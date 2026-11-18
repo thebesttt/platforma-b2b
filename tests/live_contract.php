@@ -86,8 +86,9 @@ $check('Biała lista VAT', function () use (&$bzpRows, &$krsNo, $need) {
         }
     }
     $need($tried > 0, 'brak NIP do sprawdzenia');
-    $bad = Registries::whiteList('0000000000');
-    $need(!$bad['ok'] && str_contains((string) ($bad['error'] ?? ''), 'NIP'), 'nieprawidłowy NIP powinien zwrócić komunikat API o błędnym NIP');
+    // Zła suma kontrolna – API odpowiada błędem 400 z komunikatem.
+    $bad = Registries::whiteList('1234563219');
+    $need(!$bad['ok'] && str_contains((string) ($bad['error'] ?? ''), 'NIP'), 'nieprawidłowy NIP: oczekiwano komunikatu API, jest: ' . json_encode($bad, JSON_UNESCAPED_UNICODE));
     return "sprawdzono $tried NIP";
 });
 $check('KRS: odpis aktualny', function () use (&$krsNo, $need) {

@@ -26,7 +26,7 @@ final class Uokik
             $url = self::BASE . '/bp/dec_prez.nsf/UOKiK?OpenForm&Start=1&Count=9999&Expand=' . self::CATEGORY . '.' . $i . '&Seq=2';
             $r = Http::get($url, [], 60);
             if ($r['status'] !== 200) {
-                $errors[] = "rok $i: HTTP {$r['status']}";
+                $errors[] = "rok $i: HTTP {$r['status']}" . (!empty($r['error']) ? ' (' . $r['error'] . ')' : '');
                 continue;
             }
             foreach (self::parseList($r['body']) as $d) {
