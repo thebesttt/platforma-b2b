@@ -36,7 +36,7 @@ final class Http
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS => 3,
             CURLOPT_PROTOCOLS => CURLPROTO_HTTPS | CURLPROTO_HTTP,
-            CURLOPT_CONNECTTIMEOUT => 8,
+            CURLOPT_CONNECTTIMEOUT => max(8, intdiv($timeout, 2)), // wolne serwery (np. rejestr UOKiK) dostają więcej czasu
             CURLOPT_TIMEOUT => $timeout,
             CURLOPT_HTTPHEADER => $h,
             CURLOPT_ENCODING => '',

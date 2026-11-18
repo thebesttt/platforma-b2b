@@ -18,3 +18,8 @@ jobs:
           coverage: none
       - name: Test kontraktu
         run: php tests/live_contract.php
+      - name: Diagnostyka połączenia z rejestrem UOKiK
+        if: failure()
+        run: |
+          getent hosts decyzje.uokik.gov.pl || true
+          curl -sv -o /dev/null --connect-timeout 45 --max-time 90 https://decyzje.uokik.gov.pl/bp/dec_prez.nsf 2>&1 | grep -E 'Trying|Connected|SSL|HTTP/|timed out|error' || true
