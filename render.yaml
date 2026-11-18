@@ -1,0 +1,40 @@
+# Blueprint Render.com: Dashboard → New → Blueprint → wybierz to repozytorium.
+# Tworzy aplikację (Docker) i bazę PostgreSQL. Darmowa baza na Render ma ograniczony czas życia –
+# przed startem sprzedaży przejdź na płatny plan bazy albo ustaw DATABASE_URL na bazę w Neon (darmowy plan bez limitu czasu).
+databases:
+  - name: platforma-db
+    plan: free
+    region: frankfurt
+    databaseName: platforma
+    user: platforma
+
+services:
+  - type: web
+    name: platforma-b2b
+    runtime: docker
+    plan: free
+    region: frankfurt
+    branch: main
+    healthCheckPath: /zdrowie
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: platforma-db
+          property: connectionString
+      - key: APP_SECRET
+        generateValue: true
+      - key: CRON_TOKEN            # ten sam token wpisz w GitHub → Settings → Secrets → CRON_TOKEN (codzienny import)
+        generateValue: true
+      - key: APP_NAME              # nazwa produktu widoczna w aplikacji
+        value: "[Nazwa]"
+      - key: APP_URL               # adres publiczny, np. https://platforma-b2b.onrender.com
+        sync: false
+      - key: ANTHROPIC_API_KEY     # klucz API Claude – bez niego działa analiza regułowa, a funkcje AI są wyłączone
+        sync: false
+      - key: AI_MODEL
+        value: claude-sonnet-5-5
+      - key: PSI_KEY               # opcjonalnie: klucz Google PageSpeed Insights do audytu szybkości
+        sync: false
+      - key: SIGNUP_OPEN           # 1 = każdy może założyć konto, 0 = konta zakłada administrator (bin/console user:create)
+        value: "1"

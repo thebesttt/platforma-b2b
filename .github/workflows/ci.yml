@@ -1,0 +1,57 @@
+name: Testy i obraz Docker
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  testy:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: curl, mbstring, intl, zip, pdo_sqlite, pdo_pgsql
+          coverage: none
+      - name: Składnia PHP
+        run: find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l > /dev/null
+      - name: Testy (SQLite)
+        run: php tests/run.php
+      - name: Testy (PostgreSQL)
+        run: php tests/run.php
+        env:
+          TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/test
+
+  docker:
+    needs: testy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Budowa obrazu
+        run: docker build -t platforma-b2b .
+      - name: Start bazy i aplikacji (port jak na Render)
+        run: |
+          docker network create net
+          docker run -d --name db --network net -e POSTGRES_PASSWORD=pg -e POSTGRES_DB=platforma postgres:16
+          docker run -d --name app --network net -p 10000:10000 \
+            -e DATABASE_URL=postgres://postgres:pg@db:5432/platforma -e CRON_TOKEN=ci-token -e APP_SECRET=ci-secret platforma-b2b
+          for i in $(seq 1 60); do curl -fs http://localhost:10000/zdrowie > /dev/null && break; sleep 2; done
+      - name: Test dymny
+        run: sh tests/smoke.sh http://localhost:10000
+      - name: Tekst z PDF (pdftotext w obrazie)
+        run: docker exec app sh -c 'command -v pdftotext'
+      - name: Logi kontenera
+        if: always()
+        run: docker logs app 2>&1 | tail -60

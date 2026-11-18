@@ -1,0 +1,380 @@
+{
+  "_info": "Baza wiedzy skanera PrestaCheck. Aktualizujcie ją przy każdym nowym wydaniu PrestaShop / PHP i nowych zgłoszeniach bezpieczeństwa (security.friendsofpresta.org, github.com/PrestaShop/PrestaShop/security). Data ostatniej aktualizacji poniżej.",
+  "updated": "2026-10-27",
+  "prestashop": {
+    "latest_9": "9.2.0",
+    "latest_8": "8.2.8",
+    "branches": [
+      {
+        "match": "^1\\.[0-5]\\.",
+        "status": "eol",
+        "note": "Wersja sprzed ponad dekady, bez jakichkolwiek poprawek bezpieczeństwa."
+      },
+      {
+        "match": "^1\\.6\\.",
+        "status": "eol",
+        "note": "PrestaShop 1.6 nie dostaje poprawek bezpieczeństwa od czerwca 2019 r., a od kwietnia 2026 r. nie są już generowane dla niej paczki językowe."
+      },
+      {
+        "match": "^1\\.7\\.",
+        "status": "eol",
+        "note": "Wsparcie rozszerzone PrestaShop 1.7 zakończyło się wraz z premierą PrestaShop 9.0 (czerwiec 2025 r.). Nowe luki nie są łatane."
+      },
+      {
+        "match": "^8\\.[01]\\.",
+        "status": "eol",
+        "note": "Gałęzie 8.0 i 8.1 nie są już utrzymywane – poprawki bezpieczeństwa trafiają tylko do 8.2.x i 9.x."
+      },
+      {
+        "match": "^8\\.2\\.",
+        "status": "extended",
+        "min_safe": "8.2.6",
+        "recommended": "8.2.8",
+        "latest": "8.2.8",
+        "note": "PrestaShop 8.2 jest w fazie wsparcia rozszerzonego: tylko poprawki bezpieczeństwa, do premiery PrestaShop 10. Wersje starsze niż 8.2.6 mają krytyczną lukę XSS (CVE-2026-44212), przez którą niezalogowana osoba może przejąć panel administracyjny; 8.2.8 (sierpień 2026) łata kolejnych 5 luk."
+      },
+      {
+        "match": "^9\\.0\\.",
+        "status": "outdated",
+        "note": "Gałąź 9.0 nie dostaje już poprawek. Ma krytyczną lukę XSS (CVE-2026-44212), poprawioną dopiero w 9.1.1, oraz luki naprawione w 9.1.5."
+      },
+      {
+        "match": "^9\\.1\\.",
+        "status": "previous",
+        "min_safe": "9.1.1",
+        "recommended": "9.1.5",
+        "latest": "9.1.5",
+        "note": "Od 30.09.2026 r. aktualną wersją jest PrestaShop 9.2. Wersje starsze niż 9.1.1 mają krytyczną lukę XSS (CVE-2026-44212), a 9.1.5 (sierpień 2026) łata kolejnych 5 luk."
+      },
+      {
+        "match": "^9\\.2\\.",
+        "status": "current",
+        "latest": "9.2.0",
+        "note": "Aktualna gałąź PrestaShop."
+      },
+      {
+        "match": "^(9\\.[3-9]|[1-9]\\d)\\.",
+        "status": "current",
+        "note": "Wersja nowsza niż nasza baza – aktualna."
+      }
+    ],
+    "corejs_info": "Odciski sha1 pliku /themes/core.js z oficjalnych paczek PrestaShop (github.com/PrestaShop/zip-archives). 'open' = ten sam plik może mieć też nowsze łatki, których nie ma w archiwum.",
+    "corejs": {
+      "695035b3d1233448159e1468208741fbdcc45c88": {
+        "min": "1.7.0.0",
+        "max": "1.7.0.0"
+      },
+      "02da2e6f560d855f720053308db16e28083f834a": {
+        "min": "1.7.0.1",
+        "max": "1.7.0.2"
+      },
+      "11b25170ce9258ae262ce1f4da3a748baf1977bf": {
+        "min": "1.7.0.3",
+        "max": "1.7.0.3"
+      },
+      "4862ba82ae251b2b51e3fd8a9d59c9c69a7a1e70": {
+        "min": "1.7.0.4",
+        "max": "1.7.0.6"
+      },
+      "41a5d1cfeeb78c50c06b42c90d72f50503138b97": {
+        "min": "1.7.1.0",
+        "max": "1.7.1.1"
+      },
+      "c7cf5683c818655cc86fb53d04b55d505cd6ef5a": {
+        "min": "1.7.1.2",
+        "max": "1.7.1.2"
+      },
+      "04f6df6afd1512f6c04a9646842ab25741a80510": {
+        "min": "1.7.2.0",
+        "max": "1.7.2.0"
+      },
+      "8a4c8ac778eeae4167c70ac31396cf896f7c56b6": {
+        "min": "1.7.2.1",
+        "max": "1.7.2.1"
+      },
+      "7231f00975edbd3fbfe034d5e84c206fe1c0cbfc": {
+        "min": "1.7.2.2",
+        "max": "1.7.2.2"
+      },
+      "13cff934a20998cd384d367ef3fdbf9209f46dc7": {
+        "min": "1.7.2.3",
+        "max": "1.7.2.5"
+      },
+      "15bf02ceb4f71a9db9ea569dda1273686dc7a8b8": {
+        "min": "1.7.3.0",
+        "max": "1.7.3.4"
+      },
+      "376e2032750d392100f0f81664f6e366821a0662": {
+        "min": "1.7.4.0",
+        "max": "1.7.4.1"
+      },
+      "d6104445b7e0ebeea53802fe69f8842b205bd6fc": {
+        "min": "1.7.4.2",
+        "max": "1.7.4.4"
+      },
+      "5acc26422f33720ee1481dff021e3bf598ca54c0": {
+        "min": "1.7.5.0",
+        "max": "1.7.5.0"
+      },
+      "8a677482f6e7ad555ce6a857bd71e95ac5ec0271": {
+        "min": "1.7.5.1",
+        "max": "1.7.5.2"
+      },
+      "fc3d1a991abf89ef7f959a1850a767e2c9bf733c": {
+        "min": "1.7.6.0",
+        "max": "1.7.6.0"
+      },
+      "070db617e459f76936213af43eef2d835db1d074": {
+        "min": "1.7.6.1",
+        "max": "1.7.6.2"
+      },
+      "1446430dfa8ac8875d740fa4141600617509fb16": {
+        "min": "1.7.6.3",
+        "max": "1.7.6.3"
+      },
+      "e2c6908f02aa5c243a1538efc25146d6f6533f9a": {
+        "min": "1.7.6.4",
+        "max": "1.7.6.5"
+      },
+      "cb95c045e307d53fa919dcfadd6ee2922e019de5": {
+        "min": "1.7.6.6",
+        "max": "1.7.6.6"
+      },
+      "3f3ba84baed261a78c1ff89b4a8f046223408b42": {
+        "min": "1.7.6.7",
+        "max": "1.7.6.9"
+      },
+      "c5bf5f578ad32662f535146bddc7bd78d0060b58": {
+        "min": "1.7.7.0",
+        "max": "1.7.7.8"
+      },
+      "5767ececc2b18d80db359e01a422e4b7805e1edf": {
+        "min": "1.7.8.0",
+        "max": "1.7.8.0"
+      },
+      "7a5dace9024cfa55fad6f3ee30a956a9e1e85baa": {
+        "min": "1.7.8.1",
+        "max": "1.7.8.2"
+      },
+      "d8f71c9a6f4c5eb2d51e7fee5dcea11484155417": {
+        "min": "1.7.8.3",
+        "max": "1.7.8.5"
+      },
+      "c9e9c28d929be3f22574bd057534bcab1285c5ff": {
+        "min": "1.7.8.6",
+        "max": "1.7.8.7"
+      },
+      "50363066f85dbee25f6e986604a33cf173656686": {
+        "min": "1.7.8.8",
+        "max": "1.7.8.11"
+      },
+      "7cd44227a3023e1b71cae0fe31e32e3b6cd7df83": {
+        "min": "8.0.0",
+        "max": "8.0.5"
+      },
+      "b64bc9dbd275100fea914b798b19d93952b93a3b": {
+        "min": "8.1.0",
+        "max": "8.1.6"
+      },
+      "60647977a9a4aa69c851cc69b21d8037bf17b9fc": {
+        "min": "8.1.7",
+        "max": "8.2.0"
+      },
+      "b9d860632c480f717c14bc42b998297fc3f40b5a": {
+        "min": "8.2.1",
+        "max": "8.2.1"
+      },
+      "bca510fd49f4e1d454adb8092da6c5892fb5f8b8": {
+        "min": "8.2.2",
+        "max": "8.2.3",
+        "open": true
+      }
+    },
+    "release_dates_info": "Daty wydań (data commita z tagiem w github.com/PrestaShop/PrestaShop). Służą do datowania pliku core.js po nagłówku Last-Modified – dopisujcie każde nowe wydanie.",
+    "release_dates": {
+      "1.7.0.0": "2016-11-08",
+      "1.7.0.1": "2016-11-16",
+      "1.7.0.2": "2016-11-28",
+      "1.7.0.3": "2016-12-21",
+      "1.7.0.4": "2017-01-10",
+      "1.7.0.5": "2017-02-13",
+      "1.7.0.6": "2017-03-03",
+      "1.7.1.0": "2017-04-03",
+      "1.7.1.1": "2017-04-20",
+      "1.7.1.2": "2017-06-07",
+      "1.7.2.0": "2017-07-20",
+      "1.7.2.1": "2017-08-18",
+      "1.7.2.2": "2017-08-31",
+      "1.7.2.3": "2017-10-05",
+      "1.7.2.4": "2017-10-24",
+      "1.7.2.5": "2018-02-21",
+      "1.7.3.0": "2018-02-26",
+      "1.7.3.1": "2018-04-09",
+      "1.7.3.2": "2018-05-03",
+      "1.7.3.3": "2018-05-24",
+      "1.7.3.4": "2018-06-27",
+      "1.7.4.0": "2018-07-03",
+      "1.7.4.1": "2018-07-16",
+      "1.7.4.2": "2018-07-27",
+      "1.7.4.3": "2018-10-03",
+      "1.7.4.4": "2018-11-06",
+      "1.7.5.0": "2018-12-17",
+      "1.7.5.1": "2019-02-18",
+      "1.7.5.2": "2019-05-02",
+      "1.7.6.0": "2019-07-09",
+      "1.7.6.1": "2019-08-26",
+      "1.7.6.2": "2019-11-28",
+      "1.7.6.3": "2020-01-20",
+      "1.7.6.4": "2020-03-03",
+      "1.7.6.5": "2020-04-17",
+      "1.7.6.6": "2020-07-02",
+      "1.7.6.7": "2020-07-03",
+      "1.7.6.8": "2020-09-28",
+      "1.7.6.9": "2020-11-16",
+      "1.7.7.0": "2020-12-02",
+      "1.7.7.1": "2021-01-11",
+      "1.7.7.2": "2021-02-22",
+      "1.7.7.3": "2021-03-22",
+      "1.7.7.4": "2021-05-03",
+      "1.7.7.5": "2021-06-14",
+      "1.7.7.6": "2021-08-04",
+      "1.7.7.7": "2021-08-19",
+      "1.7.7.8": "2021-09-09",
+      "1.7.8.0": "2021-10-04",
+      "1.7.8.1": "2021-11-05",
+      "1.7.8.2": "2021-12-07",
+      "1.7.8.3": "2022-01-26",
+      "1.7.8.4": "2022-02-24",
+      "1.7.8.5": "2022-03-18",
+      "1.7.8.6": "2022-05-07",
+      "1.7.8.7": "2022-07-25",
+      "1.7.8.8": "2022-12-07",
+      "1.7.8.9": "2023-04-25",
+      "1.7.8.10": "2023-07-27",
+      "1.7.8.11": "2023-12-13",
+      "8.0.0": "2022-10-26",
+      "8.0.1": "2022-12-27",
+      "8.0.2": "2023-03-13",
+      "8.0.3": "2023-03-27",
+      "8.0.4": "2023-04-25",
+      "8.0.5": "2023-07-19",
+      "8.1.0": "2023-06-26",
+      "8.1.1": "2023-07-20",
+      "8.1.2": "2023-09-28",
+      "8.1.3": "2024-01-02",
+      "8.1.4": "2024-02-19",
+      "8.1.5": "2024-03-07",
+      "8.1.6": "2024-05-13",
+      "8.1.7": "2024-06-14",
+      "8.2.0": "2024-09-23",
+      "8.2.1": "2025-02-20",
+      "8.2.2": "2025-07-28",
+      "8.2.3": "2025-08-28",
+      "8.2.4": "2026-02-03",
+      "8.2.5": "2026-03-16",
+      "8.2.6": "2026-04-27",
+      "8.2.7": "2026-06-03",
+      "8.2.8": "2026-08-12",
+      "9.0.0": "2025-06-06",
+      "9.0.1": "2025-10-10",
+      "9.0.2": "2025-12-01",
+      "9.0.3": "2026-02-03",
+      "9.1.0": "2026-03-13",
+      "9.1.1": "2026-04-27",
+      "9.1.2": "2026-05-11",
+      "9.1.3": "2026-05-21",
+      "9.1.4": "2026-06-03",
+      "9.1.5": "2026-08-12",
+      "9.2.0": "2026-09-29"
+    }
+  },
+  "php": [
+    {
+      "match": "^[0-6]\\.",
+      "status": "eol",
+      "note": "Wersja PHP bez wsparcia od wielu lat."
+    },
+    {
+      "match": "^7\\.",
+      "status": "eol",
+      "note": "PHP 7.x nie ma żadnych poprawek bezpieczeństwa (7.4 – koniec wsparcia 28.11.2022)."
+    },
+    {
+      "match": "^8\\.0\\.",
+      "status": "eol",
+      "note": "PHP 8.0 – koniec wsparcia 26.11.2023."
+    },
+    {
+      "match": "^8\\.1\\.",
+      "status": "eol",
+      "note": "PHP 8.1 – koniec wsparcia 31.12.2025."
+    },
+    {
+      "match": "^8\\.2\\.",
+      "status": "ending",
+      "note": "PHP 8.2 dostaje już tylko poprawki bezpieczeństwa, a wsparcie kończy się 31.12.2026."
+    },
+    {
+      "match": "^8\\.[3-9]\\.",
+      "status": "ok",
+      "note": "Wspierana wersja PHP."
+    }
+  ],
+  "vulnerable_modules": {
+    "_info": "Nazwa techniczna modułu (folder w /modules/) => dane z publicznych zgłoszeń. 'fixed' = pierwsza wersja z poprawką; 'max_affected' = ostatnia wersja podatna (gdy brak poprawki). Rozbudujcie listę o pełną bazę z security.friendsofpresta.org.",
+    "helpdesk": {
+      "cve": "CVE-2024-34990",
+      "type": "nieograniczony upload plików .php (przejęcie serwera)",
+      "cvss": 10.0,
+      "max_affected": "2.4.0"
+    },
+    "channable": {
+      "cve": "CVE-2024-34994",
+      "type": "SQL injection dostępny dla niezalogowanych",
+      "cvss": 9.8,
+      "max_affected": "3.2.1"
+    },
+    "bagoogleshopping": {
+      "cve": "CVE-2024-34993",
+      "type": "SQL injection dostępny dla niezalogowanych",
+      "cvss": 6.3,
+      "max_affected": "1.0.26"
+    },
+    "productdesigner": {
+      "cve": "CVE-2024-24302",
+      "type": "zdalne wykonanie kodu",
+      "cvss": 9.8,
+      "fixed": "1.178.36"
+    },
+    "supernewsletter": {
+      "cve": "CVE-2024-25839",
+      "type": "wyciek danych / eskalacja uprawnień",
+      "cvss": 7.5,
+      "max_affected": "1.4.21"
+    },
+    "prestasalesmanager": {
+      "cve": "CVE-2024-25842",
+      "type": "wyciek danych / eskalacja uprawnień",
+      "cvss": 7.5,
+      "fixed": "9.0"
+    },
+    "simpleimportproduct": {
+      "cve": "CVE-2024-25847",
+      "type": "SQL injection",
+      "cvss": 9.8,
+      "max_affected": "6.5.0"
+    },
+    "soflexibilite": {
+      "cve": "CVE-2024-25844",
+      "type": "wyciek danych przez plik debug",
+      "cvss": 7.5,
+      "fixed": "4.1.26"
+    },
+    "newsletterpop": {
+      "cve": "CVE-2023-47308",
+      "type": "SQL injection",
+      "cvss": 9.8,
+      "fixed": "2.6.1"
+    }
+  }
+}

@@ -1,0 +1,39 @@
+name: Codzienny import przetargów i odświeżenie kontrahentów
+
+# Codziennie rano (ok. 6:20 czasu polskiego zimą). Sekrety repozytorium (Settings → Secrets and variables → Actions):
+#   DATABASE_URL – zewnętrzny adres bazy (zalecane): import działa bezpośrednio w GitHub Actions, bez limitów czasu hostingu,
+#   albo APP_URL + CRON_TOKEN – wtedy zadanie wywołuje aplikację (CRON_TOKEN taki sam jak w Render).
+on:
+  schedule:
+    - cron: '20 5 * * *'
+  workflow_dispatch:
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      APP_URL: ${{ secrets.APP_URL }}
+      CRON_TOKEN: ${{ secrets.CRON_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        if: env.DATABASE_URL != ''
+        with:
+          php-version: '8.3'
+          extensions: curl, mbstring, intl, pdo_pgsql
+          coverage: none
+      - name: Import bezpośrednio do bazy
+        if: env.DATABASE_URL != ''
+        run: php bin/console migrate && php bin/console daily
+      - name: Wywołanie zadania w aplikacji
+        if: env.DATABASE_URL == '' && env.APP_URL != ''
+        run: |
+          # Darmowa instancja Render usypia – pierwsze zapytanie ją budzi.
+          curl -s -o /dev/null --max-time 120 "$APP_URL/zdrowie" || true
+          curl -fsS --retry 3 --retry-delay 20 --max-time 1500 -X POST \
+            -H "Authorization: Bearer $CRON_TOKEN" "$APP_URL/cron/run?task=daily"
+      - name: Brak konfiguracji
+        if: env.DATABASE_URL == '' && env.APP_URL == ''
+        run: echo "Ustaw sekret DATABASE_URL albo APP_URL i CRON_TOKEN, żeby włączyć codzienny import."

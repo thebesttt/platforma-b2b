@@ -1,0 +1,69 @@
+#!/usr/bin/env php
+<?php
+/**
+ * Polecenia administracyjne:
+ *   php bin/console migrate            – utworzenie/aktualizacja tabel
+ *   php bin/console import [od]        – import ogłoszeń BZP i TED (od: 'Y-m-d H:i:s' UTC) i dopasowanie do profili
+ *   php bin/console uokik:sync [lata]  – pobranie decyzji UOKiK o zatorach płatniczych
+ *   php bin/console watchlist          – odświeżenie obserwowanych kontrahentów (alerty o zmianach)
+ *   php bin/console daily              – wszystko powyżej (zadanie codzienne)
+ *   php bin/console user:create e-mail hasło "Nazwa firmy" [NIP]
+ *   php bin/console demo:seed          – konto demonstracyjne z przykładowymi danymi (tylko środowisko dev/test)
+ */
+
+declare(strict_types=1);
+
+require __DIR__ . '/../src/bootstrap.php';
+
+use App\Core\Auth;
+use App\Core\Config;
+use App\Core\Db;
+use App\Core\Migrator;
+use App\Modules\Companies\Companies;
+use App\Modules\Companies\Uokik;
+use App\Modules\Tenders\Importer;
+
+$cmd = $argv[1] ?? 'help';
+$out = static function (mixed $v): void {
+    echo (is_string($v) ? $v : json_encode($v, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) . PHP_EOL;
+};
+
+try {
+    switch ($cmd) {
+        case 'migrate':
+            $applied = (new Migrator(Db::get()))->migrate();
+            $out($applied ? 'Zastosowano: ' . implode(', ', $applied) : 'Baza aktualna.');
+            break;
+        case 'import':
+            $out(Importer::run($argv[2] ?? null));
+            break;
+        case 'uokik:sync':
+            $out(Uokik::sync((int) ($argv[2] ?? 6)));
+            break;
+        case 'watchlist':
+            $out(Companies::refreshWatched((int) ($argv[2] ?? 80)));
+            break;
+        case 'daily':
+            $out(App\Http\CronController::daily());
+            break;
+        case 'user:create':
+            [$email, $password, $company] = [$argv[2] ?? '', $argv[3] ?? '', $argv[4] ?? ''];
+            $res = Auth::register($company, $argv[5] ?? '', '', $email, $password);
+            $out($res['ok'] ? 'Utworzono konto ' . $email : 'Błąd: ' . $res['error']);
+            exit($res['ok'] ? 0 : 1);
+        case 'demo:seed':
+            if (!Config::isDev()) {
+                $out('demo:seed działa tylko przy APP_ENV=dev lub test.');
+                exit(1);
+            }
+            require APP_ROOT . '/tests/demo_seed.php';
+            $out(demo_seed());
+            break;
+        default:
+            $lines = file(__FILE__);
+            echo implode('', array_slice($lines, 2, 10));
+    }
+} catch (Throwable $e) {
+    fwrite(STDERR, get_class($e) . ': ' . $e->getMessage() . ' (' . basename($e->getFile()) . ':' . $e->getLine() . ")\n");
+    exit(1);
+}
