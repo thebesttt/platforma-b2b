@@ -25,6 +25,7 @@ final class Config
         'HTTP_FIXTURES' => '',
         'UPLOAD_MAX_MB' => '15',
         'SIGNUP_OPEN' => '1',
+        'ADMIN_EMAILS' => '',          // e-maile administratorów platformy (po przecinku)
         'AUDIT_ALLOW_PRIVATE' => '0', // tylko testy lokalne (działa wyłącznie przy APP_ENV=dev|test)
     ];
 

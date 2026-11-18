@@ -103,6 +103,9 @@ $check('KRS: odpis aktualny', function () use (&$krsNo, $need) {
 });
 $check('UOKiK: rejestr decyzji (zatory płatnicze)', function () use ($need) {
     $res = Uokik::sync(2);
+    if ($res['saved'] === 0 && str_contains(implode(' ', $res['errors']), 'timed out')) {
+        return 'OSTRZEŻENIE: rejestr nie przyjmuje połączeń z tej sieci (aktualizacja ręczna w Ustawieniach)';
+    }
     $need($res['saved'] > 0, 'nie odczytano decyzji: ' . implode('; ', $res['errors']));
     return $res['saved'] . ' decyzji';
 });

@@ -36,5 +36,7 @@ services:
         value: claude-sonnet-5-5
       - key: PSI_KEY               # opcjonalnie: klucz Google PageSpeed Insights do audytu szybkości
         sync: false
+      - key: ADMIN_EMAILS          # Twój e-mail: dostęp do ręcznej aktualizacji decyzji UOKiK (Ustawienia → Decyzje UOKiK)
+        sync: false
       - key: SIGNUP_OPEN           # 1 = każdy może założyć konto, 0 = konta zakłada administrator (bin/console user:create)
         value: "1"

@@ -101,4 +101,6 @@ return static function (Router $r): void {
     $r->post('/ustawienia', [SettingsController::class, 'save'], $a);
     $r->post('/ustawienia/haslo', [SettingsController::class, 'password'], $a);
     $r->post('/ustawienia/zespol', [SettingsController::class, 'invite'], $a);
+    $r->get('/ustawienia/uokik', [SettingsController::class, 'uokik'], $a);
+    $r->post('/ustawienia/uokik', [SettingsController::class, 'uokikUpload'], $a);
 };

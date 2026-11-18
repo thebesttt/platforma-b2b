@@ -61,6 +61,40 @@ final class SettingsController extends Controller
         return $this->redirect('/ustawienia', 'Hasło zmienione.');
     }
 
+    /** Ręczne wgranie list decyzji UOKiK (gdy rejestr blokuje połączenia z serwera). Tylko administrator platformy. */
+    public function uokik(Request $r): Response
+    {
+        if (!Auth::isAdmin()) {
+            return $this->notFound();
+        }
+        $stats = $this->db()->one('SELECT COUNT(*) AS n, MAX(decided_at) AS latest FROM uokik_decisions') ?? ['n' => 0, 'latest' => null];
+        return $this->view('settings/uokik', ['stats' => $stats, 'last' => \App\Core\Kv::get('uokik:last_sync'), 'title' => 'Decyzje UOKiK']);
+    }
+
+    public function uokikUpload(Request $r): Response
+    {
+        if (!Auth::isAdmin()) {
+            return $this->notFound();
+        }
+        $saved = 0;
+        $files = TenderController::normalizeFiles($r->files['pages'] ?? null);
+        foreach ($files as $f) {
+            if ($f['error'] !== UPLOAD_ERR_OK || (int) $f['size'] > 20 * 1024 * 1024 || (PHP_SAPI !== 'cli' && !is_uploaded_file((string) $f['tmp_name']))) {
+                continue;
+            }
+            $html = (string) file_get_contents((string) $f['tmp_name']);
+            if (!mb_check_encoding($html, 'UTF-8')) {
+                $html = mb_convert_encoding($html, 'UTF-8', 'ISO-8859-2');
+            }
+            $saved += \App\Modules\Companies\Uokik::store(\App\Modules\Companies\Uokik::parseList($html));
+        }
+        if ($saved) {
+            \App\Core\Kv::set('uokik:last_sync', now_utc());
+        }
+        AuditLog::add('uokik.upload', null, null, ['saved' => $saved], $r->ip());
+        return $this->redirect('/ustawienia/uokik', $saved ? 'Zapisano ' . $saved . ' ' . plural($saved, 'decyzję', 'decyzje', 'decyzji') . '.' : 'Nie znaleziono decyzji w plikach. Zapisz stronę listy jako „HTML”.', $saved ? 'success' : 'error');
+    }
+
     /** Właściciel dodaje członka zespołu z hasłem startowym, które przekazuje mu osobiście. */
     public function invite(Request $r): Response
     {

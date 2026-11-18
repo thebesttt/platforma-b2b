@@ -161,6 +161,17 @@ return [
         }
         eq(404, http('GET', '/nie-ma-takiej-strony')->status);
     },
+    'Administrator wgrywa listę decyzji UOKiK, inni nie widzą tej strony' => function () {
+        [, $uid] = make_org('admin@example.com');
+        login_as($uid);
+        eq(404, http('GET', '/ustawienia/uokik')->status, 'bez ADMIN_EMAILS');
+        App\Core\Config::set('ADMIN_EMAILS', 'inny@example.com, ADMIN@example.com');
+        eq(200, http('GET', '/ustawienia/uokik')->status);
+        $files = ['pages' => ['name' => ['lista.html'], 'type' => ['text/html'], 'tmp_name' => [__DIR__ . '/../fixtures/http/uokik_zatory_2026.html'], 'error' => [0], 'size' => [1000]]];
+        eq(303, http('POST', '/ustawienia/uokik', [], [], $files)->status);
+        eq(2, (int) Db::get()->val('SELECT COUNT(*) FROM uokik_decisions'));
+        App\Core\Config::set('ADMIN_EMAILS', '');
+    },
     'Zadania cykliczne: token wymagany' => function () {
         eq(401, http('GET', '/cron/run', [], ['token' => 'zly'])->status);
         $r = http('GET', '/cron/run', [], ['token' => 'test-cron-token', 'task' => 'import']);

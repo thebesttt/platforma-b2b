@@ -43,6 +43,9 @@
       </form>
       <?php endif ?>
     </section>
+    <?php if (App\Core\Auth::isAdmin()): ?>
+    <section class="card"><h2 style="margin-bottom:8px">Administracja</h2><a href="/ustawienia/uokik">Decyzje UOKiK – aktualizacja ręczna</a></section>
+    <?php endif ?>
     <section class="card">
       <h2 style="margin-bottom:8px">Dane i AI</h2>
       <p class="small">Funkcje AI: <?= $aiEnabled ? '<span class="chip low">włączone</span>' : '<span class="chip neutral">wyłączone</span>' ?></p>

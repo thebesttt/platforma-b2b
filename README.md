@@ -90,6 +90,7 @@ Darmowa baza PostgreSQL na Render ma ograniczony czas życia. Przed pierwszymi k
 | `PSI_KEY` | Klucz Google PageSpeed Insights (audyt szybkości). |
 | `SIGNUP_OPEN` | `1` oznacza otwartą rejestrację, `0` zamkniętą. |
 | `UPLOAD_MAX_MB` | Limit rozmiaru dokumentu, domyślnie 15. |
+| `ADMIN_EMAILS` | E-maile administratorów platformy, rozdzielone przecinkami. Dają dostęp do ręcznej aktualizacji decyzji UOKiK. |
 
 ## Zadania cykliczne
 
@@ -101,10 +102,19 @@ Komenda `php bin/console daily`, endpoint `/cron/run?task=daily` i workflow `.gi
 4. odświeżenie obserwowanych kontrahentów (alerty o zmianach),
 5. sprzątanie: sesje, wygasłe wpisy i ogłoszenia po terminie starsze niż 120 dni bez ofert.
 
+### Rejestr decyzji UOKiK
+
+Serwer `decyzje.uokik.gov.pl` nie przyjmuje połączeń z GitHub Actions. Połączenie kończy się przekroczeniem czasu, co wskazuje na blokadę adresów spoza Polski. Jeśli tak samo będzie z serwera Render, automatyczna synchronizacja nie zadziała. Listy można wtedy wgrać ręcznie na dwa sposoby:
+
+- **Przez stronę.** Administrator (`ADMIN_EMAILS`) otwiera **Ustawienia → Decyzje UOKiK**, gdzie są linki do list z kolejnych lat. Zapisuje je w przeglądarce jako HTML i wgrywa.
+- **Z konsoli.** Polecenie `php bin/console uokik:import pliki.html`.
+
+Docelowym rozwiązaniem może być mały serwer pośredniczący w Polsce.
+
 ## Testy
 
 ```bash
-php tests/run.php                                           # 40 testów, SQLite, bez sieci
+php tests/run.php                                           # 41 testów, SQLite, bez sieci
 TEST_DATABASE_URL=postgres://… php tests/run.php            # te same testy na PostgreSQL
 php tests/live_contract.php                                 # prawdziwe API: BZP, TED, VAT, KRS, UOKiK
 sh tests/smoke.sh http://localhost:10000                    # test dymny działającej instancji

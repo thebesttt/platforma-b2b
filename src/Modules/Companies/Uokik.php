@@ -23,18 +23,36 @@ final class Uokik
         $saved = 0;
         $errors = [];
         for ($i = 1; $i <= $years; $i++) {
-            $url = self::BASE . '/bp/dec_prez.nsf/UOKiK?OpenForm&Start=1&Count=9999&Expand=' . self::CATEGORY . '.' . $i . '&Seq=2';
-            $r = Http::get($url, [], 60);
+            $r = Http::get(self::listUrl($i), [], 60);
             if ($r['status'] !== 200) {
+                if ($r['status'] === 0 && $i === 1 && str_contains((string) ($r['error'] ?? ''), 'timed out')) {
+                    $errors[] = "rok $i: HTTP 0 (" . $r['error'] . ')';
+                    break; // serwer nie odpowiada – nie czekamy na kolejne lata
+                }
                 $errors[] = "rok $i: HTTP {$r['status']}" . (!empty($r['error']) ? ' (' . $r['error'] . ')' : '');
                 continue;
             }
-            foreach (self::parseList($r['body']) as $d) {
-                Db::get()->upsert('uokik_decisions', $d + ['created_at' => now_utc()], ['signature'], ['company_name', 'search', 'decided_at', 'summary', 'url']);
-                $saved++;
-            }
+            $saved += self::store(self::parseList($r['body']));
+        }
+        if ($errors && $saved === 0 && str_contains(implode(' ', $errors), 'timed out')) {
+            $errors[] = 'Rejestr UOKiK nie przyjmuje połączeń z tego serwera (prawdopodobnie blokada adresów spoza Polski). Wgraj listę decyzji ręcznie: Ustawienia → Decyzje UOKiK.';
         }
         return ['saved' => $saved, 'errors' => $errors];
+    }
+
+    /** Zapis decyzji (bez duplikatów po sygnaturze). Zwraca liczbę zapisanych pozycji. */
+    public static function store(array $rows): int
+    {
+        foreach ($rows as $d) {
+            Db::get()->upsert('uokik_decisions', $d + ['created_at' => now_utc()], ['signature'], ['company_name', 'search', 'decided_at', 'summary', 'url']);
+        }
+        return count($rows);
+    }
+
+    /** Adres listy decyzji z danego roku (1 = najnowszy) – do pobrania w przeglądarce i wgrania ręcznego. */
+    public static function listUrl(int $i): string
+    {
+        return self::BASE . '/bp/dec_prez.nsf/UOKiK?OpenForm&Start=1&Count=9999&Expand=' . self::CATEGORY . '.' . $i . '&Seq=2';
     }
 
     /** @return array<int, array{signature: string, company_name: string, search: string, decided_at: ?string, summary: string, url: ?string, nip: ?string}> */
