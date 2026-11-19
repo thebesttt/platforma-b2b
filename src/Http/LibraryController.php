@@ -9,7 +9,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Modules\Offers\Offers;
 
-/** Biblioteka firmy: referencje, osoby, certyfikaty, polisy i gotowe opisy – źródła dla ofert, wniosków i wiadomości. */
+/** Biblioteka firmy: referencje, osoby, certyfikaty, polisy i gotowe opisy - źródła dla ofert, wniosków i wiadomości. */
 final class LibraryController extends Controller
 {
     public function index(Request $r): Response

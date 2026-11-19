@@ -96,7 +96,7 @@ final class SettingsController extends Controller
         return $this->redirect('/ustawienia/uokik', $saved ? 'Zapisano ' . $saved . ' ' . plural($saved, 'decyzję', 'decyzje', 'decyzji') . '.' : 'Nie znaleziono decyzji w plikach. Zapisz stronę listy jako „HTML”.', $saved ? 'success' : 'error');
     }
 
-    /** Krótkie zapytanie kontrolne do modelu AI – sprawdza klucz, nazwę modelu i połączenie. Tylko administrator platformy. */
+    /** Krótkie zapytanie kontrolne do modelu AI - sprawdza klucz, nazwę modelu i połączenie. Tylko administrator platformy. */
     public function testAi(Request $r): Response
     {
         if (!Auth::isAdmin()) {

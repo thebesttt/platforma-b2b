@@ -17,7 +17,7 @@ use App\Modules\Offers\Docx;
 
 final class CompanyController extends Controller
 {
-    /** Limit nowych sprawdzeń na firmę dziennie – API białej listy VAT ma wspólny dzienny limit zapytań dla całej platformy. */
+    /** Limit nowych sprawdzeń na firmę dziennie - API białej listy VAT ma wspólny dzienny limit zapytań dla całej platformy. */
     public const DAILY_LOOKUPS = 40;
 
     public function index(Request $r): Response
@@ -51,7 +51,7 @@ final class CompanyController extends Controller
             return $this->redirect('/kontrahenci/' . $nip);
         }
         if (preg_match('/^\d{10}$/', $nip)) {
-            return $this->redirect('/kontrahenci', 'Numer NIP ' . $nip . ' ma nieprawidłową sumę kontrolną – sprawdź cyfry.', 'error');
+            return $this->redirect('/kontrahenci', 'Numer NIP ' . $nip . ' ma nieprawidłową sumę kontrolną - sprawdź cyfry.', 'error');
         }
         return $this->redirect('/kontrahenci?q=' . rawurlencode($q));
     }
@@ -60,7 +60,7 @@ final class CompanyController extends Controller
     {
         $nip = Nip::clean($r->param('nip'));
         if (!Nip::valid($nip)) {
-            return $this->redirect('/kontrahenci', 'Numer NIP jest nieprawidłowy – sprawdź cyfry.', 'error');
+            return $this->redirect('/kontrahenci', 'Numer NIP jest nieprawidłowy - sprawdź cyfry.', 'error');
         }
         $existing = Companies::byNip($nip);
         $fresh = $existing && $existing['refreshed_at'] && strtotime($existing['refreshed_at'] . ' UTC') > time() - Companies::FRESH_FOR;
@@ -102,7 +102,7 @@ final class CompanyController extends Controller
             return $this->redirect('/kontrahenci/' . $nip, $res['error'], 'error');
         }
         $n = count($res['changes'] ?? []);
-        return $this->redirect('/kontrahenci/' . $nip, $n ? 'Dane odświeżone. Zmiany: ' . implode('; ', $res['changes']) : 'Dane odświeżone – bez zmian.');
+        return $this->redirect('/kontrahenci/' . $nip, $n ? 'Dane odświeżone. Zmiany: ' . implode('; ', $res['changes']) : 'Dane odświeżone - bez zmian.');
     }
 
     public function watch(Request $r): Response

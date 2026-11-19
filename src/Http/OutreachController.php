@@ -90,7 +90,7 @@ final class OutreachController extends Controller
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $error = 'Podaj poprawny adres e-mail.';
         } elseif ($basis !== 'none' && !$data['basis_detail'] && !$data['basis_url']) {
-            $error = 'Opisz podstawę kontaktu (np. treść zapytania, sposób wyrażenia zgody) albo podaj link – to Twój dowód w razie sporu.';
+            $error = 'Opisz podstawę kontaktu (np. treść zapytania, sposób wyrażenia zgody) albo podaj link - to Twój dowód w razie sporu.';
         }
         if ($error) {
             Session::flash('error', $error);

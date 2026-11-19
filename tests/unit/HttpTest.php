@@ -148,7 +148,7 @@ return [
         http('POST', '/profile', ['name' => 'Drogi', 'cpv' => '45', 'zrodla' => ['bzp', 'ted'], 'active' => '1']);
         http('POST', '/oferty', ['tender_id' => (string) Db::get()->val('SELECT MIN(id) FROM tenders')]);
         http('POST', '/oferty', ['kind' => 'grant', 'call_name' => 'Nabór']);
-        http('POST', '/biblioteka', ['kind' => 'person', 'title' => 'Jan Kowalski – kierownik budowy', 'body' => 'Uprawnienia drogowe']);
+        http('POST', '/biblioteka', ['kind' => 'person', 'title' => 'Jan Kowalski - kierownik budowy', 'body' => 'Uprawnienia drogowe']);
         http('POST', '/klienci', ['company_name' => 'K', 'email' => 'k@example.com', 'basis' => 'rfq', 'basis_detail' => 'zapytanie']);
         $paths = ['/pulpit', '/przetargi', '/przetargi?status=all', '/przetargi/szukaj?q=droga', '/profile', '/profile/nowy', '/profile/1',
             '/oferty', '/oferty/1', '/oferty/1?sekcja=doswiadczenie&tryb=edycja', '/oferty/2', '/biblioteka', '/biblioteka?rodzaj=person', '/biblioteka/1',

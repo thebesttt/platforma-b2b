@@ -1,5 +1,5 @@
 <?php
-/** Strona internetowa kontaktu – do personalizacji wiadomości na podstawie treści strony firmy. */
+/** Strona internetowa kontaktu - do personalizacji wiadomości na podstawie treści strony firmy. */
 
 use App\Core\Schema;
 

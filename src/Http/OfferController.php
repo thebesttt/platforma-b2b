@@ -148,7 +148,7 @@ final class OfferController extends Controller
         $this->db()->update('offers', ['updated_at' => now_utc()], 'id = ?', [(int) $offer['id']]);
         AuditLog::add('offer.ai_section', 'offer', (int) $offer['id'], ['section' => $section['key']], $r->ip());
         $n = substr_count($res['body'], '⟦sprawdź⟧');
-        return $this->redirect($to, 'AI przygotowało nową wersję sekcji.' . ($n ? ' ' . $n . ' ' . plural($n, 'zdanie nie ma', 'zdania nie mają', 'zdań nie ma') . ' źródła – sprawdź je albo usuń.' : ''));
+        return $this->redirect($to, 'AI przygotowało nową wersję sekcji.' . ($n ? ' ' . $n . ' ' . plural($n, 'zdanie nie ma', 'zdania nie mają', 'zdań nie ma') . ' źródła - sprawdź je albo usuń.' : ''));
     }
 
     public function upload(Request $r): Response

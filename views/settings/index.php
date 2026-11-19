@@ -45,7 +45,7 @@
     </section>
     <?php if (App\Core\Auth::isAdmin()): ?>
     <section class="card stack-sm"><h2>Administracja</h2>
-      <a href="/ustawienia/uokik">Decyzje UOKiK – aktualizacja ręczna</a>
+      <a href="/ustawienia/uokik">Decyzje UOKiK - aktualizacja ręczna</a>
       <form method="post" action="/ustawienia/test-ai"><?= csrf_field() ?><button class="btn ghost sm" type="submit" data-busy="Sprawdzam…">Sprawdź połączenie z AI</button></form>
     </section>
     <?php endif ?>

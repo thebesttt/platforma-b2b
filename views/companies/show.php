@@ -27,7 +27,7 @@ $hasUokik = !empty($signals['uokik']);
     <p class="muted xs" style="margin:0">Dane z białej listy VAT<?= $krs ? ', KRS' : '' ?> i rejestru decyzji UOKiK, pobrane <?= e(local_dt($c['refreshed_at'])) ?></p>
   </div>
   <div class="row-flex no-print">
-    <form class="inline" method="post" action="/kontrahenci/<?= e($c['nip']) ?>/obserwuj"><?= csrf_field() ?><button class="btn<?= $watched ? ' ghost' : '' ?>" type="submit"><?= $watched ? 'Obserwujesz – przestań' : 'Obserwuj zmiany' ?></button></form>
+    <form class="inline" method="post" action="/kontrahenci/<?= e($c['nip']) ?>/obserwuj"><?= csrf_field() ?><button class="btn<?= $watched ? ' ghost' : '' ?>" type="submit"><?= $watched ? 'Obserwujesz - przestań' : 'Obserwuj zmiany' ?></button></form>
     <form class="inline" method="post" action="/kontrahenci/<?= e($c['nip']) ?>/odswiez"><?= csrf_field() ?><button class="btn ghost" type="submit" data-busy="Pobieram dane…">Odśwież dane</button></form>
     <button class="btn ghost" type="button" data-print>Drukuj / PDF</button>
   </div>
@@ -48,7 +48,7 @@ $hasUokik = !empty($signals['uokik']);
       <?php foreach ($risk['signals'] as $s): $l = $lvl[$s['level']] ?? $lvl['info']; ?>
         <div class="sig"><span class="chip <?= $l[0] ?>"><?= $l[1] ?></span><div><p style="font-weight:600"><?= e($s['title']) ?></p><p class="small"><?= e($s['detail']) ?></p><span class="src" style="margin-top:4px"><?= e($s['source']) ?></span></div></div>
       <?php endforeach ?>
-      <p class="muted xs" style="margin:12px 0 0">Ocena opiera się wyłącznie na danych publicznych. Nie zawiera informacji o długach zgłoszonych przez innych użytkowników platformy – takie dane trafiają tylko do biur informacji gospodarczej. Pełny raport z BIG (np. KRD, BIG InfoMonitor) zamówisz u biura.</p>
+      <p class="muted xs" style="margin:12px 0 0">Ocena opiera się wyłącznie na danych publicznych. Nie zawiera informacji o długach zgłoszonych przez innych użytkowników platformy - takie dane trafiają tylko do biur informacji gospodarczej. Pełny raport z BIG (np. KRD, BIG InfoMonitor) zamówisz u biura.</p>
     </section>
 
     <section class="card" id="naleznosci" aria-labelledby="t-rec">
@@ -67,7 +67,7 @@ $hasUokik = !empty($signals['uokik']);
               <td class="nowrap"><?= e(date('d.m.Y', strtotime($rr['due_at']))) ?></td>
               <td><?php if ($rr['paid_at']): ?><span class="chip low">zapłacona <?= e(date('d.m.Y', strtotime($rr['paid_at']))) ?></span><?php elseif ($od): ?><span class="chip <?= $od >= 30 ? 'high' : 'mid' ?>"><?= $od ?> <?= plural($od, 'dzień', 'dni', 'dni') ?> po terminie</span><?php else: ?><span class="chip info">przed terminem</span><?php endif ?>
                 <?php if ($rr['demand_sent_at']): ?><div class="t-sub">Wezwanie: <?= e(date('d.m.Y', strtotime($rr['demand_sent_at']))) ?></div><?php endif ?></td>
-              <td><?= $rr['paid_at'] ? '<span class="muted">—</span>' : ($big['eligible'] ? '<span class="chip low">możliwy</span>' : '<span class="chip neutral">jeszcze nie</span>') ?></td>
+              <td><?= $rr['paid_at'] ? '<span class="muted">-</span>' : ($big['eligible'] ? '<span class="chip low">możliwy</span>' : '<span class="chip neutral">jeszcze nie</span>') ?></td>
             </tr>
             <?php if (!$rr['paid_at']): ?>
             <tr><td colspan="5" style="background:var(--bg)">
@@ -80,7 +80,7 @@ $hasUokik = !empty($signals['uokik']);
                       <?php foreach ($big['checks'] as $chk): ?><li class="small"><span class="chip <?= $chk['ok'] ? 'low' : 'neutral' ?>"><?= $chk['ok'] ? 'spełniony' : 'brak' ?></span> <?= e($chk['text']) ?></li><?php endforeach ?>
                     </ul>
                     <?php if ($big['eligible_from']): ?><p class="small" style="margin:8px 0 0">Wpis będzie możliwy od <?= e(date('d.m.Y', strtotime($big['eligible_from']))) ?>.</p><?php endif ?>
-                    <?php if ($big['eligible']): ?><p class="small notice low" style="margin:8px 0 0">Spełniasz warunki. Wpisu dokonasz w panelu wybranego biura (np. KRD, BIG InfoMonitor, ERIF) – wymagają one umowy z wierzycielem.</p><?php endif ?>
+                    <?php if ($big['eligible']): ?><p class="small notice low" style="margin:8px 0 0">Spełniasz warunki. Wpisu dokonasz w panelu wybranego biura (np. KRD, BIG InfoMonitor, ERIF) - wymagają one umowy z wierzycielem.</p><?php endif ?>
                   </div>
                   <div class="side stack-sm">
                     <form method="get" action="/naleznosci/<?= (int) $rr['id'] ?>/wezwanie" class="stack-sm">
@@ -145,7 +145,7 @@ $hasUokik = !empty($signals['uokik']);
       <h2 id="t-uokik" style="margin-bottom:8px">Decyzje UOKiK</h2>
       <ul class="list-plain">
         <?php foreach ($signals['uokik'] as $u): ?>
-          <li class="small"><strong><?= e($u['signature']) ?></strong><?= $u['decided_at'] ? ' z ' . e(date('d.m.Y', strtotime($u['decided_at']))) : '' ?><br><?= e($u['company_name']) ?><?php if (($u['matched_by'] ?? '') === 'nazwa'): ?><br><span class="xs muted">Dopasowano po nazwie firmy – sprawdź w treści decyzji, czy to ten sam podmiot.</span><?php endif ?><?php if (!empty($u['url'])): ?><br><a href="<?= e(safe_url($u['url'])) ?>" target="_blank" rel="noopener">Treść decyzji</a><?php endif ?></li>
+          <li class="small"><strong><?= e($u['signature']) ?></strong><?= $u['decided_at'] ? ' z ' . e(date('d.m.Y', strtotime($u['decided_at']))) : '' ?><br><?= e($u['company_name']) ?><?php if (($u['matched_by'] ?? '') === 'nazwa'): ?><br><span class="xs muted">Dopasowano po nazwie firmy - sprawdź w treści decyzji, czy to ten sam podmiot.</span><?php endif ?><?php if (!empty($u['url'])): ?><br><a href="<?= e(safe_url($u['url'])) ?>" target="_blank" rel="noopener">Treść decyzji</a><?php endif ?></li>
         <?php endforeach ?>
       </ul>
     </section>

@@ -17,7 +17,7 @@ final class DocumentText
     /** Najdłuższy tekst jednego dokumentu, jaki zapisujemy (ok. 700 stron). */
     public const MAX_CHARS = 1500000;
 
-    /** Limit rozmiaru word/document.xml po rozpakowaniu – ochrona przed „bombą ZIP”. */
+    /** Limit rozmiaru word/document.xml po rozpakowaniu - ochrona przed „bombą ZIP”. */
     public const MAX_DOCX_XML_BYTES = 60 * 1024 * 1024;
 
     public static function extract(string $path, string $mime, string $filename): string

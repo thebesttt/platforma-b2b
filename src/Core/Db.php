@@ -21,7 +21,7 @@ final class Db
     private function __construct(string $url)
     {
         if ($url === '') {
-            // Na serwerze brak adresu bazy oznaczałby zapis do pliku, który znika przy każdym wdrożeniu – wolimy głośny błąd.
+            // Na serwerze brak adresu bazy oznaczałby zapis do pliku, który znika przy każdym wdrożeniu - wolimy głośny błąd.
             if (!Config::isDev()) {
                 throw new \RuntimeException('Brak zmiennej DATABASE_URL. Ustaw adres bazy PostgreSQL (albo APP_ENV=dev do pracy lokalnej na SQLite).');
             }
@@ -94,7 +94,7 @@ final class Db
                 default => PDO::PARAM_STR,
             };
             if (is_string($v) && $v !== '' && (!mb_check_encoding($v, 'UTF-8') || str_contains($v, "\0"))) {
-                // PostgreSQL odrzuca błędne sekwencje UTF-8 i znak NUL – jeden zły znak nie może przerwać zapisu.
+                // PostgreSQL odrzuca błędne sekwencje UTF-8 i znak NUL - jeden zły znak nie może przerwać zapisu.
                 $v = str_replace("\0", '', mb_scrub($v, 'UTF-8'));
             }
             $st->bindValue($i + 1, is_bool($v) ? (int) $v : $v, $type);
@@ -136,7 +136,7 @@ final class Db
         return (int) $this->pdo->lastInsertId();
     }
 
-    /** INSERT … ON CONFLICT (klucz) DO UPDATE – działa w PostgreSQL i SQLite ≥ 3.24. Zwraca id. */
+    /** INSERT … ON CONFLICT (klucz) DO UPDATE - działa w PostgreSQL i SQLite ≥ 3.24. Zwraca id. */
     public function upsert(string $table, array $data, array $conflictCols, ?array $updateCols = null, bool $returnId = true): int
     {
         $cols = array_keys($data);

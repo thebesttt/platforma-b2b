@@ -26,10 +26,10 @@ $failures = 0;
 $check = static function (string $name, callable $fn) use (&$failures): void {
     try {
         $info = $fn();
-        echo "  ✓ $name" . ($info ? " – $info" : '') . "\n";
+        echo "  ✓ $name" . ($info ? " - $info" : '') . "\n";
     } catch (Throwable $e) {
         $failures++;
-        echo "  ✗ $name – " . $e->getMessage() . "\n";
+        echo "  ✗ $name - " . $e->getMessage() . "\n";
     }
 };
 $need = static function (bool $cond, string $msg): void {
@@ -68,7 +68,7 @@ $check('TED: wyszukiwarka API v3', function () use ($need) {
 $krsNo = null;
 $check('Biała lista VAT', function () use (&$bzpRows, &$krsNo, $need) {
     $tried = 0;
-    // Najpierw spółki (komunalne itp.) – mają numer KRS potrzebny w kolejnym kroku.
+    // Najpierw spółki (komunalne itp.) - mają numer KRS potrzebny w kolejnym kroku.
     usort($bzpRows, static fn ($a, $b) => (int) (bool) preg_match('/sp[oó]łk|S\.A\./iu', (string) ($b['organizationName'] ?? '')) <=> (int) (bool) preg_match('/sp[oó]łk|S\.A\./iu', (string) ($a['organizationName'] ?? '')));
     foreach ($bzpRows as $row) {
         $nip = Nip::clean((string) ($row['organizationNationalId'] ?? ''));
@@ -86,14 +86,14 @@ $check('Biała lista VAT', function () use (&$bzpRows, &$krsNo, $need) {
         }
     }
     $need($tried > 0, 'brak NIP do sprawdzenia');
-    // Zła suma kontrolna – API odpowiada błędem 400 z komunikatem.
+    // Zła suma kontrolna - API odpowiada błędem 400 z komunikatem.
     $bad = Registries::whiteList('1234563219');
     $need(!$bad['ok'] && str_contains((string) ($bad['error'] ?? ''), 'NIP'), 'nieprawidłowy NIP: oczekiwano komunikatu API, jest: ' . json_encode($bad, JSON_UNESCAPED_UNICODE));
     return "sprawdzono $tried NIP";
 });
 $check('KRS: odpis aktualny', function () use (&$krsNo, $need) {
     if ($krsNo === null) {
-        return 'pominięto – wśród ostatnich zamawiających nie było spółki z numerem KRS';
+        return 'pominięto - wśród ostatnich zamawiających nie było spółki z numerem KRS';
     }
     $r = Registries::krs((string) $krsNo);
     $need($r['ok'] && $r['odpis'], 'brak odpisu dla KRS ' . $krsNo);

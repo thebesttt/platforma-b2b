@@ -24,7 +24,7 @@
       <p class="small" style="margin:0"><?= e($ackUser['name'] ?: $ackUser['email'] ?? '') ?> potwierdził(a) <?= e(local_dt($m['ack_at'], 'd.m.Y H:i')) ?>:</p>
       <blockquote class="small notice mid" style="margin:0">„<?= e($m['ack_text']) ?>”</blockquote>
     <?php else: ?>
-      <p class="small" style="margin:0">Ryzyko niskie – potwierdzenie nie było wymagane.</p>
+      <p class="small" style="margin:0">Ryzyko niskie - potwierdzenie nie było wymagane.</p>
     <?php endif ?>
     <p class="xs muted" style="margin:0">Utworzono <?= e(local_dt($m['created_at'], 'd.m.Y H:i')) ?>. Plik .eml otwiera się jako nowa wiadomość w Outlooku, Thunderbirdzie i Apple Mail.</p>
   </section>

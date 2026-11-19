@@ -233,7 +233,7 @@ return [
             ["/wiadomosci/{$id['mid']}/wyslana", []], ['/kontrahenci/1234563218/obserwuj', []], ['/kontrahenci/alerty', []]] as [$p, $data]) {
             http('POST', $p, $data);
         }
-        // Firma B mogła dodać własną obserwację tej samej (publicznej) firmy – usuwamy ją z porównania.
+        // Firma B mogła dodać własną obserwację tej samej (publicznej) firmy - usuwamy ją z porównania.
         $db->run('DELETE FROM watchlist WHERE org_id = ?', [$orgB]);
         foreach ($before as $t => $snapshot) {
             eq($snapshot, json_encode($db->all("SELECT * FROM $t ORDER BY 1")), "tabela $t zmieniona przez inną firmę");

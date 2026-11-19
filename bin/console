@@ -2,14 +2,14 @@
 <?php
 /**
  * Polecenia administracyjne:
- *   php bin/console migrate            – utworzenie/aktualizacja tabel
- *   php bin/console import [od]        – import ogłoszeń BZP i TED (od: 'Y-m-d H:i:s' UTC) i dopasowanie do profili
- *   php bin/console uokik:sync [lata]  – pobranie decyzji UOKiK o zatorach płatniczych
- *   php bin/console uokik:import pliki.html… – wgranie zapisanych stron listy decyzji (gdy rejestr blokuje serwer)
- *   php bin/console watchlist          – odświeżenie obserwowanych kontrahentów (alerty o zmianach)
- *   php bin/console daily              – wszystko powyżej (zadanie codzienne)
+ *   php bin/console migrate            - utworzenie/aktualizacja tabel
+ *   php bin/console import [od]        - import ogłoszeń BZP i TED (od: 'Y-m-d H:i:s' UTC) i dopasowanie do profili
+ *   php bin/console uokik:sync [lata]  - pobranie decyzji UOKiK o zatorach płatniczych
+ *   php bin/console uokik:import pliki.html… - wgranie zapisanych stron listy decyzji (gdy rejestr blokuje serwer)
+ *   php bin/console watchlist          - odświeżenie obserwowanych kontrahentów (alerty o zmianach)
+ *   php bin/console daily              - wszystko powyżej (zadanie codzienne)
  *   php bin/console user:create e-mail hasło "Nazwa firmy" [NIP]
- *   php bin/console demo:seed          – konto demonstracyjne z przykładowymi danymi (tylko środowisko dev/test)
+ *   php bin/console demo:seed          - konto demonstracyjne z przykładowymi danymi (tylko środowisko dev/test)
  */
 
 declare(strict_types=1);
@@ -56,7 +56,7 @@ try {
             $res = App\Http\CronController::daily();
             $out($res);
             if (!empty($res['import']['errors'])) {
-                fwrite(STDERR, "Import zakończył się z błędami – szczegóły powyżej.\n");
+                fwrite(STDERR, "Import zakończył się z błędami - szczegóły powyżej.\n");
                 exit(2);
             }
             break;

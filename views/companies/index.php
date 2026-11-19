@@ -31,7 +31,7 @@
           <tr>
             <td><a class="t-title" href="/kontrahenci/<?= e($w['nip']) ?>"><?= e($w['name'] ?: 'NIP ' . $w['nip']) ?></a><div class="t-sub">NIP <?= e(App\Core\Nip::format($w['nip'])) ?><?= $w['note'] ? ' · ' . e($w['note']) : '' ?></div></td>
             <td><?= risk_chip($w['risk_score'] !== null ? (int) $w['risk_score'] : null) ?></td>
-            <td class="n"><?= (int) $w['open_invoices'] ?: '<span class="muted">—</span>' ?></td>
+            <td class="n"><?= (int) $w['open_invoices'] ?: '<span class="muted">-</span>' ?></td>
             <td class="nowrap small muted"><?= e(local_dt($w['refreshed_at'], 'd.m H:i')) ?></td>
           </tr>
         <?php endforeach ?>

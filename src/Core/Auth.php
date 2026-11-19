@@ -48,7 +48,7 @@ final class Auth
         return self::user() !== null;
     }
 
-    /** Administrator platformy (zmienna ADMIN_EMAILS) – np. ręczne wgrywanie decyzji UOKiK. */
+    /** Administrator platformy (zmienna ADMIN_EMAILS) - np. ręczne wgrywanie decyzji UOKiK. */
     public static function isAdmin(): bool
     {
         $email = mb_strtolower((string) (self::user()['email'] ?? ''));

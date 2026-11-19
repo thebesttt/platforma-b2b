@@ -98,7 +98,7 @@ final class BzpNoticeParser
                 $criteria[$last]['weight'] = preg_match('/^\s*(\d+(?:[.,]\d+)?)/', $f['value'], $wm) ? (float) str_replace(',', '.', $wm[1]) : null;
             }
         }
-        // Przy kilku częściach kryteria się powtarzają – zostawiamy unikalne nazwy.
+        // Przy kilku częściach kryteria się powtarzają - zostawiamy unikalne nazwy.
         $seen = [];
         $criteria = array_values(array_filter($criteria, static function ($c) use (&$seen) {
             $k = mb_strtolower($c['name']);
@@ -183,7 +183,7 @@ final class BzpNoticeParser
             'submission_place' => self::oneLine($first('8.2')),
             'opening' => self::dateTime($first('8.3')),
             'binding_until' => preg_match('/(\d{4}-\d{2}-\d{2})/', $first('8.4'), $m) ? $m[1] : null,
-            // Pełna treść w punktach – dla analizy AI i wyszukiwania.
+            // Pełna treść w punktach - dla analizy AI i wyszukiwania.
             'text' => mb_substr(implode("\n", array_map(
                 static fn ($f) => $f['code'] . ') ' . $f['label'] . ($f['value'] !== '' ? ': ' . $f['value'] : ''),
                 array_filter($fields, static fn ($f) => !in_array($f['code'], ['3.6', '3.15', '3.16'], true))

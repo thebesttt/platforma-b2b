@@ -36,7 +36,7 @@ final class Importer
                     }
                 }
                 if ($bzp->failedRequests > 0) {
-                    $errors[] = 'BZP: serwer nie odpowiedział na ' . $bzp->failedRequests . ' ' . plural($bzp->failedRequests, 'zapytanie', 'zapytania', 'zapytań') . ' – brakujące ogłoszenia pobierzemy przy następnym imporcie.';
+                    $errors[] = 'BZP: serwer nie odpowiedział na ' . $bzp->failedRequests . ' ' . plural($bzp->failedRequests, 'zapytanie', 'zapytania', 'zapytań') . ' - brakujące ogłoszenia pobierzemy przy następnym imporcie.';
                 }
                 if ($bzp->continueFrom === null || $bzp->continueFrom <= $from || $bzp->failedRequests > 0) {
                     break;

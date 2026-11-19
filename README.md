@@ -9,20 +9,20 @@ Aplikacja SaaS dla małych i średnich firm, które startują w zamówieniach pu
 | Przetargi | Codzienny import ogłoszeń i dopasowanie do profili firmy (CPV, słowa kluczowe, województwa, wartość) z uzasadnieniem oceny. Karta przetargu pokazuje wadium, kryteria, terminy i warunki z treści ogłoszenia, każdy punkt ze wskazaniem źródła. Terminy można dodać do kalendarza (.ics). | BZP (API e-Zamówień), TED API v3 |
 | Analiza SWZ (AI) | Wgrywasz SWZ, OPZ i wzór umowy (PDF, DOCX, TXT). AI wypisuje warunki udziału, kary, płatności i ryzyka ze wskazaniem rozdziału. Odpowiada też na pytania do dokumentacji. | Dokumenty użytkownika, Claude API |
 | Oferty i wnioski | Szkic oferty: formularz, sposób realizacji, doświadczenie, zespół i lista dokumentów, z danych ogłoszenia i biblioteki firmy. Wnioski o dotacje mają osobne sekcje i korzystają z regulaminu naboru. Zdania bez źródła są oznaczone ⟦sprawdź⟧. Eksport do .docx. | Ogłoszenie, SWZ, regulamin, biblioteka firmy |
-| Kontrahenci | Karta firmy po NIP z oceną ryzyka płatniczego 0–100 i listą sygnałów. Firmę można obserwować, a zmiany w rejestrach wywołują alerty. Przy należnościach są wezwanie do zapłaty (.docx) i lista warunków wpisu do BIG. | Biała lista VAT, KRS, rejestr decyzji UOKiK (zatory płatnicze) |
+| Kontrahenci | Karta firmy po NIP z oceną ryzyka płatniczego 0-100 i listą sygnałów. Firmę można obserwować, a zmiany w rejestrach wywołują alerty. Przy należnościach są wezwanie do zapłaty (.docx) i lista warunków wpisu do BIG. | Biała lista VAT, KRS, rejestr decyzji UOKiK (zatory płatnicze) |
 | Klienci i wiadomości | Kontakty z zapisaną podstawą kontaktu, szkice wiadomości (regułowe lub AI z treści strony odbiorcy) oraz ocena ryzyka prawnego przy każdym rodzaju wiadomości. Przy ryzyku wysokim użytkownik musi świadomie je potwierdzić, a potwierdzenie trafia do historii. Wysyłka idzie z własnej skrzynki użytkownika (mailto lub .eml). | Dane użytkownika |
 | Audyt strony | Bezpieczeństwo, szybkość serwera, SEO techniczne, analityka i RODO. Możesz zestawić swoją stronę z konkurentami. To ten sam silnik co w PrestaCheck (`lib/prestacheck`). | Publiczne strony, opcjonalnie Google PageSpeed |
-| Reklamy | Ekran informacyjny. Integracja z Google Ads i Meta czeka na zatwierdzenie dostępu do API. | – |
+| Reklamy | Ekran informacyjny. Integracja z Google Ads i Meta czeka na zatwierdzenie dostępu do API. | - |
 
 ### Zasady wbudowane w produkt
 
-- **Wiadomości.** Platforma pokazuje ryzyko prawne każdego rodzaju wiadomości. Podstawą jest art. 398 Prawa komunikacji elektronicznej, kary to art. 444 i 448. Decyzję podejmuje klient.
+- **Wiadomości.** Platforma pokazuje ryzyko prawne każdego rodzaju wiadomości. Podstawą jest art. 398 Prawa komunikacji elektronicznej. Kary wynikają z art. 444 ust. 1 pkt 81 i art. 446 ust. 5 (do 3% przychodu albo 1 mln zł) oraz z art. 448 (wykroczenie). Decyzję podejmuje klient.
   - Przy ryzyku wysokim wymagamy potwierdzenia. Zapisujemy wtedy, kto potwierdził, kiedy, z jakiego IP i jakim tekstem (`messages.ack_*` i `audit_log`).
   - Jedyna twarda blokada dotyczy kontaktu, który zgłosił sprzeciw (art. 21 RODO). Takiemu kontaktowi nie da się wysłać ofert ani próśb o zgodę.
-- **Należności.** Długi zgłoszone przez użytkownika są widoczne tylko dla jego firmy. Platforma nie udostępnia ich innym użytkownikom, bo zakazuje tego ustawa o udostępnianiu informacji gospodarczych. Wpisu do BIG dokonuje się u biura, a aplikacja sprawdza tylko warunki z art. 14:
+- **Należności.** Długi zgłoszone przez użytkownika są widoczne tylko dla jego firmy. Platforma nie udostępnia ich innym użytkownikom, bo zakazuje tego ustawa o udostępnianiu informacji gospodarczych. Wpisu do BIG dokonuje się u biura, a aplikacja sprawdza tylko warunki z art. 15 (dłużnik niebędący konsumentem; art. 14 dotyczy konsumentów):
   - co najmniej 500 zł,
-  - co najmniej 30 dni po terminie,
-  - wezwanie wysłane co najmniej miesiąc wcześniej, z nazwą i adresem biura.
+  - wymagalne od co najmniej 30 dni,
+  - wezwanie wysłane co najmniej miesiąc wcześniej, z firmą i adresem biura oraz pouczeniem o prawie do sprzeciwu (art. 15a).
 - **AI.** Model pisze wyłącznie z podanych materiałów. Każdy punkt analizy ma źródło, a zdania bez źródła są oznaczone do sprawdzenia. Bez klucza `ANTHROPIC_API_KEY` działa analiza regułowa, a przyciski AI są nieaktywne.
 
 ## Technologia
@@ -71,12 +71,16 @@ Bez dostępu do sieci można pracować na zapisanych odpowiedziach API. Wtedy do
    - `APP_URL` (adres usługi),
    - `ANTHROPIC_API_KEY` (funkcje AI),
    - opcjonalnie `PSI_KEY` (PageSpeed) i `APP_NAME`.
-3. Po pierwszym wdrożeniu załóż konto przez `/rejestracja`. Jeśli wolisz zamknąć rejestrację, ustaw `SIGNUP_OPEN=0` i dodaj konto poleceniem `php bin/console user:create` w zakładce Shell.
+   - `ADMIN_EMAILS` (Twój e-mail: test połączenia z AI i ręczna aktualizacja decyzji UOKiK w Ustawieniach).
+3. Załóż pierwsze konto. Rejestracja jest domyślnie zamknięta (`SIGNUP_OPEN=0`), a Render generuje kod zaproszenia `SIGNUP_CODE`. Odczytaj go w zakładce Environment i otwórz `/rejestracja?kod=<kod>`. Ten sam link wyślesz firmom z pilotażu. Otwartą rejestrację (`SIGNUP_OPEN=1`) włącz dopiero, gdy będą regulamin i polityka prywatności (`TERMS_URL`, `PRIVACY_URL`).
 4. Włącz codzienny import w GitHub: **Settings → Secrets and variables → Actions**. Wybierz jeden wariant:
    - `DATABASE_URL`: zewnętrzny adres bazy z Render („External Database URL”). Import działa wtedy w GitHub Actions. Ten wariant jest zalecany.
-   - `APP_URL` i `CRON_TOKEN` (wartość z Render). Workflow wywoła wtedy `POST /cron/run`.
+   - `APP_URL` i `CRON_TOKEN` (wartość z Render). Workflow wywoła wtedy `POST /cron/run` z nagłówkiem `X-Cron-Token`.
+   Nieudany import kończy zadanie błędem, a GitHub wysyła o tym e-mail.
 
-Darmowa baza PostgreSQL na Render ma ograniczony czas życia. Przed pierwszymi klientami przejdź na płatny plan albo podłącz bazę z Neon (`DATABASE_URL=postgres://…?sslmode=require`). Darmowa instancja aplikacji usypia po okresie bezczynności, więc pierwsze wejście trwa dłużej.
+Bez zmiennej `DATABASE_URL` aplikacja na serwerze nie wystartuje. To celowe: zapis do pliku w kontenerze znikałby przy każdym wdrożeniu.
+
+Darmowa baza PostgreSQL na Render wygasa po 30 dniach. Przed pierwszymi klientami przejdź na płatny plan albo podłącz bazę z Neon (`DATABASE_URL=postgres://…?sslmode=require`). Darmowa instancja aplikacji usypia po okresie bezczynności, więc pierwsze wejście trwa dłużej.
 
 ### Zmienne środowiskowe
 
@@ -85,10 +89,11 @@ Darmowa baza PostgreSQL na Render ma ograniczony czas życia. Przed pierwszymi k
 | `DATABASE_URL` | `postgres://user:haslo@host:5432/baza` (opcjonalnie `?sslmode=require`). Pusta oznacza SQLite. |
 | `APP_SECRET` | Losowy sekret (Render generuje go sam). |
 | `APP_NAME`, `APP_URL` | Nazwa produktu i adres publiczny. |
-| `ANTHROPIC_API_KEY`, `AI_MODEL` | Claude API, domyślnie `claude-sonnet-5-5`. `AI_MAX_INPUT_CHARS` ogranicza długość dokumentacji wysyłanej do modelu. |
-| `CRON_TOKEN` | Token do `/cron/run`, przekazywany w nagłówku `Authorization: Bearer …`. |
+| `ANTHROPIC_API_KEY`, `AI_MODEL` | Claude API, domyślnie `claude-sonnet-5-5`. `AI_MAX_INPUT_CHARS` ogranicza długość dokumentacji wysyłanej do modelu (domyślnie 300 000 znaków). Dokumentacja idzie jako blok z pamięcią podręczną, więc kolejne pytania o ten sam przetarg są tańsze. Zużycie tokenów trafia do `audit_log` (`ai.call`). |
+| `CRON_TOKEN` | Token do `/cron/run`, przekazywany w nagłówku `X-Cron-Token`. |
 | `PSI_KEY` | Klucz Google PageSpeed Insights (audyt szybkości). |
-| `SIGNUP_OPEN` | `1` oznacza otwartą rejestrację, `0` zamkniętą. |
+| `SIGNUP_OPEN`, `SIGNUP_CODE` | `SIGNUP_OPEN=0` (domyślnie): konto tylko z linku `/rejestracja?kod=<SIGNUP_CODE>`. `SIGNUP_OPEN=1`: rejestracja otwarta. |
+| `TERMS_URL`, `PRIVACY_URL` | Adresy regulaminu i polityki prywatności, linkowane przy rejestracji. |
 | `UPLOAD_MAX_MB` | Limit rozmiaru dokumentu, domyślnie 15. |
 | `ADMIN_EMAILS` | E-maile administratorów platformy, rozdzielone przecinkami. Dają dostęp do ręcznej aktualizacji decyzji UOKiK. |
 
@@ -114,13 +119,27 @@ Docelowym rozwiązaniem może być mały serwer pośredniczący w Polsce.
 ## Testy
 
 ```bash
-php tests/run.php                                           # 41 testów, SQLite, bez sieci
+php tests/run.php                                           # 60 testów, SQLite, bez sieci
 TEST_DATABASE_URL=postgres://… php tests/run.php            # te same testy na PostgreSQL
 php tests/live_contract.php                                 # prawdziwe API: BZP, TED, VAT, KRS, UOKiK
 sh tests/smoke.sh http://localhost:10000                    # test dymny działającej instancji
 ```
 
-Workflow `ci.yml` uruchamia testy na SQLite i PostgreSQL oraz buduje obraz Docker i robi test dymny kontenera z bazą. Workflow `live-api.yml` co tydzień sprawdza, czy publiczne API nie zmieniły formatu.
+Testy obejmują m.in. próbę wstrzyknięcia HTML w każdym polu na każdej stronie, wszystkie akcje zapisu i izolację danych między firmami.
+
+Workflowy w GitHub Actions:
+
+- `ci.yml`: testy na SQLite i PostgreSQL, budowa obrazu Docker i test dymny kontenera z bazą (nagłówki, pliki statyczne, rejestracja z kodem, zapis formularza, zadania cykliczne).
+- `rehearsal.yml` (na żądanie): próba generalna na prawdziwych danych. Pełny import z BZP i TED do PostgreSQL, dopasowanie do przykładowych profili, parser na 40 losowych ogłoszeniach, strony aplikacji i szkice ofert na prawdziwych ogłoszeniach, karty prawdziwych firm.
+- `live-api.yml` (co tydzień): czy publiczne API nie zmieniły formatu.
+- `daily.yml`: codzienny import.
+
+## Ograniczenia, o których warto wiedzieć
+
+- **Biała lista VAT** ma dzienny limit zapytań na adres serwera. Dlatego obserwowane firmy odświeżamy zapytaniami zbiorczymi (30 firm naraz), a jedna firma może sprawdzić 40 nowych kontrahentów dziennie.
+- **Firmy spoza wykazu VAT** (zwolnione z VAT, część jednostek publicznych) nie mają karty, bo nie mamy skąd pobrać danych. Rozwiązaniem będzie integracja z CEIDG.
+- **Wysyłka e-maili.** Platforma nie wysyła jeszcze żadnych e-maili: nie ma resetu hasła ani powiadomień. Hasło zmienia się w Ustawieniach.
+- **Funkcje AI** są przetestowane na zapisanych odpowiedziach w formacie API. Pierwsze prawdziwe zapytanie warto wykonać przyciskiem „Sprawdź połączenie z AI” w Ustawieniach (dla `ADMIN_EMAILS`).
 
 ## Plan rozwoju
 

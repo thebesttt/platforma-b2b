@@ -14,7 +14,7 @@ $lvl = ['high' => ['high', 'wysokie'], 'mid' => ['mid', 'średnie'], 'low' => ['
     <?php if ($match): ?><span class="chip <?= score_class((int) $match['score']) ?>">Dopasowanie <?= (int) $match['score'] ?>/100</span><?php endif ?>
     <span class="chip neutral"><?= e(strtoupper((string) $tender['source'])) ?><?= !empty($d['procedure']) ? ' · ' . e(mb_strtolower(truncate((string) $d['procedure'], 40))) : '' ?></span>
     <?php if ($tender['deadline_at']): ?>
-      <span class="chip <?= !$open ? 'neutral' : ($days < 5 ? 'high' : 'mid') ?>">Składanie ofert: <?= e(local_dt($tender['deadline_at'], 'd.m, H:i')) ?><?= $open ? ' (za ' . max(0, (int) $days) . ' ' . plural(max(0, (int) $days), 'dzień', 'dni', 'dni') . ')' : ' – termin minął' ?></span>
+      <span class="chip <?= !$open ? 'neutral' : ($days < 5 ? 'high' : 'mid') ?>">Składanie ofert: <?= e(local_dt($tender['deadline_at'], 'd.m, H:i')) ?><?= $open ? ' (za ' . max(0, (int) $days) . ' ' . plural(max(0, (int) $days), 'dzień', 'dni', 'dni') . ')' : ' - termin minął' ?></span>
     <?php endif ?>
   </div>
   <h1><?= e($tender['title']) ?></h1>
@@ -76,7 +76,7 @@ $lvl = ['high' => ['high', 'wysokie'], 'mid' => ['mid', 'średnie'], 'low' => ['
         <?php endif ?>
         <p class="muted xs" style="margin:12px 0 0">AI może się mylić. Przed złożeniem oferty sprawdź każdy punkt we wskazanym miejscu dokumentacji.</p>
       <?php else: ?>
-        <p class="muted small">Wgraj SWZ, opis przedmiotu zamówienia i wzór umowy (sekcja „Dokumenty”). AI wypisze warunki udziału, kryteria, kary umowne, warunki płatności i ryzyka – każdy punkt ze wskazaniem rozdziału.</p>
+        <p class="muted small">Wgraj SWZ, opis przedmiotu zamówienia i wzór umowy (sekcja „Dokumenty”). AI wypisze warunki udziału, kryteria, kary umowne, warunki płatności i ryzyka - każdy punkt ze wskazaniem rozdziału.</p>
       <?php endif ?>
       <form method="post" action="/przetargi/<?= (int) $tender['id'] ?>/analiza" class="no-print" style="margin-top:12px">
         <?= csrf_field() ?>

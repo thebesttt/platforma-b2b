@@ -21,7 +21,7 @@
           <td class="small">
             <?php if ($p['cpv']): ?><div>CPV: <?= e($p['cpv']) ?></div><?php endif ?>
             <?php if (trim((string) $p['keywords'])): ?><div>Słowa: <?= e(truncate(str_replace(["\r\n", "\n"], ', ', (string) $p['keywords']), 90)) ?></div><?php endif ?>
-            <div class="muted"><?= $regions ? e(implode(', ', array_map([Regions::class, 'name'], $regions))) : 'Cała Polska' ?><?= ($p['min_value'] || $p['max_value']) ? ' · ' . e(($p['min_value'] ? short_money($p['min_value']) : '0') . '–' . ($p['max_value'] ? short_money($p['max_value']) : 'bez limitu')) : '' ?></div>
+            <div class="muted"><?= $regions ? e(implode(', ', array_map([Regions::class, 'name'], $regions))) : 'Cała Polska' ?><?= ($p['min_value'] || $p['max_value']) ? ' · ' . e(($p['min_value'] ? short_money($p['min_value']) : '0') . '-' . ($p['max_value'] ? short_money($p['max_value']) : 'bez limitu')) : '' ?></div>
           </td>
           <td class="n"><a href="/przetargi?profil=<?= (int) $p['id'] ?>"><?= (int) $p['matches'] ?></a></td>
           <td><?= $p['active'] ? '<span class="chip low">aktywny</span>' : '<span class="chip neutral">wstrzymany</span>' ?></td>

@@ -34,7 +34,7 @@ return [
         ok(str_contains($t['cpv_all'], '45233000'));
         eq('2026-12-02 09:00:00', $t['deadline_at']);
     },
-    'TED: normalizacja – tytuł, NIP z prefiksem, termin, wartość' => function () use ($fx) {
+    'TED: normalizacja - tytuł, NIP z prefiksem, termin, wartość' => function () use ($fx) {
         $j = json_decode((string) file_get_contents($fx . 'ted_search_p1.json'), true);
         $a = TedClient::normalize($j['notices'][0]);
         $b = TedClient::normalize($j['notices'][1]);

@@ -6,7 +6,7 @@ namespace App\Core;
 
 final class App
 {
-    /** Bieżące zapytanie – dla widoków (aktywna pozycja menu). */
+    /** Bieżące zapytanie - dla widoków (aktywna pozycja menu). */
     public static ?Request $request = null;
 
     public static function router(): Router

@@ -58,8 +58,8 @@ $profile = $profiles[0] ?? null;
               <div class="t-sub"><?= e($m['buyer_name']) ?> · <?= e(strtoupper((string) $m['source'])) ?><?= $m['order_type'] ? ' · ' . e(Tenders::orderTypeLabel($m['order_type'])) : '' ?></div>
               <?php if ($reasons): ?><div class="t-sub">Dlaczego: <?= e(implode(' · ', array_slice($reasons, 0, 3))) ?></div><?php endif ?>
             </td>
-            <td class="n"><?= $m['value_estimated'] ? e(short_money($m['value_estimated'])) : '<span class="muted">—</span>' ?></td>
-            <td class="nowrap"><?= $m['deadline_at'] ? e(local_dt($m['deadline_at'], 'd.m, H:i')) : '<span class="muted">—</span>' ?></td>
+            <td class="n"><?= $m['value_estimated'] ? e(short_money($m['value_estimated'])) : '<span class="muted">-</span>' ?></td>
+            <td class="nowrap"><?= $m['deadline_at'] ? e(local_dt($m['deadline_at'], 'd.m, H:i')) : '<span class="muted">-</span>' ?></td>
             <td><?= $m['buyer_risk'] !== null ? risk_chip((int) $m['buyer_risk']) : '<span class="chip neutral">Nie sprawdzono</span>' ?></td>
           </tr>
         <?php endforeach ?>

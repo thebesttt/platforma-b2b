@@ -9,11 +9,11 @@ use App\Core\Nip;
 
 /**
  * Należności od kontrahentów: przeterminowanie, wezwanie do zapłaty i warunki wpisu do biura informacji gospodarczej (BIG).
- * Dane o długach zgłoszone przez użytkownika NIE są pokazywane innym użytkownikom platformy – do BIG (np. KRD)
+ * Dane o długach zgłoszone przez użytkownika NIE są pokazywane innym użytkownikom platformy - do BIG (np. KRD)
  * przekazuje je sam wierzyciel, po spełnieniu warunków ustawy o udostępnianiu informacji gospodarczych.
  *
- * Podstawa: art. 15 ust. 1 (dłużnik niebędący konsumentem) – co najmniej 500 zł, wymagalne od co najmniej 30 dni,
- * co najmniej miesiąc od wysłania wezwania z ostrzeżeniem (firma i adres biura); art. 15a ust. 2 – wezwanie
+ * Podstawa: art. 15 ust. 1 (dłużnik niebędący konsumentem) - co najmniej 500 zł, wymagalne od co najmniej 30 dni,
+ * co najmniej miesiąc od wysłania wezwania z ostrzeżeniem (firma i adres biura); art. 15a ust. 2 - wezwanie
  * informuje o możliwości zgłoszenia sprzeciwu. Art. 14 dotyczy konsumentów (próg 200 zł) i tu nie ma zastosowania.
  */
 final class Receivables
@@ -81,7 +81,7 @@ final class Receivables
     {
         $amount = money_pl((float) $r['amount']);
         $bureau = trim((string) ($r['demand_bureau'] ?? ''));
-        $title = 'Wezwanie do zapłaty – faktura ' . $r['invoice_no'];
+        $title = 'Wezwanie do zapłaty - faktura ' . $r['invoice_no'];
         $creditor = ($org['name'] ?? '') . (!empty($org['nip']) ? ', NIP ' . Nip::format((string) $org['nip']) : '') . (!empty($org['address']) ? ', ' . $org['address'] : '');
         $debtor = ($company['name'] ?? '') . ', NIP ' . Nip::format((string) $company['nip']) . (!empty($company['address']) ? ', ' . $company['address'] : '');
         $lines = [

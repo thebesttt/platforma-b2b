@@ -30,7 +30,7 @@ final class Companies
     {
         $nip = Nip::clean($nip);
         if (!Nip::valid($nip)) {
-            return ['ok' => false, 'error' => 'Numer NIP jest nieprawidłowy – sprawdź cyfry.'];
+            return ['ok' => false, 'error' => 'Numer NIP jest nieprawidłowy - sprawdź cyfry.'];
         }
         $existing = self::byNip($nip);
         if ($existing && !$force && $existing['refreshed_at'] && strtotime($existing['refreshed_at'] . ' UTC') > time() - self::FRESH_FOR) {
@@ -122,7 +122,7 @@ final class Companies
             $out[] = 'Zmiana statusu VAT: ' . ($old['vat'] ?? 'brak') . ' → ' . ($new['vat'] ?? 'brak');
         }
         if (($old['accounts'] ?? null) !== ($new['accounts'] ?? null)) {
-            $out[] = 'Zmiana rachunków bankowych na białej liście VAT – potwierdź numer konta przed przelewem';
+            $out[] = 'Zmiana rachunków bankowych na białej liście VAT - potwierdź numer konta przed przelewem';
         }
         if (($old['board'] ?? null) !== ($new['board'] ?? null) && $old['board'] !== null) {
             $out[] = 'Zmiana składu zarządu w KRS';
@@ -179,7 +179,7 @@ final class Companies
             $pre = $wl[$r['nip']] ?? null;
             if ($pre && !$pre['ok']) {
                 $failed++;
-                continue; // rejestr niedostępny – zostawiamy dotychczasowe dane, spróbujemy jutro
+                continue; // rejestr niedostępny - zostawiamy dotychczasowe dane, spróbujemy jutro
             }
             $res = self::lookup($r['nip'], true, $pre);
             $done++;

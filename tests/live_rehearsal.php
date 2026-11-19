@@ -3,7 +3,7 @@
  * Próba generalna na prawdziwych danych: php tests/live_rehearsal.php
  * Pełny import z BZP i TED do bazy (DATABASE_URL), dopasowanie do przykładowych profili, parser na losowych
  * ogłoszeniach, karty prawdziwych firm (biała lista VAT, KRS). Wypisuje raport liczbowy i przykłady do oceny.
- * Uruchamiana w GitHub Actions – kontener deweloperski nie ma dostępu do tych serwisów.
+ * Uruchamiana w GitHub Actions - kontener deweloperski nie ma dostępu do tych serwisów.
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ $problems = [];
 $h = static function (string $t): void {
     echo "\n=== $t ===\n";
 };
-$pct = static fn (int $a, int $b) => $b ? round(100 * $a / $b) . '%' : '–';
+$pct = static fn (int $a, int $b) => $b ? round(100 * $a / $b) . '%' : '-';
 
 // 1. Import
 $h('1. Import ogłoszeń z ostatnich 2 dni (BZP + TED)');
@@ -74,11 +74,11 @@ $h('2. Dopasowanie do przykładowych profili');
 $reg = Auth::register('Firma próbna', '', 'Próba', 'proba@example.com', 'haslo-probne-123');
 $org = (int) $db->val('SELECT org_id FROM users WHERE id = ?', [$reg['user_id']]);
 $profiles = [
-    ['Roboty drogowe – Mazowsze i Łódzkie', '45233', "drog\nchodnik\nnawierzchni", 'mazowieckie lodzkie', 'works'],
-    ['Usługi IT – cała Polska', '72 48', "oprogramowani\nsystem informatyczn\nwdrożeni", '', ''],
+    ['Roboty drogowe - Mazowsze i Łódzkie', '45233', "drog\nchodnik\nnawierzchni", 'mazowieckie lodzkie', 'works'],
+    ['Usługi IT - cała Polska', '72 48', "oprogramowani\nsystem informatyczn\nwdrożeni", '', ''],
     ['Sprzątanie i utrzymanie czystości', '909', "sprzątani\nutrzymanie czystości", '', 'services'],
-    ['Sprzęt medyczny – dostawy', '331', "sprzęt medyczn\naparatur", '', 'supplies'],
-    ['Remonty budynków – Śląsk i Małopolska', '4545 4521', "remont\ntermomodernizac", 'slaskie malopolskie', 'works'],
+    ['Sprzęt medyczny - dostawy', '331', "sprzęt medyczn\naparatur", '', 'supplies'],
+    ['Remonty budynków - Śląsk i Małopolska', '4545 4521', "remont\ntermomodernizac", 'slaskie malopolskie', 'works'],
 ];
 foreach ($profiles as [$name, $cpv, $kw, $woj, $types]) {
     $pid = $db->insert('tender_profiles', ['org_id' => $org, 'name' => $name, 'cpv' => $cpv, 'keywords' => $kw, 'exclude_keywords' => '', 'voivodeships' => $woj,
@@ -97,7 +97,14 @@ foreach ($profiles as [$name, $cpv, $kw, $woj, $types]) {
 
 // 3. Parser treści ogłoszeń BZP
 $h('3. Parser treści ogłoszeń BZP (40 losowych)');
-$sample = $db->all("SELECT * FROM tenders WHERE source = 'bzp' ORDER BY " . ($db->driver() === 'pgsql' ? 'RANDOM()' : 'RANDOM()') . ' LIMIT 40');
+foreach ($db->all("SELECT notice_type, COUNT(*) AS n FROM tenders WHERE source = 'bzp' GROUP BY notice_type ORDER BY n DESC") as $row) {
+    echo '  rodzaj ogłoszenia ' . ($row['notice_type'] ?: '(brak)') . ': ' . $row['n'] . "\n";
+}
+// Losowa próba 34 ogłoszeń plus do 6 ogłoszeń o małej wartości (inny formularz) i ogłoszenie, które wcześniej się nie sparsowało.
+$sample = array_merge(
+    $db->all("SELECT * FROM tenders WHERE source = 'bzp' AND notice_type = 'ContractNotice' ORDER BY RANDOM() LIMIT 34"),
+    $db->all("SELECT * FROM tenders WHERE source = 'bzp' AND (notice_type <> 'ContractNotice' OR external_id = '08df4562-cba9-a534-c1c5-d50001945059') ORDER BY RANDOM() LIMIT 6")
+);
 $c = ['ok' => 0, 'deadline' => 0, 'criteria' => 0, 'wadium' => 0, 'conditions' => 0, 'docs_url' => 0, 'nip' => 0, 'period' => 0, 'desc' => 0, 'weights100' => 0];
 $bad = [];
 foreach ($sample as $t) {
@@ -164,7 +171,7 @@ foreach ($nips as $nip) {
     $co = $r['company'];
     $s = json_in($co['signals_json']);
     $levels[] = $s['risk']['level'] ?? '?';
-    echo '  ' . truncate((string) $co['name'], 60) . ' | KRS ' . ($co['krs'] ?: '–') . ' | ryzyko ' . $co['risk_score'] . ' (' . ($s['risk']['label'] ?? '') . ') | '
+    echo '  ' . truncate((string) $co['name'], 60) . ' | KRS ' . ($co['krs'] ?: '-') . ' | ryzyko ' . $co['risk_score'] . ' (' . ($s['risk']['label'] ?? '') . ') | '
         . implode('; ', array_map(static fn ($x) => $x['title'], array_filter($s['risk']['signals'] ?? [], static fn ($x) => $x['level'] !== 'none'))) . "\n";
     if (!empty($co['krs'])) {
         $raw = Registries::krs((string) $co['krs']);
@@ -176,7 +183,7 @@ foreach ($nips as $nip) {
 $high = count(array_filter($levels, static fn ($l) => $l === 'high'));
 echo "Firm sprawdzonych: " . count($levels) . ", z wysokim ryzykiem: $high\n";
 if (count($levels) >= 5 && $high > count($levels) / 2) {
-    $problems[] = 'Ponad połowa losowych zamawiających ma wysokie ryzyko – ocena jest prawdopodobnie zbyt surowa (fałszywe sygnały).';
+    $problems[] = 'Ponad połowa losowych zamawiających ma wysokie ryzyko - ocena jest prawdopodobnie zbyt surowa (fałszywe sygnały).';
 }
 
 // 5. Zapytanie zbiorcze do białej listy
@@ -188,7 +195,7 @@ foreach ($many as $nip => $x) {
     echo "  $nip: " . ($x['ok'] ? ($x['subject'] ? truncate((string) $x['subject']['name'], 50) . ' | ' . ($x['subject']['statusVat'] ?? '') . ' | kont: ' . ($x['subject']['accountCount'] ?? 0) : 'brak w wykazie') : $x['error']) . "\n";
 }
 if (count($many) >= 3 && $found === 0) {
-    $problems[] = 'Zapytanie zbiorcze do białej listy nie zwróciło żadnej firmy – sprawdź format odpowiedzi.';
+    $problems[] = 'Zapytanie zbiorcze do białej listy nie zwróciło żadnej firmy - sprawdź format odpowiedzi.';
 }
 
 // 5b. Strony aplikacji na prawdziwych danych (pełna ścieżka: kontroler + widok)

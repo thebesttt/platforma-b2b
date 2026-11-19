@@ -8,7 +8,7 @@ use App\Modules\Outreach\RiskPolicy;
 use App\Modules\Tenders\Importer;
 
 return [
-    'Szkic oferty z ogłoszenia i biblioteki – znaczniki źródeł' => function () {
+    'Szkic oferty z ogłoszenia i biblioteki - znaczniki źródeł' => function () {
         [$org, $uid] = make_org();
         import_fixtures();
         Db::get()->insert('library_items', ['org_id' => $org, 'kind' => 'reference', 'title' => 'Przebudowa drogi gminnej w Przykładowie', 'body' => 'Roboty drogowe z chodnikiem', 'meta_json' => json_out(['client' => 'Gmina Przykładowo', 'value' => 1800000, 'finished' => '09.2025']), 'created_at' => now_utc(), 'updated_at' => now_utc()]);

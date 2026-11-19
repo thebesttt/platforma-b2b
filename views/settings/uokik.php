@@ -4,7 +4,7 @@
   <h1>Decyzje UOKiK o zatorach płatniczych</h1>
   <p class="muted small">W bazie: <?= (int) $stats['n'] ?> <?= plural((int) $stats['n'], 'decyzja', 'decyzje', 'decyzji') ?><?= $stats['latest'] ? ', najnowsza z ' . e(date('d.m.Y', strtotime($stats['latest']))) : '' ?>. Ostatnia aktualizacja: <?= $last ? e(local_dt($last)) : 'brak' ?>.</p>
 </header>
-<div class="notice mid">Rejestr decyzji UOKiK nie przyjmuje połączeń z części serwerów poza Polską. Jeśli automatyczna aktualizacja nie działa, wgraj listy ręcznie – zajmuje to minutę raz w tygodniu.</div>
+<div class="notice mid">Rejestr decyzji UOKiK nie przyjmuje połączeń z części serwerów poza Polską. Jeśli automatyczna aktualizacja nie działa, wgraj listy ręcznie - zajmuje to minutę raz w tygodniu.</div>
 <section class="card stack-sm">
   <h2>Jak wgrać listę</h2>
   <ol class="law">

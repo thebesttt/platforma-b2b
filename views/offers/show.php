@@ -45,7 +45,7 @@ $deadline = $tender['deadline_at'] ?? $offer['deadline_at'];
       <?php if ($documents): ?>
         <ul class="list-plain"><?php foreach ($documents as $d): ?><li class="xs"><?= e($d['filename']) ?></li><?php endforeach ?></ul>
       <?php else: ?>
-        <p class="xs muted" style="margin:0"><?= $isGrant ? 'Wgraj regulamin naboru i kryteria oceny.' : ($tender ? 'Brak wgranych dokumentów SWZ – AI użyje treści ogłoszenia.' : 'Szkic bez przetargu – AI użyje tylko biblioteki.') ?></p>
+        <p class="xs muted" style="margin:0"><?= $isGrant ? 'Wgraj regulamin naboru i kryteria oceny.' : ($tender ? 'Brak wgranych dokumentów SWZ - AI użyje treści ogłoszenia.' : 'Szkic bez przetargu - AI użyje tylko biblioteki.') ?></p>
       <?php endif ?>
       <?php if ($isGrant): ?>
         <form method="post" action="<?= $base ?>/dokumenty" enctype="multipart/form-data" class="stack-sm">
@@ -80,7 +80,7 @@ $deadline = $tender['deadline_at'] ?? $offer['deadline_at'];
           <div class="field">
             <label for="sec-body">Treść</label>
             <textarea id="sec-body" class="doc" name="body" data-markers="marker-count"><?= e($current['body']) ?></textarea>
-            <span class="hint">Znacznik ⟦źródło: …⟧ wskazuje pochodzenie zdania i znika w eksporcie. ⟦sprawdź⟧ oznacza zdanie bez źródła – w pliku Word pojawi się jako [SPRAWDŹ]. <span id="marker-count" class="chip neutral" aria-live="polite"></span></span>
+            <span class="hint">Znacznik ⟦źródło: …⟧ wskazuje pochodzenie zdania i znika w eksporcie. ⟦sprawdź⟧ oznacza zdanie bez źródła - w pliku Word pojawi się jako [SPRAWDŹ]. <span id="marker-count" class="chip neutral" aria-live="polite"></span></span>
           </div>
           <label class="check"><input type="checkbox" name="done" value="1"<?= $current['status'] === 'done' ? ' checked' : '' ?>> Sekcja sprawdzona i gotowa</label>
           <div class="row-flex"><button class="btn" type="submit">Zapisz sekcję</button><a class="btn ghost" href="<?= $base ?>?sekcja=<?= e(rawurlencode($current['key'])) ?>">Anuluj</a></div>

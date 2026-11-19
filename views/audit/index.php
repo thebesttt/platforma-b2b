@@ -34,6 +34,6 @@
       </tbody>
     </table></div>
   <?php else: ?>
-    <div class="empty"><h3>Nie masz jeszcze audytów</h3><p>Sprawdź swoją stronę, a potem 2–3 strony konkurentów, żeby zobaczyć porównanie.</p></div>
+    <div class="empty"><h3>Nie masz jeszcze audytów</h3><p>Sprawdź swoją stronę, a potem 2-3 strony konkurentów, żeby zobaczyć porównanie.</p></div>
   <?php endif ?>
 </section>

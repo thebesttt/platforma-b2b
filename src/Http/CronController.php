@@ -69,7 +69,7 @@ final class CronController
         $lastTry = Kv::get('uokik:last_try');
         if ((!$lastUokik || strtotime((string) $lastUokik . ' UTC') < time() - 6 * 86400)
             && (!$lastTry || strtotime((string) $lastTry . ' UTC') < time() - 6 * 86400)) {
-            // Rejestr UOKiK bywa niedostępny z serwerów poza Polską – to ostrzeżenie, nie błąd całego zadania.
+            // Rejestr UOKiK bywa niedostępny z serwerów poza Polską - to ostrzeżenie, nie błąd całego zadania.
             Kv::set('uokik:last_try', now_utc());
             try {
                 $out['uokik'] = Uokik::sync();
@@ -89,7 +89,7 @@ final class CronController
         $db = Db::get();
         $db->run('DELETE FROM sessions WHERE expires_at < ?', [time()]);
         $db->run('DELETE FROM kv WHERE expires_at IS NOT NULL AND expires_at < ?', [time()]);
-        // Ogłoszenia po terminie starsze niż 120 dni bez ofert użytkowników – usuwamy, żeby baza nie rosła bez końca.
+        // Ogłoszenia po terminie starsze niż 120 dni bez ofert użytkowników - usuwamy, żeby baza nie rosła bez końca.
         $db->run(
             'DELETE FROM tenders WHERE deadline_at < ? AND id NOT IN (SELECT tender_id FROM offers WHERE tender_id IS NOT NULL) AND id NOT IN (SELECT tender_id FROM tender_documents)',
             [gmdate('Y-m-d H:i:s', time() - 120 * 86400)]

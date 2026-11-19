@@ -3,7 +3,7 @@
   <h1>Reklamy Google Ads i Meta</h1>
   <p class="muted small">Prosty panel: budżety, wydatki i wyniki kampanii w jednym miejscu, z możliwością wstrzymania i wznowienia kampanii.</p>
 </header>
-<div class="notice info">Moduł reklam jest w przygotowaniu. Połączenie z kontami reklamowymi wymaga zatwierdzenia platformy przez Google i Meta – do tego czasu podłączanie kont jest wyłączone.</div>
+<div class="notice info">Moduł reklam jest w przygotowaniu. Połączenie z kontami reklamowymi wymaga zatwierdzenia platformy przez Google i Meta - do tego czasu podłączanie kont jest wyłączone.</div>
 <div class="cols">
   <section class="card main stack-sm">
     <h2>Co będzie dostępne</h2>

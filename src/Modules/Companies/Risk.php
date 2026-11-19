@@ -6,7 +6,7 @@ namespace App\Modules\Companies;
 
 /**
  * Ocena ryzyka płatniczego wyłącznie z danych publicznych.
- * Każdy sygnał ma poziom, opis, źródło i wagę. Nie zawiera informacji o długach zgłaszanych przez użytkowników –
+ * Każdy sygnał ma poziom, opis, źródło i wagę. Nie zawiera informacji o długach zgłaszanych przez użytkowników -
  * udostępnianie ich innym to działalność zastrzeżona dla biur informacji gospodarczej.
  */
 final class Risk
@@ -62,7 +62,7 @@ final class Risk
             if (!empty($krs['registered_at'])) {
                 $ageDays = ($now - strtotime($krs['registered_at'])) / 86400;
                 if ($ageDays < 365) {
-                    $add('mid', 'Młoda spółka', 'Wpis do KRS ' . date('d.m.Y', strtotime($krs['registered_at'])) . ' – mniej niż rok historii.', 'KRS', 10);
+                    $add('mid', 'Młoda spółka', 'Wpis do KRS ' . date('d.m.Y', strtotime($krs['registered_at'])) . ' - mniej niż rok historii.', 'KRS', 10);
                 }
             }
             $form = mb_strtolower((string) ($krs['legal_form'] ?? ''));
@@ -77,7 +77,7 @@ final class Risk
                 }
             }
             if (isset($krs['capital']) && $krs['capital'] !== null && $krs['capital'] <= 5000 && str_contains($form, 'ograniczon')) {
-                $add('info', 'Minimalny kapitał zakładowy', 'Kapitał 5 000 zł – za długi spółki odpowiada głównie jej majątek.', 'KRS, dział 1', 3);
+                $add('info', 'Minimalny kapitał zakładowy', 'Kapitał 5 000 zł - za długi spółki odpowiada głównie jej majątek.', 'KRS, dział 1', 3);
             }
         }
 

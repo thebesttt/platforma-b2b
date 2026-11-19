@@ -76,7 +76,7 @@ final class AuthController extends Controller
             if ($res['ok']) {
                 Auth::login((int) $res['user_id']);
                 AuditLog::add('auth.register', 'user', (int) $res['user_id'], ['terms_accepted_at' => now_utc(), 'invited' => (string) config('SIGNUP_OPEN') !== '1'], $r->ip());
-                return $this->redirect('/pulpit', 'Konto gotowe. Zacznij od profilu przetargowego – na jego podstawie codziennie dobierzemy ogłoszenia.');
+                return $this->redirect('/pulpit', 'Konto gotowe. Zacznij od profilu przetargowego - na jego podstawie codziennie dobierzemy ogłoszenia.');
             }
             $error = $res['error'];
         }

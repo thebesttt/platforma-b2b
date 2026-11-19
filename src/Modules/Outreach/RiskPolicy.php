@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Outreach;
 
 /**
- * Ocena ryzyka prawnego wiadomości do firmy. Platforma nie blokuje wyboru – pokazuje ryzyko,
+ * Ocena ryzyka prawnego wiadomości do firmy. Platforma nie blokuje wyboru - pokazuje ryzyko,
  * a przy ryzyku wysokim i bardzo wysokim wymaga świadomego potwierdzenia, które zapisujemy w historii.
  *
  * Wyjątek: kontakt, który się wypisał (sprzeciw, art. 21 RODO), nie może dostać wiadomości marketingowych.
@@ -32,7 +32,7 @@ final class RiskPolicy
     ];
 
     public const BASES = [
-        'none' => 'Brak podstawy – adres z publicznego źródła',
+        'none' => 'Brak podstawy - adres z publicznego źródła',
         'rfq' => 'Zapytanie ofertowe od tej firmy',
         'consent' => 'Zgoda na informacje handlowe e-mailem',
         'client' => 'Obecny klient (wcześniejsza współpraca)',
@@ -95,14 +95,14 @@ final class RiskPolicy
             case 'consent_request':
                 $level = in_array($basis, ['consent', 'client', 'rfq'], true) ? 'low' : 'high';
                 $lead = $level === 'low'
-                    ? 'Masz już podstawę kontaktu – zamiast prosić o zgodę możesz od razu odpowiedzieć lub wysłać ofertę.'
+                    ? 'Masz już podstawę kontaktu - zamiast prosić o zgodę możesz od razu odpowiedzieć lub wysłać ofertę.'
                     : 'Prośba o zgodę wysłana e-mailem bez wcześniejszej zgody to sprawa sporna. Sądy uznawały takie wiadomości za pośrednią promocję nadawcy.';
                 if ($level === 'high') {
                     $law = array_merge(self::pkeLaw(), [
                         'Sąd Apelacyjny w Warszawie (wyrok z 12.12.2019, VII AGa 1567/18) uznał SMS z prośbą o zgodę za informację handlową, bo pośrednio promował nadawcę. Wyrok zapadł na gruncie poprzednich przepisów.',
-                        'Nie znamy orzeczenia, które pod nowymi przepisami ocenia e-mail z samą prośbą o zgodę – sprawa jest sporna.',
+                        'Nie znamy orzeczenia, które pod nowymi przepisami ocenia e-mail z samą prośbą o zgodę - sprawa jest sporna.',
                     ]);
-                    $reasons[] = 'Wiadomość nie może zawierać oferty, cen ani opisu usług – tylko pytanie o zgodę.';
+                    $reasons[] = 'Wiadomość nie może zawierać oferty, cen ani opisu usług - tylko pytanie o zgodę.';
                 }
                 break;
             case 'cold_offer':
@@ -143,7 +143,7 @@ final class RiskPolicy
     {
         $line = self::BASES[$contact['basis'] ?? 'none'] ?? 'brak';
         if (!empty($contact['basis_detail'])) {
-            $line .= ' – ' . $contact['basis_detail'];
+            $line .= ' - ' . $contact['basis_detail'];
         }
         if (!empty($contact['basis_at'])) {
             $line .= ' (' . date('d.m.Y', strtotime((string) $contact['basis_at'])) . ')';

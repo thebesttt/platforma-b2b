@@ -7,7 +7,7 @@ namespace App\Modules\Tenders;
 use App\Core\Http;
 use App\Core\Nip;
 
-/** TED Search API v3 – ogłoszenia unijne z Polski. Dostęp anonimowy, bez klucza. */
+/** TED Search API v3 - ogłoszenia unijne z Polski. Dostęp anonimowy, bez klucza. */
 final class TedClient
 {
     public const URL = 'https://api.ted.europa.eu/v3/notices/search';
@@ -59,7 +59,7 @@ final class TedClient
     {
         $pub = (string) $n['publication-number'];
         $title = self::lang($n['notice-title'] ?? null);
-        // Tytuł TED ma postać „Polska – Kategoria CPV – właściwy tytuł”.
+        // Tytuł TED ma postać „Polska - Kategoria CPV - właściwy tytuł”.
         $parts = preg_split('/\s+–\s+/u', $title, 3);
         if (is_array($parts) && count($parts) === 3) {
             $title = $parts[2];

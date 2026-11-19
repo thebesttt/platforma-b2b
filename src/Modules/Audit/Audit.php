@@ -14,7 +14,7 @@ require_once APP_ROOT . '/lib/prestacheck/class-prestacheck-scanner.php';
 
 /**
  * Audyt strony: bezpieczeństwo, szybkość, SEO techniczne, analityka i RODO.
- * Silnik PrestaCheck (ten sam co w skanerze sklepów) – działa dla każdej strony, test PrestaShop jest pomijany.
+ * Silnik PrestaCheck (ten sam co w skanerze sklepów) - działa dla każdej strony, test PrestaShop jest pomijany.
  */
 final class Audit
 {
@@ -67,7 +67,7 @@ final class Audit
         return Db::get()->all('SELECT id, url, host, score, created_at, result_json FROM site_audits WHERE org_id = ? ORDER BY id DESC LIMIT ' . (int) $limit, [$orgId]);
     }
 
-    /** Najnowszy audyt dla każdej domeny – do porównania z konkurencją. */
+    /** Najnowszy audyt dla każdej domeny - do porównania z konkurencją. */
     public static function latestPerHost(int $orgId): array
     {
         $rows = Db::get()->all(
@@ -104,7 +104,7 @@ final class Audit
     }
 
     /**
-     * Silnik powstał dla sklepów internetowych – w platformie B2B mówimy o „stronie”.
+     * Silnik powstał dla sklepów internetowych - w platformie B2B mówimy o „stronie”.
      * Najpierw całe zwroty (zgodność rodzaju), potem odmiana słowa „sklep”.
      */
     public static function localize(string $s): string
@@ -122,6 +122,8 @@ final class Audit
             'sklepach' => 'stronach', 'sklepów' => 'stron', 'sklepami' => 'stronami', 'sklepem' => 'stroną', 'sklepie' => 'stronie',
             'sklepowi' => 'stronie', 'sklepu' => 'strony', 'sklepy' => 'strony', 'Sklep' => 'Strona', 'sklep' => 'strona',
         ];
+        // Zwykły łącznik zamiast półpauzy i pauzy - jak w całej aplikacji.
+        $s = str_replace(["\u{2013}", "\u{2014}"], '-', $s);
         $s = strtr($s, $phrases);
         return (string) preg_replace_callback('/\b(' . implode('|', array_keys($words)) . ')\b/u', static fn ($m) => $words[$m[1]], $s);
     }

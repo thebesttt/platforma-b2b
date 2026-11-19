@@ -10,7 +10,7 @@ use App\Core\Nip;
 
 /**
  * Decyzje Prezesa UOKiK w sprawach zatorów płatniczych (sygnatury DZP-…).
- * Rejestr jest jawny i podaje nazwy firm; dopasowujemy po NIP, a gdy go brak – po nazwie bez formy prawnej.
+ * Rejestr jest jawny i podaje nazwy firm; dopasowujemy po NIP, a gdy go brak - po nazwie bez formy prawnej.
  */
 final class Uokik
 {
@@ -27,7 +27,7 @@ final class Uokik
             if ($r['status'] !== 200) {
                 if ($r['status'] === 0 && $i === 1 && str_contains((string) ($r['error'] ?? ''), 'timed out')) {
                     $errors[] = "rok $i: HTTP 0 (" . $r['error'] . ')';
-                    break; // serwer nie odpowiada – nie czekamy na kolejne lata
+                    break; // serwer nie odpowiada - nie czekamy na kolejne lata
                 }
                 $errors[] = "rok $i: HTTP {$r['status']}" . (!empty($r['error']) ? ' (' . $r['error'] . ')' : '');
                 continue;
@@ -49,7 +49,7 @@ final class Uokik
         return count($rows);
     }
 
-    /** Adres listy decyzji z danego roku (1 = najnowszy) – do pobrania w przeglądarce i wgrania ręcznego. */
+    /** Adres listy decyzji z danego roku (1 = najnowszy) - do pobrania w przeglądarce i wgrania ręcznego. */
     public static function listUrl(int $i): string
     {
         return self::BASE . '/bp/dec_prez.nsf/UOKiK?OpenForm&Start=1&Count=9999&Expand=' . self::CATEGORY . '.' . $i . '&Seq=2';

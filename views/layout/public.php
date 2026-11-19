@@ -10,7 +10,7 @@ $appName = (string) config('APP_NAME');
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title><?= e(isset($title) ? $title . ' · ' . $appName : $appName . ' – przetargi, oferty i bezpieczni kontrahenci') ?></title>
+<title><?= e(isset($title) ? $title . ' · ' . $appName : $appName . ' - przetargi, oferty i bezpieczni kontrahenci') ?></title>
 <meta name="description" content="Przetargi dopasowane do Twojej firmy, szkice ofert z AI, sprawdzanie kontrahentów pod kątem zatorów płatniczych i audyt strony w jednym miejscu.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="<?= e(asset('/assets/app.css')) ?>">

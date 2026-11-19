@@ -60,7 +60,7 @@ $action = '/klienci/' . (int) $c['id'] . '/wiadomosc';
         <label class="check"><input type="checkbox" name="ack" value="1" data-ack-for="save-btn"> <span class="small"><?= e(RiskPolicy::ACK_TEXT) ?></span></label>
         <p class="xs muted" style="margin:0">Zapiszemy Twoje potwierdzenie z datą i godziną w historii kontaktu.</p>
       <?php else: ?>
-        <p class="small" style="margin:0">Ryzyko niskie – możesz przygotować wiadomość do wysłania.</p>
+        <p class="small" style="margin:0">Ryzyko niskie - możesz przygotować wiadomość do wysłania.</p>
       <?php endif ?>
       <button id="save-btn" class="btn" type="submit" name="action" value="save"<?= $risk['blocked'] ? ' disabled' : '' ?>><?= $risk['needs_ack'] ? 'Potwierdzam i przygotowuję do wysłania' : 'Przygotuj do wysłania' ?></button>
       <p class="xs muted" style="margin:0">Wiadomość wyślesz ze swojej skrzynki (otworzy się w programie pocztowym).</p>

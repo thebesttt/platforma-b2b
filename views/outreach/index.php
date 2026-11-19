@@ -25,14 +25,14 @@
           <tr>
             <td><a class="t-title" href="/klienci/<?= (int) $c['id'] ?>"><?= e($c['company_name']) ?></a><div class="t-sub"><?= e(trim(($c['person'] ? $c['person'] . ' · ' : '') . $c['email'])) ?></div></td>
             <td><?php if ($c['unsubscribed_at']): ?><span class="chip high">wypisany</span><?php else: ?><span class="chip <?= $c['basis'] === 'none' ? 'neutral' : 'low' ?>"><?= e(['none' => 'brak', 'rfq' => 'zapytanie ofertowe', 'consent' => 'zgoda', 'client' => 'klient'][$c['basis']] ?? $c['basis']) ?></span><?php endif ?></td>
-            <td class="small muted nowrap"><?= $c['last_message_at'] ? e(local_dt($c['last_message_at'], 'd.m.Y')) : '—' ?></td>
+            <td class="small muted nowrap"><?= $c['last_message_at'] ? e(local_dt($c['last_message_at'], 'd.m.Y')) : '-' ?></td>
             <td class="n"><a class="btn ghost sm" href="/klienci/<?= (int) $c['id'] ?>/wiadomosc">Napisz</a></td>
           </tr>
         <?php endforeach ?>
         </tbody>
       </table></div>
     <?php else: ?>
-      <div class="empty"><h3><?= $q ? 'Brak wyników' : 'Nie masz jeszcze kontaktów' ?></h3><p>Dodaj firmę, która wysłała Ci zapytanie ofertowe albo zgodziła się na kontakt. Zapisz, skąd masz adres – to Twój dowód.</p><a class="btn" href="/klienci/nowy">Dodaj kontakt</a></div>
+      <div class="empty"><h3><?= $q ? 'Brak wyników' : 'Nie masz jeszcze kontaktów' ?></h3><p>Dodaj firmę, która wysłała Ci zapytanie ofertowe albo zgodziła się na kontakt. Zapisz, skąd masz adres - to Twój dowód.</p><a class="btn" href="/klienci/nowy">Dodaj kontakt</a></div>
     <?php endif ?>
   </section>
   <section class="card side" aria-labelledby="t-m">

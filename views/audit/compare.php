@@ -16,7 +16,7 @@ foreach ($sites as $s) { foreach ($s['view']['categories'] ?? [] as $k => $c) { 
       <tr<?= ($v['label'] ?? '') === 'Moja strona' ? ' style="background:var(--accent-soft)"' : '' ?>>
         <td><a class="t-title" href="/audyt/<?= (int) $s['row']['id'] ?>"><?= e($s['row']['host']) ?></a><?php if (!empty($v['label'])): ?><div class="t-sub"><?= e($v['label']) ?></div><?php endif ?></td>
         <td class="n"><?= App\Core\View::partial('partials/audit_score', ['v' => $v]) ?></td>
-        <?php foreach (array_keys($cats) as $k): ?><td class="n"><?= isset($v['categories'][$k]) ? (int) $v['categories'][$k]['score'] : '—' ?></td><?php endforeach ?>
+        <?php foreach (array_keys($cats) as $k): ?><td class="n"><?= isset($v['categories'][$k]) ? (int) $v['categories'][$k]['score'] : '-' ?></td><?php endforeach ?>
         <td class="n"><?= (int) ($v['counts']['critical'] ?? 0) ?></td>
       </tr>
     <?php endforeach ?>

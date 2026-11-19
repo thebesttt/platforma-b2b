@@ -1,8 +1,8 @@
 name: Codzienny import przetargów i odświeżenie kontrahentów
 
 # Codziennie rano (ok. 6:20 czasu polskiego zimą). Sekrety repozytorium (Settings → Secrets and variables → Actions):
-#   DATABASE_URL – zewnętrzny adres bazy (zalecane): import działa bezpośrednio w GitHub Actions, bez limitów czasu hostingu,
-#   albo APP_URL + CRON_TOKEN – wtedy zadanie wywołuje aplikację (CRON_TOKEN taki sam jak w Render).
+#   DATABASE_URL - zewnętrzny adres bazy (zalecane): import działa bezpośrednio w GitHub Actions, bez limitów czasu hostingu,
+#   albo APP_URL + CRON_TOKEN - wtedy zadanie wywołuje aplikację (CRON_TOKEN taki sam jak w Render).
 on:
   schedule:
     - cron: '20 5 * * *'
@@ -30,7 +30,7 @@ jobs:
       - name: Wywołanie zadania w aplikacji
         if: env.DATABASE_URL == '' && env.APP_URL != ''
         run: |
-          # Darmowa instancja Render usypia – pierwsze zapytanie ją budzi.
+          # Darmowa instancja Render usypia - pierwsze zapytanie ją budzi.
           curl -s -o /dev/null --max-time 120 "$APP_URL/zdrowie" || true
           curl -fsS --retry 3 --retry-delay 20 --max-time 1500 -X POST \
             -H "X-Cron-Token: $CRON_TOKEN" "$APP_URL/cron/run?task=daily"

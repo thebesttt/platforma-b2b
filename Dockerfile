@@ -1,7 +1,7 @@
-# Platforma B2B – obraz dla Render.com (działa też na każdym hostingu z Dockerem).
+# Platforma B2B - obraz dla Render.com (działa też na każdym hostingu z Dockerem).
 FROM php:8.3-apache
 
-# pdo_pgsql (PostgreSQL), zip (eksport .docx, odczyt .docx), poppler-utils (tekst z PDF – pdftotext).
+# pdo_pgsql (PostgreSQL), zip (eksport .docx, odczyt .docx), poppler-utils (tekst z PDF - pdftotext).
 RUN apt-get update \
  && apt-get install -y --no-install-recommends libpq-dev libzip-dev poppler-utils \
  && docker-php-ext-install pdo_pgsql zip \

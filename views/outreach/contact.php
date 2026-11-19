@@ -3,7 +3,7 @@
   <div>
     <p class="crumbs"><a href="/klienci">Klienci i wiadomości</a> / <?= $c['id'] ? e($c['company_name']) : 'Nowy kontakt' ?></p>
     <h1><?= $c['id'] ? e($c['company_name']) : 'Nowy kontakt' ?></h1>
-    <?php if (!empty($c['unsubscribed_at'])): ?><p style="margin:8px 0 0"><span class="chip high">Wypisany <?= e(local_dt($c['unsubscribed_at'], 'd.m.Y')) ?> – nie wysyłaj ofert</span></p><?php endif ?>
+    <?php if (!empty($c['unsubscribed_at'])): ?><p style="margin:8px 0 0"><span class="chip high">Wypisany <?= e(local_dt($c['unsubscribed_at'], 'd.m.Y')) ?> - nie wysyłaj ofert</span></p><?php endif ?>
   </div>
   <?php if ($c['id']): ?><a class="btn" href="/klienci/<?= (int) $c['id'] ?>/wiadomosc">Napisz wiadomość</a><?php endif ?>
 </header>
@@ -50,7 +50,7 @@
     </section>
     <form method="post" action="/klienci/<?= (int) $c['id'] ?>/wypisz" class="card stack-sm" <?= empty($c['unsubscribed_at']) ? 'data-confirm="Zapisać sprzeciw tej firmy wobec dalszych wiadomości?"' : '' ?>>
       <?= csrf_field() ?>
-      <p class="small" style="margin:0"><?= empty($c['unsubscribed_at']) ? 'Firma poprosiła o niewysyłanie wiadomości? Zapisz sprzeciw – zablokujemy oferty i prośby o zgodę.' : 'Sprzeciw zapisany. Usuń go tylko wtedy, gdy firma ponownie wyraziła zgodę.' ?></p>
+      <p class="small" style="margin:0"><?= empty($c['unsubscribed_at']) ? 'Firma poprosiła o niewysyłanie wiadomości? Zapisz sprzeciw - zablokujemy oferty i prośby o zgodę.' : 'Sprzeciw zapisany. Usuń go tylko wtedy, gdy firma ponownie wyraziła zgodę.' ?></p>
       <button class="btn <?= empty($c['unsubscribed_at']) ? 'danger' : 'ghost' ?> sm" type="submit"><?= empty($c['unsubscribed_at']) ? 'Zapisz sprzeciw (wypisz)' : 'Usuń oznaczenie sprzeciwu' ?></button>
     </form>
     <?php endif ?>

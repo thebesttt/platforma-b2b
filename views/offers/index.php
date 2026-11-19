@@ -9,7 +9,7 @@
 </header>
 
 <?php if ($libraryCount === 0): ?>
-  <div class="notice info">Zacznij od <a href="/biblioteka">biblioteki firmy</a>: dodaj 2–3 referencje, osoby z uprawnieniami i krótki opis firmy. Z nich powstają sekcje „Doświadczenie” i „Zespół”.</div>
+  <div class="notice info">Zacznij od <a href="/biblioteka">biblioteki firmy</a>: dodaj 2-3 referencje, osoby z uprawnieniami i krótki opis firmy. Z nich powstają sekcje „Doświadczenie” i „Zespół”.</div>
 <?php endif ?>
 
 <div class="cols">
@@ -23,7 +23,7 @@
           <tr>
             <td><a class="t-title" href="/oferty/<?= (int) $o['id'] ?>"><?= e(truncate((string) $o['title'], 110)) ?></a><div class="t-sub"><?= e($o['kind'] === 'grant' ? ($o['call_name'] ?? '') : ($o['buyer_name'] ?? 'bez przetargu')) ?></div></td>
             <td><span class="chip <?= $o['kind'] === 'grant' ? 'info' : 'neutral' ?>"><?= $o['kind'] === 'grant' ? 'wniosek o dotację' : 'oferta' ?></span></td>
-            <td class="nowrap small"><?= $dl ? e(local_dt($dl, 'd.m.Y H:i')) : '<span class="muted">—</span>' ?></td>
+            <td class="nowrap small"><?= $dl ? e(local_dt($dl, 'd.m.Y H:i')) : '<span class="muted">-</span>' ?></td>
             <td><span class="chip <?= $st['chip'] ?>"><?= e($st['label']) ?></span></td>
             <td class="nowrap small muted"><?= e(local_dt($o['updated_at'], 'd.m H:i')) ?></td>
           </tr>
@@ -40,7 +40,7 @@
       <h2 id="t-grant" style="margin-bottom:8px">Nowy wniosek o dotację</h2>
       <form method="post" action="/oferty" class="stack-sm">
         <?= csrf_field() ?><input type="hidden" name="kind" value="grant">
-        <div class="field"><label for="call_name">Nabór lub program</label><input id="call_name" name="call_name" type="text" required maxlength="200" placeholder="np. FENG – Ścieżka SMART, nabór 2026"></div>
+        <div class="field"><label for="call_name">Nabór lub program</label><input id="call_name" name="call_name" type="text" required maxlength="200" placeholder="np. FENG - Ścieżka SMART, nabór 2026"></div>
         <div class="field"><label for="call_url">Strona naboru</label><input id="call_url" name="call_url" type="url" placeholder="https://"></div>
         <div class="field"><label for="deadline">Termin składania wniosków</label><input id="deadline" name="deadline" type="date"></div>
         <button class="btn" type="submit">Rozpocznij wniosek</button>

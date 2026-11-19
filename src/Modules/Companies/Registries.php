@@ -34,7 +34,7 @@ final class Registries
     }
 
     /**
-     * Wiele firm jednym zapytaniem (do 30 NIP) – oszczędza dzienny limit zapytań API przy odświeżaniu obserwowanych firm.
+     * Wiele firm jednym zapytaniem (do 30 NIP) - oszczędza dzienny limit zapytań API przy odświeżaniu obserwowanych firm.
      * @param string[] $nips
      * @return array<string, array{ok: bool, subject?: ?array, error?: string}> wynik dla każdego NIP
      */
@@ -73,7 +73,7 @@ final class Registries
         return $out;
     }
 
-    /** Listy kont są długie – przechowujemy liczbę i skrót do wykrywania zmian. */
+    /** Listy kont są długie - przechowujemy liczbę i skrót do wykrywania zmian. */
     private static function normalizeSubject(array $s): array
     {
         $accounts = (array) ($s['accountNumbers'] ?? []);
@@ -149,7 +149,7 @@ final class Registries
             'statements_count' => count($statements),
             'last_statement_period_end' => $lastPeriodEnd,
             'last_statement_filed' => self::plDate($lastFiled),
-            // Rejestr może zwracać puste struktury ({} albo listy bez pozycji) – sygnałem są tylko rzeczywiste wpisy.
+            // Rejestr może zwracać puste struktury ({} albo listy bez pozycji) - sygnałem są tylko rzeczywiste wpisy.
             'dzial4' => self::prune($d['dzial4'] ?? null) ?: null,
             'dzial6_keys' => array_keys((array) (self::prune($d['dzial6'] ?? null) ?? [])),
             'dzial6_text' => mb_substr(json_out(self::prune($d['dzial6'] ?? null) ?? []), 0, 2000),

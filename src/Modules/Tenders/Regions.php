@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Tenders;
 
 /**
- * Województwa. BZP podaje kody TERYT (PL14 = mazowieckie), TED – kody NUTS (PL91 = Warszawski stołeczny).
+ * Województwa. BZP podaje kody TERYT (PL14 = mazowieckie), TED - kody NUTS (PL91 = Warszawski stołeczny).
  * Uwaga: „PL22” znaczy co innego w obu systemach (pomorskie w BZP, śląskie w NUTS), więc zawsze mapujemy na własny identyfikator.
  */
 final class Regions

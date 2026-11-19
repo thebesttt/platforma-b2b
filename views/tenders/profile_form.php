@@ -13,7 +13,7 @@ $fmt = static fn ($v) => $v === null || $v === '' ? '' : number_format((float) $
 <form method="post" action="<?= $p['id'] ? '/profile/' . (int) $p['id'] : '/profile' ?>" class="stack">
   <?= csrf_field() ?>
   <section class="card stack-sm">
-    <div class="field"><label for="name">Nazwa profilu</label><input id="name" name="name" type="text" required maxlength="120" value="<?= e($p['name']) ?>" placeholder="np. Roboty drogowe – Mazowsze"></div>
+    <div class="field"><label for="name">Nazwa profilu</label><input id="name" name="name" type="text" required maxlength="120" value="<?= e($p['name']) ?>" placeholder="np. Roboty drogowe - Mazowsze"></div>
     <div class="field"><label for="cpv">Kody CPV</label><input id="cpv" name="cpv" type="text" value="<?= e($p['cpv']) ?>" placeholder="np. 45233000 45112500"><span class="hint">Kilka kodów rozdziel spacją. Krótszy kod obejmuje całą grupę: 4523 to wszystkie roboty drogowe.</span></div>
     <div class="field"><label for="keywords">Słowa kluczowe</label><textarea id="keywords" name="keywords" rows="4" placeholder="np.&#10;nawierzchnia&#10;przebudowa drogi&#10;chodnik"><?= e($p['keywords']) ?></textarea><span class="hint">Po jednym w linii. Szukamy w tytule i opisie przedmiotu zamówienia. Wystarczy początek słowa: „remont” znajdzie też „remontu”.</span></div>
     <div class="field"><label for="exclude_keywords">Słowa wykluczające</label><textarea id="exclude_keywords" name="exclude_keywords" rows="2" placeholder="np. odśnieżanie"><?= e($p['exclude_keywords']) ?></textarea><span class="hint">Ogłoszenia z tymi słowami pominiemy.</span></div>
@@ -36,7 +36,7 @@ $fmt = static fn ($v) => $v === null || $v === '' ? '' : number_format((float) $
     </fieldset>
     <div class="form-grid">
       <div class="field"><label for="min_value">Wartość od (zł)</label><input id="min_value" name="min_value" type="text" inputmode="numeric" value="<?= e($fmt($p['min_value'])) ?>"></div>
-      <div class="field"><label for="max_value">Wartość do (zł)</label><input id="max_value" name="max_value" type="text" inputmode="numeric" value="<?= e($fmt($p['max_value'])) ?>"><span class="hint">Wiele ogłoszeń nie podaje wartości – tych nie odrzucamy.</span></div>
+      <div class="field"><label for="max_value">Wartość do (zł)</label><input id="max_value" name="max_value" type="text" inputmode="numeric" value="<?= e($fmt($p['max_value'])) ?>"><span class="hint">Wiele ogłoszeń nie podaje wartości - tych nie odrzucamy.</span></div>
     </div>
     <fieldset style="border:0;padding:0;margin:0">
       <legend class="label">Źródła</legend>
@@ -45,7 +45,7 @@ $fmt = static fn ($v) => $v === null || $v === '' ? '' : number_format((float) $
         <label class="check"><input type="checkbox" name="zrodla[]" value="ted"<?= in_array('ted', $sources, true) ? ' checked' : '' ?>> TED (powyżej progów unijnych)</label>
       </div>
     </fieldset>
-    <label class="check"><input type="checkbox" name="active" value="1"<?= $p['active'] ? ' checked' : '' ?>> Profil aktywny – dobieraj codziennie nowe ogłoszenia</label>
+    <label class="check"><input type="checkbox" name="active" value="1"<?= $p['active'] ? ' checked' : '' ?>> Profil aktywny - dobieraj codziennie nowe ogłoszenia</label>
   </section>
   <div class="row-flex">
     <button class="btn" type="submit">Zapisz profil</button>

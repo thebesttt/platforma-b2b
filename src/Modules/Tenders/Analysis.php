@@ -46,7 +46,7 @@ final class Analysis
             )), 'source' => $src('4.3')];
         }
         if (isset($d['conditions_required'])) {
-            $items[] = ['label' => 'Warunki udziału', 'value' => $d['conditions_required'] ? truncate((string) ($d['conditions'] ?: 'Tak – szczegóły w SWZ'), 600) : 'Zamawiający nie stawia warunków udziału', 'source' => $src('5.3–5.4')];
+            $items[] = ['label' => 'Warunki udziału', 'value' => $d['conditions_required'] ? truncate((string) ($d['conditions'] ?: 'Tak - szczegóły w SWZ'), 600) : 'Zamawiający nie stawia warunków udziału', 'source' => $src('5.3-5.4')];
         }
         if (isset($d['wadium'])) {
             $items[] = ['label' => 'Wadium', 'value' => $d['wadium'] ? ($d['wadium_value'] ? money_pl($d['wadium_value']) : ($d['wadium_info'] ?: 'Tak')) : 'Nie jest wymagane', 'source' => $src('6.4')];
@@ -56,17 +56,17 @@ final class Analysis
             }
         }
         if (!empty($d['performance_bond'])) {
-            $risks[] = ['level' => 'low', 'text' => 'Wymagane zabezpieczenie należytego wykonania umowy – uwzględnij jego koszt w cenie.', 'source' => $src('6.5')];
+            $risks[] = ['level' => 'low', 'text' => 'Wymagane zabezpieczenie należytego wykonania umowy - uwzględnij jego koszt w cenie.', 'source' => $src('6.5')];
         }
         if (array_key_exists('advance_payments', $d) && $d['advance_payments'] === false) {
-            $risks[] = ['level' => 'low', 'text' => 'Brak zaliczek – realizację finansujesz do pierwszej płatności.', 'source' => $src('7.1')];
+            $risks[] = ['level' => 'low', 'text' => 'Brak zaliczek - realizację finansujesz do pierwszej płatności.', 'source' => $src('7.1')];
         }
         if (!empty($d['auction'])) {
-            $items[] = ['label' => 'Aukcja elektroniczna', 'value' => 'Tak – cenę będzie można poprawić w aukcji', 'source' => $src('6.3')];
+            $items[] = ['label' => 'Aukcja elektroniczna', 'value' => 'Tak - cenę będzie można poprawić w aukcji', 'source' => $src('6.3')];
         }
         if (!empty($d['deadline'])) {
             $days = days_until($d['deadline']);
-            $items[] = ['label' => 'Składanie ofert', 'value' => local_dt($d['deadline']) . (!empty($d['submission_place']) ? ' · ' . $d['submission_place'] : ''), 'source' => $src('8.1–8.2')];
+            $items[] = ['label' => 'Składanie ofert', 'value' => local_dt($d['deadline']) . (!empty($d['submission_place']) ? ' · ' . $d['submission_place'] : ''), 'source' => $src('8.1-8.2')];
             if ($days !== null && $days < 5) {
                 $risks[] = ['level' => 'high', 'text' => 'Na przygotowanie oferty zostało ' . max(0, $days) . ' ' . plural(max(0, $days), 'dzień', 'dni', 'dni') . '.', 'source' => $src('8.1')];
             }

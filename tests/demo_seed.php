@@ -30,7 +30,7 @@ function demo_seed(): array
 
     $examples = [
         ['Przebudowa drogi powiatowej na odcinku 2,4 km wraz z chodnikiem (przykład)', 'Powiat Przykładowy', 'mazowieckie', '45233000 45233222 45112500', 2900000, 9, '9999999999'],
-        ['Remont nawierzchni ulic w centrum miasta – etap II (przykład)', 'Gmina Przykładowo', 'mazowieckie', '45233222', 1600000, 6, null],
+        ['Remont nawierzchni ulic w centrum miasta - etap II (przykład)', 'Gmina Przykładowo', 'mazowieckie', '45233222', 1600000, 6, null],
         ['Budowa ciągu pieszo-rowerowego wzdłuż drogi wojewódzkiej (przykład)', 'Zarząd Dróg Wojewódzkich (przykład)', 'lodzkie', '45233162 45233000', 4700000, 17, null],
         ['Wykonanie parkingu przy hali sportowej (przykład)', 'Przykładowa Spółka Komunalna sp. z o.o.', 'mazowieckie', '45233000', 800000, 3, '1234563218'],
         ['Odwodnienie i utwardzenie placu manewrowego (przykład)', 'Gmina Przykładowa Wola', 'lodzkie', '45233000 45232450', 650000, 11, null],
@@ -51,7 +51,7 @@ function demo_seed(): array
     $org = (int) $db->val('SELECT org_id FROM users WHERE id = ?', [$uid]);
     $db->update('organizations', ['address' => 'ul. Przykładowa 10, 00-001 Warszawa', 'phone' => '+48 600 000 000', 'website' => 'https://example.com'], 'id = ?', [$org]);
     $profileId = $db->insert('tender_profiles', [
-        'org_id' => $org, 'name' => 'Roboty drogowe – Mazowsze i Łódzkie', 'cpv' => '45233', 'keywords' => "nawierzchni\nchodnik\nparking\ndrog",
+        'org_id' => $org, 'name' => 'Roboty drogowe - Mazowsze i Łódzkie', 'cpv' => '45233', 'keywords' => "nawierzchni\nchodnik\nparking\ndrog",
         'exclude_keywords' => 'odśnieżanie', 'voivodeships' => 'mazowieckie lodzkie podlaskie', 'order_types' => 'works',
         'min_value' => 500000, 'max_value' => 5000000, 'sources' => 'bzp ted', 'active' => 1, 'created_at' => now_utc(),
     ]);
@@ -60,9 +60,9 @@ function demo_seed(): array
     $lib = [
         ['reference', 'Przebudowa ulicy Przykładowej w Gminie Przykładowo', 'Przebudowa drogi gminnej z chodnikiem i odwodnieniem, długość 1,2 km.', ['client' => 'Gmina Przykładowo', 'value' => 1800000, 'finished' => '09.2025']],
         ['reference', 'Budowa drogi gminnej z odwodnieniem', 'Nowa jezdnia 5,5 m, kanalizacja deszczowa, oznakowanie.', ['client' => 'Gmina Przykładowa Wola', 'value' => 1300000, 'finished' => '06.2024']],
-        ['person', 'Marek Przykładowy – kierownik budowy', 'Uprawnienia budowlane w specjalności drogowej bez ograniczeń, 12 lat doświadczenia na budowach dróg powiatowych.', ['role' => 'kierownik budowy']],
+        ['person', 'Marek Przykładowy - kierownik budowy', 'Uprawnienia budowlane w specjalności drogowej bez ograniczeń, 12 lat doświadczenia na budowach dróg powiatowych.', ['role' => 'kierownik budowy']],
         ['text', 'O firmie', 'Twoja Firma Drogowa wykonuje roboty drogowe od 2009 roku: przebudowy dróg gminnych i powiatowych, chodniki, parkingi i odwodnienia. Pracujemy własnym sprzętem na Mazowszu i w Łódzkiem.', []],
-        ['insurance', 'Polisa OC działalności – suma gwarancyjna 5 mln zł', '', []],
+        ['insurance', 'Polisa OC działalności - suma gwarancyjna 5 mln zł', '', []],
     ];
     foreach ($lib as [$kind, $title, $body, $meta]) {
         $db->insert('library_items', ['org_id' => $org, 'kind' => $kind, 'title' => $title, 'body' => $body, 'meta_json' => $meta ? json_out($meta) : null,
@@ -78,7 +78,7 @@ function demo_seed(): array
     $c = Companies::lookup('1234563218')['company'] ?? null;
     Companies::lookup('7181968222');
     if ($c) {
-        $db->insert('watchlist', ['org_id' => $org, 'company_id' => (int) $c['id'], 'note' => 'podwykonawca – parking', 'created_at' => now_utc()]);
+        $db->insert('watchlist', ['org_id' => $org, 'company_id' => (int) $c['id'], 'note' => 'podwykonawca - parking', 'created_at' => now_utc()]);
         $db->insert('alerts', ['org_id' => $org, 'company_id' => (int) $c['id'], 'level' => 'high', 'title' => (string) $c['name'], 'detail' => 'Nowa decyzja UOKiK o opóźnianiu płatności: DZP-99/2025', 'created_at' => now_utc()]);
         $db->insert('receivables', ['org_id' => $org, 'company_id' => (int) $c['id'], 'invoice_no' => 'FV/2026/09/14', 'amount' => 18450.00, 'currency' => 'PLN',
             'issued_at' => date('Y-m-d', strtotime('-80 days')), 'due_at' => date('Y-m-d', strtotime('-50 days')), 'demand_sent_at' => date('Y-m-d', strtotime('-35 days')),

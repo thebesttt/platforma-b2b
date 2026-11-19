@@ -161,7 +161,7 @@ function nav_on(string $prefix): string
     return ($p === $prefix || str_starts_with($p, rtrim($prefix, '/') . '/')) ? ' class="on" aria-current="page"' : '';
 }
 
-/** Chip z poziomem ryzyka płatniczego (0–100). */
+/** Chip z poziomem ryzyka płatniczego (0-100). */
 function risk_chip(?int $score): string
 {
     if ($score === null) {
@@ -193,7 +193,7 @@ function marked_html(string $text): string
         $nosrc = str_contains($line, '⟦sprawdź⟧');
         $h = e($line);
         $h = preg_replace('/\s*⟦źródło:\s*([^⟧]*)⟧/u', ' <span class="src ok">$1</span>', $h) ?? $h;
-        $h = str_replace('⟦sprawdź⟧', '<span class="chip high">Brak źródła – sprawdź lub usuń</span>', $h);
+        $h = str_replace('⟦sprawdź⟧', '<span class="chip high">Brak źródła - sprawdź lub usuń</span>', $h);
         $out[] = '<p' . ($nosrc ? ' class="nosrc"' : '') . '>' . $h . '</p>';
     }
     return implode("\n", $out);
@@ -209,7 +209,7 @@ function safe_url(?string $url): string
     return '#';
 }
 
-/** Adres pliku statycznego z wersją z czasu modyfikacji – po wdrożeniu przeglądarka pobiera nowy plik. */
+/** Adres pliku statycznego z wersją z czasu modyfikacji - po wdrożeniu przeglądarka pobiera nowy plik. */
 function asset(string $path): string
 {
     $file = APP_ROOT . '/public' . $path;

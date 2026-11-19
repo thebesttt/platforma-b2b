@@ -59,7 +59,7 @@ final class Claude
             }
         }
         $usage = (array) ($j['usage'] ?? []);
-        // Zużycie zapisujemy w dzienniku – podstawa do kontroli kosztów na firmę.
+        // Zużycie zapisujemy w dzienniku - podstawa do kontroli kosztów na firmę.
         try {
             \App\Core\AuditLog::add('ai.call', null, null, [
                 'model' => (string) Config::get('AI_MODEL'),

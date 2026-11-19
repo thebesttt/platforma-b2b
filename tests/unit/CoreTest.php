@@ -12,7 +12,7 @@ return [
         eq('123-456-32-18', Nip::format('1234563218'));
     },
     'search_text usuwa polskie znaki i interpunkcję' => function () {
-        eq('zolta lodz na wiśle', str_replace('wisle', 'wiśle', search_text('Żółta łódź – na Wiśle!')));
+        eq('zolta lodz na wiśle', str_replace('wisle', 'wiśle', search_text('Żółta łódź - na Wiśle!')));
         eq('remont ul glownej', search_text('Remont ul. Głównej'));
     },
     'plural odmienia liczebniki' => function () {

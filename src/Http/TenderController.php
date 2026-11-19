@@ -305,7 +305,7 @@ final class TenderController extends Controller
         $ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//PlatformaB2B//PL\r\nCALSCALE:GREGORIAN\r\n";
         $ics .= $ev('deadline-' . $tender['id'] . '@platforma', (string) $tender['deadline_at'], 'Termin składania ofert: ' . $title, $tender['buyer_name'] . "\n" . $link, $link);
         if (!empty($d['wadium']) && $d['wadium']) {
-            $ics .= $ev('wadium-' . $tender['id'] . '@platforma', gmdate('Y-m-d H:i:s', strtotime($tender['deadline_at'] . ' UTC') - 3 * 86400), 'Wadium – ostatni dzwonek: ' . $title, 'Wadium musi wpłynąć przed terminem składania ofert. ' . $link, $link);
+            $ics .= $ev('wadium-' . $tender['id'] . '@platforma', gmdate('Y-m-d H:i:s', strtotime($tender['deadline_at'] . ' UTC') - 3 * 86400), 'Wadium - ostatni dzwonek: ' . $title, 'Wadium musi wpłynąć przed terminem składania ofert. ' . $link, $link);
         }
         $ics .= "END:VCALENDAR\r\n";
         return Response::download($ics, 'przetarg-' . $tender['id'] . '.ics', 'text/calendar; charset=utf-8');
@@ -363,7 +363,7 @@ final class TenderController extends Controller
             'matched_until' => null,
         ];
         if ($data['cpv'] === '' && trim($data['keywords']) === '') {
-            Session::flash('error', 'Podaj co najmniej jeden kod CPV albo słowo kluczowe – bez nich nie da się dobrać ogłoszeń.');
+            Session::flash('error', 'Podaj co najmniej jeden kod CPV albo słowo kluczowe - bez nich nie da się dobrać ogłoszeń.');
             return $this->view('tenders/profile_form', ['p' => $data + ['id' => $id], 'title' => 'Profil przetargowy']);
         }
         if ($id) {

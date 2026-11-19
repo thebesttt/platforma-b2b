@@ -243,7 +243,7 @@ return [
     },
     'Import: jedno błędne ogłoszenie nie zatrzymuje pozostałych' => function () {
         $dir = bzp_fixture_dir(1);
-        // Drugie ogłoszenie bez tytułu i z niepoprawnym kodowaniem – ma zostać zapisane albo pominięte, ale nie przerwać importu.
+        // Drugie ogłoszenie bez tytułu i z niepoprawnym kodowaniem - ma zostać zapisane albo pominięte, ale nie przerwać importu.
         $rows = json_decode((string) file_get_contents("$dir/p1.json"), true);
         $rows[1]['orderObject'] = "\x9C\xE2\x80";
         file_put_contents("$dir/p1.json", json_encode($rows, JSON_INVALID_UTF8_IGNORE | JSON_PARTIAL_OUTPUT_ON_ERROR));

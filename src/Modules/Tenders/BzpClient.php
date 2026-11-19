@@ -68,7 +68,7 @@ final class BzpClient
                     break;
                 }
                 if ($page === $maxPages) {
-                    // Więcej ogłoszeń niż limit stron – nic nie gubimy, następne pobranie zaczyna od tego miejsca.
+                    // Więcej ogłoszeń niż limit stron - nic nie gubimy, następne pobranie zaczyna od tego miejsca.
                     $this->markContinue($lastPublished ?? gmdate('Y-m-d H:i:s', strtotime($fromUtc . ' UTC')));
                 }
                 $sleep ? $sleep() : usleep(150000);
@@ -130,7 +130,7 @@ final class BzpClient
             return null;
         }
         try {
-            // Ułamki sekund z 7 cyframi (np. .5450779Z) odcinamy – DateTime przyjmuje najwyżej 6.
+            // Ułamki sekund z 7 cyframi (np. .5450779Z) odcinamy - DateTime przyjmuje najwyżej 6.
             $iso = preg_replace('/(\.\d{6})\d+/', '$1', $iso) ?? $iso;
             return (new \DateTimeImmutable($iso))->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d H:i:s');
         } catch (\Throwable) {

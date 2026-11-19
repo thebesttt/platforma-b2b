@@ -7,7 +7,7 @@ namespace App\Modules\Tenders;
 use App\Core\Db;
 
 /**
- * Ocena dopasowania przetargu do profilu firmy (0–100) z uzasadnieniem po polsku.
+ * Ocena dopasowania przetargu do profilu firmy (0-100) z uzasadnieniem po polsku.
  * Twarde filtry (województwa, rodzaj zamówienia, słowa wykluczające, minione terminy) odrzucają przetarg.
  */
 final class Matcher

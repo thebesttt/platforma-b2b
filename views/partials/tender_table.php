@@ -16,8 +16,8 @@ use App\Modules\Tenders\Tenders;
           <div class="t-sub"><?= e($t['buyer_name']) ?><?= $t['voivodeship'] ? ' · ' . e(Regions::name($t['voivodeship'])) : '' ?> · <?= e(strtoupper((string) $t['source'])) ?><?= $t['order_type'] ? ' · ' . e(Tenders::orderTypeLabel($t['order_type'])) : '' ?></div>
           <?php if (!empty($t['reasons_json'])): $reasons = json_in($t['reasons_json']); if ($reasons): ?><div class="t-sub">Dlaczego: <?= e(implode(' · ', array_slice($reasons, 0, 4))) ?></div><?php endif; endif ?>
         </td>
-        <td class="n"><?= $t['value_estimated'] ? e(short_money($t['value_estimated'])) : '<span class="muted">—</span>' ?></td>
-        <td class="nowrap"><?php if ($t['deadline_at']): ?><?= e(local_dt($t['deadline_at'], 'd.m.Y, H:i')) ?><div class="t-sub"><?= $days !== null && $days < 3 ? '<span class="chip high">za ' . max(0, $days) . ' ' . plural(max(0, $days), 'dzień', 'dni', 'dni') . '</span>' : 'za ' . (int) $days . ' ' . plural((int) $days, 'dzień', 'dni', 'dni') ?></div><?php else: ?><span class="muted">—</span><?php endif ?></td>
+        <td class="n"><?= $t['value_estimated'] ? e(short_money($t['value_estimated'])) : '<span class="muted">-</span>' ?></td>
+        <td class="nowrap"><?php if ($t['deadline_at']): ?><?= e(local_dt($t['deadline_at'], 'd.m.Y, H:i')) ?><div class="t-sub"><?= $days !== null && $days < 3 ? '<span class="chip high">za ' . max(0, $days) . ' ' . plural(max(0, $days), 'dzień', 'dni', 'dni') . '</span>' : 'za ' . (int) $days . ' ' . plural((int) $days, 'dzień', 'dni', 'dni') ?></div><?php else: ?><span class="muted">-</span><?php endif ?></td>
         <td><?= $t['buyer_risk'] !== null ? risk_chip((int) $t['buyer_risk']) : ($t['buyer_nip'] ? '<a class="chip neutral" href="/kontrahenci/' . e($t['buyer_nip']) . '">Sprawdź</a>' : '<span class="chip neutral">Brak NIP</span>') ?></td>
       </tr>
     <?php endforeach ?>
