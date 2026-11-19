@@ -4,6 +4,11 @@ name: Próba generalna na prawdziwych danych
 # parser na losowych ogłoszeniach, karty prawdziwych firm. Raport w logu zadania.
 on:
   workflow_dispatch:
+    inputs:
+      notice:
+        description: 'Opcjonalnie: identyfikatory ogłoszeń BZP (po spacji) - zamiast próby wypisze ich punkty i wynik parsera'
+        required: false
+        default: ''
 
 jobs:
   proba:
@@ -25,7 +30,11 @@ jobs:
           php-version: '8.3'
           extensions: curl, mbstring, intl, zip, pdo_pgsql
           coverage: none
+      - name: Diagnostyka ogłoszeń
+        if: inputs.notice != ''
+        run: for id in ${{ inputs.notice }}; do echo "##### $id"; php tests/live_notice.php "$id"; done
       - name: Próba generalna
+        if: inputs.notice == ''
         run: php tests/live_rehearsal.php
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/proba
