@@ -87,6 +87,11 @@ final class BzpNoticeParser
             return $out;
         };
 
+        // Ogłoszenia o zamówieniach poniżej progu ustawy mają krótszy formularz z inną numeracją punktów.
+        if ($first('8.1') === '' && $first('3.6') !== '' && $first('3.1') !== '') {
+            return self::parseSmall($fields, $first);
+        }
+
         // Kryteria oceny: pary „4.3.5 Nazwa kryterium” + „4.3.6 Waga”.
         $criteria = [];
         $last = null;
@@ -187,6 +192,77 @@ final class BzpNoticeParser
             'text' => mb_substr(implode("\n", array_map(
                 static fn ($f) => $f['code'] . ') ' . $f['label'] . ($f['value'] !== '' ? ': ' . $f['value'] : ''),
                 array_filter($fields, static fn ($f) => !in_array($f['code'], ['3.6', '3.15', '3.16'], true))
+            )), 0, 40000),
+        ];
+    }
+
+    /**
+     * Ogłoszenie dotyczące zamówienia, dla którego nie ma obowiązku stosowania ustawy Pzp (poniżej progu):
+     * 3.1 nazwa, 3.2 rodzaj, 3.3 opis, 3.4 wartość, 3.6 termin składania ofert, 3.7 informacje dla wykonawców.
+     * Formularz nie zawiera kryteriów, wadium ani kodów CPV.
+     */
+    private static function parseSmall(array $fields, callable $first): array
+    {
+        $nationalId = $first('1.3');
+        $info = self::clip($first('3.7'));
+        $docsUrl = '';
+        if (preg_match('#https?://[^\s<>"]+#u', $info, $m)) {
+            $docsUrl = rtrim($m[0], '.,;)');
+        }
+        $value = null;
+        if (preg_match('/^\s*([\d\s.]+(?:,\d{1,2})?)\s*$/u', $first('3.4'), $m)) {
+            $v = (float) str_replace([' ', "\u{00A0}", '.', ','], ['', '', '', '.'], $m[1]);
+            $value = $v > 0 ? $v : null;
+        }
+        return [
+            'form' => 'small',
+            'buyer' => [
+                'name' => self::oneLine($first('1.1')),
+                'nip' => preg_match('/NIP\D*(\d{10})/u', $nationalId, $m) ? $m[1] : null,
+                'regon' => preg_match('/REGON\D*(\d{9,14})/u', $nationalId, $m) ? $m[1] : null,
+                'street' => $first('1.4.1'),
+                'city' => $first('1.4.2'),
+                'postcode' => $first('1.4.3'),
+                'voivodeship' => Regions::fromName($first('1.4.4')),
+                'email' => $first('1.4.9'),
+                'website' => $first('1.4.10'),
+                'kind' => self::oneLine($first('1.5')),
+            ],
+            'title' => self::oneLine(utrim($first('3.1'))),
+            'notice_number' => $first('2.2'),
+            'procedure' => 'Zamówienie poniżej progu ustawy Pzp',
+            'eu_funds' => null,
+            'documents_url' => $docsUrl,
+            'reference' => '',
+            'order_kind' => $first('3.2'),
+            'partial_offers' => null,
+            'parts' => 1,
+            'descriptions' => array_values(array_filter([self::clip($first('3.3'))])),
+            'cpv_main' => '',
+            'cpv_extra' => [],
+            'period' => '',
+            'criteria' => [],
+            'conditions_required' => null,
+            'conditions' => '',
+            'contractor_info' => $info,
+            'value_estimated' => $value,
+            'exclusions_optional' => null,
+            'other_documents' => '',
+            'variants' => null,
+            'auction' => null,
+            'wadium' => null,
+            'wadium_info' => '',
+            'wadium_value' => null,
+            'performance_bond' => null,
+            'advance_payments' => null,
+            'contract_changes' => null,
+            'deadline' => self::dateTime($first('3.6')),
+            'submission_place' => '',
+            'opening' => null,
+            'binding_until' => null,
+            'text' => mb_substr(implode("\n", array_map(
+                static fn ($f) => $f['code'] . ') ' . $f['label'] . ($f['value'] !== '' ? ': ' . $f['value'] : ''),
+                array_filter($fields, static fn ($f) => !str_starts_with($f['code'], '1.4.'))
             )), 0, 40000),
         ];
     }

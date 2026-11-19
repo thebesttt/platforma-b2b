@@ -49,7 +49,16 @@ final class Tenders
             return [];
         }
         $d = BzpNoticeParser::parse($html);
+        if (empty($d['deadline']) && empty($d['descriptions']) && empty($d['criteria'])) {
+            // Nieznany układ ogłoszenia: nie zapamiętujemy pustego wyniku, żeby poprawka parsera zadziałała od razu.
+            error_log('[bzp] nie rozpoznano układu ogłoszenia ' . $tender['external_id']);
+            return [];
+        }
         $upd = ['details_json' => json_out($d), 'details_fetched_at' => now_utc()];
+        if (!empty($d['value_estimated']) && empty($tender['value_estimated'])) {
+            $upd['value_estimated'] = (float) $d['value_estimated'];
+            $upd['currency'] = 'PLN';
+        }
         if (!empty($d['documents_url'])) {
             $upd['documents_url'] = $d['documents_url'];
         }

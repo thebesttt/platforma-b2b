@@ -24,6 +24,22 @@ return [
         ok($d['cpv_main'] !== '', 'główny CPV');
         ok(str_contains($d['text'], '8.1)'), 'pełna treść w punktach');
     },
+    'Parser BZP: ogłoszenie poniżej progu ustawy (krótki formularz)' => function () use ($fx) {
+        $d = BzpNoticeParser::parse((string) file_get_contents($fx . 'bzp_notice_small.html'));
+        eq('small', $d['form']);
+        eq('Usunięcie i przetwarzanie osadu z oczyszczalni ścieków (przykład)', $d['title']);
+        eq('2026-11-27 09:00:00', $d['deadline'], 'termin z pkt 3.6, w UTC');
+        contains('odwadniania', $d['descriptions'][0]);
+        eq(120000.0, $d['value_estimated']);
+        eq('malopolskie', $d['buyer']['voivodeship']);
+        eq('Przykładowy Zakład Wodociągów Sp. z o.o.', $d['buyer']['name']);
+        eq('https://platforma.example.com/postepowanie/123', $d['documents_url']);
+        $rules = Analysis::rules(['source' => 'bzp', 'title' => $d['title'], 'buyer_name' => $d['buyer']['name']], $d);
+        eq(['Przedmiot', 'Wartość zamówienia', 'Składanie ofert', 'Informacje dla wykonawców'], array_column($rules['items'], 'label'));
+        eq('Ogłoszenie, pkt 3.6', $rules['items'][2]['source']);
+        ok(!in_array('Oświadczenie o niepodleganiu wykluczeniu i spełnianiu warunków (art. 125 ust. 1)', array_column($rules['documents'], 'name'), true), 'bez oświadczenia z ustawy Pzp');
+        contains('poniżej progu', $rules['risks'][count($rules['risks']) - 1]['text']);
+    },
     'BZP: normalizacja rekordu wyszukiwarki' => function () use ($fx) {
         $rows = json_decode((string) file_get_contents($fx . 'bzp_search_p1.json'), true);
         $t = BzpClient::normalize($rows[0]);

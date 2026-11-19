@@ -30,6 +30,30 @@ final class Analysis
         $docs = [];
         $src = static fn (string $pkt) => 'Ogłoszenie, pkt ' . $pkt;
 
+        // Zamówienie poniżej progu ustawy Pzp: krótki formularz, zamawiający stosuje własne zasady.
+        if (($d['form'] ?? '') === 'small') {
+            if (!empty($d['descriptions'][0])) {
+                $items[] = ['label' => 'Przedmiot', 'value' => truncate($d['descriptions'][0], 500), 'source' => $src('3.3')];
+            }
+            if (!empty($d['value_estimated'])) {
+                $items[] = ['label' => 'Wartość zamówienia', 'value' => money_pl($d['value_estimated']), 'source' => $src('3.4')];
+            }
+            if (!empty($d['deadline'])) {
+                $days = days_until($d['deadline']);
+                $items[] = ['label' => 'Składanie ofert', 'value' => local_dt($d['deadline']), 'source' => $src('3.6')];
+                if ($days !== null && $days < 5) {
+                    $risks[] = ['level' => 'high', 'text' => 'Na przygotowanie oferty zostało ' . max(0, $days) . ' ' . plural(max(0, $days), 'dzień', 'dni', 'dni') . '.', 'source' => $src('3.6')];
+                }
+            }
+            if (!empty($d['contractor_info'])) {
+                $items[] = ['label' => 'Informacje dla wykonawców', 'value' => truncate((string) $d['contractor_info'], 700), 'source' => $src('3.7')];
+            }
+            $risks[] = ['level' => 'low', 'text' => 'Zamówienie poniżej progu ustawy Pzp. Zamawiający stosuje własny regulamin, a ogłoszenie nie podaje kryteriów oceny ani wadium - sprawdź je w dokumentach zamówienia.', 'source' => 'Rodzaj ogłoszenia'];
+            $docs[] = ['name' => 'Oferta w formie wymaganej przez zamawiającego (formularz, jeśli go udostępnił)', 'source' => $src('3.7')];
+            $docs[] = ['name' => 'Pełnomocnictwo (jeśli ofertę podpisuje pełnomocnik)', 'source' => 'Dokumenty zamówienia'];
+            return ['mode' => 'rules', 'items' => $items, 'risks' => $risks, 'documents' => $docs];
+        }
+
         if (!empty($d['descriptions'][0])) {
             $items[] = ['label' => 'Przedmiot', 'value' => truncate($d['descriptions'][0], 500), 'source' => $src('4.2.2')];
         }

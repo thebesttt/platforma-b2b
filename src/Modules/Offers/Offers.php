@@ -113,7 +113,9 @@ final class Offers
         if (!empty($d['binding_until'])) {
             $lines[] = 'Jesteśmy związani ofertą do ' . date('d.m.Y', strtotime($d['binding_until'])) . '.' . $src('ogłoszenie, pkt 8.4');
         }
-        $lines[] = 'Oświadczamy, że zapoznaliśmy się z SWZ i wzorem umowy, akceptujemy je bez zastrzeżeń i zobowiązujemy się zawrzeć umowę na tych warunkach.';
+        $lines[] = ($d['form'] ?? '') === 'small'
+            ? 'Oświadczamy, że zapoznaliśmy się z warunkami zamówienia, akceptujemy je bez zastrzeżeń i zobowiązujemy się zawrzeć umowę na tych warunkach.'
+            : 'Oświadczamy, że zapoznaliśmy się z SWZ i wzorem umowy, akceptujemy je bez zastrzeżeń i zobowiązujemy się zawrzeć umowę na tych warunkach.';
         if (!empty($d['wadium'])) {
             $lines[] = 'Wadium w wysokości ' . ($d['wadium_value'] ? money_pl($d['wadium_value']) : '[KWOTA]') . ' wnieśliśmy w formie [FORMA WADIUM]. Zwrot wadium prosimy na rachunek [NUMER KONTA].' . $src('ogłoszenie, pkt 6.4');
         }

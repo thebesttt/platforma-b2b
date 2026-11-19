@@ -52,7 +52,7 @@ $lvl = ['high' => ['high', 'wysokie'], 'mid' => ['mid', 'średnie'], 'low' => ['
       <?php elseif ($tender['source'] === 'ted'): ?>
         <p class="muted small">Ogłoszenia z TED mają pełną treść na stronie TED. Wgraj SWZ, a AI wypisze warunki, kryteria i ryzyka.</p>
       <?php else: ?>
-        <p class="muted small">Nie udało się pobrać treści ogłoszenia z BZP. Spróbuj odświeżyć stronę za chwilę.</p>
+        <p class="muted small">Nie udało się odczytać treści tego ogłoszenia. Odśwież stronę za chwilę albo otwórz ogłoszenie w BZP (przycisk powyżej).</p>
       <?php endif ?>
     </section>
 
