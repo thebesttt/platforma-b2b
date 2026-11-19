@@ -48,8 +48,9 @@ final class App
                 && str_starts_with((string) ($request->server['CONTENT_TYPE'] ?? ''), 'multipart/form-data')) {
                 return Response::html(View::render('errors/message', ['title' => 'Pliki są za duże', 'message' => 'Łączny rozmiar przesłanych plików przekracza limit serwera. Wgraj mniej plików naraz albo mniejsze pliki.'], Auth::check() ? 'app' : 'public'), 413);
             }
+            // Kod 403, nie 419: Apache zamienia niestandardowe kody odpowiedzi na błąd 500.
             if ($request->method === 'POST' && ($opts['csrf'] ?? true) && !Csrf::check($request)) {
-                return Response::html(View::render('errors/message', ['title' => 'Formularz wygasł', 'message' => 'Odśwież stronę i spróbuj ponownie.'], Auth::check() ? 'app' : 'public'), 419);
+                return Response::html(View::render('errors/message', ['title' => 'Formularz wygasł', 'message' => 'Odśwież stronę i spróbuj ponownie.'], Auth::check() ? 'app' : 'public'), 403);
             }
             $handler = $route['handler'];
             if (is_array($handler)) {

@@ -48,7 +48,7 @@ TOKEN=$(curl -fsS -c "$JAR" -b "$JAR" "$REG" | sed -n 's/.*name="_csrf" value="\
 
 # Formularz bez tokenu CSRF jest odrzucany.
 code=$(curl -s -o /dev/null -w '%{http_code}' -c "$JAR" -b "$JAR" --data-urlencode "email=x@example.com" "$BASE/logowanie")
-[ "$code" = "419" ] || fail "POST bez tokenu CSRF powinien zwrócić 419 (jest $code)"
+[ "$code" = "403" ] || fail "POST bez tokenu CSRF powinien zwrócić 403 (jest $code)"
 
 EMAIL="smoke$(date +%s)@example.com"
 loc=$(curl -s -o /dev/null -w '%{redirect_url}' -c "$JAR" -b "$JAR" \

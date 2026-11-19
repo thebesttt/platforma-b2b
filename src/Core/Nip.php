@@ -15,7 +15,8 @@ final class Nip
     public static function valid(string $nip): bool
     {
         $nip = self::clean($nip);
-        if (!preg_match('/^\d{10}$/', $nip) || $nip === '0000000000') {
+        // NIP nie zaczyna się od zera. Bez tej reguły 10-cyfrowe numery KRS (z zerami na początku) co jakiś czas przechodziły sumę kontrolną.
+        if (!preg_match('/^[1-9]\d{9}$/', $nip)) {
             return false;
         }
         $w = [6, 5, 7, 2, 3, 4, 5, 6, 7];

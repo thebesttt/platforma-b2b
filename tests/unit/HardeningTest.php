@@ -220,6 +220,54 @@ return [
         $form = http('GET', '/klienci/' . $cid . '/wiadomosc')->body;
         ok(strpos($form, 'value="keep"') < strpos($form, 'value="switch"'), 'domyślny przycisk formularza nie zmienia treści');
     },
+    'Tytuły w cudzysłowach typograficznych nie psują kodowania (błąd z prawdziwych danych BZP)' => function () {
+        // trim() z listą „ ” ucinał pojedyncze bajty: tytuł zaczynający się od “ zostawał z błędnym bajtem 0x9C i PostgreSQL odrzucał zapis.
+        foreach (['“Budowa drogi” – etap I', '„Remont szkoły”', "\u{201C}Dostawa sprzętu\u{201D}", ' "Usługa sprzątania" ', '«Ācs»', 'Zwykły tytuł'] as $raw) {
+            $t = BzpClient::normalize(['objectId' => 'x', 'orderObject' => $raw, 'publicationDate' => '2026-11-17T08:00:00Z']);
+            ok(mb_check_encoding($t['title'], 'UTF-8'), "poprawny UTF-8: $raw");
+            ok(!preg_match('/^[„”“"«»\s]|[„”“"«»\s]$/u', $t['title']), "bez cudzysłowów na brzegach: {$t['title']}");
+        }
+        eq('Budowa drogi” – etap I', BzpClient::normalize(['objectId' => 'x', 'orderObject' => '“Budowa drogi” – etap I'])['title']);
+        eq('Ācs', utrim('«Ācs»'));
+        // Zapis ogłoszenia z błędnym bajtem i znakiem NUL nie może przerwać importu.
+        $id = Tenders::save(['source' => 'bzp', 'external_id' => 'zly-utf8', 'title' => "Remont \x9C drogi\0", 'buyer_name' => "Gmina \xC5", 'raw_json' => json_out(['a' => "\x9C"])]);
+        $row = Tenders::find($id);
+        ok(mb_check_encoding($row['title'], 'UTF-8') && !str_contains($row['title'], "\0"));
+        contains('Remont', $row['title']);
+    },
+    'NIP nie zaczyna się od zera (numer KRS nie przejdzie jako NIP)' => function () {
+        ok(!App\Core\Nip::valid('0000189262'), 'numer KRS z poprawną „sumą kontrolną”');
+        ok(!App\Core\Nip::valid('0000047102'));
+        ok(App\Core\Nip::valid('1132869037'));
+        eq(null, BzpClient::normalize(['objectId' => 'x', 'orderObject' => 'T', 'organizationNationalId' => '0000189262'])['buyer_nip']);
+    },
+    'Import: jedno błędne ogłoszenie nie zatrzymuje pozostałych' => function () {
+        $dir = bzp_fixture_dir(1);
+        // Drugie ogłoszenie bez tytułu i z niepoprawnym kodowaniem – ma zostać zapisane albo pominięte, ale nie przerwać importu.
+        $rows = json_decode((string) file_get_contents("$dir/p1.json"), true);
+        $rows[1]['orderObject'] = "\x9C\xE2\x80";
+        file_put_contents("$dir/p1.json", json_encode($rows, JSON_INVALID_UTF8_IGNORE | JSON_PARTIAL_OUTPUT_ON_ERROR));
+        Config::set('HTTP_FIXTURES', $dir);
+        try {
+            $res = App\Modules\Tenders\Importer::run('2026-11-17 00:00:00');
+            eq(13, $res['bzp'], 'wszystkie ogłoszenia zapisane');
+            eq(13, (int) Db::get()->val("SELECT COUNT(*) FROM tenders WHERE source = 'bzp'"));
+        } finally {
+            Config::set('HTTP_FIXTURES', __DIR__ . '/../fixtures/http');
+        }
+    },
+    'Dopasowanie wielu profili jednym odczytem ogłoszeń daje te same wyniki' => function () {
+        import_fixtures();
+        [$org] = make_org();
+        $db = Db::get();
+        $p1 = $db->insert('tender_profiles', ['org_id' => $org, 'name' => 'A', 'cpv' => '45233', 'keywords' => '', 'sources' => 'bzp ted', 'active' => 1, 'created_at' => now_utc()]);
+        $p2 = $db->insert('tender_profiles', ['org_id' => $org, 'name' => 'B', 'cpv' => '', 'keywords' => 'drog', 'sources' => 'bzp', 'active' => 1, 'matched_until' => gmdate('Y-m-d H:i:s', time() + 3600), 'created_at' => now_utc()]);
+        $n = App\Modules\Tenders\Matcher::run();
+        ok($n >= 1, 'profil A ma dopasowania');
+        eq(0, (int) $db->val('SELECT COUNT(*) FROM tender_matches WHERE profile_id = ?', [$p2]), 'profil B: nic nowszego niż jego znacznik');
+        ok((int) $db->val('SELECT COUNT(*) FROM tender_matches WHERE profile_id = ?', [$p1]) >= 1);
+        eq(0, App\Modules\Tenders\Matcher::run(), 'powtórne uruchomienie nie tworzy duplikatów');
+    },
     'safe_url przepuszcza tylko http(s) i ścieżki lokalne' => function () {
         eq('https://example.com/a', safe_url('https://example.com/a'));
         eq('/przetargi/1', safe_url('/przetargi/1'));

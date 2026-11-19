@@ -126,12 +126,23 @@ final class Matcher
             $params[] = $profileId;
         }
         $created = 0;
-        foreach ($db->all($sql, $params) as $profile) {
-            $since = $sinceUtc ?? ($profile['matched_until'] ?: gmdate('Y-m-d H:i:s', time() - 14 * 86400));
-            $tenders = $db->all(
-                'SELECT * FROM tenders WHERE updated_at >= ? AND (deadline_at IS NULL OR deadline_at > ?) ORDER BY id',
-                [$since, now_utc()]
-            );
+        $profiles = $db->all($sql, $params);
+        if (!$profiles) {
+            return 0;
+        }
+        // Ogłoszenia czytamy raz dla wszystkich profili (bez dużego pola raw_json), a potem filtrujemy per profil.
+        $default = gmdate('Y-m-d H:i:s', time() - 14 * 86400);
+        $sinceFor = static fn (array $p) => $sinceUtc ?? ($p['matched_until'] ?: $default);
+        $minSince = min(array_map($sinceFor, $profiles));
+        $all = $db->all(
+            'SELECT id, source, title, order_type, voivodeship, cpv_main, cpv_all, value_estimated, deadline_at, details_json, updated_at
+               FROM tenders WHERE updated_at >= ? AND (deadline_at IS NULL OR deadline_at > ?) ORDER BY id',
+            [$minSince, now_utc()]
+        );
+        foreach ($profiles as $profile) {
+            $since = $sinceFor($profile);
+            $startedAt = now_utc();
+            $tenders = $since === $minSince ? $all : array_filter($all, static fn ($t) => $t['updated_at'] >= $since);
             foreach ($tenders as $t) {
                 $r = self::score($t, $profile);
                 if (!$r || $r['score'] < self::THRESHOLD) {
@@ -153,7 +164,7 @@ final class Matcher
                 ]);
                 $created++;
             }
-            $db->update('tender_profiles', ['matched_until' => now_utc()], 'id = ?', [$profile['id']]);
+            $db->update('tender_profiles', ['matched_until' => $startedAt], 'id = ?', [$profile['id']]);
         }
         return $created;
     }

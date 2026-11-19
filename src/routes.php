@@ -1,5 +1,5 @@
 <?php
-/** Wszystkie adresy aplikacji. 'auth' => true wymaga zalogowania. POST zawsze sprawdza token CSRF. */
+/** Wszystkie adresy aplikacji. 'auth' => true wymaga zalogowania. POST zawsze sprawdza token CSRF (brak tokenu = odpowiedź 403). */
 
 declare(strict_types=1);
 

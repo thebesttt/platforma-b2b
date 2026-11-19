@@ -42,7 +42,8 @@ return [
     'POST bez tokenu CSRF jest odrzucany' => function () {
         [, $uid] = make_org();
         login_as($uid);
-        eq(419, http('POST', '/profile', ['_csrf' => 'zly', 'name' => 'X', 'cpv' => '45'])->status);
+        eq(403, http('POST', '/profile', ['_csrf' => 'zly', 'name' => 'X', 'cpv' => '45'])->status);
+        eq(0, (int) App\Core\Db::get()->val('SELECT COUNT(*) FROM tender_profiles'), 'nic nie zapisano');
     },
     'Izolacja firm: cudza oferta, kontakt i należność są niewidoczne' => function () {
         [$orgA, $uidA] = make_org('a@example.com', 'Firma A');

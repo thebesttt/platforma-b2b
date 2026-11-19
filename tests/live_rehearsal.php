@@ -48,6 +48,9 @@ echo 'Błędy: ' . ($res['errors'] ? implode(' | ', $res['errors']) : 'brak') . 
 if ($res['bzp'] < 50) {
     $problems[] = 'Import z BZP zwrócił mniej niż 50 ogłoszeń z 2 dni.';
 }
+$dups = (int) $db->val('SELECT COUNT(*) FROM (SELECT source, external_id FROM tenders GROUP BY source, external_id HAVING COUNT(*) > 1) d');
+$badNip = (int) $db->val("SELECT COUNT(*) FROM tenders WHERE buyer_nip LIKE '0%'");
+echo "Duplikaty: $dups, NIP zaczynające się od zera: $badNip\n";
 if ($res['errors']) {
     $problems[] = 'Import zgłosił błędy.';
 }
@@ -182,12 +185,70 @@ if (count($many) >= 3 && $found === 0) {
     $problems[] = 'Zapytanie zbiorcze do białej listy nie zwróciło żadnej firmy – sprawdź format odpowiedzi.';
 }
 
+// 5b. Strony aplikacji na prawdziwych danych (pełna ścieżka: kontroler + widok)
+$h('5b. Strony aplikacji na prawdziwych danych');
+$_SESSION = [];
+Auth::actAs((int) $reg['user_id']);
+$get = static function (string $path, array $query = []): int {
+    $r = App\Core\App::handle(new App\Core\Request('GET', $path, $query, [], [], ['REMOTE_ADDR' => '127.0.0.1', 'HTTP_HOST' => 'localhost']));
+    if ($r->status !== 200) {
+        echo "  $path → {$r->status}: " . truncate(strip_tags($r->body), 200) . "\n";
+    }
+    return $r->status;
+};
+$pages = 0;
+$failed = 0;
+foreach (array_merge(
+    ['/pulpit', '/przetargi', '/przetargi/szukaj', '/profile', '/kontrahenci', '/oferty'],
+    array_map(static fn ($t) => '/przetargi/' . $t['id'], $sample),
+    array_map(static fn ($t) => '/przetargi/' . $t['id'], $db->all("SELECT id FROM tenders WHERE source = 'ted' ORDER BY RANDOM() LIMIT 15")),
+    array_map(static fn ($c) => '/kontrahenci/' . $c['nip'], $db->all('SELECT nip FROM companies LIMIT 10'))
+) as $path) {
+    $pages++;
+    $failed += $get($path) === 200 ? 0 : 1;
+}
+foreach ([['q' => 'remont'], ['q' => 'dostawa sprzętu', 'woj' => 'mazowieckie'], ['cpv' => '45233', 'rodzaj' => 'works'], ['q' => 'żółć „test” <b>']] as $q) {
+    $pages++;
+    $failed += $get('/przetargi/szukaj', $q) === 200 ? 0 : 1;
+}
+echo "Stron sprawdzonych: $pages, z błędem: $failed\n";
+if ($failed) {
+    $problems[] = "$failed stron aplikacji zwróciło błąd na prawdziwych danych.";
+}
+// Szkice ofert z prawdziwych ogłoszeń i eksport do Worda
+$offers = 0;
+foreach (array_slice($sample, 0, 6) as $t) {
+    try {
+        $oid = App\Modules\Offers\Offers::create($org, (int) $reg['user_id'], Tenders::find((int) $t['id']));
+        $secs = array_map(static fn ($x) => ['title' => $x['title'], 'body' => (string) $x['body']], App\Modules\Offers\Offers::sections($oid));
+        $bin = App\Modules\Offers\Docx::build('Oferta', $secs);
+        $tmp = tempnam(sys_get_temp_dir(), 'dx');
+        file_put_contents($tmp, $bin);
+        $z = new ZipArchive();
+        $z->open($tmp);
+        $xmlOk = simplexml_load_string((string) $z->getFromName('word/document.xml')) !== false;
+        $z->close();
+        unlink($tmp);
+        if (!$xmlOk || $get('/oferty/' . $oid) !== 200) {
+            $problems[] = 'Szkic oferty dla ogłoszenia ' . $t['external_id'] . ' jest uszkodzony.';
+        }
+        $offers++;
+    } catch (Throwable $e) {
+        $problems[] = 'Szkic oferty: ' . $e->getMessage();
+    }
+}
+echo "Szkice ofert z prawdziwych ogłoszeń: $offers (każdy z poprawnym plikiem .docx)\n";
+
 // 6. Powtórny import (kontynuacja od zapisanego punktu, bez duplikatów)
 $h('6. Powtórny import');
 $before = (int) $db->val('SELECT COUNT(*) FROM tenders');
 $t0 = microtime(true);
 $again = Importer::run();
-echo "Nowych zapytań o ogłoszenia: BZP {$again['bzp']}, TED {$again['ted']}, czas: " . round(microtime(true) - $t0) . " s\n";
+echo "Pobrano ponownie: BZP {$again['bzp']}, TED {$again['ted']}, czas: " . round(microtime(true) - $t0) . " s\n";
+echo 'Błędy: ' . ($again['errors'] ? implode(' | ', $again['errors']) : 'brak') . "\n";
+if ($again['errors']) {
+    $problems[] = 'Powtórny import zgłosił błędy.';
+}
 echo 'Ogłoszeń w bazie: przed ' . $before . ', po ' . (int) $db->val('SELECT COUNT(*) FROM tenders') . "\n";
 
 $h('Wynik');

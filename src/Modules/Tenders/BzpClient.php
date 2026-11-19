@@ -95,7 +95,7 @@ final class BzpClient
         preg_match_all('/(\d{8})-\d/', (string) ($row['cpvCode'] ?? ''), $m);
         $cpv = array_values(array_unique($m[1] ?? []));
         $nip = Nip::clean((string) ($row['organizationNationalId'] ?? ''));
-        $title = trim((string) ($row['orderObject'] ?? ''), " \t\n\r\0\x0B„”\"");
+        $title = utrim((string) ($row['orderObject'] ?? ''));
         return [
             'source' => 'bzp',
             'external_id' => (string) $row['objectId'],

@@ -93,6 +93,10 @@ final class Db
                 $v === null => PDO::PARAM_NULL,
                 default => PDO::PARAM_STR,
             };
+            if (is_string($v) && $v !== '' && (!mb_check_encoding($v, 'UTF-8') || str_contains($v, "\0"))) {
+                // PostgreSQL odrzuca błędne sekwencje UTF-8 i znak NUL – jeden zły znak nie może przerwać zapisu.
+                $v = str_replace("\0", '', mb_scrub($v, 'UTF-8'));
+            }
             $st->bindValue($i + 1, is_bool($v) ? (int) $v : $v, $type);
         }
         $st->execute();

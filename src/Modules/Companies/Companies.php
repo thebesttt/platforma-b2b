@@ -60,7 +60,7 @@ final class Companies
         }
         $name = $subject['name'] ?? ($krsSummary['name'] ?? ($existing['name'] ?? null));
         if (!$subject && !$krsSummary && !$existing) {
-            return ['ok' => false, 'error' => 'Nie znaleźliśmy firmy o tym numerze NIP w wykazie podatników VAT.'];
+            return ['ok' => false, 'error' => 'Tej firmy nie ma w wykazie podatników VAT, więc nie możemy pobrać jej danych. Dotyczy to m.in. firm zwolnionych z VAT i części jednostek publicznych.'];
         }
         $uokik = Uokik::forCompany($nip, (string) $name);
         $risk = Risk::assess($subject, $krsSummary, $uokik);

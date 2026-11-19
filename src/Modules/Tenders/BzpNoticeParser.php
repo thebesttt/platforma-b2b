@@ -13,6 +13,8 @@ final class BzpNoticeParser
     /** @return array<int, array{code: string, label: string, value: string}> */
     public static function fields(string $html): array
     {
+        // Błędny bajt w treści sprawiłby, że wyrażenia regularne w trybie UTF-8 zwrócą pusty wynik.
+        $html = mb_scrub($html, 'UTF-8');
         $html = preg_replace('#<(script|style)\b[^>]*>.*?</\1>#is', ' ', $html) ?? '';
         $html = preg_replace('#<!--.*?-->#s', ' ', $html) ?? '';
         $html = preg_replace('#</?(h[1-6]|p|div|li|tr|table|ul|ol)\b[^>]*>|<br\s*/?>#i', "\n", $html) ?? '';
@@ -151,7 +153,7 @@ final class BzpNoticeParser
                 'website' => $first('1.5.10'),
                 'kind' => self::oneLine($first('1.6')),
             ],
-            'title' => self::oneLine(trim($first('2.3'), " „”\"")),
+            'title' => self::oneLine(utrim($first('2.3'))),
             'notice_number' => $first('2.5'),
             'procedure' => self::oneLine($first('2.16')),
             'eu_funds' => self::yes($first('2.14')),

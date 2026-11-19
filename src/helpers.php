@@ -135,7 +135,8 @@ function truncate(string $s, int $len): string
 
 function json_out(mixed $v): string
 {
-    return json_encode($v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+    // JSON_INVALID_UTF8_SUBSTITUTE: błędny znak w danych z zewnętrznego serwisu nie może przerwać zapisu.
+    return json_encode($v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR);
 }
 
 function json_in(?string $s): array
@@ -213,4 +214,14 @@ function asset(string $path): string
 {
     $file = APP_ROOT . '/public' . $path;
     return $path . '?v=' . (is_file($file) ? substr((string) filemtime($file), -8) : APP_VERSION);
+}
+
+/**
+ * Usuwa z początku i końca tekstu odstępy oraz cudzysłowy, także typograficzne.
+ * Wbudowane trim() działa na bajtach: lista ze znakami „ ” ucinała pojedyncze bajty i psuła kodowanie UTF-8.
+ */
+function utrim(string $s): string
+{
+    $s = mb_scrub($s, 'UTF-8');
+    return preg_replace('/^[\s\x{00A0}„”“"«»\x{2018}\x{2019}\x{201A}]+|[\s\x{00A0}„”“"«»\x{2018}\x{2019}\x{201A}]+$/u', '', $s) ?? trim($s);
 }
