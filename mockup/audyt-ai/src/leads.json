@@ -1,0 +1,70 @@
+{
+  "version": "2026-11-19",
+  "company": "Agencja Przykładowa (dane fikcyjne)",
+  "pages": "strona główna i 3 strony oferty",
+  "levels": { "hot": 70, "talk": 40 },
+  "questions": [
+    {
+      "id": "need", "text": "W czym możemy pomóc?", "label": "Potrzeba",
+      "options": [["Migracja lub aktualizacja sklepu", 25], ["Nowy sklep", 20], ["SEO i widoczność", 20], ["Naprawa i stała opieka", 15], ["Integracje: hurtownia, ERP, płatności", 15]]
+    },
+    {
+      "id": "platform", "text": "Na czym działa sklep?", "label": "Platforma",
+      "options": [["PrestaShop 8 lub nowsza", 15], ["PrestaShop 1.7", 15], ["PrestaShop 1.6 lub starsza", 15], ["Inna platforma", 5], ["Jeszcze nie mam sklepu", 10]]
+    },
+    {
+      "id": "when", "text": "Kiedy chcesz zacząć?", "label": "Termin",
+      "options": [["Od razu", 25], ["W ciągu miesiąca", 20], ["W tym kwartale", 10], ["Na razie się rozglądam", 0]]
+    },
+    {
+      "id": "budget", "text": "Jaki budżet przewidujesz?", "label": "Budżet",
+      "options": [["Powyżej 20 tys. zł", 25], ["5-20 tys. zł", 20], ["Do 5 tys. zł", 5], ["Jeszcze nie wiem", 10]]
+    }
+  ],
+  "phone_points": 10,
+  "greeting": "Dzień dobry. Jestem asystentem AI firmy Agencja Przykładowa. Zadam 4 krótkie pytania, żeby od razu skierować Cię do właściwej osoby.",
+  "url_prompt": "Podaj adres sklepu. Przed rozmową sprawdzimy go bezpłatnie i pokażemy wynik.",
+  "thanks": "Dziękujemy. Odezwiemy się najpóźniej w następnym dniu roboczym.",
+  "leads": [
+    {
+      "at": "19.11.2026, 09:12", "company": "Meble Dębowe (przykład)", "person": "Anna K.", "email": "anna@meble-debowe.example", "phone": true,
+      "answers": [0, 1, 0, 0], "status": "Nowe", "consent": false, "page": "/oferta/migracja-prestashop",
+      "nip": ["good", "Czynny podatnik VAT, wpis w KRS bez zmian. Ryzyko niskie."], "shop": "meble-debowe.example", "audit": 48,
+      "summary": "Chce przenieść sklep z PrestaShop 1.7 na 8 przed sezonem. Pyta, czy zostaną adresy stron i pozycje w Google."
+    },
+    {
+      "at": "19.11.2026, 08:40", "company": "Rowery Koło (przykład)", "person": "Marek W.", "email": "marek@rowery-kolo.example", "phone": true,
+      "answers": [2, 0, 1, 1], "status": "W kontakcie", "consent": true, "page": "/oferta/seo-dla-sklepow",
+      "nip": null, "shop": "rowery-kolo.example", "audit": 61,
+      "summary": "Ruch z Google spadł po zmianie szablonu. Szuka stałej opieki nad widocznością."
+    },
+    {
+      "at": "18.11.2026, 21:57", "company": "Dom i Styl (przykład)", "person": "Katarzyna B.", "email": "biuro@dom-i-styl.example", "phone": false,
+      "answers": [0, 3, 1, 1], "status": "Nowe", "consent": false, "page": "/",
+      "nip": ["bad", "Spółka w likwidacji według KRS. Ryzyko wysokie: sprawdź kontrahenta przed wyceną."], "shop": "dom-i-styl.example", "audit": 39,
+      "summary": "Przenosiny z innej platformy na PrestaShop. Zapytanie wysłane poza godzinami pracy."
+    },
+    {
+      "at": "18.11.2026, 14:05", "company": "Zielony Ogród (przykład)", "person": "Ewa S.", "email": "ewa@zielony-ogrod.example", "phone": false,
+      "answers": [3, 2, 0, 2], "status": "Oferta wysłana", "consent": false, "page": "/oferta/opieka-techniczna",
+      "nip": null, "shop": "zielony-ogrod.example", "audit": 44,
+      "summary": "Sklep na PrestaShop 1.6 przestał wysyłać potwierdzenia zamówień. Potrzebna szybka naprawa."
+    },
+    {
+      "at": "18.11.2026, 11:30", "company": "Herbaty Świata (przykład)", "person": "Piotr N.", "email": "piotr@herbaty-swiata.example", "phone": true,
+      "answers": [1, 4, 2, 3], "status": "Nowe", "consent": true, "page": "/",
+      "nip": null, "shop": null, "audit": null,
+      "summary": "Planuje pierwszy sklep internetowy. Chce poznać koszt i czas wdrożenia."
+    },
+    {
+      "at": "17.11.2026, 16:48", "company": "Auto Części 24 (przykład)", "person": "Tomasz R.", "email": "tomasz@auto-czesci-24.example", "phone": false,
+      "answers": [4, 3, 3, 2], "status": "Nowe", "consent": false, "page": "/blog/integracja-z-hurtownia",
+      "nip": null, "shop": null, "audit": null,
+      "summary": "Pyta ogólnie o integrację z hurtownią. Bez konkretnego terminu."
+    }
+  ],
+  "knowledge": { "library": 6, "pages": 14, "read_at": "18.11.2026" },
+  "limits": { "messages": 12, "daily": 300, "budget": 150 },
+  "funnel": [["Odsłony stron z widżetem", 1265], ["Rozpoczęte rozmowy", 148], ["Odpowiedzi na wszystkie pytania", 61], ["Zostawiony kontakt", 29], ["Zapytania pilne", 11]],
+  "ab": { "days": 30, "a": ["Zwykły formularz", 1240, 21], "b": ["Kwalifikator", 1265, 29] }
+}

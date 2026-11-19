@@ -14,6 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 rules = json.loads((ROOT / 'src/rules.json').read_text(encoding='utf-8'))
 sample = json.loads((ROOT / 'src/sample.json').read_text(encoding='utf-8'))
+leads = json.loads((ROOT / 'src/leads.json').read_text(encoding='utf-8'))
 page = (ROOT / 'src/page.html').read_text(encoding='utf-8')
 
 # --- Kontrola spójności wytycznych -------------------------------------------------------------
@@ -47,6 +48,18 @@ for u in rules['unscored']:
 for code in sample['results']:
     if code not in codes:
         errors.append(f'Dane przykładowe dla nieznanego wskaźnika {code}.')
+# Zasady kwalifikacji zapytań: komplet punktów to 100, a przykładowe zapytania wskazują istniejące odpowiedzi.
+lead_max = sum(max(o[1] for o in q['options']) for q in leads['questions']) + leads['phone_points']
+if lead_max != 100:
+    errors.append(f'Zasady kwalifikacji: komplet punktów to {lead_max}, powinno być 100.')
+if not 0 < leads['levels']['talk'] < leads['levels']['hot'] <= 100:
+    errors.append('Zasady kwalifikacji: błędne progi.')
+for lead in leads['leads']:
+    if len(lead['answers']) != len(leads['questions']) or any(a >= len(q['options']) for a, q in zip(lead['answers'], leads['questions'])):
+        errors.append(f"Zapytanie {lead['company']}: odpowiedzi nie pasują do pytań.")
+steps = [s[1] for s in leads['funnel']]
+if steps != sorted(steps, reverse=True) or steps[0] != leads['ab']['b'][1] or steps[3] != leads['ab']['b'][2]:
+    errors.append('Lejek: kroki muszą maleć i zgadzać się z wariantem „Kwalifikator” w teście.')
 if errors:
     sys.exit('Błędy:\n- ' + '\n- '.join(errors))
 
@@ -55,7 +68,7 @@ def embed(obj):
     return json.dumps(obj, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
 
 
-built = page.replace('/*__RULES__*/null', embed(rules)).replace('/*__SAMPLE__*/null', embed(sample))
+built = page.replace('/*__RULES__*/null', embed(rules)).replace('/*__SAMPLE__*/null', embed(sample)).replace('/*__LEADS__*/null', embed(leads))
 assert '/*__' not in built
 
 head, body = built.split('</style>', 1)

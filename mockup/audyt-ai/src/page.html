@@ -1,4 +1,4 @@
-<title>Audyt widoczności w AI</title>
+<title>Mockup audytu i zapytań</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap">
 <style>
@@ -32,6 +32,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 var(--font); }
 a { color: var(--accent); }
 a:hover { color: var(--accent-hover); }
@@ -165,15 +166,48 @@ td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space:
 .qa li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; }
 .qa .y { color: var(--good); font-weight: 700; } .qa .n { color: var(--bad); font-weight: 700; }
 .inline-note { background: var(--note-bg); color: var(--note-text); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+
+/* Zapytania ze strony */
+.nav a:hover { background: var(--line-soft); }
+.lead summary { grid-template-columns: 52px minmax(0, 1fr) auto auto; }
+.badge-score { font: 700 20px var(--font-head); font-variant-numeric: tabular-nums; }
+.counts { display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 14px; }
+.widget-wrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 20px; align-items: start; }
+.widget-wrap > * { min-width: 0; }
+.widget { border: 1px solid var(--line); border-radius: 16px; background: var(--surface); overflow: hidden; display: flex; flex-direction: column; max-width: 420px; }
+.w-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--accent); color: var(--on-accent); }
+.w-head b { font-family: var(--font-head); }
+.w-ai { font-size: 11px; font-weight: 700; border: 1px solid currentColor; border-radius: 6px; padding: 0 6px; }
+.w-note { font-size: 12px; color: var(--muted); padding: 8px 16px; border-bottom: 1px solid var(--line); background: var(--line-soft); }
+.w-body { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.bubble { max-width: 88%; padding: 9px 12px; border-radius: 14px; font-size: 14px; overflow-wrap: anywhere; }
+.bubble.bot { background: var(--line-soft); align-self: flex-start; border-bottom-left-radius: 4px; }
+.bubble.user { background: var(--accent-soft); align-self: flex-end; border-bottom-right-radius: 4px; }
+.opts { display: flex; flex-direction: column; gap: 6px; }
+.opts button { text-align: left; border: 1px solid var(--accent-line); background: var(--surface); color: var(--accent); border-radius: 10px; padding: 9px 12px; font: 500 14px var(--font); cursor: pointer; min-height: 40px; }
+.opts button:hover { background: var(--accent-soft); }
+.w-form { display: flex; flex-direction: column; gap: 10px; }
+.w-form .field { flex: none; }
+.check { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--text-2); }
+.check input { margin-top: 3px; }
+.w-foot { border-top: 1px solid var(--line); padding: 10px 12px; display: flex; gap: 8px; }
+.w-foot input { flex: 1; min-width: 0; min-height: 40px; border: 1px solid var(--line); border-radius: 10px; padding: 0 12px; font: 14px var(--font); background: var(--surface); color: var(--text); }
+.err { color: var(--bad); font-size: 13px; }
+.codeblock { background: var(--line-soft); border-radius: 10px; padding: 12px 14px; overflow-x: auto; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; }
+.funnel { display: flex; flex-direction: column; gap: 14px; }
+@media (max-width: 560px) {
+  .lead summary { grid-template-columns: 44px minmax(0, 1fr); }
+  .lead summary .chip { grid-column: 2; justify-self: start; grid-row: auto; }
+}
 </style>
 
-<div class="mockbar"><b>Mockup.</b> Dane przykładowe dla fikcyjnego sklepu. To nie jest wynik prawdziwego audytu. Formularz i przyciski pokazują układ, nie uruchamiają pomiaru.</div>
+<div class="mockbar"><b>Mockup.</b> Dane przykładowe dla fikcyjnych firm. Nic tu nie jest mierzone ani wysyłane. Formularze i przyciski pokazują układ.</div>
 <div class="shell" id="shell">
   <aside class="sidebar" aria-label="Menu platformy">
     <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span class="brand-name">[Nazwa]</span></div>
     <nav class="nav">
-      <span>Pulpit</span><span>Przetargi</span><span>Oferty i wnioski</span><span>Kontrahenci</span><span>Klienci i wiadomości</span>
-      <span class="on" aria-current="true">Audyt i reklamy</span>
+      <span>Pulpit</span><span>Przetargi</span><span>Oferty i wnioski</span><span>Kontrahenci</span><a href="#zapytania" id="navLeads">Klienci i wiadomości</a>
+      <a href="#raport" id="navAudit">Audyt i reklamy</a>
       <div class="nav-sub">Konto</div><span class="acct">Biblioteka firmy</span><span class="acct">Ustawienia</span>
     </nav>
   </aside>
@@ -182,7 +216,7 @@ td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space:
       <div class="client-note" id="clientNote" hidden>Widok klienta: tak wygląda raport pod publicznym linkiem. Tylko do odczytu, bez menu platformy.</div>
       <header class="head">
         <div>
-          <p class="crumbs agency-only">Audyt i reklamy / Audyt treści pod wyszukiwarki i AI</p>
+          <p class="crumbs agency-only" id="crumbs"></p>
           <h1 id="pageTitle"></h1>
           <div class="meta" id="pageMeta"></div>
         </div>
@@ -191,12 +225,19 @@ td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space:
       <nav class="tabs" aria-label="Części audytu" id="tabs">
         <a href="#raport">Raport</a><a href="#wytyczne">Wytyczne wskaźników</a><a href="#postep">Przed i po</a><a href="#cytowania">Cytowania w AI</a><a href="#strony" class="agency-only">Strony witryny</a>
       </nav>
+      <nav class="tabs" aria-label="Części modułu zapytań" id="tabsLeads" hidden>
+        <a href="#zapytania">Zapytania</a><a href="#kwalifikator">Zasady kwalifikacji</a><a href="#widzet">Podgląd widżetu</a><a href="#wyniki">Wyniki</a>
+      </nav>
 
       <section id="v-raport" aria-label="Raport"></section>
       <section id="v-wytyczne" aria-label="Wytyczne wskaźników" hidden></section>
       <section id="v-postep" aria-label="Przed i po" hidden></section>
       <section id="v-cytowania" aria-label="Cytowania w AI" hidden></section>
       <section id="v-strony" aria-label="Strony witryny" hidden></section>
+      <section id="v-zapytania" aria-label="Zapytania" hidden></section>
+      <section id="v-kwalifikator" aria-label="Zasady kwalifikacji" hidden></section>
+      <section id="v-widzet" aria-label="Podgląd widżetu" hidden></section>
+      <section id="v-wyniki" aria-label="Wyniki" hidden></section>
     </div>
   </main>
 </div>
@@ -204,6 +245,7 @@ td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space:
 <script>
 const RULES = /*__RULES__*/null;
 const SAMPLE = /*__SAMPLE__*/null;
+const LEADS = /*__LEADS__*/null;
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const LABEL = { good: 'Dobrze', mid: 'Do poprawy', bad: 'Źle' };
@@ -246,7 +288,16 @@ function auditSwitch() {
     `<button type="button" data-audit="${a.id}" aria-pressed="${state.audit === a.id}">${esc(a.date)} · ${esc(a.label)}</button>`).join('') + `</div>`;
 }
 
-function renderHead() {
+function renderHead(module) {
+  const crumbs = document.getElementById('crumbs');
+  if (module === 'zapytania') {
+    crumbs.textContent = 'Klienci i wiadomości / Zapytania ze strony';
+    document.getElementById('pageTitle').textContent = 'Zapytania ze strony';
+    document.getElementById('pageMeta').innerHTML =
+      `<span>Firma: <b>${esc(LEADS.company)}</b></span><span>Widżet: <b>${esc(LEADS.pages)}</b></span><span>Zasady kwalifikacji: <b>wersja ${esc(LEADS.version)}</b></span>`;
+    return;
+  }
+  crumbs.textContent = 'Audyt i reklamy / Audyt treści pod wyszukiwarki i AI';
   const a = auditOf(state.audit);
   document.getElementById('pageTitle').textContent = SAMPLE.title;
   document.getElementById('pageMeta').innerHTML =
@@ -398,13 +449,231 @@ function renderPages() {
   document.getElementById('v-strony').innerHTML = h;
 }
 
-const VIEWS = ['raport', 'wytyczne', 'postep', 'cytowania', 'strony'];
-function show() {
-  const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'raport';
-  for (const id of VIEWS) document.getElementById('v-' + id).hidden = id !== v;
-  for (const a of document.querySelectorAll('#tabs a')) { if (a.getAttribute('href') === '#' + v) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
+
+/* ===== Zapytania ze strony ===== */
+const W0 = () => ({ step: 0, answers: [], shop: null, asked: [], error: '' });
+state.w = W0();
+const maxOf = (q) => Math.max(...q.options.map((o) => o[1]));
+/* Ocenę zapytania liczy program z tabeli zasad. AI jej nie zmienia. */
+function leadScore(answers, phone) {
+  let pts = 0;
+  const rows = LEADS.questions.map((q, i) => {
+    if (answers[i] === undefined) return { label: q.label, answer: null, pts: 0, max: maxOf(q) };
+    const o = q.options[answers[i]]; pts += o[1];
+    return { label: q.label, answer: o[0], pts: o[1], max: maxOf(q) };
+  });
+  const ph = phone ? LEADS.phone_points : 0; pts += ph;
+  rows.push({ label: 'Telefon', answer: phone === null ? null : (phone ? 'Podany' : 'Nie podano'), pts: ph, max: LEADS.phone_points });
+  return { pts, rows };
 }
-function renderAll() { renderHead(); renderReport(); renderGuide(); renderProgress(); renderCitations(); renderPages(); show(); }
+const leadLevel = (p) => p >= LEADS.levels.hot ? ['good', 'Pilne'] : (p >= LEADS.levels.talk ? ['mid', 'Do rozmowy'] : ['plain', 'Niski priorytet']);
+const lchip = (lv) => `<span class="chip ${lv[0]}">${esc(lv[1])}</span>`;
+const pct = (a, b) => (100 * a / b).toFixed(1).replace('.', ',') + '%';
+
+function renderLeads() {
+  const scored = LEADS.leads.map((l) => ({ l, s: leadScore(l.answers, l.phone) }));
+  const cnt = (f) => scored.filter(f).length;
+  let h = `<div class="card counts" style="margin-bottom:20px">
+      <span><b>${scored.length}</b> zapytań na liście</span><span><b>${cnt((x) => x.l.status === 'Nowe')}</b> nowych</span>
+      <span><b>${cnt((x) => x.s.pts >= LEADS.levels.hot)}</b> pilnych (od ${LEADS.levels.hot} pkt)</span>
+      <span><b>${cnt((x) => x.l.nip && x.l.nip[0] === 'bad')}</b> z ostrzeżeniem o kontrahencie</span></div>
+    <div class="card flush"><div class="card-head"><h2>Zapytania</h2><p class="small muted">Każde zapytanie ma ocenę z jawnych zasad, sprawdzenie firmy i podstawę kontaktu. Kliknij wiersz, żeby zobaczyć szczegóły.</p></div>`;
+  for (const { l, s } of scored) {
+    const lv = leadLevel(s.pts);
+    h += `<details class="rule lead"><summary>
+        <span class="badge-score">${s.pts}</span>
+        <span class="name">${esc(l.company)} <span class="muted" style="font-weight:400">${esc(l.person)}</span></span>
+        ${lchip(lv)}<span class="chip plain">${esc(l.status)}</span>
+        <span></span><span class="val">${esc(s.rows[0].answer)} · ${esc(l.at)} · ze strony ${esc(l.page)}${l.nip && l.nip[0] === 'bad' ? ' · <b style="color:var(--bad)">sprawdź kontrahenta</b>' : ''}</span></summary>
+      <div class="body">
+        <dl class="kv">
+          <dt>Streszczenie</dt><dd>${esc(l.summary)}</dd>
+          <dt>Kontakt</dt><dd>${esc(l.email)}${l.phone ? ', telefon podany' : ', bez telefonu'}</dd>
+          <dt>Podstawa</dt><dd>Zapytanie od tej firmy, wysłane ${esc(l.at)}. Odpowiedź na zapytanie nie wymaga zgody marketingowej. Zgoda na kolejne oferty e-mailem: <b>${l.consent ? 'tak' : 'nie'}</b>.</dd>
+          <dt>Firma</dt><dd>${l.nip ? `<span class="chip ${l.nip[0]}">${l.nip[0] === 'bad' ? 'Ryzyko wysokie' : (l.nip[0] === 'good' ? 'Ryzyko niskie' : 'NIP podany')}</span> ${esc(l.nip[1])}` : 'NIP nie został podany. Poproś o niego przed wyceną.'}</dd>
+          <dt>Sklep</dt><dd>${l.shop ? `${esc(l.shop)}${l.audit !== null ? ` · audyt: <b>${l.audit} / 100</b> ${chip(level(l.audit))} <a href="#raport">zobacz, jak wygląda raport</a>` : ' · audyt w kolejce'}` : 'Adres nie został podany.'}</dd>
+        </dl>
+        <div class="table-wrap"><table style="min-width:420px"><thead><tr><th>Pytanie</th><th>Odpowiedź</th><th class="n">Punkty</th></tr></thead><tbody>` +
+        s.rows.map((r) => `<tr><td>${esc(r.label)}</td><td>${esc(r.answer)}</td><td class="n">${r.pts} / ${r.max}</td></tr>`).join('') +
+        `<tr><td><b>Razem</b></td><td>${lchip(lv)}</td><td class="n"><b>${s.pts} / 100</b></td></tr></tbody></table></div>
+        <div><button class="btn" type="button" data-note>Przygotuj odpowiedź</button>
+          <p class="inline-note" hidden style="margin-top:10px">W platformie ten przycisk otwiera szkic odpowiedzi w module wiadomości. Rodzaj: odpowiedź na zapytanie, ryzyko prawne niskie.</p></div>
+      </div></details>`;
+  }
+  h += `</div>`;
+  document.getElementById('v-zapytania').innerHTML = h;
+}
+
+function renderQualifier() {
+  const total = LEADS.questions.reduce((a, q) => a + maxOf(q), 0) + LEADS.phone_points;
+  let h = `<div class="card" style="margin-bottom:20px"><h2 style="margin-bottom:10px">Jak powstaje ocena zapytania</h2>
+    <ul class="plain-list">
+      <li><b>Ocenę liczy program z tabeli poniżej</b>, razem ${total} punktów. Te same odpowiedzi dają zawsze tę samą ocenę.</li>
+      <li><b>AI nie zmienia oceny.</b> W czacie odpowiada na pytania z bazy wiedzy firmy i pisze streszczenie zapytania dla handlowca.</li>
+      <li><b>Progi:</b> od ${LEADS.levels.hot} pkt „Pilne”, od ${LEADS.levels.talk} pkt „Do rozmowy”, poniżej „Niski priorytet”. Pytania, punkty i progi ustawia firma.</li>
+      <li><b>Sprawdzenie firmy jest osobno.</b> Ostrzeżenie o kontrahencie nie odejmuje punktów, ale jest widoczne przy zapytaniu.</li>
+    </ul></div>
+    <div class="card flush" style="margin-bottom:20px"><div class="card-head"><h2>Pytania i punkty</h2><p class="small muted">Zasady w wersji ${esc(LEADS.version)}. W mockupie bez edycji.</p></div>
+      <div class="table-wrap"><table style="min-width:520px"><thead><tr><th>Pytanie</th><th>Odpowiedź</th><th class="n">Punkty</th></tr></thead><tbody>` +
+    LEADS.questions.map((q) => q.options.map((o, i) => `<tr>${i === 0 ? `<td rowspan="${q.options.length}"><b>${esc(q.text)}</b></td>` : ''}<td>${esc(o[0])}</td><td class="n">${o[1]}</td></tr>`).join('')).join('') +
+    `<tr><td><b>Kontakt</b></td><td>Podany numer telefonu</td><td class="n">${LEADS.phone_points}</td></tr></tbody></table></div></div>
+    <div class="two" style="margin-bottom:20px">
+      <div class="card"><h2 style="margin-bottom:10px">Baza wiedzy</h2><ul class="plain-list">
+        <li><b>Biblioteka firmy:</b> ${LEADS.knowledge.library} pozycji (opis firmy, oferta, referencje).</li>
+        <li><b>Strona internetowa:</b> ${LEADS.knowledge.pages} podstron przeczytanych ${esc(LEADS.knowledge.read_at)}.</li>
+        <li>Czat odpowiada tylko na podstawie tych źródeł. Gdy czegoś w nich nie ma, mówi to wprost i proponuje kontakt z człowiekiem. Nie podaje cen, których nie ma w bazie.</li></ul></div>
+      <div class="card"><h2 style="margin-bottom:10px">Limity i koszt AI</h2><ul class="plain-list">
+        <li>Do <b>${LEADS.limits.messages}</b> wiadomości w jednej rozmowie.</li>
+        <li>Do <b>${LEADS.limits.daily}</b> rozmów dziennie na widżet.</li>
+        <li>Budżet AI: <b>${LEADS.limits.budget} zł</b> miesięcznie. Po przekroczeniu działają same pytania, bez czatu.</li>
+        <li>Pytania kwalifikujące nie zużywają AI.</li></ul></div>
+    </div>
+    <div class="card" style="margin-bottom:20px"><h2 style="margin-bottom:10px">Wymogi</h2><ul class="qa">
+        <li><span class="y" aria-hidden="true">✓</span><span>Informacja na początku rozmowy, że odpowiada asystent AI. <span class="muted small">AI Act, obowiązuje od 2.08.2026</span></span></li>
+        <li><span class="y" aria-hidden="true">✓</span><span>Klauzula informacyjna przy podaniu kontaktu. <span class="muted small">RODO</span></span></li>
+        <li><span class="y" aria-hidden="true">✓</span><span>Zgoda na oferty osobno i domyślnie odznaczona. <span class="muted small">Prawo komunikacji elektronicznej</span></span></li>
+        <li><span class="y" aria-hidden="true">✓</span><span>Bez śledzenia zachowania i bez plików cookie.</span></li>
+        <li><span class="n" aria-hidden="true">✕</span><span>Adres polityki prywatności. <span class="muted small">do uzupełnienia w ustawieniach</span></span></li>
+      </ul></div>
+    <div class="card"><h2 style="margin-bottom:10px">Kod do wklejenia na stronę</h2><p class="small muted" style="margin-bottom:10px">Jeden wiersz przed znacznikiem zamykającym body. Widżet działa tylko na adresach wpisanych w ustawieniach.</p>
+      <div class="codeblock">&lt;script src="https://twoja-platforma.example/w/a1b2c3.js" async&gt;&lt;/script&gt;</div></div>`;
+  document.getElementById('v-kwalifikator').innerHTML = h;
+}
+
+function renderWidget() {
+  const w = state.w, q = LEADS.questions;
+  const phoneState = w.step >= 6 ? !!w.phone : null;
+  const s = leadScore(w.answers, phoneState);
+  let b = `<div class="bubble bot">${esc(LEADS.greeting)}</div>`;
+  for (let i = 0; i < Math.min(w.step, q.length); i++) b += `<div class="bubble bot">${esc(q[i].text)}</div><div class="bubble user">${esc(q[i].options[w.answers[i]][0])}</div>`;
+  if (w.step < q.length) {
+    b += `<div class="bubble bot">${esc(q[w.step].text)}</div><div class="opts">` + q[w.step].options.map((o, i) => `<button type="button" data-opt="${i}">${esc(o[0])}</button>`).join('') + `</div>`;
+  } else {
+    b += `<div class="bubble bot">${esc(LEADS.url_prompt)}</div>`;
+    if (w.step === 4) {
+      b += `<form class="w-form" id="wShop"><label class="field" for="wUrl">Adres sklepu<input id="wUrl" type="text" inputmode="url" placeholder="np. moj-sklep.pl"></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="submit">Dalej</button><button class="btn ghost" type="button" data-skip>Pomiń</button></div></form>`;
+    } else {
+      b += `<div class="bubble user">${w.shop ? esc(w.shop) : 'Pomijam'}</div><div class="bubble bot">Zostaw kontakt, a odezwie się osoba, która zajmuje się takimi sprawami.</div>`;
+      if (w.step === 5) {
+        b += `<form class="w-form" id="wContact" novalidate>
+          <label class="field" for="wName">Imię<input id="wName" type="text" autocomplete="given-name"></label>
+          <label class="field" for="wEmail">E-mail<input id="wEmail" type="email" autocomplete="email"></label>
+          <label class="field" for="wPhone">Telefon (opcjonalnie)<input id="wPhone" type="tel" autocomplete="tel"></label>
+          <label class="field" for="wNip">NIP firmy (opcjonalnie)<input id="wNip" type="text" inputmode="numeric"></label>
+          <label class="check" for="wConsent"><input id="wConsent" type="checkbox"><span>Chcę dostawać oferty e-mailem. Zgodę można wycofać w każdej chwili.</span></label>
+          <p class="small muted">Administratorem danych jest Agencja Przykładowa. Dane posłużą do odpowiedzi na to zapytanie. Szczegóły są w polityce prywatności.</p>
+          ${w.error ? `<p class="err" role="alert">${esc(w.error)}</p>` : ''}
+          <button class="btn" type="submit">Wyślij zapytanie</button>
+          <p class="small muted">W mockupie nic nie jest wysyłane. Dane zostają tylko w tej karcie przeglądarki.</p></form>`;
+      } else {
+        b += `<div class="bubble user">${esc(w.email)}</div><div class="bubble bot">${esc(LEADS.thanks)}</div>
+          <div><button class="btn ghost" type="button" data-restart>Zacznij od nowa</button></div>`;
+      }
+    }
+  }
+  for (const a of w.asked) b += `<div class="bubble user">${esc(a)}</div><div class="bubble bot">W mockupie czat nie odpowiada. Po wdrożeniu odpowiedź powstaje z bazy wiedzy firmy, a gdy jej tam nie ma, asystent mówi to wprost i proponuje kontakt z człowiekiem.</div>`;
+  const askable = w.step < 4 || w.step === 6;
+  const lv = leadLevel(s.pts);
+  const h = `<div class="widget-wrap">
+    <div><p class="small muted" style="margin-bottom:8px">Tak widzi to osoba odwiedzająca stronę. Kliknij odpowiedzi, żeby przejść całą rozmowę.</p>
+      <div class="widget" aria-label="Podgląd widżetu">
+        <div class="w-head"><b>Agencja Przykładowa</b><span class="w-ai">AI</span></div>
+        <div class="w-note">Rozmawiasz z asystentem AI. Może się mylić. Ważne ustalenia potwierdzi człowiek.</div>
+        <div class="w-body" id="wBody">${b}</div>
+        ${askable ? `<form class="w-foot" id="wAsk"><label class="sr-only" for="wQ">Twoje pytanie</label><input id="wQ" type="text" placeholder="Masz pytanie? Napisz"><button class="btn ghost" type="submit">Wyślij</button></form>` : ''}
+      </div></div>
+    <div class="card"><h2 style="margin-bottom:6px">Co zobaczy handlowiec</h2><p class="small muted" style="margin-bottom:12px">Ocena rośnie z każdą odpowiedzią. Punkty pochodzą z zakładki <a href="#kwalifikator">Zasady kwalifikacji</a>.</p>
+      <div class="score-row" style="margin-bottom:8px"><span class="score-num" style="font-size:40px">${s.pts}<small> / 100</small></span>${w.step >= 6 ? lchip(lv) : '<span class="chip plain">w trakcie</span>'}</div>
+      <div class="bar"><i style="width:${s.pts}%"></i></div>
+      <table style="margin-top:12px"><tbody>` + s.rows.map((r) => `<tr><td>${esc(r.label)}</td><td>${r.answer === null ? '<span class="muted">czeka na odpowiedź</span>' : esc(r.answer)}</td><td class="n">${r.answer === null ? '' : r.pts + ' / ' + r.max}</td></tr>`).join('') + `</tbody></table>
+      ${w.step >= 6 ? `<p class="inline-note" style="margin-top:12px">Zapytanie jest na górze listy w zakładce <a href="#zapytania">Zapytania</a>.</p>` : ''}
+    </div></div>`;
+  document.getElementById('v-widzet').innerHTML = h;
+}
+
+function ztest(n1, x1, n2, x2) {
+  const p1 = x1 / n1, p2 = x2 / n2, p = (x1 + x2) / (n1 + n2);
+  return { p1, p2, z: (p2 - p1) / Math.sqrt(p * (1 - p) * (1 / n1 + 1 / n2)) };
+}
+function renderResults() {
+  const f = LEADS.funnel, ab = LEADS.ab, t = ztest(ab.a[1], ab.a[2], ab.b[1], ab.b[2]);
+  const sure = Math.abs(t.z) >= 1.96, zs = t.z.toFixed(2).replace('.', ',');
+  const row = (v) => `<tr><td><b>${esc(v[0])}</b></td><td class="n">${v[1].toLocaleString('pl-PL')}</td><td class="n">${v[2]}</td><td class="n"><b>${pct(v[2], v[1])}</b></td></tr>`;
+  const h = `<div class="two" style="margin-bottom:20px">
+    <div class="card"><h2 style="margin-bottom:6px">Lejek kwalifikatora</h2><p class="small muted" style="margin-bottom:14px">Ostatnie ${ab.days} dni. Procent liczony od poprzedniego kroku.</p>
+      <div class="funnel">` + f.map((s, i) => `<div class="grow"><span>${esc(s[0])}</span><span class="pts">${s[1].toLocaleString('pl-PL')}</span>
+        <div class="bar"><i style="width:${Math.max(2, Math.round(100 * s[1] / f[0][1]))}%"></i></div>${i ? `<span class="small muted" style="grid-column:1/-1">${pct(s[1], f[i - 1][1])} poprzedniego kroku</span>` : ''}</div>`).join('') + `</div></div>
+    <div class="card"><h2 style="margin-bottom:6px">Test: formularz czy kwalifikator</h2><p class="small muted" style="margin-bottom:10px">Połowa odwiedzających widzi zwykły formularz, połowa kwalifikator. Przydział jest losowy.</p>
+      <div class="table-wrap"><table><thead><tr><th>Wariant</th><th class="n">Odsłony</th><th class="n">Zapytania</th><th class="n">Konwersja</th></tr></thead><tbody>${row(ab.a)}${row(ab.b)}</tbody></table></div>
+      <p style="margin-top:12px">${sure ? `<span class="chip good">Różnica pewna</span>` : `<span class="chip mid">Za mało danych</span>`} Wynik testu: z = ${zs}, próg pewności to 1,96.
+        ${sure ? 'Można wybrać lepszy wariant.' : 'Kwalifikator ma na razie wyższą konwersję, ale taka różnica mogła wyjść przypadkiem. Test trwa dalej.'}</p></div>
+    </div>
+    <div class="card"><h2 style="margin-bottom:10px">Jak to liczymy</h2><ul class="plain-list">
+      <li><b>Konwersja</b> to liczba zapytań z kontaktem podzielona przez liczbę odsłon stron z widżetem.</li>
+      <li><b>Zwycięzcę testu ogłaszamy dopiero, gdy z wynosi co najmniej 1,96</b> (pewność 95%). Wcześniej raport pisze „za mało danych”.</li>
+      <li><b>Nie obiecujemy procentu wzrostu.</b> Wynik zależy od strony i ruchu, dlatego mierzymy go testem na Twojej stronie.</li>
+      <li>Wariant przydziela serwer, bez plików cookie.</li></ul></div>`;
+  document.getElementById('v-wyniki').innerHTML = h;
+}
+
+document.addEventListener('click', (e) => {
+  const opt = e.target.closest('[data-opt]');
+  if (opt) { state.w.answers.push(Number(opt.dataset.opt)); state.w.step++; renderWidget(); return; }
+  if (e.target.closest('[data-skip]')) { state.w.shop = null; state.w.step = 5; renderWidget(); return; }
+  if (e.target.closest('[data-restart]')) { state.w = W0(); renderWidget(); return; }
+  const note = e.target.closest('[data-note]');
+  if (note) { note.nextElementSibling.hidden = !note.nextElementSibling.hidden; }
+});
+document.addEventListener('submit', (e) => {
+  const w = state.w, val = (id) => document.getElementById(id).value.trim();
+  if (e.target.id === 'wShop') { e.preventDefault(); w.shop = val('wUrl').slice(0, 120) || null; w.step = 5; renderWidget(); }
+  if (e.target.id === 'wAsk') { e.preventDefault(); const t = val('wQ').slice(0, 200); if (t) { w.asked.push(t); renderWidget(); } }
+  if (e.target.id === 'wContact') {
+    e.preventDefault();
+    const email = val('wEmail');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { w.error = 'Podaj adres e-mail, żebyśmy mogli odpowiedzieć.'; const keep = ['wName', 'wPhone', 'wNip'].map(val); const c = document.getElementById('wConsent').checked; renderWidget(); ['wName', 'wPhone', 'wNip'].forEach((id, i) => { document.getElementById(id).value = keep[i]; }); document.getElementById('wConsent').checked = c; document.getElementById('wEmail').focus(); return; }
+    const name = val('wName').slice(0, 60) || 'Bez imienia';
+    w.error = ''; w.email = email.slice(0, 120); w.phone = val('wPhone') !== '';
+    LEADS.leads.unshift({
+      at: 'przed chwilą', company: 'Zapytanie z podglądu widżetu', person: name, email: w.email, phone: w.phone,
+      answers: w.answers.slice(), status: 'Nowe', consent: document.getElementById('wConsent').checked, page: 'podgląd widżetu',
+      nip: val('wNip') ? ['plain', 'W platformie sprawdzimy go w wykazie VAT i KRS.'] : null, shop: w.shop, audit: null,
+      summary: 'Zapytanie utworzone w podglądzie widżetu. W platformie streszczenie pisze AI na podstawie odpowiedzi.',
+    });
+    w.step = 6; renderLeads(); renderWidget();
+  }
+});
+
+const MODULES = {
+  audyt: { views: ['raport', 'wytyczne', 'postep', 'cytowania', 'strony'], tabs: 'tabs', nav: 'navAudit' },
+  zapytania: { views: ['zapytania', 'kwalifikator', 'widzet', 'wyniki'], tabs: 'tabsLeads', nav: 'navLeads' },
+};
+function current() {
+  const h = location.hash.slice(1);
+  for (const [module, def] of Object.entries(MODULES)) if (def.views.includes(h)) return { module, view: h };
+  return { module: 'audyt', view: 'raport' };
+}
+function setClient(on) {
+  document.getElementById('shell').classList.toggle('client', on);
+  document.getElementById('clientNote').hidden = !on;
+  document.getElementById('clientBtn').textContent = on ? 'Wróć do widoku agencji' : 'Podgląd dla klienta';
+}
+function show() {
+  const cur = current();
+  if (cur.module !== 'audyt') setClient(false);
+  for (const [module, def] of Object.entries(MODULES)) {
+    const on = module === cur.module, nav = document.getElementById(def.nav);
+    for (const id of def.views) document.getElementById('v-' + id).hidden = id !== cur.view;
+    document.getElementById(def.tabs).hidden = !on;
+    nav.classList.toggle('on', on);
+    if (on) { nav.setAttribute('aria-current', 'true'); nav.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } else nav.removeAttribute('aria-current');
+    for (const a of document.querySelectorAll('#' + def.tabs + ' a')) { if (a.getAttribute('href') === '#' + cur.view) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
+  }
+  document.getElementById('clientBtn').hidden = cur.module !== 'audyt';
+  renderHead(cur.module);
+}
+function renderAll() { renderReport(); renderGuide(); renderProgress(); renderCitations(); renderPages(); renderLeads(); renderQualifier(); renderWidget(); renderResults(); show(); }
 
 document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-audit]');
@@ -413,10 +682,9 @@ document.addEventListener('click', (e) => {
 document.addEventListener('submit', (e) => {
   if (e.target.id === 'auditForm') { e.preventDefault(); document.getElementById('formNote').hidden = false; }
 });
-document.getElementById('clientBtn').addEventListener('click', (e) => {
-  const on = document.getElementById('shell').classList.toggle('client');
-  document.getElementById('clientNote').hidden = !on;
-  e.currentTarget.textContent = on ? 'Wróć do widoku agencji' : 'Podgląd dla klienta';
+document.getElementById('clientBtn').addEventListener('click', () => {
+  const on = !document.getElementById('shell').classList.contains('client');
+  setClient(on);
   if (on && location.hash === '#strony') location.hash = '#raport';
 });
 window.addEventListener('hashchange', show);
