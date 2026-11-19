@@ -88,7 +88,15 @@ final class BzpNoticeParser
         };
 
         // Ogłoszenia o zamówieniach poniżej progu ustawy mają krótszy formularz z inną numeracją punktów.
-        if ($first('8.1') === '' && $first('3.6') !== '' && $first('3.1') !== '') {
+        // Rozpoznajemy go po etykiecie punktu 3.1 („Nazwa zamówienia”); termin z pkt 3.6 bywa pominięty.
+        $label31 = '';
+        foreach ($fields as $f) {
+            if ($f['code'] === '3.1') {
+                $label31 = mb_strtolower($f['label']);
+                break;
+            }
+        }
+        if ($first('8.1') === '' && str_starts_with($label31, 'nazwa zamówienia')) {
             return self::parseSmall($fields, $first);
         }
 

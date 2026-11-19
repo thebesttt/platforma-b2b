@@ -125,7 +125,9 @@ foreach ($sample as $t) {
     $c['desc'] += !empty($d['descriptions']) ? 1 : 0;
     $sum = array_sum(array_map(static fn ($x) => (float) ($x['weight'] ?? 0), $d['criteria'] ?? []));
     $c['weights100'] += (abs($sum - 100) < 0.6) ? 1 : 0;
-    if (empty($d['deadline']) || empty($d['criteria']) || empty($d['descriptions'])) {
+    $small = ($d['form'] ?? '') === 'small';
+    $c['small'] = ($c['small'] ?? 0) + ($small ? 1 : 0);
+    if (empty($d['descriptions']) || (!$small && (empty($d['deadline']) || empty($d['criteria'])))) {
         $bad[] = $t['external_id'] . ' (termin: ' . (empty($d['deadline']) ? 'brak' : 'ok') . ', kryteria: ' . count($d['criteria'] ?? []) . ', opis: ' . count($d['descriptions'] ?? []) . ')';
         // Diagnostyka: jaki to rodzaj ogłoszenia i jak wygląda jego treść.
         $html = (string) (new App\Modules\Tenders\BzpClient())->noticeHtml((string) $t['external_id']);
@@ -137,7 +139,7 @@ foreach ($sample as $t) {
     $rules = Analysis::rules(Tenders::find((int) $t['id']) ?? $t, $d); // nie może rzucić wyjątku na żadnym ogłoszeniu
 }
 $n = count($sample);
-echo "Pobrano treść: {$c['ok']}/$n\n";
+echo "Pobrano treść: {$c['ok']}/$n, w tym ogłoszeń poniżej progu ustawy (krótki formularz bez kryteriów i wadium): " . ($c['small'] ?? 0) . "\n";
 foreach (['deadline' => 'termin składania ofert', 'desc' => 'opis przedmiotu', 'criteria' => 'kryteria oceny', 'weights100' => 'wagi kryteriów sumują się do 100', 'wadium' => 'informacja o wadium',
     'conditions' => 'warunki udziału (tak/nie)', 'period' => 'termin realizacji', 'docs_url' => 'adres dokumentów SWZ', 'nip' => 'NIP zamawiającego'] as $k => $label) {
     echo "  $label: " . $pct($c[$k], $c['ok']) . "\n";

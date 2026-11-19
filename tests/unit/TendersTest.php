@@ -39,6 +39,12 @@ return [
         eq('Ogłoszenie, pkt 3.6', $rules['items'][2]['source']);
         ok(!in_array('Oświadczenie o niepodleganiu wykluczeniu i spełnianiu warunków (art. 125 ust. 1)', array_column($rules['documents'], 'name'), true), 'bez oświadczenia z ustawy Pzp');
         contains('poniżej progu', $rules['risks'][count($rules['risks']) - 1]['text']);
+        // Ogłoszenie bez terminu w pkt 3.6 nadal jest rozpoznawane (termin mamy wtedy z wyszukiwarki BZP).
+        $html = preg_replace('#<h3 class="mb-0">3\.6\.\).*?</h3>#s', '', (string) file_get_contents($fx . 'bzp_notice_small.html'));
+        $noDeadline = BzpNoticeParser::parse((string) $html);
+        eq('small', $noDeadline['form']);
+        eq(null, $noDeadline['deadline']);
+        contains('odwadniania', $noDeadline['descriptions'][0]);
     },
     'BZP: normalizacja rekordu wyszukiwarki' => function () use ($fx) {
         $rows = json_decode((string) file_get_contents($fx . 'bzp_search_p1.json'), true);

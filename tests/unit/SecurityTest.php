@@ -137,7 +137,22 @@ return [
         ok($db->val('SELECT deadline_at FROM offers WHERE id = ?', [$gid]) !== null);
         $post('/oferty', ['kind' => 'grant', 'call_name' => '']);
         eq(1, (int) $db->val("SELECT COUNT(*) FROM offers WHERE kind = 'grant'"), 'wniosek bez nazwy naboru nie powstaje');
+        // Dokumenty naboru: wgranie pliku i sekcja pisana przez AI na ich podstawie
+        $tmp = tempnam(sys_get_temp_dir(), 'reg');
+        file_put_contents($tmp, "Regulamin naboru. Kryterium 1: innowacyjność projektu.");
+        $files = ['documents' => ['name' => ['regulamin.txt'], 'type' => ['text/plain'], 'tmp_name' => [$tmp], 'error' => [0], 'size' => [60]]];
+        eq(303, http('POST', "/oferty/$gid/dokumenty", [], [], $files)->status);
+        eq(1, (int) $db->val('SELECT COUNT(*) FROM offer_documents WHERE offer_id = ?', [$gid]));
+        App\Core\Http::$log = [];
+        $post("/oferty/$gid/sekcje/projekt/ai");
+        $aiCall = array_values(array_filter(App\Core\Http::$log, static fn ($l) => str_contains($l['url'], 'anthropic.com')))[0] ?? null;
+        ok($aiCall !== null, 'zapytanie do AI wysłane');
+        contains('Kryterium 1: innowacyjno', (string) $aiCall['body'], 'regulamin naboru trafia do modelu');
+        contains('wniosku o dofinansowanie', (string) $aiCall['body']);
+        @unlink($tmp);
+        eq(200, http('GET', "/oferty/$gid")->status);
         $post("/oferty/$gid/usun");
+        eq(0, (int) $db->val('SELECT COUNT(*) FROM offer_documents WHERE offer_id = ?', [$gid]), 'dokumenty naboru usunięte razem z wnioskiem');
         eq(0, (int) $db->val('SELECT COUNT(*) FROM offer_sections WHERE offer_id = ?', [$gid]), 'sekcje usunięte razem z wnioskiem');
         // Kontrahenci i należności
         eq(200, http('GET', '/kontrahenci/1234563218')->status);
