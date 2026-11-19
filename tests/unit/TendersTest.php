@@ -46,6 +46,37 @@ return [
         eq(null, $noDeadline['deadline']);
         contains('odwadniania', $noDeadline['descriptions'][0]);
     },
+    'Ogłoszenie poniżej progu bez opisu i terminu: strona przetargu działa, a wynik jest zapamiętany' => function () {
+        [$org, $uid] = make_org();
+        $_SESSION = [];
+        App\Core\Auth::actAs($uid);
+        $db = Db::get();
+        $ids = [];
+        foreach (['male-bez-opisu', 'male'] as $ext) {
+            $ids[$ext] = Tenders::save([
+                'source' => 'bzp', 'external_id' => $ext, 'title' => 'Zakup i dostawa zestawu kotłów orkiestrowych (' . $ext . ')',
+                'buyer_name' => 'Przykładowa Orkiestra', 'published_at' => now_utc(), 'deadline_at' => gmdate('Y-m-d 09:00:00', time() + 5 * 86400),
+                'url' => 'https://ezamowienia.gov.pl/mo-client-board/bzp/notice-details/id/' . $ext,
+            ]);
+        }
+        $bare = Tenders::details((array) Tenders::find($ids['male-bez-opisu']));
+        eq('small', $bare['form']);
+        eq([], $bare['descriptions']);
+        eq(null, $bare['deadline']);
+        ok((string) $db->val('SELECT details_json FROM tenders WHERE id = ?', [$ids['male-bez-opisu']]) !== '', 'wynik zapamiętany, bez ponownego pobierania');
+        eq('https://platforma.example.com/postepowanie/123', $db->val('SELECT documents_url FROM tenders WHERE id = ?', [$ids['male-bez-opisu']]) ?: $bare['documents_url']);
+        foreach ($ids as $ext => $id) {
+            $r = http('GET', '/przetargi/' . $id);
+            eq(200, $r->status, $ext);
+            contains('poniżej progu ustawy Pzp', $r->body);
+            contains('Informacje dla wykonawców', $r->body);
+        }
+        contains('odwadniania', http('GET', '/przetargi/' . $ids['male'])->body);
+        // Szkic oferty z takiego ogłoszenia też powstaje.
+        $res = http('POST', '/oferty', ['tender_id' => $ids['male-bez-opisu']]);
+        eq(303, $res->status);
+        eq(1, (int) $db->val('SELECT COUNT(*) FROM offers WHERE tender_id = ?', [$ids['male-bez-opisu']]));
+    },
     'BZP: normalizacja rekordu wyszukiwarki' => function () use ($fx) {
         $rows = json_decode((string) file_get_contents($fx . 'bzp_search_p1.json'), true);
         $t = BzpClient::normalize($rows[0]);

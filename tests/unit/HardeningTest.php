@@ -166,7 +166,10 @@ return [
         $t = Db::get()->one("SELECT * FROM tenders WHERE source = 'bzp' ORDER BY id LIMIT 1");
         $d = Tenders::details($t);
         Http::$log = [];
-        ok(Analysis::ai($org, $uid, $t, $d)['ok']);
+        $ai = Analysis::ai($org, $uid, $t, $d);
+        ok($ai['ok']);
+        ok(!preg_match('/[\x{2013}\x{2014}]/u', json_encode($ai['result'], JSON_UNESCAPED_UNICODE)), 'tekst z AI bez pauz i półpauz');
+        contains('Wadium 46 000 zł - gwarancję', json_encode($ai['result'], JSON_UNESCAPED_UNICODE));
         ok(Analysis::ask($org, $uid, $t, $d, 'Czy jest wadium?')['ok']);
         $calls = array_values(array_filter(Http::$log, static fn ($l) => str_contains($l['url'], 'anthropic.com')));
         eq(2, count($calls));

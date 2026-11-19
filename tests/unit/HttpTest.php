@@ -171,6 +171,11 @@ return [
         $files = ['pages' => ['name' => ['lista.html'], 'type' => ['text/html'], 'tmp_name' => [__DIR__ . '/../fixtures/http/uokik_zatory_2026.html'], 'error' => [0], 'size' => [1000]]];
         eq(303, http('POST', '/ustawienia/uokik', [], [], $files)->status);
         eq(2, (int) Db::get()->val('SELECT COUNT(*) FROM uokik_decisions'));
+        // Przycisk „Sprawdź połączenie z AI”: wynik i zużycie tokenów w komunikacie.
+        eq(303, http('POST', '/ustawienia/test-ai')->status);
+        $page = http('GET', '/ustawienia')->body;
+        contains('AI działa.', $page);
+        contains('21 wejście, 3 wyjście', $page);
         App\Core\Config::set('ADMIN_EMAILS', '');
     },
     'Zadania cykliczne: token wymagany' => function () {

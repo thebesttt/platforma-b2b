@@ -74,6 +74,9 @@ final class Claude
         if (($j['stop_reason'] ?? '') === 'max_tokens') {
             return ['ok' => false, 'error' => 'Odpowiedź modelu była za długa i została ucięta. Spróbuj ponownie albo zadaj węższe pytanie.'];
         }
+        // Jedna konwencja w całej aplikacji: zwykły łącznik zamiast pauzy i półpauzy, także w tekstach z AI
+        // (oferty, wiadomości, analizy).
+        $text = str_replace(["\u{2013}", "\u{2014}"], '-', $text);
         return ['ok' => true, 'text' => $text, 'usage' => $usage];
     }
 

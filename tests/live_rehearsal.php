@@ -127,7 +127,8 @@ foreach ($sample as $t) {
     $c['weights100'] += (abs($sum - 100) < 0.6) ? 1 : 0;
     $small = ($d['form'] ?? '') === 'small';
     $c['small'] = ($c['small'] ?? 0) + ($small ? 1 : 0);
-    if (empty($d['descriptions']) || (!$small && (empty($d['deadline']) || empty($d['criteria'])))) {
+    // W krótkim formularzu opis (pkt 3.3) i termin (pkt 3.6) są nieobowiązkowe - wystarczy rozpoznany tytuł.
+    if ($small ? empty($d['title']) : (empty($d['descriptions']) || empty($d['deadline']) || empty($d['criteria']))) {
         $bad[] = $t['external_id'] . ' (termin: ' . (empty($d['deadline']) ? 'brak' : 'ok') . ', kryteria: ' . count($d['criteria'] ?? []) . ', opis: ' . count($d['descriptions'] ?? []) . ')';
         // Diagnostyka: jaki to rodzaj ogłoszenia i jak wygląda jego treść.
         $html = (string) (new App\Modules\Tenders\BzpClient())->noticeHtml((string) $t['external_id']);

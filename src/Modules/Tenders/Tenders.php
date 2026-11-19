@@ -49,7 +49,7 @@ final class Tenders
             return [];
         }
         $d = BzpNoticeParser::parse($html);
-        if (empty($d['deadline']) && empty($d['descriptions']) && empty($d['criteria'])) {
+        if (($d['form'] ?? '') !== 'small' && empty($d['deadline']) && empty($d['descriptions']) && empty($d['criteria'])) {
             // Nieznany układ ogłoszenia: nie zapamiętujemy pustego wyniku, żeby poprawka parsera zadziałała od razu.
             error_log('[bzp] nie rozpoznano układu ogłoszenia ' . $tender['external_id']);
             return [];

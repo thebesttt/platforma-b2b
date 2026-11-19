@@ -10,6 +10,16 @@ return [
     // BZP – pierwsza strona ogłoszeń o zamówieniu; reszta pusta.
     '#^GET https://ezamowienia\.gov\.pl/mo-board/api/v1/Board/Search\?NoticeType=ContractNotice&.*&PageNumber=1&#' => 'bzp_search_p1.json',
     '#^GET https://ezamowienia\.gov\.pl/mo-board/api/v1/Board/Search\?#' => $json([]),
+    // Ogłoszenie poniżej progu ustawy; wariant „bez-opisu”: zamawiający pominął opis (pkt 3.3) i termin (pkt 3.6).
+    '#^GET https://ezamowienia\.gov\.pl/mo-board/api/v1/Board/GetNoticeHtmlBodyById\?noticeId=male-bez-opisu#' => [
+        'status' => 200,
+        'body' => preg_replace(
+            ['#<h3 class="mb-0">3\.3\.\).*?(?=<h3 class="mb-0">3\.4\.\))#s', '#<h3 class="mb-0">3\.6\.\).*?</h3>#s'],
+            '',
+            (string) file_get_contents(__DIR__ . '/bzp_notice_small.html')
+        ),
+    ],
+    '#^GET https://ezamowienia\.gov\.pl/mo-board/api/v1/Board/GetNoticeHtmlBodyById\?noticeId=male#' => 'bzp_notice_small.html',
     '#^GET https://ezamowienia\.gov\.pl/mo-board/api/v1/Board/GetNoticeHtmlBodyById\?noticeId=#' => 'bzp_notice_543096.html',
 
     // TED
@@ -36,4 +46,9 @@ return [
     '#^POST https://api\.anthropic\.com/v1/messages\n.*Odpowiadasz na pytania wykonawcy#s' => 'claude_qa.json',
     '#^POST https://api\.anthropic\.com/v1/messages\n.*Piszesz fragment#s' => 'claude_section.json',
     '#^POST https://api\.anthropic\.com/v1/messages\n.*Piszesz e-mail#s' => 'claude_email.json',
+    '#^POST https://api\.anthropic\.com/v1/messages\n.*Odpowiadasz jednym słowem#s' => $json([
+        'type' => 'message', 'role' => 'assistant', 'stop_reason' => 'end_turn',
+        'content' => [['type' => 'text', 'text' => 'działa']],
+        'usage' => ['input_tokens' => 21, 'output_tokens' => 3],
+    ]),
 ];
