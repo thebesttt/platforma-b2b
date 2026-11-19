@@ -2,7 +2,7 @@
 
 Stan na 19.11.2026. Nowa część modułu „Klienci i wiadomości”. Mockup jest w `mockup/audyt-ai` (menu „Klienci i wiadomości”), zasady kwalifikacji w `mockup/audyt-ai/src/leads.json`.
 
-Cel: więcej zapytań ze strony i szybsza ocena, które z nich są warte telefonu jeszcze dziś. Pierwszym użytkownikiem jest prestalab, potem moduł trafia do klientów platformy.
+Cel: więcej zapytań ze strony i szybsza ocena, które z nich są warte telefonu jeszcze dziś. Pierwszym użytkownikiem jest PerfectData (perfectdata.pl), potem moduł trafia do klientów platformy.
 
 ## 1. Co bierzemy z LeadTok, a czego nie
 
@@ -85,7 +85,7 @@ Cloudflare może tu pomóc: plik `/w/{id}.js` nadaje się do serwowania z ich si
 - Baza wiedzy trafia do modelu jako blok z pamięcią podręczną, tak jak dziś materiały do ofert. To obniża koszt kolejnych pytań.
 - Każda rozmowa jest zapisana, żeby firma mogła sprawdzić, co asystent odpowiedział.
 
-Kosztu jednej rozmowy nie znamy przed testem. Zmierzymy go w pilotażu na prestalab i dopiero wtedy ustawimy domyślny budżet.
+Kosztu jednej rozmowy nie znamy przed testem. Zmierzymy go w pilotażu na perfectdata.pl i dopiero wtedy ustawimy domyślny budżet.
 
 ## 6. Wymogi prawne
 
@@ -111,9 +111,24 @@ To podsumowanie do pracy, nie opinia prawna. Treść klauzul powinien zatwierdzi
 3. **Wyniki.** Lejek i test A/B.
 4. **Demo z adresu.** Wpisujesz adres strony, platforma buduje bazę wiedzy i pokazuje gotowy kwalifikator. To też sposób na sprzedaż samej platformy.
 
-Pilotaż na prestalab jest możliwy po etapie 1. Kod widżetu trafi na prestalab.pl dopiero po wyraźnej zgodzie właściciela.
+Pilotaż na perfectdata.pl jest możliwy po etapie 1. Kod widżetu trafi na stronę dopiero po wyraźnej zgodzie właściciela.
 
-## 9. Testy
+## 9. Jak to wpiąć w perfectdata.pl
+
+Stan strony na 19.11.2026: formularz „Umów bezpłatną konsultację” (imię i nazwisko, e-mail, telefon opcjonalnie, opis firmy), przycisk WhatsApp, bezpłatna diagnoza z 21 pytań liczona w przeglądarce, dwa płatne audyty (Express 249 zł netto, Data-First 1490 zł netto) i cennik usług.
+
+| Miejsce na stronie | Co się zmienia | Uwagi |
+|---|---|---|
+| Formularz „Umów bezpłatną konsultację” | Kwalifikator zamiast formularza albo test A/B obu wersji | Pole „opis firmy” zastępują 4 pytania. WhatsApp zostaje jako druga droga. |
+| Strony usług (strony WWW, Google Ads, Meta Ads, SEO i GEO) | Kwalifikator z zaznaczoną z góry potrzebą | Mniej kliknięć, bo wiadomo, o którą usługę chodzi. |
+| Bezpłatna diagnoza | Po wyniku propozycja rozmowy o najsłabszym obszarze | Diagnoza obiecuje wynik bez podawania e-maila. Ta obietnica zostaje: kwalifikator jest dobrowolnym krokiem po wyniku. |
+| Płatne audyty | Bez zmian | Automatyczne sprawdzenie strony przy zapytaniu nie zastępuje audytu wykonywanego przez człowieka. Może do niego prowadzić. |
+
+Progi budżetu w pytaniach wynikają z cennika na stronie: Google Ads i Meta Ads od 997 zł miesięcznie, SEO od 1900 zł miesięcznie, GEO 1800 zł albo 900 zł jako dodatek, strony od 3500 zł. Po zmianie cennika trzeba je poprawić.
+
+Kolejność: najpierw test A/B na jednej stronie usługi, potem reszta. Dzięki temu widać wynik na liczbach, zanim zniknie sprawdzony formularz.
+
+## 10. Testy
 
 - Każda kombinacja odpowiedzi daje ocenę zgodną z tabelą zasad. Komplet punktów to 100 (sprawdza `build.py` w mockupie, potem test w platformie).
 - Publiczne adresy: obca strona nie dostaje odpowiedzi, przekroczony limit zwraca błąd, za długie pola są odrzucane.
@@ -121,9 +136,9 @@ Pilotaż na prestalab jest możliwy po etapie 1. Kod widżetu trafi na prestalab
 - Izolacja danych między firmami.
 - Czat: pytanie spoza bazy wiedzy kończy się odmową, a tekst odwiedzającego nie zmienia zasad asystenta.
 
-## 10. Decyzje dla właściciela
+## 11. Decyzje dla właściciela
 
-1. **Pytania i punkty dla prestalab.** W mockupie są przykładowe: potrzeba, platforma, termin, budżet, telefon. Do przejrzenia z osobą, która odbiera zapytania.
+1. **Pytania i punkty dla PerfectData.** W mockupie są przykładowe: potrzeba, rodzaj firmy, termin, budżet, telefon. Punkty za poszczególne usługi to propozycja. Do przejrzenia z osobą, która odbiera zapytania.
 2. **Pytanie o budżet.** Daje dobrą ocenę, ale część osób zniechęca. Można je zostawić jako opcjonalne.
-3. **Zgoda na kod na prestalab.pl** i wybór stron, na których widżet ma się pojawić.
+3. **Zgoda na kod na perfectdata.pl** i wybór stron, na których widżet ma się pojawić.
 4. **Czas odpowiedzi w podziękowaniu.** Widżet obiecuje kontakt w następnym dniu roboczym. Obietnica musi być realna.

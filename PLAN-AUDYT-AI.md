@@ -141,7 +141,21 @@ Po etapie 1 narzędzie nadaje się do pracy z klientem. Kolejne etapy dodają ws
 - Cytat z oceny AI musi być w treści strony.
 - Izolacja danych między firmami i próba wstrzyknięcia HTML na nowych ekranach, jak w reszcie platformy.
 
-## 10. Decyzje dla właściciela
+## 10. Zastosowanie na perfectdata.pl
+
+Audyt pasuje do usługi „SEO i GEO” z perfectdata.pl na trzy sposoby:
+
+- **Przed sprzedażą.** Automatyczne sprawdzenie strony przy zapytaniu (moduł „Zapytania ze strony”). Handlowiec dzwoni z wynikiem i trzema najważniejszymi brakami.
+- **W trakcie współpracy.** Raport „Przed i po” jako dowód wykonanej pracy co miesiąc. Lista „Najpierw to” jako plan prac.
+- **Jako zasady dla zespołu.** Wytyczne mówią wykonawcy, co dokładnie ma być zrobione, żeby wskaźnik był „Dobrze”.
+
+Strona usługi mówi wprost, że SEO i GEO nie gwarantują pozycji ani cytowań w odpowiedziach AI. Audyt jest z tym zgodny: punkty są za spełnienie warunków, a cytowania pokazujemy osobno jako wynik.
+
+Audyt nie zastępuje płatnych audytów z perfectdata.pl (Express i Data-First). Tamte ocenia człowiek i dotyczą danych, pomiaru i kampanii. Ten mierzy automatycznie jedną stronę pod kątem wyszukiwarek i AI.
+
+Pierwszą stroną do sprawdzenia po uruchomieniu silnika powinna być sama perfectdata.pl. Firma, która sprzedaje GEO, powinna mieć u siebie komplet punktów w grupie A (dostęp botów AI), tym bardziej że strona stoi za Cloudflare, a Cloudflare ma własne ustawienia blokowania botów AI.
+
+## 11. Decyzje dla właściciela
 
 1. **Gdzie działa audyt:** moduł platformy (zalecane) czy osobny produkt na Cloudflare.
 2. **Progi umowne.** W wytycznych jest 11 wskaźników z dopiskiem o progu umownym (A3, A5, A6, B3, B4, B5, B6, C3, C4, D1, D2) oraz progi wyniku (85 i 60 pkt). Zespół SEO powinien je przejrzeć przed wdrożeniem, bo potem zmiana to nowa wersja.

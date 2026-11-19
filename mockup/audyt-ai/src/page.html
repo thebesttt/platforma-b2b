@@ -201,7 +201,7 @@ td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space:
 }
 </style>
 
-<div class="mockbar"><b>Mockup.</b> Dane przykładowe dla fikcyjnych firm. Nic tu nie jest mierzone ani wysyłane. Formularze i przyciski pokazują układ.</div>
+<div class="mockbar"><b>Mockup.</b> Kwalifikator ustawiony przykładowo dla PerfectData, na podstawie oferty z perfectdata.pl. Zapytania, audyty i wyniki są fikcyjne. Nic nie jest mierzone ani wysyłane.</div>
 <div class="shell" id="shell">
   <aside class="sidebar" aria-label="Menu platformy">
     <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span class="brand-name">[Nazwa]</span></div>
@@ -477,7 +477,7 @@ function renderLeads() {
       <span><b>${scored.length}</b> zapytań na liście</span><span><b>${cnt((x) => x.l.status === 'Nowe')}</b> nowych</span>
       <span><b>${cnt((x) => x.s.pts >= LEADS.levels.hot)}</b> pilnych (od ${LEADS.levels.hot} pkt)</span>
       <span><b>${cnt((x) => x.l.nip && x.l.nip[0] === 'bad')}</b> z ostrzeżeniem o kontrahencie</span></div>
-    <div class="card flush"><div class="card-head"><h2>Zapytania</h2><p class="small muted">Każde zapytanie ma ocenę z jawnych zasad, sprawdzenie firmy i podstawę kontaktu. Kliknij wiersz, żeby zobaczyć szczegóły.</p></div>`;
+    <div class="card flush"><div class="card-head"><h2>Zapytania</h2><p class="small muted">Każde zapytanie ma ocenę z jawnych zasad, sprawdzenie firmy, audyt strony i podstawę kontaktu. Kliknij wiersz, żeby zobaczyć szczegóły.</p></div>`;
   for (const { l, s } of scored) {
     const lv = leadLevel(s.pts);
     h += `<details class="rule lead"><summary>
@@ -491,7 +491,7 @@ function renderLeads() {
           <dt>Kontakt</dt><dd>${esc(l.email)}${l.phone ? ', telefon podany' : ', bez telefonu'}</dd>
           <dt>Podstawa</dt><dd>Zapytanie od tej firmy, wysłane ${esc(l.at)}. Odpowiedź na zapytanie nie wymaga zgody marketingowej. Zgoda na kolejne oferty e-mailem: <b>${l.consent ? 'tak' : 'nie'}</b>.</dd>
           <dt>Firma</dt><dd>${l.nip ? `<span class="chip ${l.nip[0]}">${l.nip[0] === 'bad' ? 'Ryzyko wysokie' : (l.nip[0] === 'good' ? 'Ryzyko niskie' : 'NIP podany')}</span> ${esc(l.nip[1])}` : 'NIP nie został podany. Poproś o niego przed wyceną.'}</dd>
-          <dt>Sklep</dt><dd>${l.shop ? `${esc(l.shop)}${l.audit !== null ? ` · audyt: <b>${l.audit} / 100</b> ${chip(level(l.audit))} <a href="#raport">zobacz, jak wygląda raport</a>` : ' · audyt w kolejce'}` : 'Adres nie został podany.'}</dd>
+          <dt>Strona</dt><dd>${l.shop ? `${esc(l.shop)}${l.audit !== null ? ` · audyt: <b>${l.audit} / 100</b> ${chip(level(l.audit))} <a href="#raport">zobacz, jak wygląda raport</a>` : ' · audyt w kolejce'}` : 'Adres nie został podany.'}</dd>
         </dl>
         <div class="table-wrap"><table style="min-width:420px"><thead><tr><th>Pytanie</th><th>Odpowiedź</th><th class="n">Punkty</th></tr></thead><tbody>` +
         s.rows.map((r) => `<tr><td>${esc(r.label)}</td><td>${esc(r.answer)}</td><td class="n">${r.pts} / ${r.max}</td></tr>`).join('') +
@@ -551,7 +551,7 @@ function renderWidget() {
   } else {
     b += `<div class="bubble bot">${esc(LEADS.url_prompt)}</div>`;
     if (w.step === 4) {
-      b += `<form class="w-form" id="wShop"><label class="field" for="wUrl">Adres sklepu<input id="wUrl" type="text" inputmode="url" placeholder="np. moj-sklep.pl"></label>
+      b += `<form class="w-form" id="wShop"><label class="field" for="wUrl">Adres strony<input id="wUrl" type="text" inputmode="url" placeholder="np. moja-firma.pl"></label>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="submit">Dalej</button><button class="btn ghost" type="button" data-skip>Pomiń</button></div></form>`;
     } else {
       b += `<div class="bubble user">${w.shop ? esc(w.shop) : 'Pomijam'}</div><div class="bubble bot">Zostaw kontakt, a odezwie się osoba, która zajmuje się takimi sprawami.</div>`;
@@ -562,7 +562,7 @@ function renderWidget() {
           <label class="field" for="wPhone">Telefon (opcjonalnie)<input id="wPhone" type="tel" autocomplete="tel"></label>
           <label class="field" for="wNip">NIP firmy (opcjonalnie)<input id="wNip" type="text" inputmode="numeric"></label>
           <label class="check" for="wConsent"><input id="wConsent" type="checkbox"><span>Chcę dostawać oferty e-mailem. Zgodę można wycofać w każdej chwili.</span></label>
-          <p class="small muted">Administratorem danych jest Agencja Przykładowa. Dane posłużą do odpowiedzi na to zapytanie. Szczegóły są w polityce prywatności.</p>
+          <p class="small muted">Administratorem danych jest właściciel serwisu ${esc(LEADS.company)}. Dane posłużą do odpowiedzi na to zapytanie. Szczegóły są w polityce prywatności.</p>
           ${w.error ? `<p class="err" role="alert">${esc(w.error)}</p>` : ''}
           <button class="btn" type="submit">Wyślij zapytanie</button>
           <p class="small muted">W mockupie nic nie jest wysyłane. Dane zostają tylko w tej karcie przeglądarki.</p></form>`;
@@ -578,7 +578,7 @@ function renderWidget() {
   const h = `<div class="widget-wrap">
     <div><p class="small muted" style="margin-bottom:8px">Tak widzi to osoba odwiedzająca stronę. Kliknij odpowiedzi, żeby przejść całą rozmowę.</p>
       <div class="widget" aria-label="Podgląd widżetu">
-        <div class="w-head"><b>Agencja Przykładowa</b><span class="w-ai">AI</span></div>
+        <div class="w-head"><b>${esc(LEADS.company)}</b><span class="w-ai">AI</span></div>
         <div class="w-note">Rozmawiasz z asystentem AI. Może się mylić. Ważne ustalenia potwierdzi człowiek.</div>
         <div class="w-body" id="wBody">${b}</div>
         ${askable ? `<form class="w-foot" id="wAsk"><label class="sr-only" for="wQ">Twoje pytanie</label><input id="wQ" type="text" placeholder="Masz pytanie? Napisz"><button class="btn ghost" type="submit">Wyślij</button></form>` : ''}
