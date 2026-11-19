@@ -9,7 +9,7 @@
 <section class="card">
   <form method="post" action="/audyt" class="form-grid">
     <?= csrf_field() ?>
-    <div class="field" style="grid-column:span 2"><label for="url">Adres strony</label><input id="url" name="url" type="text" required placeholder="np. twojafirma.pl" value="<?= e($own) ?>"></div>
+    <div class="field span-2"><label for="url">Adres strony</label><input id="url" name="url" type="text" required placeholder="np. twojafirma.pl" value="<?= e($own) ?>"></div>
     <div class="field"><label for="label">Etykieta</label><select id="label" name="label"><option value="Moja strona">Moja strona</option><option value="Konkurent">Konkurent</option></select></div>
     <div class="field" style="justify-content:flex-end">
       <label class="check" style="min-height:0;padding:0 0 8px"><input type="checkbox" name="pagespeed" value="1"> <span class="small">Dodaj pomiar Google PageSpeed (ok. 30 s)</span></label>

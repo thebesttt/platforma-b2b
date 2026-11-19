@@ -89,10 +89,13 @@ code { font-size: 13px; background: var(--line-soft); padding: 1px 6px; border-r
 .info { background: var(--accent-soft); color: var(--accent); }
 .neutral { background: var(--line-soft); color: var(--muted); }
 .score { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; height: 28px; padding: 0 6px; border-radius: 8px; font-weight: 700; font-size: 14px; }
-.src { font-size: 12px; color: var(--muted); background: var(--line-soft); border-radius: 6px; padding: 2px 8px; white-space: nowrap; text-decoration: none; display: inline-block; }
+.src { font-size: 12px; color: var(--muted); background: var(--line-soft); border-radius: 6px; padding: 2px 8px; text-decoration: none; display: inline-block; max-width: 100%; overflow-wrap: anywhere; }
 .src.ok { color: var(--low); background: var(--low-bg); font-weight: 600; }
 .nosrc { background: var(--high-bg); border-bottom: 2px solid var(--high); }
 .kv-row { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; padding: 12px 0; border-top: 1px solid var(--line-soft); }
+.kv-row > div, .kv-row > p { flex: 1 1 0; min-width: 0; overflow-wrap: anywhere; }
+.kv-row > .src { flex: 0 1 auto; max-width: 45%; }
+@media (max-width: 560px) { .kv-row { flex-direction: column; gap: 6px; } .kv-row > div, .kv-row > p { flex: none; } .kv-row > .src { max-width: 100%; } }
 .kv-row:first-child { border-top: 0; }
 .kv-row .k { font-size: 13px; color: var(--muted); margin: 0 0 4px; }
 .kv-row .v { font-size: 14px; line-height: 1.5; margin: 0; white-space: pre-line; }
@@ -145,6 +148,8 @@ textarea { min-height: 120px; resize: vertical; line-height: 1.6; }
 textarea.doc { min-height: 320px; font-size: 15px; }
 input:focus-visible, select:focus-visible, textarea:focus-visible, .btn:focus-visible, a:focus-visible, button:focus-visible { outline: 3px solid #A4BCFD; outline-offset: 1px; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 16px; }
+/* Pole na dwie kolumny tylko tam, gdzie dwie kolumny się mieszczą. Na telefonie siatka ma jedną i szersze pole rozpychało stronę. */
+@media (min-width: 781px) { .form-grid > .span-2 { grid-column: span 2; } }
 .check { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; padding: 10px 0; font-size: 14px; }
 .check input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--accent); flex: none; }
 .opt { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; background: #fff; }

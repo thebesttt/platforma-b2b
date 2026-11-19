@@ -205,6 +205,14 @@ Mockup całego panelu:
 - Obsługa klawiaturą z widocznym fokusem, kontrast tekstu na tle co najmniej 7:1 (wymagane minimum to 4,5:1).
 - Strona nie pobiera żadnych zasobów z sieci. Żaden link na pulpicie i liście funkcji nie prowadzi donikąd.
 
+Ponowne sprawdzenie 20.11.2026:
+
+- Próba generalna na prawdziwych danych: import 1398 ogłoszeń z BZP i 861 z TED z 2 dni, parser na 40 losowych ogłoszeniach (40 z 40), karty prawdziwych firm, 6 szkiców ofert z poprawnym plikiem .docx, powtórny import bez duplikatów.
+- Połączenia z rejestrami: BZP, TED, wykaz VAT i KRS odpowiadają w oczekiwanym formacie. Rejestr decyzji UOKiK nie przyjmuje połączeń z sieci GitHuba, więc zostaje ręczne wgrywanie w Ustawieniach.
+- Uruchomiona aplikacja na danych demonstracyjnych: 59 stron i 10 pobrań (kalendarz, .docx, .eml) bez błędów, błędne hasło i błędny NIP dają czytelny komunikat, nieistniejące adresy zwracają 404, wylogowanie zamyka dostęp.
+- Wiadomość o ryzyku bardzo wysokim: przycisk jest nieaktywny bez potwierdzenia, serwer odmawia zapisu także przy ominięciu przycisku, a potwierdzenie zapisuje się z użytkownikiem i godziną.
+- Znalezione i poprawione: na telefonie strona audytu i część kart przetargów przewijały się w bok. Po poprawce 71 stron w 11 szerokościach (320-1366 px) nie ma poziomego przewijania.
+
 Czego nie dało się sprawdzić:
 
 - prawdziwego zapytania do modelu AI (wymaga klucza API),
