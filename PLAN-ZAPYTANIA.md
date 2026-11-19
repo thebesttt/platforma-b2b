@@ -1,6 +1,6 @@
 # Zapytania ze strony: plan integracji
 
-Stan na 19.11.2026. Nowa część modułu „Klienci i wiadomości”. Mockup jest w `mockup/audyt-ai` (menu „Klienci i wiadomości”), zasady kwalifikacji w `mockup/audyt-ai/src/leads.json`.
+Stan na 19.11.2026. Moduł „Zapytania” w panelu PerfectData. Mockup w wyglądzie perfectdata.pl jest w `mockup/audyt-ai` (pozycja „Zapytania” w nagłówku), zasady kwalifikacji w `mockup/audyt-ai/src/leads.json`. Kolejność prac w całym projekcie jest w `PLAN.md` (zapytania to etap 1).
 
 Cel: więcej zapytań ze strony i szybsza ocena, które z nich są warte telefonu jeszcze dziś. Pierwszym użytkownikiem jest PerfectData (perfectdata.pl), potem moduł trafia do klientów platformy.
 
@@ -113,6 +113,8 @@ To podsumowanie do pracy, nie opinia prawna. Treść klauzul powinien zatwierdzi
 
 Pilotaż na perfectdata.pl jest możliwy po etapie 1. Kod widżetu trafi na stronę dopiero po wyraźnej zgodzie właściciela.
 
+Przed kwalifikatorem powstają dwie rzeczy wspólne dla całego panelu: wygląd PerfectData w platformie i wysyłka e-maili (powiadomienie o nowym zapytaniu).
+
 ## 9. Jak to wpiąć w perfectdata.pl
 
 Stan strony na 19.11.2026: formularz „Umów bezpłatną konsultację” (imię i nazwisko, e-mail, telefon opcjonalnie, opis firmy), przycisk WhatsApp, bezpłatna diagnoza z 21 pytań liczona w przeglądarce, dwa płatne audyty (Express 249 zł netto, Data-First 1490 zł netto) i cennik usług.
@@ -127,6 +129,14 @@ Stan strony na 19.11.2026: formularz „Umów bezpłatną konsultację” (imię
 Progi budżetu w pytaniach wynikają z cennika na stronie: Google Ads i Meta Ads od 997 zł miesięcznie, SEO od 1900 zł miesięcznie, GEO 1800 zł albo 900 zł jako dodatek, strony od 3500 zł. Po zmianie cennika trzeba je poprawić.
 
 Kolejność: najpierw test A/B na jednej stronie usługi, potem reszta. Dzięki temu widać wynik na liczbach, zanim zniknie sprawdzony formularz.
+
+### Wygląd widżetu i panelu
+
+- **Widżet wygląda jak część strony.** Używa jej kolorów i czcionki: ciemny panel, ramka w odcieniu złota, złoty przycisk wysyłki, pola formularza jak w „Umów bezpłatną konsultację”. Odpowiedzi odwiedzającego mają złotą ramkę, wiadomości asystenta są na ciemniejszym tle.
+- **Informacja o AI jest stałym paskiem pod nazwą firmy**, a nie drobnym drukiem na dole.
+- **Style widżetu są odizolowane.** Nie zmieniają strony i strona nie zmienia ich.
+- **Lista zapytań w panelu** to wiersze z dużą oceną z lewej: firma, potrzeba, poziom („Pilne”, „Do rozmowy”, „Niski priorytet”) i stan. Ostrzeżenie o kontrahencie jest widoczne bez rozwijania wiersza.
+- **Ekran „Co zobaczy handlowiec”** pokazuje obok widżetu, jak ocena rośnie z każdą odpowiedzią. Służy do ustawiania pytań i punktów.
 
 ## 10. Testy
 

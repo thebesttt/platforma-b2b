@@ -26,6 +26,9 @@ codes = [r['code'] for r in rules['rules']]
 if len(set(codes)) != len(codes):
     errors.append('Powtórzony kod wskaźnika.')
 groups = {g['id'] for g in rules['groups']}
+for g in rules['groups']:
+    if not g.get('short'):
+        errors.append(f"Grupa {g['id']}: brak krótkiej nazwy (short) do linijki punktów.")
 for r in rules['rules']:
     for key in ('what', 'how', 'good', 'mid', 'bad', 'fix'):
         if not r.get(key):

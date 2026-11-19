@@ -1,6 +1,10 @@
 # Mockup: audyt treści i zapytania ze strony
 
-Klikalny mockup dwóch modułów platformy: audytu treści pod wyszukiwarki i AI (menu „Audyt i reklamy”) oraz zapytań ze strony (menu „Klienci i wiadomości”). Dane są przykładowe, nic nie jest mierzone ani wysyłane.
+Klikalny mockup dwóch modułów panelu PerfectData: „Audyt AI” (audyt treści pod wyszukiwarki i AI) oraz „Zapytania” (zapytania ze strony). Dane są przykładowe, nic nie jest mierzone ani wysyłane.
+
+## Wygląd
+
+Mockup ma wygląd perfectdata.pl: kolory odczytane ze stylów strony 19.11.2026 (zmienne na początku `src/page.html`), czcionka systemowa, jeden ciemny motyw, nagłówek jak na stronie. Strona nie pobiera nic z sieci. Logo jest przybliżeniem tekstowym, przy wdrożeniu zastąpi je plik logo ze strony. Zasady wyglądu są opisane w `PLAN.md` w głównym folderze.
 
 ## Co tu jest
 

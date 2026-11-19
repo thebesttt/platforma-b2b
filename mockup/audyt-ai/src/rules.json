@@ -112,26 +112,31 @@
     {
       "id": "A",
       "name": "Dostęp dla wyszukiwarek i botów AI",
+      "short": "Dostęp",
       "lead": "Jeśli bot nie pobierze strony albo nie wolno mu pokazać fragmentu, reszta wskaźników nie ma znaczenia."
     },
     {
       "id": "B",
       "name": "Zrozumiała struktura",
+      "short": "Struktura",
       "lead": "Tytuł, nagłówki i dane strukturalne mówią, o czym jest strona i gdzie leży odpowiedź."
     },
     {
       "id": "C",
       "name": "Wiarygodność i dowody",
+      "short": "Wiarygodność",
       "lead": "Kto to napisał, kiedy i na jakiej podstawie."
     },
     {
       "id": "D",
       "name": "Odpowiedź na pytania",
+      "short": "Odpowiedzi",
       "lead": "Czy strona odpowiada na pytanie z frazy i na pytania poboczne, które AI zadaje przy okazji."
     },
     {
       "id": "E",
       "name": "Szybkość i wygoda",
+      "short": "Szybkość",
       "lead": "Strona ma działać szybko i poprawnie na telefonie."
     }
   ],

@@ -130,7 +130,7 @@
       "page": "/uslugi/seo-geo",
       "nip": [
         "good",
-        "Czynny podatnik VAT, wpis w KRS bez zmian. Ryzyko niskie."
+        "Czynny podatnik VAT, wpis w KRS bez zmian."
       ],
       "shop": "stalmet.example",
       "audit": 48,
@@ -173,7 +173,7 @@
       "page": "/",
       "nip": [
         "bad",
-        "Spółka w likwidacji według KRS. Ryzyko wysokie: sprawdź kontrahenta przed wyceną."
+        "Spółka w likwidacji według KRS. Sprawdź kontrahenta przed wyceną."
       ],
       "shop": "dom-i-styl.example",
       "audit": 39,

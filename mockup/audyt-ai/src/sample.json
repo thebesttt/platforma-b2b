@@ -29,7 +29,7 @@
     "D1": { "a": ["mid", "Odpowiedź dopiero w 214. słowie", "Wskazane zdanie: „Do domu najczęściej wystarczy ekspres kolbowy albo automatyczny o ciśnieniu 15 barów.”"], "b": ["good", "Odpowiedź w 31. słowie", "Wskazane zdanie: „Do domu najczęściej wystarczy ekspres kolbowy albo automatyczny o ciśnieniu 15 barów.”"] },
     "D2": { "a": ["mid", "Odpowiedź na 5 z 10 pytań"], "b": ["good", "Odpowiedź na 9 z 10 pytań"] },
     "D3": { "a": ["good", "4 z 4: „ekspres ciśnieniowy”"], "b": ["good", "4 z 4: „ekspres ciśnieniowy”"] },
-    "E1": { "a": ["parts", "LCP 3,4 s · INP 180 ms · CLS 0,21", "Dane użytkowników Chrome z 28 dni, telefon.", [1, 2, 1]], "b": ["parts", "LCP 2,3 s · INP 170 ms · CLS 0,12", "Dane użytkowników Chrome z 28 dni, telefon. CLS: baner z kodem rabatowym przesuwa treść.", [2, 2, 1]] },
+    "E1": { "a": ["parts", "LCP 3,4 s; INP 180 ms; CLS 0,21", "Dane użytkowników Chrome z 28 dni, telefon.", [1, 2, 1]], "b": ["parts", "LCP 2,3 s; INP 170 ms; CLS 0,12", "Dane użytkowników Chrome z 28 dni, telefon. CLS: baner z kodem rabatowym przesuwa treść.", [2, 2, 1]] },
     "E2": { "a": ["good", "Meta viewport jest, brak przewijania w poziomie"], "b": ["good", "Meta viewport jest, brak przewijania w poziomie"] },
     "E3": { "a": ["good", "HTTPS działa, brak zasobów po http"], "b": ["good", "HTTPS działa, brak zasobów po http"] }
   },

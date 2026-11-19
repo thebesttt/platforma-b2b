@@ -1,6 +1,6 @@
 # Audyt treści pod wyszukiwarki i AI: plan integracji
 
-Stan na 19.11.2026. Dotyczy nowej części modułu „Audyt i reklamy”. Mockup jest w `mockup/audyt-ai`, wytyczne w `mockup/audyt-ai/WYTYCZNE.md`.
+Stan na 19.11.2026. Moduł „Audyt AI” w panelu PerfectData. Mockup w wyglądzie perfectdata.pl jest w `mockup/audyt-ai`, wytyczne w `mockup/audyt-ai/WYTYCZNE.md`. Kolejność prac w całym projekcie jest w `PLAN.md` (audyt to etap 2).
 
 ## 1. Co bierzemy z CitationOne, a czego nie
 
@@ -110,7 +110,17 @@ Bezpieczeństwo:
 | `/audyt/wytyczne` | „Wytyczne wskaźników” (z `rules.json`) |
 | `/r/{token}` | Raport dla klienta, bez logowania |
 
-W menu zostaje pozycja „Audyt i reklamy”. Audyt techniczny sklepu i audyt treści są dwiema zakładkami tego samego modułu. Stronę można przypisać do klienta z listy „Klienci”, wtedy raporty są też w jego karcie.
+W panelu PerfectData moduł ma w nagłówku pozycję „Audyt AI”, obok „Zapytania”. Zakładki modułu: Raport, Wytyczne wskaźników, Przed i po, Cytowania w AI, Strony witryny. Stronę można przypisać do klienta z listy „Klienci”, wtedy raporty są też w jego karcie. W platformie dla innych firm audyt treści jest zakładką modułu „Audyt i reklamy”, obok audytu technicznego sklepu.
+
+### Wygląd raportu
+
+Raport ma wygląd perfectdata.pl (kolory, czcionka i przyciski ze strony, opis w `PLAN.md`). Klient agencji dostaje link `/r/{token}` i widzi markę PerfectData, bez panelu agencji.
+
+- **Wynik i linijka 100 punktów.** Duża złota liczba, pod nią 24 odcinki w 5 grupach. Szerokość odcinka to waga wskaźnika, złote wypełnienie to zdobyte punkty, czerwona ramka to zero. Suma złota na linijce równa się liczbie nad nią. Kliknięcie odcinka otwiera wskaźnik.
+- **„Najpierw to”.** Do 6 zadań z liczbą punktów do zdobycia i warunkiem zaliczenia. Najpierw warunki konieczne, potem dostęp botów, potem według punktów.
+- **Wskaźniki w wierszach:** kod, nazwa, zmierzona wartość, stan, punkty. Po rozwinięciu: co mierzymy, jak, dowód, co zrobić i trzy progi z zaznaczonym obecnym.
+- **„Przed i po”.** Dwie linijki jedna pod drugą i tabela zmian. To ekran do pokazania klientowi po miesiącu pracy.
+- **Stan zawsze jako kształt i słowo** (pełne koło, pół koła, pierścień), żeby raport był czytelny także w druku czarno-białym i dla osób nierozróżniających barw.
 
 ## 7. Usługi zewnętrzne
 
@@ -130,6 +140,8 @@ W menu zostaje pozycja „Audyt i reklamy”. Audyt techniczny sklepu i audyt tr
 4. **Dane z kont klienta.** Search Console i Bing Webmaster Tools.
 
 Po etapie 1 narzędzie nadaje się do pracy z klientem. Kolejne etapy dodają wskaźniki, nie zmieniają już istniejących.
+
+Etap 1 zaczyna się po uruchomieniu panelu PerfectData i kwalifikatora zapytań (etap 1 w `PLAN.md`), bo korzysta z tego samego wyglądu i tej samej listy klientów.
 
 ## 9. Testy, które pilnują zgodności z wytycznymi
 
