@@ -271,6 +271,23 @@ return [
         ok((int) $db->val('SELECT COUNT(*) FROM tender_matches WHERE profile_id = ?', [$p1]) >= 1);
         eq(0, App\Modules\Tenders\Matcher::run(), 'powtórne uruchomienie nie tworzy duplikatów');
     },
+    'Import z kontynuacją po limicie stron: każde ogłoszenie zapisane i policzone raz' => function () {
+        // 121 stron po 10 ogłoszeń: pierwsza runda kończy się na limicie 120 stron, druga dostaje te same ogłoszenia jeszcze raz.
+        $dir = bzp_fixture_dir(121);
+        Config::set('HTTP_FIXTURES', $dir);
+        BzpClient::$pauseUs = 0;
+        try {
+            $q = Db::$queries;
+            $res = App\Modules\Tenders\Importer::run('2026-11-17 00:00:00');
+            eq(1200, $res['bzp'], 'liczba zapisanych ogłoszeń bez podwójnego liczenia');
+            eq(1200, (int) Db::get()->val("SELECT COUNT(*) FROM tenders WHERE source = 'bzp'"));
+            ok(Db::$queries - $q <= 60, 'import 1200 ogłoszeń: ' . (Db::$queries - $q) . ' zapytań do bazy');
+            eq('2026-11-18 04:00:00', App\Core\Kv::get('import:bzp:until'), 'następny import zaczyna od 1200. ogłoszenia');
+        } finally {
+            BzpClient::$pauseUs = 150000;
+            Config::set('HTTP_FIXTURES', __DIR__ . '/../fixtures/http');
+        }
+    },
     'Import zapisuje ogłoszenia paczkami: mało zapytań, zachowane wartości, pominięte tylko wadliwe' => function () {
         $db = Db::get();
         $mk = static fn (string $id, array $over = []) => $over + [

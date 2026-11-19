@@ -25,8 +25,14 @@ final class Importer
             $bzp = new BzpClient();
             $from = (string) $bzpSince;
             // Jedno pobranie ma limit stron; przy zaległościach (pierwszy import, przerwa) kontynuujemy od ostatniego ogłoszenia.
+            $seen = [];
             for ($round = 0; $round < self::MAX_ROUNDS; $round++) {
-                $result['bzp'] += Tenders::saveMany($bzp->since($from), $skipped, 'BZP');
+                // Kontynuacja zaczyna się od chwili publikacji ostatniego ogłoszenia, więc część wraca drugi raz - liczymy je raz.
+                $rows = array_filter($bzp->since($from), static fn (array $t) => !isset($seen[$t['external_id']]));
+                foreach ($rows as $t) {
+                    $seen[$t['external_id']] = true;
+                }
+                $result['bzp'] += Tenders::saveMany($rows, $skipped, 'BZP');
                 if ($bzp->failedRequests > 0) {
                     $errors[] = 'BZP: serwer nie odpowiedział na ' . $bzp->failedRequests . ' ' . plural($bzp->failedRequests, 'zapytanie', 'zapytania', 'zapytań') . ' - brakujące ogłoszenia pobierzemy przy następnym imporcie.';
                 }

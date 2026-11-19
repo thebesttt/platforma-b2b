@@ -26,6 +26,9 @@ final class BzpClient
     /** Liczba zapytań, które nie zwróciły poprawnej odpowiedzi (do raportu z importu). */
     public int $failedRequests = 0;
 
+    /** Przerwa między stronami wyników w mikrosekundach (nie obciążamy serwera BZP). Testy ustawiają 0. */
+    public static int $pauseUs = 150000;
+
     public function since(string $fromUtc, int $maxPages = 120, ?callable $sleep = null): array
     {
         $out = [];
@@ -71,7 +74,7 @@ final class BzpClient
                     // Więcej ogłoszeń niż limit stron - nic nie gubimy, następne pobranie zaczyna od tego miejsca.
                     $this->markContinue($lastPublished ?? gmdate('Y-m-d H:i:s', strtotime($fromUtc . ' UTC')));
                 }
-                $sleep ? $sleep() : usleep(150000);
+                $sleep ? $sleep() : usleep(self::$pauseUs);
             }
         }
         return array_values($out);
