@@ -143,17 +143,22 @@ final class Matcher
             $since = $sinceFor($profile);
             $startedAt = now_utc();
             $tenders = $since === $minSince ? $all : array_filter($all, static fn ($t) => $t['updated_at'] >= $since);
+            // Dotychczasowe dopasowania profilu czytamy raz, a zmiany zapisujemy paczkami - bez dwóch zapytań na każde ogłoszenie.
+            $existing = [];
+            foreach ($db->all('SELECT tender_id, score, reasons_json FROM tender_matches WHERE profile_id = ?', [$profile['id']]) as $m) {
+                $existing[(int) $m['tender_id']] = $m;
+            }
+            $batch = [];
             foreach ($tenders as $t) {
                 $r = self::score($t, $profile);
                 if (!$r || $r['score'] < self::THRESHOLD) {
                     continue;
                 }
-                $exists = $db->val('SELECT id FROM tender_matches WHERE profile_id = ? AND tender_id = ?', [$profile['id'], $t['id']]);
-                if ($exists) {
-                    $db->update('tender_matches', ['score' => $r['score'], 'reasons_json' => json_out($r['reasons'])], 'id = ?', [(int) $exists]);
+                $old = $existing[(int) $t['id']] ?? null;
+                if ($old && (int) $old['score'] === (int) $r['score'] && json_in($old['reasons_json']) == $r['reasons']) {
                     continue;
                 }
-                $db->insert('tender_matches', [
+                $batch[(int) $t['id']] = [
                     'org_id' => $profile['org_id'],
                     'profile_id' => $profile['id'],
                     'tender_id' => $t['id'],
@@ -161,8 +166,12 @@ final class Matcher
                     'reasons_json' => json_out($r['reasons']),
                     'status' => 'new',
                     'created_at' => now_utc(),
-                ]);
-                $created++;
+                ];
+                $created += $old ? 0 : 1;
+            }
+            foreach (array_chunk(array_values($batch), 200) as $chunk) {
+                // Przy istniejącym dopasowaniu zmieniamy tylko ocenę i uzasadnienie - status (zapisany, odrzucony) zostaje.
+                $db->upsertMany('tender_matches', $chunk, ['profile_id', 'tender_id'], [], ['org_id', 'status', 'created_at']);
             }
             $db->update('tender_profiles', ['matched_until' => $startedAt], 'id = ?', [$profile['id']]);
         }

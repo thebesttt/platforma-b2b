@@ -57,6 +57,27 @@ jobs:
           grep -q "DATABASE_URL" err.txt
       - name: Tekst z PDF (pdftotext w obrazie)
         run: docker exec app sh -c 'command -v pdftotext'
+      - name: Zasoby jak na najmniejszej instancji Render (512 MB RAM, 0,1 CPU)
+        run: |
+          docker run -d --name maly --network net -p 10001:10000 --memory=512m --memory-swap=512m --cpus=0.1 \
+            -e DATABASE_URL=postgres://postgres:pg@db:5432/platforma -e CRON_TOKEN=ci-token -e APP_SECRET=ci-secret \
+            -e SIGNUP_OPEN=0 -e SIGNUP_CODE=ci-kod platforma-b2b
+          start=$(date +%s)
+          for i in $(seq 1 90); do curl -fs http://localhost:10001/zdrowie > /dev/null && break; sleep 2; done
+          echo "start aplikacji: $(( $(date +%s) - start )) s"
+          start=$(date +%s)
+          sh tests/smoke.sh http://localhost:10001 ci-kod ci-token
+          echo "test dymny: $(( $(date +%s) - start )) s"
+          # 60 zapytań naraz: wszystkie obsłużone, liczba procesów w limicie, bez braku pamięci.
+          start=$(date +%s)
+          seq 1 60 | xargs -P 30 -I{} curl -s -o /dev/null -m 120 -w "%{http_code}\n" http://localhost:10001/logowanie | sort | uniq -c | tee kody.txt
+          echo "60 zapytań: $(( $(date +%s) - start )) s"
+          test "$(grep -vc ' 200$' kody.txt)" = "0"
+          n=$(docker exec maly sh -c 'grep -lx apache2 /proc/[0-9]*/comm | wc -l')
+          echo "procesy apache2: $n"
+          test "$n" -le 13
+          docker stats --no-stream --format 'pamięć: {{.MemUsage}}' maly
+          test "$(docker inspect -f '{{.State.OOMKilled}} {{.State.Running}}' maly)" = "false true"
       - name: Logi kontenera
         if: always()
         run: docker logs app 2>&1 | tail -60

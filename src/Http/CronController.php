@@ -89,9 +89,14 @@ final class CronController
         $db = Db::get();
         $db->run('DELETE FROM sessions WHERE expires_at < ?', [time()]);
         $db->run('DELETE FROM kv WHERE expires_at IS NOT NULL AND expires_at < ?', [time()]);
-        // Ogłoszenia po terminie starsze niż 120 dni bez ofert użytkowników - usuwamy, żeby baza nie rosła bez końca.
+        // Ogłoszenia 120 dni po terminie usuwamy, żeby baza nie rosła bez końca. Zostają te, z którymi ktoś pracował:
+        // z ofertą, wgranymi dokumentami, analizą albo zapisane przez użytkownika.
         $db->run(
-            'DELETE FROM tenders WHERE deadline_at < ? AND id NOT IN (SELECT tender_id FROM offers WHERE tender_id IS NOT NULL) AND id NOT IN (SELECT tender_id FROM tender_documents)',
+            "DELETE FROM tenders WHERE deadline_at < ?
+                AND id NOT IN (SELECT tender_id FROM offers WHERE tender_id IS NOT NULL)
+                AND id NOT IN (SELECT tender_id FROM tender_documents)
+                AND id NOT IN (SELECT tender_id FROM tender_analyses)
+                AND id NOT IN (SELECT tender_id FROM tender_matches WHERE status = 'saved')",
             [gmdate('Y-m-d H:i:s', time() - 120 * 86400)]
         );
         return $out;

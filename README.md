@@ -67,11 +67,11 @@ Bez dostępu do sieci można pracować na zapisanych odpowiedziach API. Wtedy do
 ## Wdrożenie na Render.com
 
 1. W Render wybierz **New → Blueprint** i wskaż to repozytorium. Plik `render.yaml` utworzy aplikację (Docker) i bazę PostgreSQL.
-2. W ustawieniach usługi `platforma-b2b` uzupełnij zmienne:
-   - `APP_URL` (adres usługi),
+2. Render zapyta o dwie zmienne:
    - `ANTHROPIC_API_KEY` (funkcje AI),
-   - opcjonalnie `PSI_KEY` (PageSpeed) i `APP_NAME`.
    - `ADMIN_EMAILS` (Twój e-mail: test połączenia z AI i ręczna aktualizacja decyzji UOKiK w Ustawieniach).
+
+   Pozostałe ustawia się same. Opcjonalne (`PSI_KEY`, `APP_NAME`, `TERMS_URL`, `PRIVACY_URL`, `APP_URL` przy własnej domenie) dodasz później w zakładce Environment.
 3. Załóż pierwsze konto. Rejestracja jest domyślnie zamknięta (`SIGNUP_OPEN=0`), a Render generuje kod zaproszenia `SIGNUP_CODE`. Odczytaj go w zakładce Environment i otwórz `/rejestracja?kod=<kod>`. Ten sam link wyślesz firmom z pilotażu. Otwartą rejestrację (`SIGNUP_OPEN=1`) włącz dopiero, gdy będą regulamin i polityka prywatności (`TERMS_URL`, `PRIVACY_URL`).
 4. Włącz codzienny import w GitHub: **Settings → Secrets and variables → Actions**. Wybierz jeden wariant:
    - `DATABASE_URL`: zewnętrzny adres bazy z Render („External Database URL”). Import działa wtedy w GitHub Actions. Ten wariant jest zalecany.
@@ -80,7 +80,7 @@ Bez dostępu do sieci można pracować na zapisanych odpowiedziach API. Wtedy do
 
 Bez zmiennej `DATABASE_URL` aplikacja na serwerze nie wystartuje. To celowe: zapis do pliku w kontenerze znikałby przy każdym wdrożeniu.
 
-Darmowa baza PostgreSQL na Render wygasa po 30 dniach. Przed pierwszymi klientami przejdź na płatny plan albo podłącz bazę z Neon (`DATABASE_URL=postgres://…?sslmode=require`). Darmowa instancja aplikacji usypia po okresie bezczynności, więc pierwsze wejście trwa dłużej.
+Darmowa baza PostgreSQL na Render wygasa po 30 dniach. Przed pierwszymi klientami przejdź na płatny plan albo podłącz bazę z Neon (`DATABASE_URL=postgres://…?sslmode=require`; w Neon skopiuj adres bezpośredni, bez `-pooler` w nazwie hosta). Darmowa instancja aplikacji usypia po okresie bezczynności, więc pierwsze wejście trwa dłużej.
 
 ### Zmienne środowiskowe
 
@@ -88,7 +88,7 @@ Darmowa baza PostgreSQL na Render wygasa po 30 dniach. Przed pierwszymi klientam
 |---|---|
 | `DATABASE_URL` | `postgres://user:haslo@host:5432/baza` (opcjonalnie `?sslmode=require`). Pusta oznacza SQLite. |
 | `APP_SECRET` | Losowy sekret (Render generuje go sam). |
-| `APP_NAME`, `APP_URL` | Nazwa produktu i adres publiczny. |
+| `APP_NAME`, `APP_URL` | Nazwa produktu i adres publiczny. `APP_URL` jest opcjonalny: na Render aplikacja bierze adres z `RENDER_EXTERNAL_URL`. Ustaw go przy własnej domenie. |
 | `ANTHROPIC_API_KEY`, `AI_MODEL` | Claude API, domyślnie `claude-sonnet-5-5`. `AI_MAX_INPUT_CHARS` ogranicza długość dokumentacji wysyłanej do modelu (domyślnie 300 000 znaków). Dokumentacja idzie jako blok z pamięcią podręczną, więc kolejne pytania o ten sam przetarg są tańsze. Zużycie tokenów trafia do `audit_log` (`ai.call`). |
 | `CRON_TOKEN` | Token do `/cron/run`, przekazywany w nagłówku `X-Cron-Token`. |
 | `PSI_KEY` | Klucz Google PageSpeed Insights (audyt szybkości). |

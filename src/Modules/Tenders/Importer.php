@@ -26,15 +26,7 @@ final class Importer
             $from = (string) $bzpSince;
             // Jedno pobranie ma limit stron; przy zaległościach (pierwszy import, przerwa) kontynuujemy od ostatniego ogłoszenia.
             for ($round = 0; $round < self::MAX_ROUNDS; $round++) {
-                $rows = $bzp->since($from);
-                foreach ($rows as $t) {
-                    try {
-                        Tenders::save($t);
-                        $result['bzp']++;
-                    } catch (\Throwable $e) {
-                        $skipped[] = 'BZP ' . ($t['external_id'] ?? '?') . ': ' . truncate($e->getMessage(), 160);
-                    }
-                }
+                $result['bzp'] += Tenders::saveMany($bzp->since($from), $skipped, 'BZP');
                 if ($bzp->failedRequests > 0) {
                     $errors[] = 'BZP: serwer nie odpowiedział na ' . $bzp->failedRequests . ' ' . plural($bzp->failedRequests, 'zapytanie', 'zapytania', 'zapytań') . ' - brakujące ogłoszenia pobierzemy przy następnym imporcie.';
                 }
@@ -51,14 +43,7 @@ final class Importer
 
         $tedSince = $sinceUtc ? substr($sinceUtc, 0, 10) : (Kv::get('import:ted:until') ?: gmdate('Y-m-d', time() - 3 * 86400));
         try {
-            foreach ((new TedClient())->since((string) $tedSince) as $t) {
-                try {
-                    Tenders::save($t);
-                    $result['ted']++;
-                } catch (\Throwable $e) {
-                    $skipped[] = 'TED ' . ($t['external_id'] ?? '?') . ': ' . truncate($e->getMessage(), 160);
-                }
-            }
+            $result['ted'] = Tenders::saveMany((new TedClient())->since((string) $tedSince), $skipped, 'TED');
             Kv::set('import:ted:until', gmdate('Y-m-d', time() - 86400));
         } catch (\Throwable $e) {
             $errors[] = 'TED: ' . $e->getMessage();

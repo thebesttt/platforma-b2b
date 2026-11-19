@@ -28,21 +28,16 @@ services:
         generateValue: true
       - key: APP_NAME              # nazwa produktu widoczna w aplikacji
         value: "[Nazwa]"
-      - key: APP_URL               # adres publiczny, np. https://platforma-b2b.onrender.com
-        sync: false
+      # Render zapyta o dwie wartości poniżej przy tworzeniu usługi. Obie można uzupełnić później w zakładce Environment.
       - key: ANTHROPIC_API_KEY     # klucz API Claude - bez niego działa analiza regułowa, a funkcje AI są wyłączone
         sync: false
       - key: AI_MODEL
         value: claude-sonnet-5-5
-      - key: PSI_KEY               # opcjonalnie: klucz Google PageSpeed Insights do audytu szybkości
-        sync: false
       - key: ADMIN_EMAILS          # Twój e-mail: dostęp do ręcznej aktualizacji decyzji UOKiK (Ustawienia → Decyzje UOKiK)
         sync: false
       - key: SIGNUP_OPEN           # 0 = rejestracja tylko z linku z kodem (zalecane do czasu regulaminu), 1 = otwarta dla wszystkich
         value: "0"
       - key: SIGNUP_CODE           # kod zaproszenia: konto zakłada się pod adresem /rejestracja?kod=<ta wartość>
         generateValue: true
-      - key: TERMS_URL             # opcjonalnie: adres regulaminu (link przy rejestracji)
-        sync: false
-      - key: PRIVACY_URL           # opcjonalnie: adres polityki prywatności
-        sync: false
+# Zmienne opcjonalne dodasz później w zakładce Environment: PSI_KEY (klucz Google PageSpeed do audytu szybkości),
+# TERMS_URL i PRIVACY_URL (adresy regulaminu i polityki prywatności), APP_URL (własna domena).

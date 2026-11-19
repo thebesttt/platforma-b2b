@@ -32,6 +32,56 @@ final class Tenders
         return $db->insert('tenders', $t);
     }
 
+    /** Kolumny rekordu z importu. */
+    private const IMPORT_COLS = ['source', 'external_id', 'notice_number', 'notice_type', 'title', 'order_type', 'buyer_name', 'buyer_nip', 'buyer_city',
+        'voivodeship', 'cpv_main', 'cpv_all', 'value_estimated', 'currency', 'published_at', 'deadline_at', 'url', 'documents_url', 'raw_json'];
+
+    /** Kolumny, których zapisanej wartości nie nadpisujemy pustą (np. wartość odczytana później z treści ogłoszenia). */
+    private const KEEP_IF_EMPTY = ['documents_url', 'value_estimated', 'currency', 'buyer_nip'];
+
+    /**
+     * Zapis wielu ogłoszeń z importu: jedno zapytanie na 100 ogłoszeń zamiast dwóch na każde. Import działa często
+     * daleko od bazy (GitHub Actions a baza w innym regionie), więc liczba zapytań decyduje o czasie importu.
+     *
+     * @param string[] $skipped opisy ogłoszeń, których nie udało się zapisać (dopisywane)
+     * @return int liczba zapisanych ogłoszeń
+     */
+    public static function saveMany(array $rows, array &$skipped = [], string $label = ''): int
+    {
+        $now = now_utc();
+        $unique = [];
+        foreach ($rows as $t) {
+            $row = [];
+            foreach (self::IMPORT_COLS as $c) {
+                $v = $t[$c] ?? null;
+                $row[$c] = ($v === '' && in_array($c, self::KEEP_IF_EMPTY, true)) ? null : $v;
+            }
+            $row['search'] = search_text(($row['title'] ?? '') . ' ' . ($row['buyer_name'] ?? '') . ' ' . ($row['buyer_city'] ?? ''));
+            $row['created_at'] = $now;
+            $row['updated_at'] = $now;
+            // To samo ogłoszenie bywa na dwóch stronach wyników - zostaje ostatnia wersja.
+            $unique[$row['source'] . '|' . $row['external_id']] = $row;
+        }
+        $saved = 0;
+        foreach (array_chunk(array_values($unique), 100) as $chunk) {
+            try {
+                Db::get()->upsertMany('tenders', $chunk, ['source', 'external_id'], self::KEEP_IF_EMPTY, ['created_at']);
+                $saved += count($chunk);
+            } catch (\Throwable) {
+                // Jedno wadliwe ogłoszenie nie może zatrzymać całej setki: zapisujemy pojedynczo i pomijamy tylko wadliwe.
+                foreach ($chunk as $row) {
+                    try {
+                        self::save(array_diff_key($row, ['search' => 1, 'created_at' => 1, 'updated_at' => 1]));
+                        $saved++;
+                    } catch (\Throwable $e) {
+                        $skipped[] = trim($label . ' ' . $row['external_id']) . ': ' . truncate($e->getMessage(), 160);
+                    }
+                }
+            }
+        }
+        return $saved;
+    }
+
     public static function find(int $id): ?array
     {
         return Db::get()->one('SELECT * FROM tenders WHERE id = ?', [$id]);

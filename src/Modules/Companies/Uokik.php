@@ -43,8 +43,16 @@ final class Uokik
     /** Zapis decyzji (bez duplikatów po sygnaturze). Zwraca liczbę zapisanych pozycji. */
     public static function store(array $rows): int
     {
+        $now = now_utc();
+        $unique = [];
         foreach ($rows as $d) {
-            Db::get()->upsert('uokik_decisions', $d + ['created_at' => now_utc()], ['signature'], ['company_name', 'search', 'decided_at', 'summary', 'url']);
+            $unique[(string) $d['signature']] = [
+                'signature' => $d['signature'], 'company_name' => $d['company_name'], 'search' => $d['search'], 'decided_at' => $d['decided_at'] ?? null,
+                'summary' => $d['summary'] ?? null, 'url' => $d['url'] ?? null, 'nip' => $d['nip'] ?? null, 'created_at' => $now,
+            ];
+        }
+        foreach (array_chunk(array_values($unique), 200) as $chunk) {
+            Db::get()->upsertMany('uokik_decisions', $chunk, ['signature'], [], ['nip', 'created_at']);
         }
         return count($rows);
     }

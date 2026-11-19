@@ -4,6 +4,17 @@ use App\Core\Kv;
 use App\Core\Nip;
 
 return [
+    'Adres aplikacji: APP_URL, potem adres nadany przez Render, na końcu nagłówek Host' => function () {
+        $req = new App\Core\Request('GET', '/', [], [], [], ['HTTP_HOST' => 'app.example.com', 'HTTP_X_FORWARDED_PROTO' => 'https']);
+        App\Core\Config::set('APP_URL', '');
+        eq('https://app.example.com', $req->baseUrl());
+        App\Core\Config::set('RENDER_EXTERNAL_URL', 'https://platforma-b2b.onrender.com');
+        eq('https://platforma-b2b.onrender.com', $req->baseUrl());
+        App\Core\Config::set('APP_URL', 'https://moja-domena.example/');
+        eq('https://moja-domena.example', $req->baseUrl());
+        App\Core\Config::set('APP_URL', '');
+        App\Core\Config::set('RENDER_EXTERNAL_URL', '');
+    },
     'NIP: suma kontrolna i formatowanie' => function () {
         ok(Nip::valid('1234563218'));
         ok(Nip::valid('123-456-32-18'));

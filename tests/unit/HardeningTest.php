@@ -271,6 +271,114 @@ return [
         ok((int) $db->val('SELECT COUNT(*) FROM tender_matches WHERE profile_id = ?', [$p1]) >= 1);
         eq(0, App\Modules\Tenders\Matcher::run(), 'powtórne uruchomienie nie tworzy duplikatów');
     },
+    'Import zapisuje ogłoszenia paczkami: mało zapytań, zachowane wartości, pominięte tylko wadliwe' => function () {
+        $db = Db::get();
+        $mk = static fn (string $id, array $over = []) => $over + [
+            'source' => 'bzp', 'external_id' => $id, 'title' => 'Remont drogi ' . $id, 'buyer_name' => 'Gmina Przykładowa', 'buyer_nip' => null,
+            'value_estimated' => null, 'currency' => null, 'documents_url' => null, 'published_at' => now_utc(),
+            'deadline_at' => gmdate('Y-m-d H:i:s', time() + 10 * 86400), 'url' => 'https://example.com/' . $id, 'raw_json' => '{}',
+        ];
+        $rows = [];
+        for ($i = 0; $i < 250; $i++) {
+            $rows[] = $mk('n' . $i);
+        }
+        $rows[] = $mk('n7', ['title' => 'Remont drogi - wersja druga']); // to samo ogłoszenie drugi raz w jednej paczce
+        $q = Db::$queries;
+        $skipped = [];
+        eq(250, Tenders::saveMany($rows, $skipped, 'BZP'));
+        ok(Db::$queries - $q <= 9, 'zapis 250 ogłoszeń: ' . (Db::$queries - $q) . ' zapytań');
+        eq([], $skipped);
+        eq(250, (int) $db->val('SELECT COUNT(*) FROM tenders'));
+        eq('Remont drogi - wersja druga', $db->val("SELECT title FROM tenders WHERE external_id = 'n7'"));
+
+        // Wartości uzupełnione później (np. z treści ogłoszenia) nie znikają przy kolejnym imporcie.
+        $db->run("UPDATE tenders SET value_estimated = 120000, currency = 'PLN', documents_url = 'https://example.com/swz', buyer_nip = '1234563218',
+            created_at = '2026-01-01 00:00:00', details_json = '{\"form\":\"small\"}' WHERE external_id = 'n3'");
+        Tenders::saveMany([$mk('n3', ['title' => 'Nowy tytuł ogłoszenia', 'documents_url' => ''])]);
+        $t = $db->one("SELECT * FROM tenders WHERE external_id = 'n3'");
+        eq('Nowy tytuł ogłoszenia', $t['title']);
+        contains('nowy tytul', $t['search']);
+        eq(120000.0, (float) $t['value_estimated']);
+        eq('PLN', $t['currency']);
+        eq('https://example.com/swz', $t['documents_url']);
+        eq('1234563218', $t['buyer_nip']);
+        eq('2026-01-01 00:00:00', substr((string) $t['created_at'], 0, 19), 'data dodania bez zmian');
+        eq('small', json_in($t['details_json'])['form'] ?? null, 'pobrana treść ogłoszenia zostaje');
+        Tenders::saveMany([$mk('n3', ['value_estimated' => 500000.0, 'currency' => 'EUR'])]);
+        eq(500000.0, (float) $db->val("SELECT value_estimated FROM tenders WHERE external_id = 'n3'"), 'nowa wartość zastępuje starą');
+
+        // Wadliwe ogłoszenie (bez tytułu) nie zatrzymuje pozostałych z tej samej paczki.
+        $skipped = [];
+        eq(2, Tenders::saveMany([$mk('x1'), $mk('x2', ['title' => null]), $mk('x3')], $skipped, 'BZP'));
+        eq(1, count($skipped));
+        contains('BZP x2', $skipped[0]);
+        eq(2, (int) $db->val("SELECT COUNT(*) FROM tenders WHERE external_id IN ('x1', 'x2', 'x3')"));
+
+        // Cały import z plików testowych mieści się w kilkunastu zapytaniach (każde to osobna wymiana z bazą).
+        $q = Db::$queries;
+        eq([], App\Modules\Tenders\Importer::run('2026-11-15 00:00:00')['errors']);
+        ok(Db::$queries - $q <= 12, 'import: ' . (Db::$queries - $q) . ' zapytań');
+    },
+    'Dopasowania zapisywane paczkami: status zostaje, zmienia się tylko ocena' => function () {
+        import_fixtures();
+        [$org] = make_org();
+        $db = Db::get();
+        $p = $db->insert('tender_profiles', ['org_id' => $org, 'name' => 'A', 'cpv' => '45233', 'keywords' => '', 'sources' => 'bzp ted', 'active' => 1, 'created_at' => now_utc()]);
+        ok(App\Modules\Tenders\Matcher::run() >= 1);
+        $count = (int) $db->val('SELECT COUNT(*) FROM tender_matches WHERE profile_id = ?', [$p]);
+        $m = $db->one('SELECT * FROM tender_matches WHERE profile_id = ? ORDER BY id LIMIT 1', [$p]);
+        // Użytkownik zapisał przetarg, a ocena w bazie jest nieaktualna: kolejne dopasowanie poprawia ocenę i nic więcej.
+        $db->run("UPDATE tender_matches SET status = 'saved', score = 1, created_at = '2026-01-01 00:00:00' WHERE id = ?", [(int) $m['id']]);
+        $db->run('UPDATE tender_profiles SET matched_until = NULL WHERE id = ?', [$p]);
+        $q = Db::$queries;
+        eq(0, App\Modules\Tenders\Matcher::run(), 'bez nowych dopasowań');
+        ok(Db::$queries - $q <= 5, 'dopasowanie: ' . (Db::$queries - $q) . ' zapytań');
+        $after = $db->one('SELECT * FROM tender_matches WHERE id = ?', [(int) $m['id']]);
+        eq('saved', $after['status']);
+        eq((int) $m['score'], (int) $after['score']);
+        eq('2026-01-01 00:00:00', substr((string) $after['created_at'], 0, 19));
+        eq($count, (int) $db->val('SELECT COUNT(*) FROM tender_matches WHERE profile_id = ?', [$p]));
+        // Bez zmian nie zapisujemy niczego: profile, ogłoszenia, dotychczasowe dopasowania i znacznik profilu.
+        $db->run('UPDATE tender_profiles SET matched_until = NULL WHERE id = ?', [$p]);
+        $q = Db::$queries;
+        eq(0, App\Modules\Tenders\Matcher::run());
+        eq(4, Db::$queries - $q, 'bez zmian: brak zapisu dopasowań');
+    },
+    'Zadanie dzienne usuwa stare ogłoszenia, ale nie te, z którymi ktoś pracował' => function () {
+        [$org, $uid] = make_org();
+        $db = Db::get();
+        $old = gmdate('Y-m-d H:i:s', time() - 130 * 86400);
+        $ids = [];
+        foreach (['samo', 'dopasowane', 'zapisane', 'oferta', 'dokument', 'analiza', 'swieze'] as $k) {
+            $ids[$k] = Tenders::save(['source' => 'bzp', 'external_id' => 'stare-' . $k, 'title' => 'Stare ogłoszenie ' . $k,
+                'published_at' => $old, 'deadline_at' => $k === 'swieze' ? gmdate('Y-m-d H:i:s', time() - 30 * 86400) : $old]);
+        }
+        $p = $db->insert('tender_profiles', ['org_id' => $org, 'name' => 'A', 'sources' => 'bzp', 'active' => 1, 'created_at' => now_utc()]);
+        $match = static fn (string $k, string $status) => $db->insert('tender_matches', ['org_id' => $org, 'profile_id' => $p, 'tender_id' => $ids[$k],
+            'score' => 80, 'reasons_json' => '[]', 'status' => $status, 'created_at' => now_utc()]);
+        $match('dopasowane', 'new');
+        $match('zapisane', 'saved');
+        $db->insert('offers', ['org_id' => $org, 'tender_id' => $ids['oferta'], 'title' => 'Oferta', 'created_at' => now_utc(), 'updated_at' => now_utc()]);
+        $db->insert('tender_documents', ['org_id' => $org, 'tender_id' => $ids['dokument'], 'filename' => 'swz.txt', 'text' => 'x', 'created_at' => now_utc()]);
+        $db->insert('tender_analyses', ['org_id' => $org, 'tender_id' => $ids['analiza'], 'kind' => 'summary', 'result_json' => '{}', 'created_at' => now_utc()]);
+        App\Http\CronController::daily();
+        $left = array_column($db->all("SELECT external_id FROM tenders WHERE external_id LIKE 'stare-%' ORDER BY external_id"), 'external_id');
+        eq(['stare-analiza', 'stare-dokument', 'stare-oferta', 'stare-swieze', 'stare-zapisane'], $left);
+        eq(0, (int) $db->val('SELECT COUNT(*) FROM tender_matches WHERE tender_id = ?', [$ids['dopasowane']]), 'dopasowanie usuniętego ogłoszenia znika razem z nim');
+        eq(1, (int) $db->val('SELECT COUNT(*) FROM tender_matches WHERE tender_id = ?', [$ids['zapisane']]));
+    },
+    'Decyzje UOKiK zapisywane paczkami bez duplikatów' => function () {
+        $d = static fn (string $sig, string $name, ?string $nip = null) => ['signature' => $sig, 'company_name' => $name, 'search' => mb_strtolower($name),
+            'decided_at' => '2026-02-03', 'summary' => 'Opis', 'url' => null, 'nip' => $nip];
+        App\Modules\Companies\Uokik::store([$d('DZP-1/2026', 'Alfa', '1234563218'), $d('DZP-2/2026', 'Beta'), $d('DZP-1/2026', 'Alfa S.A.', '1234563218')]);
+        $db = Db::get();
+        eq(2, (int) $db->val('SELECT COUNT(*) FROM uokik_decisions'));
+        eq('Alfa S.A.', $db->val("SELECT company_name FROM uokik_decisions WHERE signature = 'DZP-1/2026'"));
+        App\Modules\Companies\Uokik::store([$d('DZP-1/2026', 'Alfa Nowa'), $d('DZP-3/2026', 'Gamma')]);
+        eq(3, (int) $db->val('SELECT COUNT(*) FROM uokik_decisions'));
+        eq('Alfa Nowa', $db->val("SELECT company_name FROM uokik_decisions WHERE signature = 'DZP-1/2026'"));
+        eq('1234563218', $db->val("SELECT nip FROM uokik_decisions WHERE signature = 'DZP-1/2026'"), 'NIP przypisany wcześniej zostaje');
+    },
     'safe_url przepuszcza tylko http(s) i ścieżki lokalne' => function () {
         eq('https://example.com/a', safe_url('https://example.com/a'));
         eq('/przetargi/1', safe_url('/przetargi/1'));

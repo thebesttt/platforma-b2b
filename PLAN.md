@@ -5,8 +5,8 @@ Stan na 19.11.2026. Kolejność wynika z jednej zasady: najpierw to, bez czego n
 ## Etap 0. Uruchomienie (ok. 2 godziny pracy właściciela)
 
 1. W Render utwórz usługę przez New → Blueprint, z repozytorium `platforma-b2b`.
-2. W Render uzupełnij zmienne `APP_URL`, `ANTHROPIC_API_KEY` i `ADMIN_EMAILS` (swój e-mail).
-3. Zdecyduj o bazie. Darmowa baza Render wygasa po 30 dniach, potem jest 14 dni na przejście na płatny plan, a po tym czasie dane są kasowane. Od razu wybierz płatny plan Render albo bazę w Neon.
+2. Render zapyta o dwie zmienne: `ANTHROPIC_API_KEY` i `ADMIN_EMAILS` (swój e-mail). Resztę ustawia sam.
+3. Zdecyduj o bazie. Darmowa baza Render wygasa po 30 dniach, potem jest 14 dni na przejście na płatny plan, a po tym czasie dane są kasowane. Od razu wybierz płatny plan Render albo bazę w Neon (w Neon skopiuj adres bezpośredni, bez `-pooler` w nazwie hosta).
 4. Załóż konto z linku `/rejestracja?kod=<SIGNUP_CODE>`. Kod jest w Render, w zakładce Environment. Rejestracja bez kodu jest zamknięta.
 5. W Ustawieniach kliknij „Sprawdź połączenie z AI”. To pierwsze prawdziwe zapytanie do modelu.
 6. W GitHubie dodaj sekret `DATABASE_URL` (zewnętrzny adres bazy). Włącza codzienny import.
@@ -70,10 +70,11 @@ Decyzje właściciela, które blokują dalsze kroki:
 
 ## Co zostało sprawdzone przed uruchomieniem (19.11.2026)
 
-- 62 testy automatyczne na SQLite i PostgreSQL, w tym próba wstrzyknięcia HTML w każdym polu na każdej stronie, wszystkie akcje zapisu i izolacja danych między firmami.
+- 66 testów automatycznych na SQLite i PostgreSQL, w tym próba wstrzyknięcia HTML w każdym polu na każdej stronie, wszystkie akcje zapisu i izolacja danych między firmami.
 - Obraz Docker z bazą PostgreSQL: test dymny w GitHub Actions (nagłówki bezpieczeństwa, pliki statyczne, rejestracja z kodem, zapis formularza, zadania cykliczne, brak startu bez bazy).
 - Próba generalna na prawdziwych danych: import 1331 ogłoszeń z BZP i 861 z TED z 2 dni bez błędów i duplikatów, parser na 40 losowych ogłoszeniach (w tym krótkie ogłoszenia poniżej progu ustawy Pzp), 75 stron aplikacji i 6 szkiców ofert na prawdziwych ogłoszeniach, karty 10 prawdziwych firm (w tym poprawnie wykryta spółka w likwidacji).
 - Test w przeglądarce całej ścieżki użytkownika na danych demonstracyjnych.
+- Import przy bazie w innym regionie niż GitHub Actions (symulowane opóźnienie 100 ms): 2200 ogłoszeń i 10 profili w kilkanaście sekund. Przed poprawką trwałoby to ponad pół godziny.
 - Przepisy cytowane w aplikacji sprawdzone w źródłach.
 
 Czego nie dało się sprawdzić przed wdrożeniem:

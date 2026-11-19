@@ -31,6 +31,14 @@ RUN { \
       echo '  Require all granted'; \
       echo '  DirectoryIndex index.php'; \
       echo '</Directory>'; \
+      echo '# Mała instancja (512 MB RAM): przy natłoku zapytań kolejka zamiast dziesiątek procesów PHP i braku pamięci.'; \
+      echo '<IfModule mpm_prefork_module>'; \
+      echo '  StartServers 2'; \
+      echo '  MinSpareServers 2'; \
+      echo '  MaxSpareServers 4'; \
+      echo '  MaxRequestWorkers ${APACHE_MAX_WORKERS}'; \
+      echo '  MaxConnectionsPerChild 300'; \
+      echo '</IfModule>'; \
     } > /etc/apache2/conf-enabled/platforma.conf
 
 WORKDIR /var/www/app
@@ -44,7 +52,8 @@ COPY docker-entrypoint.sh /usr/local/bin/platforma-entrypoint
 RUN chmod +x /usr/local/bin/platforma-entrypoint bin/console \
  && mkdir -p storage && chown www-data:www-data storage
 
-ENV PORT=10000 APP_ENV=production
+# APACHE_MAX_WORKERS: ile zapytań obsługujemy jednocześnie. Na większej instancji można podnieść (ok. 1 na każde 40 MB RAM).
+ENV PORT=10000 APP_ENV=production APACHE_MAX_WORKERS=12
 EXPOSE 10000
 ENTRYPOINT ["platforma-entrypoint"]
 CMD ["apache2-foreground"]

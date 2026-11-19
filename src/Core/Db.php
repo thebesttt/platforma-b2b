@@ -15,6 +15,9 @@ final class Db
 {
     private static ?Db $instance = null;
 
+    /** Licznik wykonanych zapytań (diagnostyka i testy wydajności importu). */
+    public static int $queries = 0;
+
     private PDO $pdo;
     private string $driver;
 
@@ -55,6 +58,9 @@ final class Db
             }
             $this->pdo = new PDO($dsn, urldecode($p['user'] ?? ''), urldecode($p['pass'] ?? ''));
             $this->driver = 'pgsql';
+            // Bez nazwanych zapytań po stronie serwera: jedno zapytanie = jedna wymiana z bazą (zamiast trzech),
+            // a połączenie działa też przez pulę połączeń (PgBouncer, np. adres „pooler” w Neon).
+            $this->pdo->setAttribute(PDO::PGSQL_ATTR_DISABLE_PREPARES, true);
             $this->pdo->exec("SET TIME ZONE 'UTC'");
         }
         $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -85,6 +91,7 @@ final class Db
 
     public function run(string $sql, array $params = []): PDOStatement
     {
+        self::$queries++;
         $st = $this->pdo->prepare($sql);
         foreach (array_values($params) as $i => $v) {
             $type = match (true) {
@@ -159,6 +166,47 @@ final class Db
         $where = implode(' AND ', array_map(static fn ($c) => "$c = ?", $conflictCols));
         $vals = array_map(static fn ($c) => $data[$c], $conflictCols);
         return (int) $this->val("SELECT id FROM $table WHERE $where", $vals);
+    }
+
+    /**
+     * Zapis wielu wierszy jednym zapytaniem (INSERT … ON CONFLICT … DO UPDATE). Kolumny bierzemy z pierwszego wiersza,
+     * brakujące wartości to NULL. Klucz konfliktu nie może się powtarzać w jednym wywołaniu.
+     *
+     * @param string[] $keepIfNull kolumny, których istniejącej wartości nie nadpisujemy wartością NULL
+     * @param string[] $insertOnly kolumny ustawiane tylko przy wstawianiu nowego wiersza (np. created_at)
+     */
+    public function upsertMany(string $table, array $rows, array $conflictCols, array $keepIfNull = [], array $insertOnly = []): void
+    {
+        if (!$rows) {
+            return;
+        }
+        $cols = array_keys(reset($rows));
+        $set = [];
+        foreach ($cols as $c) {
+            if (in_array($c, $conflictCols, true) || in_array($c, $insertOnly, true)) {
+                continue;
+            }
+            $set[] = in_array($c, $keepIfNull, true) ? "$c = COALESCE(excluded.$c, $table.$c)" : "$c = excluded.$c";
+        }
+        $one = '(' . implode(', ', array_fill(0, count($cols), '?')) . ')';
+        // SQLite w starszych wersjach przyjmuje do 999 parametrów w zapytaniu.
+        $perQuery = max(1, intdiv($this->driver === 'sqlite' ? 900 : 20000, count($cols)));
+        foreach (array_chunk($rows, $perQuery) as $chunk) {
+            $params = [];
+            foreach ($chunk as $row) {
+                foreach ($cols as $c) {
+                    $params[] = $row[$c] ?? null;
+                }
+            }
+            $this->run(sprintf(
+                'INSERT INTO %s (%s) VALUES %s ON CONFLICT (%s) DO %s',
+                $table,
+                implode(', ', $cols),
+                implode(', ', array_fill(0, count($chunk), $one)),
+                implode(', ', $conflictCols),
+                $set ? 'UPDATE SET ' . implode(', ', $set) : 'NOTHING'
+            ), $params);
+        }
     }
 
     public function update(string $table, array $data, string $where, array $params = []): int

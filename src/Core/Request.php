@@ -73,7 +73,8 @@ final class Request
 
     public function baseUrl(): string
     {
-        $configured = rtrim((string) Config::get('APP_URL'), '/');
+        // APP_URL jest opcjonalny: na Render adres usługi jest w RENDER_EXTERNAL_URL, a w ostateczności bierzemy go z zapytania.
+        $configured = rtrim((string) (Config::get('APP_URL') ?: Config::get('RENDER_EXTERNAL_URL', '')), '/');
         if ($configured !== '') {
             return $configured;
         }
