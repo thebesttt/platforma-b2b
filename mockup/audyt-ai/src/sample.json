@@ -1,0 +1,69 @@
+{
+  "client": "Sklep Przykładowy (dane fikcyjne)",
+  "url": "https://sklep-przykladowy.example/poradnik/ekspres-cisnieniowy-do-domu",
+  "title": "Jaki ekspres ciśnieniowy do domu wybrać",
+  "phrase": "jaki ekspres ciśnieniowy do domu",
+  "audits": [
+    { "id": "a", "label": "przed pracami", "date": "14.10.2026" },
+    { "id": "b", "label": "po pracach", "date": "18.11.2026" }
+  ],
+  "results": {
+    "A1": { "a": ["good", "Kod 200, 1 przekierowanie (z http na https)"], "b": ["good", "Kod 200, 1 przekierowanie (z http na https)"] },
+    "A2": { "a": ["good", "Brak noindex, adres kanoniczny wskazuje tę stronę"], "b": ["good", "Brak noindex, adres kanoniczny wskazuje tę stronę"] },
+    "A3": { "a": ["good", "Brak ograniczeń fragmentu"], "b": ["good", "Brak ograniczeń fragmentu"] },
+    "A4": { "a": ["mid", "4 z 5 botów ma dostęp, zablokowany OAI-SearchBot", "robots.txt, wiersze 14-15: „User-agent: OAI-SearchBot” i „Disallow: /”. Bez punktów: GPTBot zablokowany, ClaudeBot i Google-Extended dozwolone."], "b": ["good", "5 z 5 botów ma dostęp", "Bez punktów: GPTBot nadal zablokowany. To decyzja właściciela i nie wpływa na wyszukiwanie."] },
+    "A5": { "a": ["bad", "3 z 5: PerplexityBot i Claude-SearchBot dostają kod 403", "Odpowiedź zawiera nagłówek cf-mitigated: challenge. Zapora CDN blokuje kategorię botów AI."], "b": ["good", "5 z 5 zapytań z kodem 200"] },
+    "A6": { "a": ["mid", "64% słów treści w HTML z serwera", "Tabela porównawcza modeli (412 słów) pojawia się dopiero po uruchomieniu skryptu."], "b": ["good", "97% słów treści w HTML z serwera"] },
+    "B1": { "a": ["good", "Unikalny, 71 znaków", "Wskazówka bez punktów: tytuł ponad 60 znaków może zostać ucięty w wynikach."], "b": ["good", "Unikalny, 54 znaki"] },
+    "B2": { "a": ["bad", "Brak meta description"], "b": ["good", "Jest, 148 znaków, nie powtarza się"] },
+    "B3": { "a": ["mid", "1 H1: „Poradnik”, 0 wspólnych słów z tytułem"], "b": ["good", "1 H1, 5 z 6 słów jest też w tytule"] },
+    "B4": { "a": ["mid", "2 z 3: nagłówek „Informacje” jest ogólnikiem", "6 nagłówków H2, poziomy po kolei."], "b": ["good", "3 z 3: 8 nagłówków H2, poziomy po kolei, bez ogólników"] },
+    "B5": { "a": ["mid", "2 akapity powyżej 150 słów (212 i 187 słów)"], "b": ["good", "Najdłuższy akapit ma 96 słów"] },
+    "B6": { "a": ["mid", "7 z 12 zdjęć ma opis alt (58%)"], "b": ["good", "12 z 12 zdjęć ma opis alt"] },
+    "B7": { "a": ["mid", "Article bez autora i daty aktualizacji"], "b": ["good", "Article, BreadcrumbList i Organization, wartości zgodne z treścią"] },
+    "C1": { "a": ["bad", "Brak podpisu autora"], "b": ["good", "Podpis, strona autora i Person w danych strukturalnych"] },
+    "C2": { "a": ["mid", "Data widoczna (3.02.2026), brak jej w danych strukturalnych"], "b": ["good", "Aktualizacja 12.11.2026, zgodna z dateModified", "Treść zmieniła się między audytami (inny skrót treści), więc zmiana daty jest uzasadniona."] },
+    "C3": { "a": ["bad", "0 źródeł na 1840 słów"], "b": ["good", "5 źródeł na 2130 słów"] },
+    "C4": { "a": ["mid", "3 zdania z liczbą i jednostką na 1000 słów"], "b": ["good", "8 zdań z liczbą i jednostką na 1000 słów"] },
+    "C5": { "a": ["mid", "2 z 3: brak strony „O nas”"], "b": ["mid", "2 z 3: strona „O nas” jest w przygotowaniu"] },
+    "D1": { "a": ["mid", "Odpowiedź dopiero w 214. słowie", "Wskazane zdanie: „Do domu najczęściej wystarczy ekspres kolbowy albo automatyczny o ciśnieniu 15 barów.”"], "b": ["good", "Odpowiedź w 31. słowie", "Wskazane zdanie: „Do domu najczęściej wystarczy ekspres kolbowy albo automatyczny o ciśnieniu 15 barów.”"] },
+    "D2": { "a": ["mid", "Odpowiedź na 5 z 10 pytań"], "b": ["good", "Odpowiedź na 9 z 10 pytań"] },
+    "D3": { "a": ["good", "4 z 4: „ekspres ciśnieniowy”"], "b": ["good", "4 z 4: „ekspres ciśnieniowy”"] },
+    "E1": { "a": ["parts", "LCP 3,4 s · INP 180 ms · CLS 0,21", "Dane użytkowników Chrome z 28 dni, telefon.", [1, 2, 1]], "b": ["parts", "LCP 2,3 s · INP 170 ms · CLS 0,12", "Dane użytkowników Chrome z 28 dni, telefon. CLS: baner z kodem rabatowym przesuwa treść.", [2, 2, 1]] },
+    "E2": { "a": ["good", "Meta viewport jest, brak przewijania w poziomie"], "b": ["good", "Meta viewport jest, brak przewijania w poziomie"] },
+    "E3": { "a": ["good", "HTTPS działa, brak zasobów po http"], "b": ["good", "HTTPS działa, brak zasobów po http"] }
+  },
+  "questions": [
+    ["Czym różni się ekspres kolbowy od automatycznego?", true, true],
+    ["Jakie ciśnienie powinien mieć ekspres do domu?", true, true],
+    ["Ile kosztuje dobry ekspres ciśnieniowy do domu?", false, true],
+    ["Czy warto dopłacić do ekspresu z młynkiem?", true, true],
+    ["Jak często trzeba odkamieniać ekspres?", false, true],
+    ["Jaki ekspres wybrać do małej kuchni?", false, true],
+    ["Ile prądu zużywa ekspres ciśnieniowy?", false, true],
+    ["Jaka kawa nadaje się do ekspresu ciśnieniowego?", true, true],
+    ["Czy ekspres ciśnieniowy spieni mleko?", true, true],
+    ["Ile lat działa ekspres i jak wygląda serwis?", false, false]
+  ],
+  "engines": ["ChatGPT (wyszukiwanie)", "Perplexity", "Gemini z wyszukiwarką Google"],
+  "runs": 3,
+  "citations": [
+    ["jaki ekspres ciśnieniowy do domu", [0, 1, 0], [2, 3, 1]],
+    ["Ile kosztuje dobry ekspres ciśnieniowy do domu?", [0, 0, 0], [1, 2, 0]],
+    ["Jak często trzeba odkamieniać ekspres?", [0, 0, 0], [3, 2, 2]],
+    ["Ile prądu zużywa ekspres ciśnieniowy?", [0, 0, 0], [0, 1, 0]]
+  ],
+  "rivals": [
+    ["porownywarka.example", 21],
+    ["magazyn-kawowy.example", 14],
+    ["forum-baristow.example", 9]
+  ],
+  "pages": [
+    ["/poradnik/ekspres-cisnieniowy-do-domu", "jaki ekspres ciśnieniowy do domu", 97, "Brak strony „O nas”"],
+    ["/ekspres-kolbowy-model-x", "ekspres kolbowy model x opinie", 88, "CLS 0,14: zdjęcia bez wymiarów"],
+    ["/", "sklep z ekspresami do kawy", 81, "Brak strony „O nas”"],
+    ["/poradnik/jak-odkamienic-ekspres", "jak odkamienić ekspres", 74, "Odpowiedź na 5 z 10 pytań pobocznych"],
+    ["/ekspresy-kolbowe", "ekspresy kolbowe", 68, "Brak opisu strony, 2 akapity powyżej 150 słów"],
+    ["/blog/nowosci-w-ofercie", "nowości ekspresy 2026", 47, "PerplexityBot dostaje kod 403"]
+  ]
+}

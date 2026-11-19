@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Audyt widoczności w AI</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Układ: powłoka platformy (menu po lewej), a w treści raport czytany od góry: wynik, zadania, wskaźniki. */
+:root {
+  --bg: #F5F6F8; --surface: #FFFFFF; --line: #E4E7EC; --line-soft: #F2F4F7;
+  --text: #0F172A; --text-2: #344054; --muted: #475467;
+  --accent: #2347C5; --accent-hover: #1A3596; --accent-soft: #EEF2FF; --accent-line: #C7D2FE; --on-accent: #FFFFFF;
+  --good: #067647; --good-bg: #ECFDF3; --mid: #B54708; --mid-bg: #FFFAEB; --bad: #B42318; --bad-bg: #FEF3F2; --bad-line: #FECDCA;
+  --track: #E4E7EC; --note-bg: #FFF7E0; --note-text: #5C3A00;
+  --radius: 12px;
+  --font: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-head: "Space Grotesk", Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1320; --surface: #161C2C; --line: #2A3347; --line-soft: #1D2436;
+    --text: #EEF1F7; --text-2: #C9D0DE; --muted: #A2ABBD;
+    --accent: #8FA6FF; --accent-hover: #B4C3FF; --accent-soft: #1E2A52; --accent-line: #3A4A85; --on-accent: #0E1320;
+    --good: #5FD39A; --good-bg: #12301F; --mid: #F5B95B; --mid-bg: #3A2A0E; --bad: #FF9A8F; --bad-bg: #3B1512; --bad-line: #6E2A24;
+    --track: #2A3347; --note-bg: #3A2A0E; --note-text: #FFE2A8;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1320; --surface: #161C2C; --line: #2A3347; --line-soft: #1D2436;
+  --text: #EEF1F7; --text-2: #C9D0DE; --muted: #A2ABBD;
+  --accent: #8FA6FF; --accent-hover: #B4C3FF; --accent-soft: #1E2A52; --accent-line: #3A4A85; --on-accent: #0E1320;
+  --good: #5FD39A; --good-bg: #12301F; --mid: #F5B95B; --mid-bg: #3A2A0E; --bad: #FF9A8F; --bad-bg: #3B1512; --bad-line: #6E2A24;
+  --track: #2A3347; --note-bg: #3A2A0E; --note-text: #FFE2A8;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 var(--font); }
+a { color: var(--accent); }
+a:hover { color: var(--accent-hover); }
+h1, h2, h3 { font-family: var(--font-head); line-height: 1.25; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(22px, 3vw, 28px); }
+h2 { font-size: 18px; }
+h3 { font-size: 15px; }
+p { margin: 0; }
+code { font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--line-soft); padding: 1px 6px; border-radius: 6px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.num { font-variant-numeric: tabular-nums; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.mockbar { background: var(--note-bg); color: var(--note-text); font-size: 13px; padding-block: 8px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.shell { display: flex; flex-wrap: wrap; }
+.sidebar { flex: 1 1 210px; max-width: 100%; background: var(--surface); border-right: 1px solid var(--line); padding-block: 20px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: 14px; display: flex; flex-direction: column; gap: 20px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-mark { width: 30px; height: 30px; border-radius: 8px; background: var(--accent); flex: none; }
+.brand-name { font-family: var(--font-head); font-weight: 700; font-size: 17px; }
+.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav span, .nav a { display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; font-size: 14px; color: var(--text-2); text-decoration: none; white-space: nowrap; }
+.nav .on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.nav-sub { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; padding: 10px 12px 2px; }
+.content { flex: 999 1 560px; min-width: 0; padding-block: 28px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.container { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+@media (min-width: 900px) { .content { padding-left: 36px; padding-right: 36px; } }
+@media (max-width: 780px) {
+  .sidebar { border-right: 0; border-bottom: 1px solid var(--line); padding-block: 12px; padding-right: max(16px, env(safe-area-inset-right, 0px)); gap: 10px; }
+  .nav { flex-direction: row; overflow-x: auto; gap: 4px; }
+  .nav-sub, .nav .acct { display: none; }
+}
+.client .sidebar, .client .agency-only { display: none; }
+.client-note { background: var(--accent-soft); color: var(--text); border: 1px solid var(--accent-line); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+
+.crumbs { font-size: 13px; color: var(--muted); }
+.head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px; }
+.head > div { min-width: 0; flex: 1 1 420px; }
+.head > .btn { flex: none; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--muted); margin-top: 6px; }
+.meta b { color: var(--text-2); font-weight: 600; overflow-wrap: anywhere; }
+.tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line); }
+.tabs a { padding: 10px 12px; font-size: 14px; color: var(--text-2); text-decoration: none; white-space: nowrap; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tabs a[aria-current="page"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); font: 600 14px var(--font); cursor: pointer; }
+.btn:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn.ghost { background: var(--surface); color: var(--accent); border-color: var(--accent-line); }
+.btn.ghost:hover { background: var(--accent-soft); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; min-width: 0; }
+.card.flush { padding: 0; overflow: hidden; }
+.card-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 16px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.card-head p { flex: 1 1 320px; }
+.form { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.field { display: flex; flex-direction: column; gap: 4px; flex: 1 1 220px; min-width: 0; font-size: 13px; color: var(--text-2); }
+.field input { min-height: 40px; border: 1px solid var(--line); border-radius: 10px; padding: 0 12px; font: 14px var(--font); background: var(--surface); color: var(--text); width: 100%; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: transparent; color: var(--text-2); font: 14px var(--font); padding: 8px 14px; cursor: pointer; min-height: 40px; }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+
+.chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.chip.good { background: var(--good-bg); color: var(--good); }
+.chip.mid { background: var(--mid-bg); color: var(--mid); }
+.chip.bad { background: var(--bad-bg); color: var(--bad); }
+.chip.plain { background: var(--line-soft); color: var(--text-2); }
+.chip.plain::before { display: none; }
+.src { display: inline-block; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 6px; border: 1px solid var(--line); color: var(--text-2); text-decoration: none; white-space: nowrap; }
+a.src:hover { border-color: var(--accent-line); color: var(--accent); }
+
+.summary { display: flex; flex-wrap: wrap; gap: 20px; }
+.scorebox { flex: 1 1 260px; display: flex; flex-direction: column; gap: 10px; }
+.score-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.score-num { font: 700 56px/1 var(--font-head); font-variant-numeric: tabular-nums; }
+.score-num small { font-size: 20px; font-weight: 500; color: var(--muted); }
+.bar { height: 8px; border-radius: 999px; background: var(--track); overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 999px; background: var(--accent); }
+.bar.good i { background: var(--good); } .bar.mid i { background: var(--mid); } .bar.bad i { background: var(--bad); }
+.scale { position: relative; height: 22px; font-size: 11px; color: var(--muted); }
+.scale span { position: absolute; top: 4px; transform: translateX(-50%); }
+.scale span::before { content: ""; position: absolute; left: 50%; top: -6px; width: 1px; height: 5px; background: var(--muted); }
+.groups { flex: 2 1 380px; display: flex; flex-direction: column; gap: 12px; justify-content: center; }
+.grow { display: grid; grid-template-columns: minmax(0, 1fr) 64px; gap: 4px 12px; align-items: center; font-size: 14px; }
+.grow .bar { grid-column: 1 / -1; }
+.grow .pts { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-2); }
+
+.todo { list-style: none; margin: 0; padding: 0; }
+.todo li { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 4px 14px; padding: 14px 20px; border-top: 1px solid var(--line); }
+.todo li:first-child { border-top: 0; }
+.gain { font: 700 15px var(--font-head); color: var(--accent); font-variant-numeric: tabular-nums; }
+.todo .how { font-size: 13px; color: var(--muted); }
+
+.rule { border-top: 1px solid var(--line); }
+.rule:first-child { border-top: 0; }
+.rule summary { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto 52px; gap: 4px 12px; align-items: center; padding: 12px 20px; cursor: pointer; list-style: none; }
+.rule summary::-webkit-details-marker { display: none; }
+.rule summary:hover { background: var(--line-soft); }
+.rule .code { font: 600 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--muted); }
+.rule .name { font-weight: 600; }
+.rule .val { grid-column: 2 / -1; font-size: 13px; color: var(--muted); }
+.rule .pts { text-align: right; font-variant-numeric: tabular-nums; font-size: 14px; color: var(--text-2); }
+.rule .body { padding: 4px 20px 18px 66px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; }
+.kv { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 6px 12px; }
+.kv dt { color: var(--muted); font-size: 13px; }
+.kv dd { margin: 0; }
+.levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 8px; }
+.level { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 13px; display: flex; flex-direction: column; gap: 6px; }
+.level .chip { align-self: flex-start; }
+.level.now { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.level .lp { color: var(--muted); }
+.srcs { display: flex; flex-wrap: wrap; gap: 6px; }
+@media (max-width: 560px) {
+  .rule summary { grid-template-columns: 30px minmax(0, 1fr) 44px; }
+  .rule summary .chip { grid-column: 2; justify-self: start; grid-row: 3; }
+  .rule .body { padding-left: 20px; }
+  .kv { grid-template-columns: 1fr; gap: 2px; }
+  .kv dd { margin-bottom: 8px; }
+}
+
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-top: 1px solid var(--line); }
+thead th { border-top: 0; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.guide table { min-width: 860px; }
+.guide td:nth-child(2) { min-width: 200px; }
+.plain-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 20px; }
+.delta-up { color: var(--good); font-weight: 600; }
+.qa { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.qa li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; }
+.qa .y { color: var(--good); font-weight: 700; } .qa .n { color: var(--bad); font-weight: 700; }
+.inline-note { background: var(--note-bg); color: var(--note-text); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="mockbar"><b>Mockup.</b> Dane przykładowe dla fikcyjnego sklepu. To nie jest wynik prawdziwego audytu. Formularz i przyciski pokazują układ, nie uruchamiają pomiaru.</div>
+<div class="shell" id="shell">
+  <aside class="sidebar" aria-label="Menu platformy">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span class="brand-name">[Nazwa]</span></div>
+    <nav class="nav">
+      <span>Pulpit</span><span>Przetargi</span><span>Oferty i wnioski</span><span>Kontrahenci</span><span>Klienci i wiadomości</span>
+      <span class="on" aria-current="true">Audyt i reklamy</span>
+      <div class="nav-sub">Konto</div><span class="acct">Biblioteka firmy</span><span class="acct">Ustawienia</span>
+    </nav>
+  </aside>
+  <main class="content">
+    <div class="container">
+      <div class="client-note" id="clientNote" hidden>Widok klienta: tak wygląda raport pod publicznym linkiem. Tylko do odczytu, bez menu platformy.</div>
+      <header class="head">
+        <div>
+          <p class="crumbs agency-only">Audyt i reklamy / Audyt treści pod wyszukiwarki i AI</p>
+          <h1 id="pageTitle"></h1>
+          <div class="meta" id="pageMeta"></div>
+        </div>
+        <button class="btn ghost" id="clientBtn" type="button">Podgląd dla klienta</button>
+      </header>
+      <nav class="tabs" aria-label="Części audytu" id="tabs">
+        <a href="#raport">Raport</a><a href="#wytyczne">Wytyczne wskaźników</a><a href="#postep">Przed i po</a><a href="#cytowania">Cytowania w AI</a><a href="#strony" class="agency-only">Strony witryny</a>
+      </nav>
+
+      <section id="v-raport" aria-label="Raport"></section>
+      <section id="v-wytyczne" aria-label="Wytyczne wskaźników" hidden></section>
+      <section id="v-postep" aria-label="Przed i po" hidden></section>
+      <section id="v-cytowania" aria-label="Cytowania w AI" hidden></section>
+      <section id="v-strony" aria-label="Strony witryny" hidden></section>
+    </div>
+  </main>
+</div>
+
+<script>
+const RULES = {"version":"2026-11-19","levels":{"good":85,"mid":60},"sources":{"g_guide":{"who":"Google","label":"Google: optymalizacja pod funkcje generatywnej AI w wyszukiwarce (10.07.2026)","url":"https://developers.google.com/search/docs/fundamentals/ai-optimization-guide","short":"Google: przewodnik AI"},"g_features":{"who":"Google","label":"Google: funkcje AI a Twoja witryna (10.12.2025)","url":"https://developers.google.com/search/docs/appearance/ai-features","short":"Google: funkcje AI"},"g_snippet":{"who":"Google","label":"Google: fragmenty i meta description","url":"https://developers.google.com/search/docs/appearance/snippet","short":"Google: fragmenty"},"g_title":{"who":"Google","label":"Google: linki tytułowe","url":"https://developers.google.com/search/docs/appearance/title-link","short":"Google: tytuły"},"g_helpful":{"who":"Google","label":"Google: tworzenie pomocnych, wiarygodnych treści","url":"https://developers.google.com/search/docs/fundamentals/creating-helpful-content","short":"Google: pomocne treści"},"g_article":{"who":"Google","label":"Google: dane strukturalne Article (8.09.2026)","url":"https://developers.google.com/search/docs/data-types/article","short":"Google: Article"},"g_faq":{"who":"Google","label":"Google: koniec wyników rozszerzonych FAQ od 7.05.2026 (omówienie ppc.land)","url":"https://ppc.land/google-kills-faq-rich-results-what-seos-saw-coming-since-2019/","short":"Google: FAQ"},"cwv":{"who":"Google","label":"web.dev: Core Web Vitals","url":"https://web.dev/articles/vitals","short":"web.dev"},"openai":{"who":"Boty AI","label":"OpenAI: przegląd botów (OAI-SearchBot, GPTBot, ChatGPT-User)","url":"https://developers.openai.com/api/docs/bots.md","short":"OpenAI"},"anthropic":{"who":"Boty AI","label":"Anthropic: boty ClaudeBot, Claude-User, Claude-SearchBot","url":"https://support.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler","short":"Anthropic"},"perplexity":{"who":"Boty AI","label":"Perplexity: boty PerplexityBot i Perplexity-User","url":"https://docs.perplexity.ai/docs/resources/perplexity-crawlers.md","short":"Perplexity"},"cloudflare":{"who":"Boty AI","label":"Cloudflare: zasady dostępu botów AI (Search, Agents, Training)","url":"https://developers.cloudflare.com/bots/additional-configurations/block-ai-bots/","short":"Cloudflare"},"ms_ads":{"who":"Microsoft","label":"Microsoft: optymalizacja treści pod odpowiedzi AI (10.2025)","url":"https://about.ads.microsoft.com/en/blog/post/october-2025/optimizing-your-content-for-inclusion-in-ai-search-answers","short":"Microsoft"},"bing_perf":{"who":"Microsoft","label":"Bing: raport AI Performance w Bing Webmaster Tools (02.2026)","url":"https://blogs.bing.com/webmaster/February-2026/Introducing-AI-Performance-in-Bing-Webmaster-Tools-Public-Preview","short":"Bing: raport AI"},"bing_guide":{"who":"Microsoft","label":"Bing: wytyczne dla webmasterów z częścią o GEO (omówienie Search Engine Journal, 02.2026)","url":"https://www.searchenginejournal.com/bing-adds-geo-to-official-guidelines-expands-ai-abuse-definitions/568442/","short":"Bing: wytyczne"},"geo":{"who":"Badanie","label":"Badanie GEO: Generative Engine Optimization (Aggarwal i in., KDD 2024)","url":"https://arxiv.org/html/2311.09735v3","short":"Badanie GEO"},"vercel":{"who":"Badanie","label":"Badanie Vercel i MERJ: boty AI a JavaScript (12.2024)","url":"https://vercel.com/blog/the-rise-of-the-ai-crawler","short":"Badanie Vercel"}},"groups":[{"id":"A","name":"Dostęp dla wyszukiwarek i botów AI","lead":"Jeśli bot nie pobierze strony albo nie wolno mu pokazać fragmentu, reszta wskaźników nie ma znaczenia."},{"id":"B","name":"Zrozumiała struktura","lead":"Tytuł, nagłówki i dane strukturalne mówią, o czym jest strona i gdzie leży odpowiedź."},{"id":"C","name":"Wiarygodność i dowody","lead":"Kto to napisał, kiedy i na jakiej podstawie."},{"id":"D","name":"Odpowiedź na pytania","lead":"Czy strona odpowiada na pytanie z frazy i na pytania poboczne, które AI zadaje przy okazji."},{"id":"E","name":"Szybkość i wygoda","lead":"Strona ma działać szybko i poprawnie na telefonie."}],"rules":[{"code":"A1","group":"A","name":"Kod odpowiedzi","max":4,"partial":2,"required":true,"what":"Czy adres odpowiada poprawnie, bez łańcucha przekierowań.","how":"Pobieramy adres tak jak przeglądarka i liczymy przekierowania.","good":"Kod 200 po najwyżej 1 przekierowaniu.","mid":"Kod 200 po 2 lub więcej przekierowaniach.","bad":"Kod 4xx lub 5xx, pętla przekierowań albo brak odpowiedzi w 15 s.","fix":"Linkuj od razu do adresu docelowego i usuń pośrednie przekierowania.","basis":["g_features"]},{"code":"A2","group":"A","name":"Indeksowanie","max":6,"partial":3,"required":true,"what":"Czy strona może trafić do indeksu wyszukiwarki.","how":"Sprawdzamy znacznik meta robots, nagłówek X-Robots-Tag i adres kanoniczny.","good":"Brak noindex. Adres kanoniczny wskazuje tę samą stronę.","mid":"Brak noindex, ale brakuje adresu kanonicznego.","bad":"Jest noindex albo adres kanoniczny wskazuje inną stronę.","fix":"Usuń noindex i ustaw rel=canonical na własny adres strony.","basis":["g_features","g_guide"],"note":"Brak adresu kanonicznego nie blokuje indeksowania. Punktujemy go, bo wskazuje wyszukiwarce właściwy adres, gdy ta sama treść jest pod kilkoma adresami."},{"code":"A3","group":"A","name":"Fragment i cytat","max":4,"partial":2,"required":true,"what":"Czy wyszukiwarka może pokazać fragment strony. Bez tego strona nie będzie źródłem w odpowiedziach AI Google.","how":"Szukamy dyrektyw nosnippet, max-snippet i noarchive oraz atrybutu data-nosnippet.","good":"Brak nosnippet, max-snippet:0 i noarchive. Treść główna jest poza data-nosnippet.","mid":"max-snippet poniżej 160 znaków, data-nosnippet na części treści głównej albo noarchive.","bad":"nosnippet albo max-snippet:0.","fix":"Usuń ograniczenia fragmentu ze stron, które mają być cytowane. Atrybut data-nosnippet zostaw tylko na elementach, których nie chcesz pokazywać.","note":"Według wytycznych Bing dyrektywa noarchive wyłącza treść z odpowiedzi Copilota. Na Google nie wpływa, dlatego to stan „Do poprawy”, a nie „Źle”.","convention":"Próg 160 znaków jest umowny.","basis":["g_features","g_snippet","bing_guide"]},{"code":"A4","group":"A","name":"robots.txt dla botów wyszukiwania","max":8,"partial":4,"required":true,"what":"Czy boty, które budują wyniki wyszukiwania i odpowiedzi AI, mogą pobrać ten adres.","how":"Czytamy robots.txt i sprawdzamy reguły dla 5 botów: Googlebot, Bingbot, OAI-SearchBot (ChatGPT), PerplexityBot i Claude-SearchBot.","good":"Wszystkie 5 botów ma dostęp do adresu.","mid":"Googlebot i Bingbot mają dostęp, ale co najmniej 1 bot AI jest zablokowany.","bad":"Zablokowany Googlebot albo Bingbot.","fix":"Usuń regułę Disallow dla wymienionych botów. OpenAI i Perplexity podają, że zmiana działa po ok. 24 godzinach.","note":"Boty treningowe (GPTBot, ClaudeBot, Google-Extended) pokazujemy osobno i bez punktów. Ich blokada nie wpływa na wyszukiwanie. To decyzja właściciela strony.","basis":["openai","anthropic","perplexity","g_features"]},{"code":"A5","group":"A","name":"Serwer i CDN wpuszczają boty","max":4,"partial":2,"what":"Czy zapora, CDN lub hosting nie odrzucają botów mimo zgody w robots.txt.","how":"Wysyłamy 5 zapytań z nagłówkiem User-Agent każdego bota i porównujemy odpowiedź z odpowiedzią dla przeglądarki.","good":"5 z 5 zapytań zwraca kod 200 i tę samą treść co przeglądarce.","mid":"Kod 200 dla wszystkich, ale odpowiedź dla bota trwa ponad 5 s.","bad":"Co najmniej 1 bot dostaje kod 403, 429 albo stronę z testem zamiast treści.","fix":"W panelu CDN lub zapory zezwól na boty wyszukiwania AI. W Cloudflare: Security, Settings, AI Crawler and Agent access policies, kategoria Search na Allow.","note":"Test wychodzi z naszego serwera. Zapora, która weryfikuje adresy IP botów, może potraktować prawdziwego bota inaczej. Ostateczne potwierdzenie daje dziennik serwera.","convention":"Próg 5 s jest umowny.","basis":["g_features","perplexity","cloudflare"]},{"code":"A6","group":"A","name":"Treść bez JavaScript","max":4,"partial":2,"what":"Czy treść jest w kodzie HTML wysyłanym przez serwer. Według badania z 2024 r. boty OpenAI, Anthropic i Perplexity nie uruchamiają JavaScript.","how":"Porównujemy liczbę słów treści głównej w HTML z serwera i po uruchomieniu skryptów w przeglądarce.","good":"Co najmniej 90% słów treści głównej i nagłówek H1 są w HTML z serwera.","mid":"50-89% słów treści głównej.","bad":"Mniej niż 50% słów albo brak H1 w HTML z serwera.","fix":"Renderuj treść po stronie serwera. Skrypty zostaw do dodatków: opinii, czatu, liczników.","convention":"Progi 90% i 50% są umowne.","basis":["vercel","g_features","ms_ads"],"note":"Google uruchamia JavaScript, więc ten wskaźnik dotyczy pozostałych botów AI. Badanie jest z grudnia 2024 r. Jeśli boty zaczną uruchamiać skrypty, zmienimy wskaźnik w nowej wersji wytycznych."},{"code":"B1","group":"B","name":"Tytuł strony","max":4,"partial":2,"what":"Czy strona ma własny, opisowy tytuł.","how":"Odczytujemy znacznik title i porównujemy go z tytułami innych sprawdzonych stron witryny.","good":"Tytuł jest, opisuje treść i nie powtarza się na innych sprawdzonych stronach.","mid":"Tytuł powtarza się na innej stronie albo jest ogólnikiem (np. „Strona główna”).","bad":"Brak znacznika title albo jest pusty.","fix":"Napisz własny, opisowy tytuł dla każdej strony. Nazwę marki dodaj krótko na końcu.","note":"Google nie podaje limitu długości tytułu. Tytuł ponad ok. 60 znaków może zostać ucięty w wynikach, więc pokazujemy to jako wskazówkę bez punktów.","basis":["g_title","ms_ads"]},{"code":"B2","group":"B","name":"Opis strony","max":3,"partial":1,"what":"Meta description: krótki opis, którego wyszukiwarka może użyć jako fragmentu.","how":"Odczytujemy meta description i porównujemy z opisami innych sprawdzonych stron.","good":"Opis jest i nie powtarza się na innych sprawdzonych stronach.","mid":"Opis jest, ale taki sam jak na innej stronie.","bad":"Brak opisu.","fix":"Opisz w 1-2 zdaniach, co czytelnik znajdzie na stronie. Bez listy słów kluczowych.","note":"Google nie podaje limitu długości opisu.","basis":["g_snippet","ms_ads"]},{"code":"B3","group":"B","name":"Nagłówek H1","max":4,"partial":2,"what":"Czy strona ma jeden główny nagłówek zgodny z tytułem.","how":"Liczymy nagłówki H1 i porównujemy słowa H1 ze słowami tytułu (bez spójników i nazwy marki).","good":"Dokładnie jeden H1, a co najmniej połowa jego słów jest też w tytule.","mid":"Kilka H1 albo mniej niż połowa wspólnych słów z tytułem.","bad":"Brak H1 albo H1 jest pusty.","fix":"Zostaw jeden H1, który mówi to samo co tytuł strony.","convention":"Próg połowy wspólnych słów jest umowny.","basis":["g_title","ms_ads"]},{"code":"B4","group":"B","name":"Nagłówki sekcji","max":4,"partial":2,"what":"Czy treść jest podzielona na sekcje z konkretnymi nagłówkami.","how":"Sprawdzamy trzy warunki: co najmniej 2 nagłówki H2 na stronie powyżej 300 słów, poziomy po kolei (bez przeskoku z H2 do H4), brak ogólników z listy (np. „Informacje”, „Dowiedz się więcej”).","good":"Spełnione 3 z 3 warunków.","mid":"Spełnione 2 z 3 warunków.","bad":"Spełniony 1 warunek albo żaden.","fix":"Podziel treść na sekcje. Nagłówek ma mówić, o czym jest sekcja, najlepiej jako pytanie albo konkretny temat.","convention":"Próg 300 słów i lista ogólników są umowne.","basis":["g_guide","ms_ads","bing_perf"]},{"code":"B5","group":"B","name":"Bez ścian tekstu","max":3,"partial":1,"what":"Czy akapity są na tyle krótkie, że widać granice między myślami.","how":"Liczymy słowa w każdym akapicie treści głównej.","good":"Żaden akapit nie ma więcej niż 150 słów.","mid":"1-2 akapity powyżej 150 słów.","bad":"3 lub więcej akapitów powyżej 150 słów.","fix":"Podziel długie akapity. Kroki i porównania zapisz jako listę albo tabelę.","convention":"Próg 150 słów jest umowny.","basis":["ms_ads","g_guide"]},{"code":"B6","group":"B","name":"Treść jako tekst","max":3,"partial":1,"what":"Czy ważne informacje są tekstem, a nie tylko obrazem albo plikiem PDF.","how":"Liczymy zdjęcia w treści głównej z opisem alt. Sprawdzamy, czy cena, parametry i kroki są w HTML.","good":"Co najmniej 90% zdjęć w treści ma opis alt, a kluczowe dane są tekstem.","mid":"50-89% zdjęć ma opis alt.","bad":"Mniej niż 50% zdjęć ma opis alt albo kluczowe dane są tylko na obrazie lub w PDF.","fix":"Dodaj opisy alt. Parametry, ceny i kroki zapisz w HTML.","convention":"Progi 90% i 50% są umowne.","basis":["g_features","ms_ads"]},{"code":"B7","group":"B","name":"Dane strukturalne","max":4,"partial":2,"what":"Czy dane strukturalne są poprawne i zgodne z tym, co widać na stronie.","how":"Odczytujemy JSON-LD, sprawdzamy składnię i typ, porównujemy wartości (tytuł, autor, data, cena) z widoczną treścią.","good":"JSON-LD bez błędów, typ pasuje do strony (artykuł: Article lub BlogPosting, produkt: Product, strona główna: Organization i WebSite), wartości zgodne z treścią.","mid":"Brak danych strukturalnych albo dane niepełne.","bad":"Błąd składni albo wartości sprzeczne z widoczną treścią.","fix":"Dodaj JSON-LD właściwy dla rodzaju strony i trzymaj go w zgodzie z treścią.","note":"Google nie wymaga danych strukturalnych do odpowiedzi AI. Punktujemy je, bo dają wyniki rozszerzone i zaleca je Microsoft. Typ FAQPage jest bez punktów: od 7.05.2026 nie daje wyników rozszerzonych w Google.","basis":["g_features","g_guide","ms_ads","g_faq"]},{"code":"C1","group":"C","name":"Autor","max":5,"partial":2,"what":"Czy wiadomo, kto napisał treść.","how":"Szukamy podpisu autora, linku do strony o autorze lub „O nas” i właściwości author w danych strukturalnych.","good":"Widoczne imię i nazwisko autora, link do strony o autorze, autor w danych strukturalnych (Person z name i url).","mid":"Podpis jest, ale brakuje linku albo danych strukturalnych.","bad":"Brak informacji o autorze.","fix":"Podpisz treść prawdziwym autorem i podlinkuj jego stronę z opisem doświadczenia.","note":"Na stronach produktów i ofert zamiast autora sprawdzamy wydawcę (Organization). Zmyślony autor to oszustwo według Google.","basis":["g_helpful","g_article"]},{"code":"C2","group":"C","name":"Daty","max":4,"partial":2,"what":"Czy widać, kiedy treść powstała i kiedy była aktualizowana.","how":"Szukamy widocznej daty i porównujemy ją z datePublished i dateModified w danych strukturalnych (format ISO 8601).","good":"Widoczna data publikacji lub aktualizacji i ta sama data w danych strukturalnych.","mid":"Data jest widoczna, ale brakuje jej w danych strukturalnych albo różni się o ponad 1 dzień.","bad":"Brak daty. Także wtedy, gdy data zmieniła się między audytami, a treść nie.","fix":"Pokaż datę aktualizacji i zmieniaj ją tylko razem z treścią.","note":"Google ostrzega przed zmianą daty bez zmiany treści.","basis":["g_article","g_helpful","bing_perf"]},{"code":"C3","group":"C","name":"Źródła","max":4,"partial":2,"what":"Czy twierdzenia i liczby mają podane źródło.","how":"Liczymy linki z treści głównej do zewnętrznych źródeł. Nie liczymy linków do własnej witryny, sklepów i mediów społecznościowych.","good":"Co najmniej 2 źródła na 1000 słów treści, minimum 2.","mid":"1 źródło.","bad":"Brak źródeł.","fix":"Podlinkuj dane, normy i badania, na które się powołujesz.","note":"W badaniu GEO dodanie źródeł podniosło widoczność w odpowiedzi AI o 28%. Test był na symulowanym silniku, nie na ChatGPT ani Google.","convention":"Próg 2 źródeł na 1000 słów jest umowny.","basis":["geo","g_helpful","bing_perf"]},{"code":"C4","group":"C","name":"Konkretne dane","max":3,"partial":1,"what":"Czy treść podaje liczby i parametry zamiast ogólników.","how":"Liczymy zdania z liczbą i jednostką (np. 15 barów, 1450 W, 2 lata gwarancji) na 1000 słów treści.","good":"Co najmniej 5 takich zdań na 1000 słów.","mid":"2-4 na 1000 słów.","bad":"0-1 na 1000 słów.","fix":"Zamień ogólniki na parametry. Zamiast „cichy ekspres” napisz „ekspres o głośności 52 dB”.","note":"W badaniu GEO dodanie statystyk podniosło widoczność o 31% (symulowany silnik).","convention":"Progi są umowne.","basis":["geo","ms_ads"]},{"code":"C5","group":"C","name":"Dane firmy","max":4,"partial":2,"what":"Czy wiadomo, jaka firma stoi za stroną.","how":"Sprawdzamy trzy warunki: Organization w danych strukturalnych (name, url, logo), linki do stron „Kontakt” i „O nas”, te same dane firmy w stopce i na stronie kontaktowej.","good":"Spełnione 3 z 3 warunków.","mid":"Spełnione 2 z 3 warunków.","bad":"Spełniony 1 warunek albo żaden.","fix":"Dodaj dane Organization, stronę „O nas” i ujednolić nazwę, adres i NIP w całej witrynie.","basis":["g_helpful","bing_guide"]},{"code":"D1","group":"D","name":"Odpowiedź na początku","max":5,"partial":2,"ai":true,"what":"Czy strona od razu odpowiada na pytanie z frazy.","how":"Model AI czyta pierwsze 300 słów po H1 i wskazuje zdanie, które odpowiada na główne pytanie. Raport pokazuje to zdanie i jego pozycję.","good":"Bezpośrednia odpowiedź w pierwszych 100 słowach.","mid":"Odpowiedź między 101. a 300. słowem.","bad":"Brak bezpośredniej odpowiedzi w pierwszych 300 słowach.","fix":"Zacznij od odpowiedzi w 1-2 zdaniach. Szczegóły i wyjątki podaj niżej.","convention":"Progi 100 i 300 słów są umowne.","basis":["bing_guide","ms_ads"]},{"code":"D2","group":"D","name":"Pytania poboczne","max":7,"partial":3,"ai":true,"what":"Na ile pytań pobocznych odpowiada strona. Wyszukiwarki AI rozbijają jedno zapytanie na kilka i szukają odpowiedzi na każde.","how":"Przy pierwszym audycie ustalamy 10 pytań pobocznych do frazy i zamrażamy listę. Przy każdym audycie model AI sprawdza, na które pytania strona odpowiada, i podaje cytat.","good":"Odpowiedź na co najmniej 8 z 10 pytań.","mid":"Odpowiedź na 5-7 pytań.","bad":"Odpowiedź na 4 pytania lub mniej.","fix":"Dopisz brakujące odpowiedzi na tej samej stronie, każdą pod własnym nagłówkiem.","note":"Nie twórz osobnych stron pod każdą odmianę pytania. Google traktuje to jako nadużycie (scaled content abuse).","convention":"Liczba 10 pytań i progi są umowne. Listę pytań zatwierdza opiekun klienta.","basis":["g_guide","g_features","bing_perf"]},{"code":"D3","group":"D","name":"Jeden temat, jedna nazwa","max":3,"partial":1,"what":"Czy strona trzyma się jednego tematu i nazywa go zawsze tak samo.","how":"Porównujemy nazwę głównego tematu w tytule, H1, pierwszym akapicie i danych strukturalnych.","good":"Ta sama nazwa w 4 z 4 miejsc.","mid":"Ta sama nazwa w 3 z 4 miejsc.","bad":"Ta sama nazwa w 2 miejscach lub mniej.","fix":"Nazywaj produkt, usługę lub temat zawsze tak samo. Jedna strona, jeden temat.","basis":["bing_guide","bing_perf"]},{"code":"E1","group":"E","name":"Core Web Vitals","max":6,"partial":3,"parts":true,"what":"Szybkość ładowania, reakcja na kliknięcie i stabilność układu u prawdziwych użytkowników.","how":"Bierzemy dane użytkowników Chrome z 28 dni (75. percentyl, telefon) z PageSpeed Insights. Gdy ich brak, pokazujemy pomiar laboratoryjny i to oznaczamy.","good":"LCP do 2,5 s, INP do 200 ms, CLS do 0,1. Po 2 pkt za każdy z trzech wskaźników.","mid":"LCP do 4,0 s, INP do 500 ms, CLS do 0,25. Po 1 pkt.","bad":"Powyżej tych wartości. 0 pkt.","fix":"Zmniejsz i wczytuj z wyprzedzeniem główne zdjęcie, ogranicz skrypty, podaj wymiary obrazów i miejsc na reklamy.","basis":["cwv","g_guide"]},{"code":"E2","group":"E","name":"Wygląd na telefonie","max":2,"partial":1,"what":"Czy strona dopasowuje się do ekranu telefonu.","how":"Sprawdzamy meta viewport i szerokość strony przy ekranie 360 px.","good":"Jest meta viewport i strona nie przewija się w poziomie.","mid":"Jest meta viewport, ale strona przewija się w poziomie.","bad":"Brak meta viewport.","fix":"Dodaj meta viewport i usuń elementy o stałej szerokości.","basis":["g_guide"]},{"code":"E3","group":"E","name":"HTTPS","max":2,"partial":1,"what":"Czy strona działa bezpiecznie po HTTPS.","how":"Sprawdzamy certyfikat, przekierowanie z http i zasoby ładowane po http.","good":"HTTPS działa, http przekierowuje, żaden zasób nie ładuje się po http.","mid":"HTTPS działa, ale część zasobów ładuje się po http.","bad":"Brak HTTPS albo błąd certyfikatu.","fix":"Włącz przekierowanie na HTTPS i popraw adresy zasobów.","basis":["g_guide"]}],"unscored":[{"name":"Długość tytułu ponad 60 znaków","why":"Google nie podaje limitu długości. Długi tytuł może zostać ucięty w wynikach, więc to wskazówka, nie błąd.","basis":["g_title"]},{"name":"Długość treści na tle konkurencji","why":"Google pisze wprost, że nie ma idealnej długości strony. Dopisywanie tekstu dla samej długości nie pomaga.","basis":["g_guide"]},{"name":"Sekcje po 200-500 słów (CitationOne: Chunk Optimization)","why":"Google: „There's no requirement to break your content into tiny pieces for AI to better understand it.” Dzielimy treść dla czytelnika, nie pod licznik słów.","basis":["g_guide"]},{"name":"Nasycenie terminami na tle TOP 10 (TF-IDF)","why":"Google podaje, że systemy rozumieją synonimy i intencję. Bing zalicza sztucznie konstruowany język do nadużyć. W badaniu GEO upychanie słów kluczowych obniżyło widoczność o 8%.","basis":["g_guide","bing_guide","geo"]},{"name":"Strona czynna zamiast biernej (CitationOne: Semantic Roles)","why":"Nie znaleźliśmy oficjalnego źródła ani badania, które to potwierdza.","basis":[]},{"name":"Plik llms.txt","why":"Google go nie używa. Plik nie pomaga i nie szkodzi w Google. Można go mieć dla innych usług.","basis":["g_guide","g_features"]},{"name":"FAQPage w danych strukturalnych","why":"Od 7.05.2026 wyniki rozszerzone FAQ nie pojawiają się w Google. Znaczniki można zostawić. Sekcja pytań i odpowiedzi w treści nadal ma sens i liczy się we wskaźniku D2.","basis":["g_faq","bing_perf"]},{"name":"Boty treningowe: GPTBot, ClaudeBot, Google-Extended","why":"Służą do trenowania modeli, nie do wyszukiwania. Blokada nie zmienia widoczności w ChatGPT, Claude ani Google. To decyzja właściciela strony.","basis":["openai","anthropic","g_features"]},{"name":"IndexNow","why":"Microsoft zaleca go do szybkiego zgłaszania zmian w Bing. Nie wpływa na Google, więc pokazujemy go jako wskazówkę.","basis":["bing_perf"]}]};
+const SAMPLE = {"client":"Sklep Przykładowy (dane fikcyjne)","url":"https://sklep-przykladowy.example/poradnik/ekspres-cisnieniowy-do-domu","title":"Jaki ekspres ciśnieniowy do domu wybrać","phrase":"jaki ekspres ciśnieniowy do domu","audits":[{"id":"a","label":"przed pracami","date":"14.10.2026"},{"id":"b","label":"po pracach","date":"18.11.2026"}],"results":{"A1":{"a":["good","Kod 200, 1 przekierowanie (z http na https)"],"b":["good","Kod 200, 1 przekierowanie (z http na https)"]},"A2":{"a":["good","Brak noindex, adres kanoniczny wskazuje tę stronę"],"b":["good","Brak noindex, adres kanoniczny wskazuje tę stronę"]},"A3":{"a":["good","Brak ograniczeń fragmentu"],"b":["good","Brak ograniczeń fragmentu"]},"A4":{"a":["mid","4 z 5 botów ma dostęp, zablokowany OAI-SearchBot","robots.txt, wiersze 14-15: „User-agent: OAI-SearchBot” i „Disallow: /”. Bez punktów: GPTBot zablokowany, ClaudeBot i Google-Extended dozwolone."],"b":["good","5 z 5 botów ma dostęp","Bez punktów: GPTBot nadal zablokowany. To decyzja właściciela i nie wpływa na wyszukiwanie."]},"A5":{"a":["bad","3 z 5: PerplexityBot i Claude-SearchBot dostają kod 403","Odpowiedź zawiera nagłówek cf-mitigated: challenge. Zapora CDN blokuje kategorię botów AI."],"b":["good","5 z 5 zapytań z kodem 200"]},"A6":{"a":["mid","64% słów treści w HTML z serwera","Tabela porównawcza modeli (412 słów) pojawia się dopiero po uruchomieniu skryptu."],"b":["good","97% słów treści w HTML z serwera"]},"B1":{"a":["good","Unikalny, 71 znaków","Wskazówka bez punktów: tytuł ponad 60 znaków może zostać ucięty w wynikach."],"b":["good","Unikalny, 54 znaki"]},"B2":{"a":["bad","Brak meta description"],"b":["good","Jest, 148 znaków, nie powtarza się"]},"B3":{"a":["mid","1 H1: „Poradnik”, 0 wspólnych słów z tytułem"],"b":["good","1 H1, 5 z 6 słów jest też w tytule"]},"B4":{"a":["mid","2 z 3: nagłówek „Informacje” jest ogólnikiem","6 nagłówków H2, poziomy po kolei."],"b":["good","3 z 3: 8 nagłówków H2, poziomy po kolei, bez ogólników"]},"B5":{"a":["mid","2 akapity powyżej 150 słów (212 i 187 słów)"],"b":["good","Najdłuższy akapit ma 96 słów"]},"B6":{"a":["mid","7 z 12 zdjęć ma opis alt (58%)"],"b":["good","12 z 12 zdjęć ma opis alt"]},"B7":{"a":["mid","Article bez autora i daty aktualizacji"],"b":["good","Article, BreadcrumbList i Organization, wartości zgodne z treścią"]},"C1":{"a":["bad","Brak podpisu autora"],"b":["good","Podpis, strona autora i Person w danych strukturalnych"]},"C2":{"a":["mid","Data widoczna (3.02.2026), brak jej w danych strukturalnych"],"b":["good","Aktualizacja 12.11.2026, zgodna z dateModified","Treść zmieniła się między audytami (inny skrót treści), więc zmiana daty jest uzasadniona."]},"C3":{"a":["bad","0 źródeł na 1840 słów"],"b":["good","5 źródeł na 2130 słów"]},"C4":{"a":["mid","3 zdania z liczbą i jednostką na 1000 słów"],"b":["good","8 zdań z liczbą i jednostką na 1000 słów"]},"C5":{"a":["mid","2 z 3: brak strony „O nas”"],"b":["mid","2 z 3: strona „O nas” jest w przygotowaniu"]},"D1":{"a":["mid","Odpowiedź dopiero w 214. słowie","Wskazane zdanie: „Do domu najczęściej wystarczy ekspres kolbowy albo automatyczny o ciśnieniu 15 barów.”"],"b":["good","Odpowiedź w 31. słowie","Wskazane zdanie: „Do domu najczęściej wystarczy ekspres kolbowy albo automatyczny o ciśnieniu 15 barów.”"]},"D2":{"a":["mid","Odpowiedź na 5 z 10 pytań"],"b":["good","Odpowiedź na 9 z 10 pytań"]},"D3":{"a":["good","4 z 4: „ekspres ciśnieniowy”"],"b":["good","4 z 4: „ekspres ciśnieniowy”"]},"E1":{"a":["parts","LCP 3,4 s · INP 180 ms · CLS 0,21","Dane użytkowników Chrome z 28 dni, telefon.",[1,2,1]],"b":["parts","LCP 2,3 s · INP 170 ms · CLS 0,12","Dane użytkowników Chrome z 28 dni, telefon. CLS: baner z kodem rabatowym przesuwa treść.",[2,2,1]]},"E2":{"a":["good","Meta viewport jest, brak przewijania w poziomie"],"b":["good","Meta viewport jest, brak przewijania w poziomie"]},"E3":{"a":["good","HTTPS działa, brak zasobów po http"],"b":["good","HTTPS działa, brak zasobów po http"]}},"questions":[["Czym różni się ekspres kolbowy od automatycznego?",true,true],["Jakie ciśnienie powinien mieć ekspres do domu?",true,true],["Ile kosztuje dobry ekspres ciśnieniowy do domu?",false,true],["Czy warto dopłacić do ekspresu z młynkiem?",true,true],["Jak często trzeba odkamieniać ekspres?",false,true],["Jaki ekspres wybrać do małej kuchni?",false,true],["Ile prądu zużywa ekspres ciśnieniowy?",false,true],["Jaka kawa nadaje się do ekspresu ciśnieniowego?",true,true],["Czy ekspres ciśnieniowy spieni mleko?",true,true],["Ile lat działa ekspres i jak wygląda serwis?",false,false]],"engines":["ChatGPT (wyszukiwanie)","Perplexity","Gemini z wyszukiwarką Google"],"runs":3,"citations":[["jaki ekspres ciśnieniowy do domu",[0,1,0],[2,3,1]],["Ile kosztuje dobry ekspres ciśnieniowy do domu?",[0,0,0],[1,2,0]],["Jak często trzeba odkamieniać ekspres?",[0,0,0],[3,2,2]],["Ile prądu zużywa ekspres ciśnieniowy?",[0,0,0],[0,1,0]]],"rivals":[["porownywarka.example",21],["magazyn-kawowy.example",14],["forum-baristow.example",9]],"pages":[["/poradnik/ekspres-cisnieniowy-do-domu","jaki ekspres ciśnieniowy do domu",97,"Brak strony „O nas”"],["/ekspres-kolbowy-model-x","ekspres kolbowy model x opinie",88,"CLS 0,14: zdjęcia bez wymiarów"],["/","sklep z ekspresami do kawy",81,"Brak strony „O nas”"],["/poradnik/jak-odkamienic-ekspres","jak odkamienić ekspres",74,"Odpowiedź na 5 z 10 pytań pobocznych"],["/ekspresy-kolbowe","ekspresy kolbowe",68,"Brak opisu strony, 2 akapity powyżej 150 słów"],["/blog/nowosci-w-ofercie","nowości ekspresy 2026",47,"PerplexityBot dostaje kod 403"]]};
+
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const LABEL = { good: 'Dobrze', mid: 'Do poprawy', bad: 'Źle' };
+const chip = (st) => `<span class="chip ${st}">${LABEL[st]}</span>`;
+/* Pierwsza litera mała, ale skrótów (LCP, JSON-LD, HTTPS) nie ruszamy. */
+const lcfirst = (t) => /^[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż ]/.test(t) ? t.charAt(0).toLowerCase() + t.slice(1) : t;
+const REQUIRED = RULES.rules.filter((r) => r.required);
+const state = { audit: 'a' };
+
+/* Punkty liczymy z wytycznych, nigdy nie wpisujemy sum ręcznie. */
+function result(rule, audit) {
+  const r = SAMPLE.results[rule.code][audit];
+  let status = r[0], pts;
+  if (status === 'parts') {
+    pts = r[3].reduce((a, b) => a + b, 0);
+    status = pts === rule.max ? 'good' : (pts * 2 >= rule.max ? 'mid' : 'bad');
+  } else {
+    pts = status === 'good' ? rule.max : (status === 'mid' ? rule.partial : 0);
+  }
+  return { status, pts, value: r[1], evidence: r[2] || '' };
+}
+function totals(audit) {
+  const g = {}; let sum = 0, blocked = [];
+  for (const gr of RULES.groups) g[gr.id] = { pts: 0, max: 0 };
+  for (const rule of RULES.rules) {
+    const res = result(rule, audit);
+    g[rule.group].pts += res.pts; g[rule.group].max += rule.max; sum += res.pts;
+    if (rule.required && res.status === 'bad') blocked.push(rule);
+  }
+  return { sum, g, blocked };
+}
+const level = (score) => score >= RULES.levels.good ? 'good' : (score >= RULES.levels.mid ? 'mid' : 'bad');
+const ratioLevel = (pts, max) => pts === max ? 'good' : (pts * 2 >= max ? 'mid' : 'bad');
+const auditOf = (id) => SAMPLE.audits.find((a) => a.id === id);
+const srcLinks = (keys) => keys.map((k) => { const s = RULES.sources[k]; return `<a class="src" href="${esc(s.url)}" target="_blank" rel="noopener" title="${esc(s.label)}">${esc(s.short)}</a>`; }).join(' ');
+const srcList = (keys) => keys.map((k) => { const s = RULES.sources[k]; return `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)}</a>`; }).join('<br>');
+
+function auditSwitch() {
+  return `<div class="seg" role="group" aria-label="Wybierz audyt">` + SAMPLE.audits.map((a) =>
+    `<button type="button" data-audit="${a.id}" aria-pressed="${state.audit === a.id}">${esc(a.date)} · ${esc(a.label)}</button>`).join('') + `</div>`;
+}
+
+function renderHead() {
+  const a = auditOf(state.audit);
+  document.getElementById('pageTitle').textContent = SAMPLE.title;
+  document.getElementById('pageMeta').innerHTML =
+    `<span>Klient: <b>${esc(SAMPLE.client)}</b></span><span>Adres: <b>${esc(SAMPLE.url)}</b></span><span>Fraza: <b>${esc(SAMPLE.phrase)}</b></span><span>Audyt: <b>${esc(a.date)}</b></span><span>Wytyczne: <b>wersja ${esc(RULES.version)}</b></span>`;
+}
+
+function renderReport() {
+  const t = totals(state.audit), lv = level(t.sum);
+  const todo = RULES.rules.map((rule) => ({ rule, res: result(rule, state.audit) }))
+    .filter((x) => x.res.pts < x.rule.max)
+    .sort((x, y) => (y.rule.required && y.res.status === 'bad') - (x.rule.required && x.res.status === 'bad')
+      || (y.rule.group === 'A') - (x.rule.group === 'A') || (y.rule.max - y.res.pts) - (x.rule.max - x.res.pts));
+  let h = `
+  <div class="card agency-only" style="margin-bottom:20px">
+    <form class="form" id="auditForm">
+      <label class="field" for="fUrl">Adres strony<input id="fUrl" type="url" value="${esc(SAMPLE.url)}"></label>
+      <label class="field" for="fPhrase">Fraza, na którą strona ma odpowiadać<input id="fPhrase" type="text" value="${esc(SAMPLE.phrase)}"></label>
+      <button class="btn" type="submit">Sprawdź stronę</button>
+    </form>
+    <p class="inline-note" id="formNote" hidden style="margin-top:12px">W mockupie nie ma pomiaru. Po podłączeniu silnika ten przycisk uruchomi audyt i pokaże postęp kroków.</p>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:20px">${auditSwitch()}<span class="small muted">Ta sama strona i ta sama lista pytań w obu audytach.</span></div>
+  <div class="card summary" style="margin-bottom:20px">
+    <div class="scorebox">
+      <div class="score-row"><span class="score-num">${t.sum}<small> / 100</small></span>${chip(lv)}</div>
+      <div class="bar ${lv}" role="img" aria-label="Wynik ${t.sum} na 100"><i style="width:${t.sum}%"></i></div>
+      <div class="scale" aria-hidden="true"><span style="left:${RULES.levels.mid}%">${RULES.levels.mid}</span><span style="left:${RULES.levels.good}%">${RULES.levels.good}</span></div>
+      <p class="small muted">Dobrze od ${RULES.levels.good} pkt, do poprawy od ${RULES.levels.mid} pkt. ${t.blocked.length
+        ? `<b style="color:var(--bad)">Warunek konieczny niespełniony: ${t.blocked.map((r) => esc(r.code + ' ' + r.name)).join(', ')}.</b> Dopóki tak jest, wyszukiwarki nie pokażą tej strony albo jej fragmentu.`
+        : `Warunki konieczne (${REQUIRED.map((r) => r.code).join(', ')}) są spełnione.`}</p>
+    </div>
+    <div class="groups">` + RULES.groups.map((gr) => { const x = t.g[gr.id]; return `
+      <div class="grow"><span>${esc(gr.name)}</span><span class="pts">${x.pts} / ${x.max}</span>
+        <div class="bar ${ratioLevel(x.pts, x.max)}"><i style="width:${Math.round(100 * x.pts / x.max)}%"></i></div></div>`; }).join('') + `
+    </div>
+  </div>`;
+  h += `<div class="card flush" style="margin-bottom:20px"><div class="card-head"><h2>Najpierw to</h2><p class="small muted">Najpierw dostęp dla botów, potem zadania według punktów do zdobycia. Przy każdym jest warunek, po którym wskaźnik zmieni się na „Dobrze”.</p></div>`;
+  if (todo.length) {
+    h += `<ol class="todo">` + todo.slice(0, 6).map((x) => `
+      <li><span class="gain">+${x.rule.max - x.res.pts} pkt</span>
+        <div><b>${esc(x.rule.code)} ${esc(x.rule.name)}.</b> ${esc(x.rule.fix)}</div>
+        <span></span><div class="how">Teraz: ${esc(x.res.value)}. Zaliczymy, gdy: ${esc(lcfirst(x.rule.good))}</div></li>`).join('') + `</ol>`;
+    if (todo.length > 6) h += `<p class="small muted" style="padding:12px 20px;border-top:1px solid var(--line)">Pozostałe zadania (${todo.length - 6}) są niżej przy wskaźnikach.</p>`;
+  } else {
+    h += `<p style="padding:16px 20px">Wszystkie wskaźniki mają komplet punktów.</p>`;
+  }
+  h += `</div>`;
+  for (const gr of RULES.groups) {
+    const x = t.g[gr.id];
+    h += `<div class="card flush" style="margin-bottom:20px"><div class="card-head"><h2>${esc(gr.id)}. ${esc(gr.name)} <span class="muted num" style="font-weight:500">${x.pts} / ${x.max}</span></h2><p class="small muted">${esc(gr.lead)}</p></div>`;
+    for (const rule of RULES.rules.filter((r) => r.group === gr.id)) {
+      const res = result(rule, state.audit);
+      const lvl = (st, txt, pts) => `<div class="level${res.status === st ? ' now' : ''}">${chip(st)}<span>${esc(txt)}</span><span class="lp">${pts}</span></div>`;
+      h += `<details class="rule"><summary>
+          <span class="code">${esc(rule.code)}</span><span class="name">${esc(rule.name)}${rule.required ? ' <span class="chip plain">konieczny</span>' : ''}${rule.ai ? ' <span class="chip plain">ocena AI z cytatem</span>' : ''}</span>${chip(res.status)}<span class="pts">${res.pts} / ${rule.max}</span>
+          <span></span><span class="val">${esc(res.value)}</span></summary>
+        <div class="body">
+          <dl class="kv">
+            <dt>Co mierzymy</dt><dd>${esc(rule.what)}</dd>
+            <dt>Jak</dt><dd>${esc(rule.how)}</dd>
+            ${res.evidence ? `<dt>Dowód</dt><dd>${esc(res.evidence)}</dd>` : ''}
+            ${res.status !== 'good' ? `<dt>Co zrobić</dt><dd>${esc(rule.fix)}</dd>` : ''}
+            ${rule.note ? `<dt>Uwaga</dt><dd>${esc(rule.note)}</dd>` : ''}
+          </dl>
+          <div class="levels">${lvl('good', rule.good, rule.max + ' pkt')}${lvl('mid', rule.mid, rule.parts ? 'po 1 pkt' : rule.partial + ' pkt')}${lvl('bad', rule.bad, '0 pkt')}</div>
+          ${rule.code === 'D2' ? `<div><h3 style="margin-bottom:8px">Zamrożona lista pytań</h3><ul class="qa">` + SAMPLE.questions.map((q) => { const ok = q[state.audit === 'a' ? 1 : 2]; return `<li><span class="${ok ? 'y' : 'n'}" aria-hidden="true">${ok ? '✓' : '✕'}</span><span>${esc(q[0])} <span class="muted small">${ok ? 'jest odpowiedź' : 'brak odpowiedzi'}</span></span></li>`; }).join('') + `</ul></div>` : ''}
+          <div class="srcs"><span class="small muted">Podstawa:</span> ${srcLinks(rule.basis)}${rule.convention ? ` <span class="small muted">${esc(rule.convention)}</span>` : ''}</div>
+        </div></details>`;
+    }
+    h += `</div>`;
+  }
+  h += `<div class="card"><h2 style="margin-bottom:6px">Wskazówki bez punktów</h2><p class="small muted" style="margin-bottom:12px">Pokazujemy je, ale nie wpływają na wynik. Powody są w zakładce <a href="#wytyczne">Wytyczne wskaźników</a>.</p>
+    <ul class="plain-list">${RULES.unscored.slice(0, 4).map((u) => `<li><b>${esc(u.name)}.</b> ${esc(u.why)}</li>`).join('')}</ul></div>`;
+  document.getElementById('v-raport').innerHTML = h;
+}
+
+function renderGuide() {
+  const total = RULES.rules.reduce((a, r) => a + r.max, 0);
+  let h = `<div class="card" style="margin-bottom:20px"><h2 style="margin-bottom:10px">Zasady punktacji</h2>
+    <ul class="plain-list">
+      <li><b>${total} punktów w ${RULES.groups.length} grupach, ${RULES.rules.length} wskaźników.</b> Każdy wskaźnik ma trzy stany: „Dobrze” (komplet punktów), „Do poprawy” (część punktów) i „Źle” (0 pkt). Progi są w tabelach poniżej.</li>
+      <li><b>Wynik strony:</b> ${RULES.levels.good}-100 pkt to „Dobrze”, ${RULES.levels.mid}-${RULES.levels.good - 1} pkt to „Do poprawy”, poniżej ${RULES.levels.mid} pkt to „Źle”. Te progi są umowne.</li>
+      <li><b>Warunki konieczne:</b> ${REQUIRED.map((r) => esc(r.code + ' ' + r.name)).join(', ')}. Gdy któryś jest w stanie „Źle”, raport pokazuje blokadę niezależnie od liczby punktów.</li>
+      <li><b>Punkty dajemy tylko za to, co ma podstawę:</b> oficjalną dokumentację Google, Microsoftu i dostawców botów AI albo opublikowane badanie. Podstawa jest przy każdym wskaźniku. Gdy sama liczba progu jest nasza, piszemy „próg umowny”.</li>
+      <li><b>Ten sam pomiar daje ten sam wynik.</b> Wskaźniki liczy program według reguł z tej strony. Dwa wskaźniki (D1 i D2) ocenia model AI, zawsze z cytatem ze strony jako dowodem i z zamrożoną listą pytań.</li>
+      <li><b>Brak pomiaru nie odbiera punktów.</b> Gdy wskaźnika nie da się zmierzyć (np. usługa pomiaru szybkości nie odpowiada), raport pokazuje „brak pomiaru”, a wynik liczymy proporcjonalnie z pozostałych punktów.</li>
+      <li><b>Wynik nie jest obietnicą pozycji ani cytowań.</b> Google pisze, że żadne zewnętrzne narzędzie nie ma dostępu do jego systemów rankingowych i AI. Wynik mówi, czy strona spełnia opisane tu warunki.</li>
+      <li><b>Wytyczne mają wersję</b> (ta: ${esc(RULES.version)}). Każdy audyt zapisuje wersję, według której był liczony. Zmiana progów to nowa wersja, a stare audyty zostają przy swojej.</li>
+    </ul></div>`;
+  for (const gr of RULES.groups) {
+    const rules = RULES.rules.filter((r) => r.group === gr.id);
+    h += `<div class="card flush guide" style="margin-bottom:20px"><div class="card-head"><h2>${esc(gr.id)}. ${esc(gr.name)} <span class="muted num" style="font-weight:500">${rules.reduce((a, r) => a + r.max, 0)} pkt</span></h2><p class="small muted">${esc(gr.lead)}</p></div>
+      <div class="table-wrap"><table><thead><tr><th>Kod</th><th>Wskaźnik i pomiar</th><th>Dobrze</th><th>Do poprawy</th><th>Źle</th><th class="n">Punkty</th><th>Podstawa</th></tr></thead><tbody>` +
+      rules.map((r) => `<tr><td><span class="code" style="font:600 12px ui-monospace,Menlo,Consolas,monospace">${esc(r.code)}</span></td>
+        <td><b>${esc(r.name)}</b>${r.required ? ' <span class="chip plain">konieczny</span>' : ''}${r.ai ? ' <span class="chip plain">ocena AI</span>' : ''}<br><span class="muted">${esc(r.how)}</span>${r.note ? `<br><span class="muted">${esc(r.note)}</span>` : ''}</td>
+        <td>${esc(r.good)}</td><td>${esc(r.mid)}</td><td>${esc(r.bad)}</td>
+        <td class="n">${r.parts ? '2 / 1 / 0<br><span class="muted">razy 3</span>' : r.max + ' / ' + r.partial + ' / 0'}</td>
+        <td><div class="srcs">${srcLinks(r.basis)}</div>${r.convention ? `<span class="muted">${esc(r.convention)}</span>` : ''}</td></tr>`).join('') + `</tbody></table></div></div>`;
+  }
+  h += `<div class="card flush" style="margin-bottom:20px"><div class="card-head"><h2>Czego nie punktujemy i dlaczego</h2><p class="small muted">Te rzeczy bywają liczone w innych narzędziach. U nas są wskazówką, bo nie mają potwierdzenia albo źródła mówią, że nie pomagają.</p></div>
+    <div class="table-wrap"><table><thead><tr><th>Wskazówka</th><th>Dlaczego bez punktów</th><th>Źródło</th></tr></thead><tbody>` +
+    RULES.unscored.map((u) => `<tr><td style="min-width:180px"><b>${esc(u.name)}</b></td><td>${esc(u.why)}</td><td>${u.basis.length ? srcLinks(u.basis) : '<span class="muted">brak</span>'}</td></tr>`).join('') + `</tbody></table></div></div>`;
+  h += `<div class="card"><h2 style="margin-bottom:10px">Źródła</h2><p class="small" style="line-height:1.9">${srcList(Object.keys(RULES.sources))}</p></div>`;
+  document.getElementById('v-wytyczne').innerHTML = h;
+}
+
+function renderProgress() {
+  const [a, b] = SAMPLE.audits, ta = totals(a.id), tb = totals(b.id);
+  const rows = RULES.rules.map((rule) => ({ rule, ra: result(rule, a.id), rb: result(rule, b.id) }));
+  const fixed = rows.filter((x) => x.rb.pts > x.ra.pts).length, left = rows.filter((x) => x.rb.pts < x.rule.max);
+  const tile = (au, t) => `<div class="card"><p class="small muted">${esc(au.date)} · ${esc(au.label)}</p><div class="score-row" style="margin:6px 0 10px"><span class="score-num">${t.sum}<small> / 100</small></span>${chip(level(t.sum))}</div><div class="bar ${level(t.sum)}"><i style="width:${t.sum}%"></i></div></div>`;
+  let h = `<div class="two" style="margin-bottom:20px">${tile(a, ta)}${tile(b, tb)}</div>
+    <div class="card" style="margin-bottom:20px"><p><b>Zmiana: +${tb.sum - ta.sum} pkt.</b> Poprawione wskaźniki: ${fixed} z ${rows.length}. ${left.length ? 'Do zrobienia zostało: ' + left.map((x) => esc(x.rule.code + ' ' + x.rule.name)).join(', ') + '.' : 'Wszystkie wskaźniki mają komplet punktów.'}</p>
+      <p class="small muted" style="margin-top:6px">Oba audyty liczone według tej samej wersji wytycznych (${esc(RULES.version)}) i tej samej listy pytań, więc wyniki można porównywać.</p></div>
+    <div class="card flush"><div class="table-wrap"><table style="min-width:680px"><thead><tr><th>Kod</th><th>Wskaźnik</th><th>${esc(a.date)}</th><th>${esc(b.date)}</th><th class="n">Punkty</th></tr></thead><tbody>` +
+    rows.map((x) => `<tr><td><span style="font:600 12px ui-monospace,Menlo,Consolas,monospace" class="muted">${esc(x.rule.code)}</span></td><td><b>${esc(x.rule.name)}</b></td>
+      <td>${chip(x.ra.status)}<br><span class="muted">${esc(x.ra.value)}</span></td><td>${chip(x.rb.status)}<br><span class="muted">${esc(x.rb.value)}</span></td>
+      <td class="n">${x.ra.pts} → ${x.rb.pts}${x.rb.pts > x.ra.pts ? `<br><span class="delta-up">+${x.rb.pts - x.ra.pts}</span>` : ''}</td></tr>`).join('') +
+    `<tr><td></td><td><b>Razem</b></td><td></td><td></td><td class="n"><b>${ta.sum} → ${tb.sum}</b></td></tr></tbody></table></div></div>`;
+  document.getElementById('v-postep').innerHTML = h;
+}
+
+function renderCitations() {
+  const idx = state.audit === 'a' ? 1 : 2, runs = SAMPLE.runs, au = auditOf(state.audit);
+  let hit = 0, all = 0;
+  for (const c of SAMPLE.citations) for (const n of c[idx]) { hit += n; all += runs; }
+  const cell = (n) => `<td class="n"><span class="chip ${n === 0 ? 'bad' : (n === runs ? 'good' : 'mid')}">${n} z ${runs}</span></td>`;
+  let h = `<div class="card" style="margin-bottom:20px"><h2 style="margin-bottom:8px">To jest wynik, nie wytyczna</h2>
+      <p>Sprawdzamy, czy wyszukiwarki AI podają tę stronę jako źródło. Cytowania nie wchodzą do punktów, bo nie zależą tylko od strony, a odpowiedzi AI różnią się między próbami. Dlatego każde pytanie zadajemy ${runs} razy i pokazujemy, w ilu próbach strona była źródłem.</p></div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:20px">${auditSwitch()}<span class="small muted">Audyt z ${esc(au.date)}: strona była źródłem w <b>${hit} z ${all}</b> prób.</span></div>
+    <div class="card flush" style="margin-bottom:20px"><div class="table-wrap"><table style="min-width:640px"><thead><tr><th>Pytanie</th>${SAMPLE.engines.map((e) => `<th class="n">${esc(e)}</th>`).join('')}</tr></thead><tbody>` +
+    SAMPLE.citations.map((c) => `<tr><td>${esc(c[0])}</td>${c[idx].map(cell).join('')}</tr>`).join('') + `</tbody></table></div></div>
+    <div class="two">
+      <div class="card"><h2 style="margin-bottom:10px">Kto jest cytowany najczęściej</h2><p class="small muted" style="margin-bottom:10px">Źródła z tych samych ${all} prób (audyt z ${esc(SAMPLE.audits[1].date)}).</p>
+        <ul class="plain-list" style="list-style:none;padding:0">${SAMPLE.rivals.map((r) => `<li class="grow"><span>${esc(r[0])}</span><span class="pts">${r[1]} z ${all}</span><div class="bar"><i style="width:${Math.round(100 * r[1] / all)}%"></i></div></li>`).join('')}</ul></div>
+      <div class="card"><h2 style="margin-bottom:10px">Dane z kont klienta</h2><ul class="plain-list">
+        <li><b>Google Search Console.</b> Raport skuteczności w funkcjach generatywnej AI pokazuje, jak treść działa w AI Overviews i AI Mode. <span class="chip plain">po podłączeniu konta</span></li>
+        <li><b>Bing Webmaster Tools.</b> Raport AI Performance: liczba cytowań w Copilocie i cytowane strony. <span class="chip plain">po podłączeniu konta</span></li>
+      </ul><p class="small muted" style="margin-top:10px">To jedyne dane pochodzące wprost od wyszukiwarek. Test zapytań powyżej jest naszym pomiarem z zewnątrz.</p></div>
+    </div>`;
+  document.getElementById('v-cytowania').innerHTML = h;
+}
+
+function renderPages() {
+  let h = `<div class="card flush"><div class="card-head"><h2>Strony witryny</h2><p class="small muted">Każda strona ma swoją frazę i swój raport. Lista powstaje z mapy witryny albo z wklejonych adresów.</p></div>
+    <div class="table-wrap"><table style="min-width:680px"><thead><tr><th>Adres</th><th>Fraza</th><th class="n">Wynik</th><th>Stan</th><th>Najważniejszy brak</th></tr></thead><tbody>` +
+    SAMPLE.pages.map((p) => `<tr><td><code>${esc(p[0])}</code></td><td>${esc(p[1])}</td><td class="n"><b>${p[2]}</b></td><td>${chip(level(p[2]))}</td><td>${esc(p[3])}</td></tr>`).join('') +
+    `</tbody></table></div></div>`;
+  document.getElementById('v-strony').innerHTML = h;
+}
+
+const VIEWS = ['raport', 'wytyczne', 'postep', 'cytowania', 'strony'];
+function show() {
+  const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'raport';
+  for (const id of VIEWS) document.getElementById('v-' + id).hidden = id !== v;
+  for (const a of document.querySelectorAll('#tabs a')) { if (a.getAttribute('href') === '#' + v) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
+}
+function renderAll() { renderHead(); renderReport(); renderGuide(); renderProgress(); renderCitations(); renderPages(); show(); }
+
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-audit]');
+  if (b) { state.audit = b.dataset.audit; renderAll(); }
+});
+document.addEventListener('submit', (e) => {
+  if (e.target.id === 'auditForm') { e.preventDefault(); document.getElementById('formNote').hidden = false; }
+});
+document.getElementById('clientBtn').addEventListener('click', (e) => {
+  const on = document.getElementById('shell').classList.toggle('client');
+  document.getElementById('clientNote').hidden = !on;
+  e.currentTarget.textContent = on ? 'Wróć do widoku agencji' : 'Podgląd dla klienta';
+  if (on && location.hash === '#strony') location.hash = '#raport';
+});
+window.addEventListener('hashchange', show);
+renderAll();
+</script>
+</body>
+</html>

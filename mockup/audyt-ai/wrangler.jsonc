@@ -1,0 +1,8 @@
+{
+  // Mockup jako strona statyczna na Cloudflare (Workers Static Assets). Bez kodu serwera i bez bazy.
+  "name": "audyt-ai-mockup",
+  "compatibility_date": "2026-11-19",
+  "assets": {
+    "directory": "./public"
+  }
+}

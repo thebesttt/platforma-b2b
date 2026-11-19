@@ -1,0 +1,424 @@
+<title>Audyt widoczności w AI</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Układ: powłoka platformy (menu po lewej), a w treści raport czytany od góry: wynik, zadania, wskaźniki. */
+:root {
+  --bg: #F5F6F8; --surface: #FFFFFF; --line: #E4E7EC; --line-soft: #F2F4F7;
+  --text: #0F172A; --text-2: #344054; --muted: #475467;
+  --accent: #2347C5; --accent-hover: #1A3596; --accent-soft: #EEF2FF; --accent-line: #C7D2FE; --on-accent: #FFFFFF;
+  --good: #067647; --good-bg: #ECFDF3; --mid: #B54708; --mid-bg: #FFFAEB; --bad: #B42318; --bad-bg: #FEF3F2; --bad-line: #FECDCA;
+  --track: #E4E7EC; --note-bg: #FFF7E0; --note-text: #5C3A00;
+  --radius: 12px;
+  --font: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-head: "Space Grotesk", Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1320; --surface: #161C2C; --line: #2A3347; --line-soft: #1D2436;
+    --text: #EEF1F7; --text-2: #C9D0DE; --muted: #A2ABBD;
+    --accent: #8FA6FF; --accent-hover: #B4C3FF; --accent-soft: #1E2A52; --accent-line: #3A4A85; --on-accent: #0E1320;
+    --good: #5FD39A; --good-bg: #12301F; --mid: #F5B95B; --mid-bg: #3A2A0E; --bad: #FF9A8F; --bad-bg: #3B1512; --bad-line: #6E2A24;
+    --track: #2A3347; --note-bg: #3A2A0E; --note-text: #FFE2A8;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1320; --surface: #161C2C; --line: #2A3347; --line-soft: #1D2436;
+  --text: #EEF1F7; --text-2: #C9D0DE; --muted: #A2ABBD;
+  --accent: #8FA6FF; --accent-hover: #B4C3FF; --accent-soft: #1E2A52; --accent-line: #3A4A85; --on-accent: #0E1320;
+  --good: #5FD39A; --good-bg: #12301F; --mid: #F5B95B; --mid-bg: #3A2A0E; --bad: #FF9A8F; --bad-bg: #3B1512; --bad-line: #6E2A24;
+  --track: #2A3347; --note-bg: #3A2A0E; --note-text: #FFE2A8;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 var(--font); }
+a { color: var(--accent); }
+a:hover { color: var(--accent-hover); }
+h1, h2, h3 { font-family: var(--font-head); line-height: 1.25; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(22px, 3vw, 28px); }
+h2 { font-size: 18px; }
+h3 { font-size: 15px; }
+p { margin: 0; }
+code { font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--line-soft); padding: 1px 6px; border-radius: 6px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.num { font-variant-numeric: tabular-nums; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.mockbar { background: var(--note-bg); color: var(--note-text); font-size: 13px; padding-block: 8px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.shell { display: flex; flex-wrap: wrap; }
+.sidebar { flex: 1 1 210px; max-width: 100%; background: var(--surface); border-right: 1px solid var(--line); padding-block: 20px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: 14px; display: flex; flex-direction: column; gap: 20px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-mark { width: 30px; height: 30px; border-radius: 8px; background: var(--accent); flex: none; }
+.brand-name { font-family: var(--font-head); font-weight: 700; font-size: 17px; }
+.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav span, .nav a { display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; font-size: 14px; color: var(--text-2); text-decoration: none; white-space: nowrap; }
+.nav .on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.nav-sub { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; padding: 10px 12px 2px; }
+.content { flex: 999 1 560px; min-width: 0; padding-block: 28px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.container { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+@media (min-width: 900px) { .content { padding-left: 36px; padding-right: 36px; } }
+@media (max-width: 780px) {
+  .sidebar { border-right: 0; border-bottom: 1px solid var(--line); padding-block: 12px; padding-right: max(16px, env(safe-area-inset-right, 0px)); gap: 10px; }
+  .nav { flex-direction: row; overflow-x: auto; gap: 4px; }
+  .nav-sub, .nav .acct { display: none; }
+}
+.client .sidebar, .client .agency-only { display: none; }
+.client-note { background: var(--accent-soft); color: var(--text); border: 1px solid var(--accent-line); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+
+.crumbs { font-size: 13px; color: var(--muted); }
+.head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px; }
+.head > div { min-width: 0; flex: 1 1 420px; }
+.head > .btn { flex: none; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--muted); margin-top: 6px; }
+.meta b { color: var(--text-2); font-weight: 600; overflow-wrap: anywhere; }
+.tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line); }
+.tabs a { padding: 10px 12px; font-size: 14px; color: var(--text-2); text-decoration: none; white-space: nowrap; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tabs a[aria-current="page"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); font: 600 14px var(--font); cursor: pointer; }
+.btn:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn.ghost { background: var(--surface); color: var(--accent); border-color: var(--accent-line); }
+.btn.ghost:hover { background: var(--accent-soft); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; min-width: 0; }
+.card.flush { padding: 0; overflow: hidden; }
+.card-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 16px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.card-head p { flex: 1 1 320px; }
+.form { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.field { display: flex; flex-direction: column; gap: 4px; flex: 1 1 220px; min-width: 0; font-size: 13px; color: var(--text-2); }
+.field input { min-height: 40px; border: 1px solid var(--line); border-radius: 10px; padding: 0 12px; font: 14px var(--font); background: var(--surface); color: var(--text); width: 100%; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: transparent; color: var(--text-2); font: 14px var(--font); padding: 8px 14px; cursor: pointer; min-height: 40px; }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+
+.chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.chip.good { background: var(--good-bg); color: var(--good); }
+.chip.mid { background: var(--mid-bg); color: var(--mid); }
+.chip.bad { background: var(--bad-bg); color: var(--bad); }
+.chip.plain { background: var(--line-soft); color: var(--text-2); }
+.chip.plain::before { display: none; }
+.src { display: inline-block; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 6px; border: 1px solid var(--line); color: var(--text-2); text-decoration: none; white-space: nowrap; }
+a.src:hover { border-color: var(--accent-line); color: var(--accent); }
+
+.summary { display: flex; flex-wrap: wrap; gap: 20px; }
+.scorebox { flex: 1 1 260px; display: flex; flex-direction: column; gap: 10px; }
+.score-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.score-num { font: 700 56px/1 var(--font-head); font-variant-numeric: tabular-nums; }
+.score-num small { font-size: 20px; font-weight: 500; color: var(--muted); }
+.bar { height: 8px; border-radius: 999px; background: var(--track); overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 999px; background: var(--accent); }
+.bar.good i { background: var(--good); } .bar.mid i { background: var(--mid); } .bar.bad i { background: var(--bad); }
+.scale { position: relative; height: 22px; font-size: 11px; color: var(--muted); }
+.scale span { position: absolute; top: 4px; transform: translateX(-50%); }
+.scale span::before { content: ""; position: absolute; left: 50%; top: -6px; width: 1px; height: 5px; background: var(--muted); }
+.groups { flex: 2 1 380px; display: flex; flex-direction: column; gap: 12px; justify-content: center; }
+.grow { display: grid; grid-template-columns: minmax(0, 1fr) 64px; gap: 4px 12px; align-items: center; font-size: 14px; }
+.grow .bar { grid-column: 1 / -1; }
+.grow .pts { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-2); }
+
+.todo { list-style: none; margin: 0; padding: 0; }
+.todo li { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 4px 14px; padding: 14px 20px; border-top: 1px solid var(--line); }
+.todo li:first-child { border-top: 0; }
+.gain { font: 700 15px var(--font-head); color: var(--accent); font-variant-numeric: tabular-nums; }
+.todo .how { font-size: 13px; color: var(--muted); }
+
+.rule { border-top: 1px solid var(--line); }
+.rule:first-child { border-top: 0; }
+.rule summary { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto 52px; gap: 4px 12px; align-items: center; padding: 12px 20px; cursor: pointer; list-style: none; }
+.rule summary::-webkit-details-marker { display: none; }
+.rule summary:hover { background: var(--line-soft); }
+.rule .code { font: 600 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--muted); }
+.rule .name { font-weight: 600; }
+.rule .val { grid-column: 2 / -1; font-size: 13px; color: var(--muted); }
+.rule .pts { text-align: right; font-variant-numeric: tabular-nums; font-size: 14px; color: var(--text-2); }
+.rule .body { padding: 4px 20px 18px 66px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; }
+.kv { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 6px 12px; }
+.kv dt { color: var(--muted); font-size: 13px; }
+.kv dd { margin: 0; }
+.levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 8px; }
+.level { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 13px; display: flex; flex-direction: column; gap: 6px; }
+.level .chip { align-self: flex-start; }
+.level.now { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.level .lp { color: var(--muted); }
+.srcs { display: flex; flex-wrap: wrap; gap: 6px; }
+@media (max-width: 560px) {
+  .rule summary { grid-template-columns: 30px minmax(0, 1fr) 44px; }
+  .rule summary .chip { grid-column: 2; justify-self: start; grid-row: 3; }
+  .rule .body { padding-left: 20px; }
+  .kv { grid-template-columns: 1fr; gap: 2px; }
+  .kv dd { margin-bottom: 8px; }
+}
+
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-top: 1px solid var(--line); }
+thead th { border-top: 0; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.guide table { min-width: 860px; }
+.guide td:nth-child(2) { min-width: 200px; }
+.plain-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 20px; }
+.delta-up { color: var(--good); font-weight: 600; }
+.qa { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.qa li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; }
+.qa .y { color: var(--good); font-weight: 700; } .qa .n { color: var(--bad); font-weight: 700; }
+.inline-note { background: var(--note-bg); color: var(--note-text); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+</style>
+
+<div class="mockbar"><b>Mockup.</b> Dane przykładowe dla fikcyjnego sklepu. To nie jest wynik prawdziwego audytu. Formularz i przyciski pokazują układ, nie uruchamiają pomiaru.</div>
+<div class="shell" id="shell">
+  <aside class="sidebar" aria-label="Menu platformy">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span class="brand-name">[Nazwa]</span></div>
+    <nav class="nav">
+      <span>Pulpit</span><span>Przetargi</span><span>Oferty i wnioski</span><span>Kontrahenci</span><span>Klienci i wiadomości</span>
+      <span class="on" aria-current="true">Audyt i reklamy</span>
+      <div class="nav-sub">Konto</div><span class="acct">Biblioteka firmy</span><span class="acct">Ustawienia</span>
+    </nav>
+  </aside>
+  <main class="content">
+    <div class="container">
+      <div class="client-note" id="clientNote" hidden>Widok klienta: tak wygląda raport pod publicznym linkiem. Tylko do odczytu, bez menu platformy.</div>
+      <header class="head">
+        <div>
+          <p class="crumbs agency-only">Audyt i reklamy / Audyt treści pod wyszukiwarki i AI</p>
+          <h1 id="pageTitle"></h1>
+          <div class="meta" id="pageMeta"></div>
+        </div>
+        <button class="btn ghost" id="clientBtn" type="button">Podgląd dla klienta</button>
+      </header>
+      <nav class="tabs" aria-label="Części audytu" id="tabs">
+        <a href="#raport">Raport</a><a href="#wytyczne">Wytyczne wskaźników</a><a href="#postep">Przed i po</a><a href="#cytowania">Cytowania w AI</a><a href="#strony" class="agency-only">Strony witryny</a>
+      </nav>
+
+      <section id="v-raport" aria-label="Raport"></section>
+      <section id="v-wytyczne" aria-label="Wytyczne wskaźników" hidden></section>
+      <section id="v-postep" aria-label="Przed i po" hidden></section>
+      <section id="v-cytowania" aria-label="Cytowania w AI" hidden></section>
+      <section id="v-strony" aria-label="Strony witryny" hidden></section>
+    </div>
+  </main>
+</div>
+
+<script>
+const RULES = /*__RULES__*/null;
+const SAMPLE = /*__SAMPLE__*/null;
+
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const LABEL = { good: 'Dobrze', mid: 'Do poprawy', bad: 'Źle' };
+const chip = (st) => `<span class="chip ${st}">${LABEL[st]}</span>`;
+/* Pierwsza litera mała, ale skrótów (LCP, JSON-LD, HTTPS) nie ruszamy. */
+const lcfirst = (t) => /^[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż ]/.test(t) ? t.charAt(0).toLowerCase() + t.slice(1) : t;
+const REQUIRED = RULES.rules.filter((r) => r.required);
+const state = { audit: 'a' };
+
+/* Punkty liczymy z wytycznych, nigdy nie wpisujemy sum ręcznie. */
+function result(rule, audit) {
+  const r = SAMPLE.results[rule.code][audit];
+  let status = r[0], pts;
+  if (status === 'parts') {
+    pts = r[3].reduce((a, b) => a + b, 0);
+    status = pts === rule.max ? 'good' : (pts * 2 >= rule.max ? 'mid' : 'bad');
+  } else {
+    pts = status === 'good' ? rule.max : (status === 'mid' ? rule.partial : 0);
+  }
+  return { status, pts, value: r[1], evidence: r[2] || '' };
+}
+function totals(audit) {
+  const g = {}; let sum = 0, blocked = [];
+  for (const gr of RULES.groups) g[gr.id] = { pts: 0, max: 0 };
+  for (const rule of RULES.rules) {
+    const res = result(rule, audit);
+    g[rule.group].pts += res.pts; g[rule.group].max += rule.max; sum += res.pts;
+    if (rule.required && res.status === 'bad') blocked.push(rule);
+  }
+  return { sum, g, blocked };
+}
+const level = (score) => score >= RULES.levels.good ? 'good' : (score >= RULES.levels.mid ? 'mid' : 'bad');
+const ratioLevel = (pts, max) => pts === max ? 'good' : (pts * 2 >= max ? 'mid' : 'bad');
+const auditOf = (id) => SAMPLE.audits.find((a) => a.id === id);
+const srcLinks = (keys) => keys.map((k) => { const s = RULES.sources[k]; return `<a class="src" href="${esc(s.url)}" target="_blank" rel="noopener" title="${esc(s.label)}">${esc(s.short)}</a>`; }).join(' ');
+const srcList = (keys) => keys.map((k) => { const s = RULES.sources[k]; return `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)}</a>`; }).join('<br>');
+
+function auditSwitch() {
+  return `<div class="seg" role="group" aria-label="Wybierz audyt">` + SAMPLE.audits.map((a) =>
+    `<button type="button" data-audit="${a.id}" aria-pressed="${state.audit === a.id}">${esc(a.date)} · ${esc(a.label)}</button>`).join('') + `</div>`;
+}
+
+function renderHead() {
+  const a = auditOf(state.audit);
+  document.getElementById('pageTitle').textContent = SAMPLE.title;
+  document.getElementById('pageMeta').innerHTML =
+    `<span>Klient: <b>${esc(SAMPLE.client)}</b></span><span>Adres: <b>${esc(SAMPLE.url)}</b></span><span>Fraza: <b>${esc(SAMPLE.phrase)}</b></span><span>Audyt: <b>${esc(a.date)}</b></span><span>Wytyczne: <b>wersja ${esc(RULES.version)}</b></span>`;
+}
+
+function renderReport() {
+  const t = totals(state.audit), lv = level(t.sum);
+  const todo = RULES.rules.map((rule) => ({ rule, res: result(rule, state.audit) }))
+    .filter((x) => x.res.pts < x.rule.max)
+    .sort((x, y) => (y.rule.required && y.res.status === 'bad') - (x.rule.required && x.res.status === 'bad')
+      || (y.rule.group === 'A') - (x.rule.group === 'A') || (y.rule.max - y.res.pts) - (x.rule.max - x.res.pts));
+  let h = `
+  <div class="card agency-only" style="margin-bottom:20px">
+    <form class="form" id="auditForm">
+      <label class="field" for="fUrl">Adres strony<input id="fUrl" type="url" value="${esc(SAMPLE.url)}"></label>
+      <label class="field" for="fPhrase">Fraza, na którą strona ma odpowiadać<input id="fPhrase" type="text" value="${esc(SAMPLE.phrase)}"></label>
+      <button class="btn" type="submit">Sprawdź stronę</button>
+    </form>
+    <p class="inline-note" id="formNote" hidden style="margin-top:12px">W mockupie nie ma pomiaru. Po podłączeniu silnika ten przycisk uruchomi audyt i pokaże postęp kroków.</p>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:20px">${auditSwitch()}<span class="small muted">Ta sama strona i ta sama lista pytań w obu audytach.</span></div>
+  <div class="card summary" style="margin-bottom:20px">
+    <div class="scorebox">
+      <div class="score-row"><span class="score-num">${t.sum}<small> / 100</small></span>${chip(lv)}</div>
+      <div class="bar ${lv}" role="img" aria-label="Wynik ${t.sum} na 100"><i style="width:${t.sum}%"></i></div>
+      <div class="scale" aria-hidden="true"><span style="left:${RULES.levels.mid}%">${RULES.levels.mid}</span><span style="left:${RULES.levels.good}%">${RULES.levels.good}</span></div>
+      <p class="small muted">Dobrze od ${RULES.levels.good} pkt, do poprawy od ${RULES.levels.mid} pkt. ${t.blocked.length
+        ? `<b style="color:var(--bad)">Warunek konieczny niespełniony: ${t.blocked.map((r) => esc(r.code + ' ' + r.name)).join(', ')}.</b> Dopóki tak jest, wyszukiwarki nie pokażą tej strony albo jej fragmentu.`
+        : `Warunki konieczne (${REQUIRED.map((r) => r.code).join(', ')}) są spełnione.`}</p>
+    </div>
+    <div class="groups">` + RULES.groups.map((gr) => { const x = t.g[gr.id]; return `
+      <div class="grow"><span>${esc(gr.name)}</span><span class="pts">${x.pts} / ${x.max}</span>
+        <div class="bar ${ratioLevel(x.pts, x.max)}"><i style="width:${Math.round(100 * x.pts / x.max)}%"></i></div></div>`; }).join('') + `
+    </div>
+  </div>`;
+  h += `<div class="card flush" style="margin-bottom:20px"><div class="card-head"><h2>Najpierw to</h2><p class="small muted">Najpierw dostęp dla botów, potem zadania według punktów do zdobycia. Przy każdym jest warunek, po którym wskaźnik zmieni się na „Dobrze”.</p></div>`;
+  if (todo.length) {
+    h += `<ol class="todo">` + todo.slice(0, 6).map((x) => `
+      <li><span class="gain">+${x.rule.max - x.res.pts} pkt</span>
+        <div><b>${esc(x.rule.code)} ${esc(x.rule.name)}.</b> ${esc(x.rule.fix)}</div>
+        <span></span><div class="how">Teraz: ${esc(x.res.value)}. Zaliczymy, gdy: ${esc(lcfirst(x.rule.good))}</div></li>`).join('') + `</ol>`;
+    if (todo.length > 6) h += `<p class="small muted" style="padding:12px 20px;border-top:1px solid var(--line)">Pozostałe zadania (${todo.length - 6}) są niżej przy wskaźnikach.</p>`;
+  } else {
+    h += `<p style="padding:16px 20px">Wszystkie wskaźniki mają komplet punktów.</p>`;
+  }
+  h += `</div>`;
+  for (const gr of RULES.groups) {
+    const x = t.g[gr.id];
+    h += `<div class="card flush" style="margin-bottom:20px"><div class="card-head"><h2>${esc(gr.id)}. ${esc(gr.name)} <span class="muted num" style="font-weight:500">${x.pts} / ${x.max}</span></h2><p class="small muted">${esc(gr.lead)}</p></div>`;
+    for (const rule of RULES.rules.filter((r) => r.group === gr.id)) {
+      const res = result(rule, state.audit);
+      const lvl = (st, txt, pts) => `<div class="level${res.status === st ? ' now' : ''}">${chip(st)}<span>${esc(txt)}</span><span class="lp">${pts}</span></div>`;
+      h += `<details class="rule"><summary>
+          <span class="code">${esc(rule.code)}</span><span class="name">${esc(rule.name)}${rule.required ? ' <span class="chip plain">konieczny</span>' : ''}${rule.ai ? ' <span class="chip plain">ocena AI z cytatem</span>' : ''}</span>${chip(res.status)}<span class="pts">${res.pts} / ${rule.max}</span>
+          <span></span><span class="val">${esc(res.value)}</span></summary>
+        <div class="body">
+          <dl class="kv">
+            <dt>Co mierzymy</dt><dd>${esc(rule.what)}</dd>
+            <dt>Jak</dt><dd>${esc(rule.how)}</dd>
+            ${res.evidence ? `<dt>Dowód</dt><dd>${esc(res.evidence)}</dd>` : ''}
+            ${res.status !== 'good' ? `<dt>Co zrobić</dt><dd>${esc(rule.fix)}</dd>` : ''}
+            ${rule.note ? `<dt>Uwaga</dt><dd>${esc(rule.note)}</dd>` : ''}
+          </dl>
+          <div class="levels">${lvl('good', rule.good, rule.max + ' pkt')}${lvl('mid', rule.mid, rule.parts ? 'po 1 pkt' : rule.partial + ' pkt')}${lvl('bad', rule.bad, '0 pkt')}</div>
+          ${rule.code === 'D2' ? `<div><h3 style="margin-bottom:8px">Zamrożona lista pytań</h3><ul class="qa">` + SAMPLE.questions.map((q) => { const ok = q[state.audit === 'a' ? 1 : 2]; return `<li><span class="${ok ? 'y' : 'n'}" aria-hidden="true">${ok ? '✓' : '✕'}</span><span>${esc(q[0])} <span class="muted small">${ok ? 'jest odpowiedź' : 'brak odpowiedzi'}</span></span></li>`; }).join('') + `</ul></div>` : ''}
+          <div class="srcs"><span class="small muted">Podstawa:</span> ${srcLinks(rule.basis)}${rule.convention ? ` <span class="small muted">${esc(rule.convention)}</span>` : ''}</div>
+        </div></details>`;
+    }
+    h += `</div>`;
+  }
+  h += `<div class="card"><h2 style="margin-bottom:6px">Wskazówki bez punktów</h2><p class="small muted" style="margin-bottom:12px">Pokazujemy je, ale nie wpływają na wynik. Powody są w zakładce <a href="#wytyczne">Wytyczne wskaźników</a>.</p>
+    <ul class="plain-list">${RULES.unscored.slice(0, 4).map((u) => `<li><b>${esc(u.name)}.</b> ${esc(u.why)}</li>`).join('')}</ul></div>`;
+  document.getElementById('v-raport').innerHTML = h;
+}
+
+function renderGuide() {
+  const total = RULES.rules.reduce((a, r) => a + r.max, 0);
+  let h = `<div class="card" style="margin-bottom:20px"><h2 style="margin-bottom:10px">Zasady punktacji</h2>
+    <ul class="plain-list">
+      <li><b>${total} punktów w ${RULES.groups.length} grupach, ${RULES.rules.length} wskaźników.</b> Każdy wskaźnik ma trzy stany: „Dobrze” (komplet punktów), „Do poprawy” (część punktów) i „Źle” (0 pkt). Progi są w tabelach poniżej.</li>
+      <li><b>Wynik strony:</b> ${RULES.levels.good}-100 pkt to „Dobrze”, ${RULES.levels.mid}-${RULES.levels.good - 1} pkt to „Do poprawy”, poniżej ${RULES.levels.mid} pkt to „Źle”. Te progi są umowne.</li>
+      <li><b>Warunki konieczne:</b> ${REQUIRED.map((r) => esc(r.code + ' ' + r.name)).join(', ')}. Gdy któryś jest w stanie „Źle”, raport pokazuje blokadę niezależnie od liczby punktów.</li>
+      <li><b>Punkty dajemy tylko za to, co ma podstawę:</b> oficjalną dokumentację Google, Microsoftu i dostawców botów AI albo opublikowane badanie. Podstawa jest przy każdym wskaźniku. Gdy sama liczba progu jest nasza, piszemy „próg umowny”.</li>
+      <li><b>Ten sam pomiar daje ten sam wynik.</b> Wskaźniki liczy program według reguł z tej strony. Dwa wskaźniki (D1 i D2) ocenia model AI, zawsze z cytatem ze strony jako dowodem i z zamrożoną listą pytań.</li>
+      <li><b>Brak pomiaru nie odbiera punktów.</b> Gdy wskaźnika nie da się zmierzyć (np. usługa pomiaru szybkości nie odpowiada), raport pokazuje „brak pomiaru”, a wynik liczymy proporcjonalnie z pozostałych punktów.</li>
+      <li><b>Wynik nie jest obietnicą pozycji ani cytowań.</b> Google pisze, że żadne zewnętrzne narzędzie nie ma dostępu do jego systemów rankingowych i AI. Wynik mówi, czy strona spełnia opisane tu warunki.</li>
+      <li><b>Wytyczne mają wersję</b> (ta: ${esc(RULES.version)}). Każdy audyt zapisuje wersję, według której był liczony. Zmiana progów to nowa wersja, a stare audyty zostają przy swojej.</li>
+    </ul></div>`;
+  for (const gr of RULES.groups) {
+    const rules = RULES.rules.filter((r) => r.group === gr.id);
+    h += `<div class="card flush guide" style="margin-bottom:20px"><div class="card-head"><h2>${esc(gr.id)}. ${esc(gr.name)} <span class="muted num" style="font-weight:500">${rules.reduce((a, r) => a + r.max, 0)} pkt</span></h2><p class="small muted">${esc(gr.lead)}</p></div>
+      <div class="table-wrap"><table><thead><tr><th>Kod</th><th>Wskaźnik i pomiar</th><th>Dobrze</th><th>Do poprawy</th><th>Źle</th><th class="n">Punkty</th><th>Podstawa</th></tr></thead><tbody>` +
+      rules.map((r) => `<tr><td><span class="code" style="font:600 12px ui-monospace,Menlo,Consolas,monospace">${esc(r.code)}</span></td>
+        <td><b>${esc(r.name)}</b>${r.required ? ' <span class="chip plain">konieczny</span>' : ''}${r.ai ? ' <span class="chip plain">ocena AI</span>' : ''}<br><span class="muted">${esc(r.how)}</span>${r.note ? `<br><span class="muted">${esc(r.note)}</span>` : ''}</td>
+        <td>${esc(r.good)}</td><td>${esc(r.mid)}</td><td>${esc(r.bad)}</td>
+        <td class="n">${r.parts ? '2 / 1 / 0<br><span class="muted">razy 3</span>' : r.max + ' / ' + r.partial + ' / 0'}</td>
+        <td><div class="srcs">${srcLinks(r.basis)}</div>${r.convention ? `<span class="muted">${esc(r.convention)}</span>` : ''}</td></tr>`).join('') + `</tbody></table></div></div>`;
+  }
+  h += `<div class="card flush" style="margin-bottom:20px"><div class="card-head"><h2>Czego nie punktujemy i dlaczego</h2><p class="small muted">Te rzeczy bywają liczone w innych narzędziach. U nas są wskazówką, bo nie mają potwierdzenia albo źródła mówią, że nie pomagają.</p></div>
+    <div class="table-wrap"><table><thead><tr><th>Wskazówka</th><th>Dlaczego bez punktów</th><th>Źródło</th></tr></thead><tbody>` +
+    RULES.unscored.map((u) => `<tr><td style="min-width:180px"><b>${esc(u.name)}</b></td><td>${esc(u.why)}</td><td>${u.basis.length ? srcLinks(u.basis) : '<span class="muted">brak</span>'}</td></tr>`).join('') + `</tbody></table></div></div>`;
+  h += `<div class="card"><h2 style="margin-bottom:10px">Źródła</h2><p class="small" style="line-height:1.9">${srcList(Object.keys(RULES.sources))}</p></div>`;
+  document.getElementById('v-wytyczne').innerHTML = h;
+}
+
+function renderProgress() {
+  const [a, b] = SAMPLE.audits, ta = totals(a.id), tb = totals(b.id);
+  const rows = RULES.rules.map((rule) => ({ rule, ra: result(rule, a.id), rb: result(rule, b.id) }));
+  const fixed = rows.filter((x) => x.rb.pts > x.ra.pts).length, left = rows.filter((x) => x.rb.pts < x.rule.max);
+  const tile = (au, t) => `<div class="card"><p class="small muted">${esc(au.date)} · ${esc(au.label)}</p><div class="score-row" style="margin:6px 0 10px"><span class="score-num">${t.sum}<small> / 100</small></span>${chip(level(t.sum))}</div><div class="bar ${level(t.sum)}"><i style="width:${t.sum}%"></i></div></div>`;
+  let h = `<div class="two" style="margin-bottom:20px">${tile(a, ta)}${tile(b, tb)}</div>
+    <div class="card" style="margin-bottom:20px"><p><b>Zmiana: +${tb.sum - ta.sum} pkt.</b> Poprawione wskaźniki: ${fixed} z ${rows.length}. ${left.length ? 'Do zrobienia zostało: ' + left.map((x) => esc(x.rule.code + ' ' + x.rule.name)).join(', ') + '.' : 'Wszystkie wskaźniki mają komplet punktów.'}</p>
+      <p class="small muted" style="margin-top:6px">Oba audyty liczone według tej samej wersji wytycznych (${esc(RULES.version)}) i tej samej listy pytań, więc wyniki można porównywać.</p></div>
+    <div class="card flush"><div class="table-wrap"><table style="min-width:680px"><thead><tr><th>Kod</th><th>Wskaźnik</th><th>${esc(a.date)}</th><th>${esc(b.date)}</th><th class="n">Punkty</th></tr></thead><tbody>` +
+    rows.map((x) => `<tr><td><span style="font:600 12px ui-monospace,Menlo,Consolas,monospace" class="muted">${esc(x.rule.code)}</span></td><td><b>${esc(x.rule.name)}</b></td>
+      <td>${chip(x.ra.status)}<br><span class="muted">${esc(x.ra.value)}</span></td><td>${chip(x.rb.status)}<br><span class="muted">${esc(x.rb.value)}</span></td>
+      <td class="n">${x.ra.pts} → ${x.rb.pts}${x.rb.pts > x.ra.pts ? `<br><span class="delta-up">+${x.rb.pts - x.ra.pts}</span>` : ''}</td></tr>`).join('') +
+    `<tr><td></td><td><b>Razem</b></td><td></td><td></td><td class="n"><b>${ta.sum} → ${tb.sum}</b></td></tr></tbody></table></div></div>`;
+  document.getElementById('v-postep').innerHTML = h;
+}
+
+function renderCitations() {
+  const idx = state.audit === 'a' ? 1 : 2, runs = SAMPLE.runs, au = auditOf(state.audit);
+  let hit = 0, all = 0;
+  for (const c of SAMPLE.citations) for (const n of c[idx]) { hit += n; all += runs; }
+  const cell = (n) => `<td class="n"><span class="chip ${n === 0 ? 'bad' : (n === runs ? 'good' : 'mid')}">${n} z ${runs}</span></td>`;
+  let h = `<div class="card" style="margin-bottom:20px"><h2 style="margin-bottom:8px">To jest wynik, nie wytyczna</h2>
+      <p>Sprawdzamy, czy wyszukiwarki AI podają tę stronę jako źródło. Cytowania nie wchodzą do punktów, bo nie zależą tylko od strony, a odpowiedzi AI różnią się między próbami. Dlatego każde pytanie zadajemy ${runs} razy i pokazujemy, w ilu próbach strona była źródłem.</p></div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:20px">${auditSwitch()}<span class="small muted">Audyt z ${esc(au.date)}: strona była źródłem w <b>${hit} z ${all}</b> prób.</span></div>
+    <div class="card flush" style="margin-bottom:20px"><div class="table-wrap"><table style="min-width:640px"><thead><tr><th>Pytanie</th>${SAMPLE.engines.map((e) => `<th class="n">${esc(e)}</th>`).join('')}</tr></thead><tbody>` +
+    SAMPLE.citations.map((c) => `<tr><td>${esc(c[0])}</td>${c[idx].map(cell).join('')}</tr>`).join('') + `</tbody></table></div></div>
+    <div class="two">
+      <div class="card"><h2 style="margin-bottom:10px">Kto jest cytowany najczęściej</h2><p class="small muted" style="margin-bottom:10px">Źródła z tych samych ${all} prób (audyt z ${esc(SAMPLE.audits[1].date)}).</p>
+        <ul class="plain-list" style="list-style:none;padding:0">${SAMPLE.rivals.map((r) => `<li class="grow"><span>${esc(r[0])}</span><span class="pts">${r[1]} z ${all}</span><div class="bar"><i style="width:${Math.round(100 * r[1] / all)}%"></i></div></li>`).join('')}</ul></div>
+      <div class="card"><h2 style="margin-bottom:10px">Dane z kont klienta</h2><ul class="plain-list">
+        <li><b>Google Search Console.</b> Raport skuteczności w funkcjach generatywnej AI pokazuje, jak treść działa w AI Overviews i AI Mode. <span class="chip plain">po podłączeniu konta</span></li>
+        <li><b>Bing Webmaster Tools.</b> Raport AI Performance: liczba cytowań w Copilocie i cytowane strony. <span class="chip plain">po podłączeniu konta</span></li>
+      </ul><p class="small muted" style="margin-top:10px">To jedyne dane pochodzące wprost od wyszukiwarek. Test zapytań powyżej jest naszym pomiarem z zewnątrz.</p></div>
+    </div>`;
+  document.getElementById('v-cytowania').innerHTML = h;
+}
+
+function renderPages() {
+  let h = `<div class="card flush"><div class="card-head"><h2>Strony witryny</h2><p class="small muted">Każda strona ma swoją frazę i swój raport. Lista powstaje z mapy witryny albo z wklejonych adresów.</p></div>
+    <div class="table-wrap"><table style="min-width:680px"><thead><tr><th>Adres</th><th>Fraza</th><th class="n">Wynik</th><th>Stan</th><th>Najważniejszy brak</th></tr></thead><tbody>` +
+    SAMPLE.pages.map((p) => `<tr><td><code>${esc(p[0])}</code></td><td>${esc(p[1])}</td><td class="n"><b>${p[2]}</b></td><td>${chip(level(p[2]))}</td><td>${esc(p[3])}</td></tr>`).join('') +
+    `</tbody></table></div></div>`;
+  document.getElementById('v-strony').innerHTML = h;
+}
+
+const VIEWS = ['raport', 'wytyczne', 'postep', 'cytowania', 'strony'];
+function show() {
+  const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'raport';
+  for (const id of VIEWS) document.getElementById('v-' + id).hidden = id !== v;
+  for (const a of document.querySelectorAll('#tabs a')) { if (a.getAttribute('href') === '#' + v) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
+}
+function renderAll() { renderHead(); renderReport(); renderGuide(); renderProgress(); renderCitations(); renderPages(); show(); }
+
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-audit]');
+  if (b) { state.audit = b.dataset.audit; renderAll(); }
+});
+document.addEventListener('submit', (e) => {
+  if (e.target.id === 'auditForm') { e.preventDefault(); document.getElementById('formNote').hidden = false; }
+});
+document.getElementById('clientBtn').addEventListener('click', (e) => {
+  const on = document.getElementById('shell').classList.toggle('client');
+  document.getElementById('clientNote').hidden = !on;
+  e.currentTarget.textContent = on ? 'Wróć do widoku agencji' : 'Podgląd dla klienta';
+  if (on && location.hash === '#strony') location.hash = '#raport';
+});
+window.addEventListener('hashchange', show);
+renderAll();
+</script>
