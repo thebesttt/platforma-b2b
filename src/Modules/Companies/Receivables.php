@@ -9,14 +9,17 @@ use App\Core\Nip;
 
 /**
  * Należności od kontrahentów: przeterminowanie, wezwanie do zapłaty i warunki wpisu do biura informacji gospodarczej (BIG).
- * Dane o długach zgłoszone przez użytkownika NIE są pokazywane innym użytkownikom platformy – trafiają tylko do BIG
- * (np. KRD) przez partnera, po spełnieniu warunków ustawy o udostępnianiu informacji gospodarczych.
+ * Dane o długach zgłoszone przez użytkownika NIE są pokazywane innym użytkownikom platformy – do BIG (np. KRD)
+ * przekazuje je sam wierzyciel, po spełnieniu warunków ustawy o udostępnianiu informacji gospodarczych.
+ *
+ * Podstawa: art. 15 ust. 1 (dłużnik niebędący konsumentem) – co najmniej 500 zł, wymagalne od co najmniej 30 dni,
+ * co najmniej miesiąc od wysłania wezwania z ostrzeżeniem (firma i adres biura); art. 15a ust. 2 – wezwanie
+ * informuje o możliwości zgłoszenia sprzeciwu. Art. 14 dotyczy konsumentów (próg 200 zł) i tu nie ma zastosowania.
  */
 final class Receivables
 {
-    public const BIG_MIN_AMOUNT = 500.0;   // art. 14 ust. 1 pkt 2 – dług przedsiębiorcy
-    public const BIG_MIN_DAYS = 30;        // art. 14 ust. 1 pkt 3
-    public const BIG_DEMAND_WAIT_DAYS = 30; // co najmniej miesiąc od wysłania wezwania z ostrzeżeniem (art. 14 ust. 1 pkt 4)
+    public const BIG_MIN_AMOUNT = 500.0; // art. 15 ust. 1 pkt 2
+    public const BIG_MIN_DAYS = 30;      // art. 15 ust. 1 pkt 2
 
     public static function forCompany(int $orgId, int $companyId): array
     {
@@ -47,19 +50,21 @@ final class Receivables
         $now ??= time();
         $days = self::daysOverdue($r, $now);
         $demandAt = !empty($r['demand_sent_at']) ? strtotime((string) $r['demand_sent_at'] . ' 00:00:00') : null;
-        $waitOk = $demandAt !== null && $now - $demandAt >= self::BIG_DEMAND_WAIT_DAYS * 86400;
+        // „Co najmniej miesiąc” liczymy kalendarzowo: wezwanie z 14.10 → wpis możliwy od 14.11.
+        $waitUntil = $demandAt !== null ? strtotime('+1 month', $demandAt) : null;
+        $waitOk = $waitUntil !== null && $now >= $waitUntil;
         $checks = [
             ['ok' => empty($r['paid_at']), 'text' => 'Należność nie została zapłacona'],
-            ['ok' => (float) $r['amount'] >= self::BIG_MIN_AMOUNT, 'text' => 'Kwota co najmniej 500 zł (dla dłużnika-przedsiębiorcy)'],
-            ['ok' => $days >= self::BIG_MIN_DAYS, 'text' => 'Co najmniej 30 dni po terminie płatności (teraz: ' . $days . ' ' . plural($days, 'dzień', 'dni', 'dni') . ')'],
-            ['ok' => $demandAt !== null, 'text' => 'Wysłane wezwanie do zapłaty z ostrzeżeniem o zamiarze przekazania danych do BIG'],
-            ['ok' => trim((string) ($r['demand_bureau'] ?? '')) !== '', 'text' => 'W wezwaniu podano nazwę i adres siedziby biura informacji gospodarczej'],
+            ['ok' => (float) $r['amount'] >= self::BIG_MIN_AMOUNT, 'text' => 'Łączna kwota zaległości co najmniej 500 zł (dłużnik niebędący konsumentem)'],
+            ['ok' => $days >= self::BIG_MIN_DAYS, 'text' => 'Wymagalna od co najmniej 30 dni (teraz: ' . $days . ' ' . plural($days, 'dzień', 'dni', 'dni') . ' po terminie)'],
+            ['ok' => $demandAt !== null, 'text' => 'Wysłane wezwanie do zapłaty z ostrzeżeniem o zamiarze przekazania danych do biura i informacją o prawie do sprzeciwu'],
+            ['ok' => trim((string) ($r['demand_bureau'] ?? '')) !== '', 'text' => 'W wezwaniu podano firmę i adres siedziby biura informacji gospodarczej'],
             ['ok' => $waitOk, 'text' => 'Minął co najmniej miesiąc od wysłania wezwania'],
         ];
         $eligible = !in_array(false, array_column($checks, 'ok'), true);
         $from = null;
-        if (!$eligible && $demandAt !== null && !$waitOk) {
-            $from = date('Y-m-d', $demandAt + self::BIG_DEMAND_WAIT_DAYS * 86400);
+        if (!$eligible && $waitUntil !== null && !$waitOk) {
+            $from = date('Y-m-d', $waitUntil);
         }
         return ['eligible' => $eligible, 'checks' => $checks, 'eligible_from' => $from];
     }
@@ -67,7 +72,8 @@ final class Receivables
     /** Rekompensata za koszty odzyskiwania należności (art. 10 ustawy o przeciwdziałaniu nadmiernym opóźnieniom). */
     public static function compensationEur(float $amount): int
     {
-        return $amount <= 5000 ? 40 : ($amount <= 50000 ? 70 : 100);
+        // Art. 10 ust. 1: 40 euro do 5000 zł włącznie, 70 euro powyżej 5000 zł i poniżej 50 000 zł, 100 euro od 50 000 zł.
+        return $amount <= 5000 ? 40 : ($amount < 50000 ? 70 : 100);
     }
 
     /** Treść wezwania do zapłaty z ostrzeżeniem o przekazaniu danych do BIG. */
@@ -96,7 +102,8 @@ final class Receivables
         ];
         if ($bureau !== '') {
             $lines[] = 'Jednocześnie informujemy, że w przypadku braku zapłaty w terminie miesiąca od dnia doręczenia niniejszego wezwania zamierzamy przekazać dane dotyczące zobowiązania do biura informacji gospodarczej: '
-                . $bureau . ' (art. 14 ust. 1 pkt 4 ustawy z dnia 9 kwietnia 2010 r. o udostępnianiu informacji gospodarczych i wymianie danych gospodarczych).';
+                . $bureau . ' (art. 15 ust. 1 pkt 3 ustawy z dnia 9 kwietnia 2010 r. o udostępnianiu informacji gospodarczych i wymianie danych gospodarczych).';
+            $lines[] = 'Informujemy o możliwości zgłoszenia nam sprzeciwu wobec zamiaru przekazania danych do biura (art. 15a tej ustawy). W sprzeciwie można zakwestionować istnienie zobowiązania w całości lub w części albo wskazać na jego przedawnienie.';
             $lines[] = '';
         }
         $lines[] = 'Brak zapłaty spowoduje skierowanie sprawy na drogę postępowania sądowego, co narazi Państwa na dodatkowe koszty.';

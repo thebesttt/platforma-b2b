@@ -17,6 +17,9 @@ use App\Modules\Offers\Docx;
 
 final class CompanyController extends Controller
 {
+    /** Limit nowych sprawdzeń na firmę dziennie – API białej listy VAT ma wspólny dzienny limit zapytań dla całej platformy. */
+    public const DAILY_LOOKUPS = 40;
+
     public function index(Request $r): Response
     {
         $org = $this->orgId();
@@ -61,9 +64,9 @@ final class CompanyController extends Controller
         }
         $existing = Companies::byNip($nip);
         $fresh = $existing && $existing['refreshed_at'] && strtotime($existing['refreshed_at'] . ' UTC') > time() - Companies::FRESH_FOR;
-        if (!$fresh && Kv::hit('lookup:' . $this->orgId() . ':' . gmdate('Ymd'), 86400) > 300) {
+        if (!$fresh && Kv::hit('lookup:' . $this->orgId() . ':' . gmdate('Ymd'), 86400) > self::DAILY_LOOKUPS) {
             if (!$existing) {
-                return $this->redirect('/kontrahenci', 'Osiągnięto dzienny limit 300 sprawdzeń nowych firm. Spróbuj jutro.', 'error');
+                return $this->redirect('/kontrahenci', 'Osiągnięto dzienny limit ' . self::DAILY_LOOKUPS . ' sprawdzeń nowych firm. Spróbuj jutro.', 'error');
             }
         } else {
             $res = Companies::lookup($nip);

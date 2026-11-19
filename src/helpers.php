@@ -8,7 +8,25 @@ use App\Core\Csrf;
 
 function e(mixed $value): string
 {
+    if (is_array($value) || is_object($value)) {
+        $value = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR) ?: '';
+    }
     return htmlspecialchars((string) ($value ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
+/** Dowolna wartość (np. pole z odpowiedzi modelu AI) jako tekst jednej linii logicznej. */
+function to_text(mixed $v): string
+{
+    if (is_string($v)) {
+        return trim($v);
+    }
+    if (is_scalar($v)) {
+        return (string) $v;
+    }
+    if (is_array($v)) {
+        return trim(implode('; ', array_map('to_text', $v)));
+    }
+    return '';
 }
 
 function url(string $path = '/', array $query = []): string
@@ -178,4 +196,21 @@ function marked_html(string $text): string
         $out[] = '<p' . ($nosrc ? ' class="nosrc"' : '') . '>' . $h . '</p>';
     }
     return implode("\n", $out);
+}
+
+/** Adres do atrybutu href: tylko http(s) i ścieżki lokalne, inaczej „#” (ochrona przed javascript: itp.). */
+function safe_url(?string $url): string
+{
+    $url = trim((string) $url);
+    if ($url !== '' && (preg_match('#^https?://#i', $url) || ($url[0] === '/' && !str_starts_with($url, '//')))) {
+        return $url;
+    }
+    return '#';
+}
+
+/** Adres pliku statycznego z wersją z czasu modyfikacji – po wdrożeniu przeglądarka pobiera nowy plik. */
+function asset(string $path): string
+{
+    $file = APP_ROOT . '/public' . $path;
+    return $path . '?v=' . (is_file($file) ? substr((string) filemtime($file), -8) : APP_VERSION);
 }

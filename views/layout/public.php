@@ -13,7 +13,7 @@ $appName = (string) config('APP_NAME');
 <title><?= e(isset($title) ? $title . ' · ' . $appName : $appName . ' – przetargi, oferty i bezpieczni kontrahenci') ?></title>
 <meta name="description" content="Przetargi dopasowane do Twojej firmy, szkice ofert z AI, sprawdzanie kontrahentów pod kątem zatorów płatniczych i audyt strony w jednym miejscu.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/assets/app.css?v=<?= e(APP_VERSION) ?>">
+<link rel="stylesheet" href="<?= e(asset('/assets/app.css')) ?>">
 </head>
 <body>
 <header class="pub-top">
@@ -36,6 +36,6 @@ $appName = (string) config('APP_NAME');
   </div>
 </main>
 <footer class="pub-foot">© <?= date('Y') ?> <?= e($appName) ?> · Dane z BZP, TED, KRS, wykazu podatników VAT i rejestru decyzji UOKiK</footer>
-<script src="/assets/app.js?v=<?= e(APP_VERSION) ?>" defer></script>
+<script src="<?= e(asset('/assets/app.js')) ?>" defer></script>
 </body>
 </html>

@@ -7,6 +7,9 @@ namespace App\Core;
 /** Konta: rejestracja firmy z właścicielem, logowanie, bieżący użytkownik i firma. */
 final class Auth
 {
+    /** Bardzo długie hasło to tani sposób na obciążenie serwera liczeniem skrótu. */
+    public const MAX_PASSWORD_BYTES = 800;
+
     private static ?array $user = null;
     private static ?array $org = null;
 
@@ -83,6 +86,9 @@ final class Auth
         if (mb_strlen($password) < 10) {
             return ['ok' => false, 'error' => 'Hasło musi mieć co najmniej 10 znaków.'];
         }
+        if (strlen($password) > self::MAX_PASSWORD_BYTES) {
+            return ['ok' => false, 'error' => 'Hasło jest za długie (najwyżej 200 znaków).'];
+        }
         if (trim($company) === '') {
             return ['ok' => false, 'error' => 'Podaj nazwę firmy.'];
         }
@@ -117,13 +123,19 @@ final class Auth
     public static function attempt(string $email, string $password, string $ip): array
     {
         $email = mb_strtolower(trim($email));
+        if (strlen($password) > self::MAX_PASSWORD_BYTES) {
+            return ['ok' => false, 'error' => 'Nieprawidłowy e-mail lub hasło.'];
+        }
         $key = 'login:' . hash('sha256', $ip . '|' . $email);
-        if ((int) (Kv::get($key) ?? 0) >= 8) {
+        // Drugi licznik tylko na e-mail: adres IP za proxy da się podrobić nagłówkiem, więc nie może być jedyną ochroną.
+        $emailKey = 'login-email:' . hash('sha256', $email);
+        if ((int) (Kv::get($key) ?? 0) >= 8 || (int) (Kv::get($emailKey) ?? 0) >= 20) {
             return ['ok' => false, 'error' => 'Zbyt wiele nieudanych prób. Spróbuj ponownie za 15 minut.'];
         }
         $u = Db::get()->one('SELECT * FROM users WHERE email = ?', [$email]);
         if (!$u || !password_verify($password, (string) $u['password_hash'])) {
             Kv::hit($key, 900);
+            Kv::hit($emailKey, 900);
             usleep(250000);
             return ['ok' => false, 'error' => 'Nieprawidłowy e-mail lub hasło.'];
         }
@@ -131,6 +143,7 @@ final class Auth
             Db::get()->update('users', ['password_hash' => self::hash($password)], 'id = ?', [$u['id']]);
         }
         Kv::forget($key);
+        Kv::forget($emailKey);
         self::login((int) $u['id']);
         return ['ok' => true];
     }

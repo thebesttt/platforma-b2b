@@ -99,8 +99,8 @@ final class RiskPolicy
                     : 'Prośba o zgodę wysłana e-mailem bez wcześniejszej zgody to sprawa sporna. Sądy uznawały takie wiadomości za pośrednią promocję nadawcy.';
                 if ($level === 'high') {
                     $law = array_merge(self::pkeLaw(), [
-                        'Sąd Apelacyjny w Warszawie (VII AGa 1567/18) uznał prośbę o zgodę wysłaną SMS-em za pośrednią promocję nadawcy.',
-                        'Brak orzeczeń pod nowymi przepisami dla e-maila z samą prośbą o zgodę – sprawa sporna.',
+                        'Sąd Apelacyjny w Warszawie (wyrok z 12.12.2019, VII AGa 1567/18) uznał SMS z prośbą o zgodę za informację handlową, bo pośrednio promował nadawcę. Wyrok zapadł na gruncie poprzednich przepisów.',
+                        'Nie znamy orzeczenia, które pod nowymi przepisami ocenia e-mail z samą prośbą o zgodę – sprawa jest sporna.',
                     ]);
                     $reasons[] = 'Wiadomość nie może zawierać oferty, cen ani opisu usług – tylko pytanie o zgodę.';
                 }
@@ -134,7 +134,8 @@ final class RiskPolicy
     {
         return [
             'Art. 398 Prawa komunikacji elektronicznej: informacja handlowa wymaga uprzedniej zgody odbiorcy, także firmy.',
-            'Kara Prezesa UKE: do 3% przychodu z poprzedniego roku albo do 1 mln zł (art. 444); także wykroczenie (art. 448) i czyn nieuczciwej konkurencji.',
+            'Kara Prezesa UKE: do 3% przychodu z poprzedniego roku albo do 1 mln zł, zależnie od tego, która kwota jest wyższa (art. 444 ust. 1 pkt 81 i art. 446 ust. 5).',
+            'Dodatkowo wykroczenie zagrożone grzywną, ścigane na żądanie odbiorcy (art. 448), oraz roszczenia z tytułu czynu nieuczciwej konkurencji.',
         ];
     }
 

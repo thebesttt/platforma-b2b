@@ -17,14 +17,17 @@ final class Config
         'DATABASE_URL' => '',
         'ANTHROPIC_API_KEY' => '',
         'AI_MODEL' => 'claude-sonnet-5-5',
-        'AI_MAX_INPUT_CHARS' => '400000',
+        'AI_MAX_INPUT_CHARS' => '300000', // ok. 100 tys. tokenów dokumentacji na jedno zapytanie
         'CRON_TOKEN' => '',
         'PSI_KEY' => '',
         'RESEND_API_KEY' => '',
         'MAIL_FROM' => '',
         'HTTP_FIXTURES' => '',
         'UPLOAD_MAX_MB' => '15',
-        'SIGNUP_OPEN' => '1',
+        'SIGNUP_OPEN' => '0',          // 1 = każdy może założyć konto; 0 = tylko z kodem zaproszenia (SIGNUP_CODE)
+        'SIGNUP_CODE' => '',           // kod zaproszenia: /rejestracja?kod=…
+        'TERMS_URL' => '',             // adres regulaminu (link przy rejestracji)
+        'PRIVACY_URL' => '',           // adres polityki prywatności
         'ADMIN_EMAILS' => '',          // e-maile administratorów platformy (po przecinku)
         'AUDIT_ALLOW_PRIVATE' => '0', // tylko testy lokalne (działa wyłącznie przy APP_ENV=dev|test)
     ];

@@ -38,5 +38,11 @@ services:
         sync: false
       - key: ADMIN_EMAILS          # Twój e-mail: dostęp do ręcznej aktualizacji decyzji UOKiK (Ustawienia → Decyzje UOKiK)
         sync: false
-      - key: SIGNUP_OPEN           # 1 = każdy może założyć konto, 0 = konta zakłada administrator (bin/console user:create)
-        value: "1"
+      - key: SIGNUP_OPEN           # 0 = rejestracja tylko z linku z kodem (zalecane do czasu regulaminu), 1 = otwarta dla wszystkich
+        value: "0"
+      - key: SIGNUP_CODE           # kod zaproszenia: konto zakłada się pod adresem /rejestracja?kod=<ta wartość>
+        generateValue: true
+      - key: TERMS_URL             # opcjonalnie: adres regulaminu (link przy rejestracji)
+        sync: false
+      - key: PRIVACY_URL           # opcjonalnie: adres polityki prywatności
+        sync: false

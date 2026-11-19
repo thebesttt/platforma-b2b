@@ -11,6 +11,8 @@ $action = '/klienci/' . (int) $c['id'] . '/wiadomosc';
 
 <form method="post" action="<?= e($action) ?>" class="cols">
   <?= csrf_field() ?>
+  <?php /* Pierwszy przycisk formularza jest domyślny dla klawisza Enter: tylko odświeża stronę z wpisaną treścią. */ ?>
+  <button type="submit" name="action" value="keep" class="sr-only" tabindex="-1" aria-hidden="true">Odśwież</button>
   <div class="main stack">
     <section class="card stack-sm" aria-labelledby="t-kind">
       <h2 id="t-kind">1. Rodzaj wiadomości</h2>

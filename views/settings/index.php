@@ -10,7 +10,7 @@
       <p class="muted small" style="margin:0">Trafiają do formularzy ofert, wniosków i wezwań do zapłaty.</p>
       <div class="form-grid">
         <div class="field"><label for="s-name">Nazwa firmy</label><input id="s-name" name="name" type="text" value="<?= e($org['name']) ?>"<?= App\Core\Auth::isOwner() ? '' : ' disabled' ?>></div>
-        <div class="field"><label for="s-nip">NIP</label><input id="s-nip" name="nip" type="text" inputmode="numeric" value="<?= e($org['nip']) ?>"></div>
+        <div class="field"><label for="s-nip">NIP</label><input id="s-nip" name="nip" type="text" inputmode="numeric" value="<?= e($org['nip']) ?>"<?= App\Core\Auth::isOwner() ? '' : ' disabled' ?>></div>
         <div class="field" style="grid-column:1/-1"><label for="s-addr">Adres siedziby</label><input id="s-addr" name="address" type="text" value="<?= e($org['address']) ?>" placeholder="ul. Przykładowa 1, 00-001 Warszawa"></div>
         <div class="field"><label for="s-phone">Telefon</label><input id="s-phone" name="phone" type="text" value="<?= e($org['phone']) ?>"></div>
         <div class="field"><label for="s-web">Strona internetowa</label><input id="s-web" name="website" type="text" value="<?= e($org['website']) ?>"></div>
@@ -44,7 +44,10 @@
       <?php endif ?>
     </section>
     <?php if (App\Core\Auth::isAdmin()): ?>
-    <section class="card"><h2 style="margin-bottom:8px">Administracja</h2><a href="/ustawienia/uokik">Decyzje UOKiK – aktualizacja ręczna</a></section>
+    <section class="card stack-sm"><h2>Administracja</h2>
+      <a href="/ustawienia/uokik">Decyzje UOKiK – aktualizacja ręczna</a>
+      <form method="post" action="/ustawienia/test-ai"><?= csrf_field() ?><button class="btn ghost sm" type="submit" data-busy="Sprawdzam…">Sprawdź połączenie z AI</button></form>
+    </section>
     <?php endif ?>
     <section class="card">
       <h2 style="margin-bottom:8px">Dane i AI</h2>

@@ -1,0 +1,31 @@
+name: Próba generalna na prawdziwych danych
+
+# Na żądanie: pełny import z BZP i TED do PostgreSQL, dopasowanie do przykładowych profili,
+# parser na losowych ogłoszeniach, karty prawdziwych firm. Raport w logu zadania.
+on:
+  workflow_dispatch:
+
+jobs:
+  proba:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: proba
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: curl, mbstring, intl, zip, pdo_pgsql
+          coverage: none
+      - name: Próba generalna
+        run: php tests/live_rehearsal.php
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/proba

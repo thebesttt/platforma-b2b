@@ -16,7 +16,7 @@ $appName = (string) config('APP_NAME');
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?= e(($title ?? 'Pulpit') . ' · ' . $appName) ?></title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/assets/app.css?v=<?= e(APP_VERSION) ?>">
+<link rel="stylesheet" href="<?= e(asset('/assets/app.css')) ?>">
 <meta name="robots" content="noindex">
 </head>
 <body>
@@ -50,6 +50,6 @@ $appName = (string) config('APP_NAME');
     </div>
   </main>
 </div>
-<script src="/assets/app.js?v=<?= e(APP_VERSION) ?>" defer></script>
+<script src="<?= e(asset('/assets/app.js')) ?>" defer></script>
 </body>
 </html>

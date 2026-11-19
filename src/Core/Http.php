@@ -19,8 +19,9 @@ final class Http
     /** @return array{status: int, headers: array<string, string>, body: string, error?: string} */
     public static function request(string $method, string $url, ?string $body = null, array $headers = [], int $timeout = 20): array
     {
-        self::$log[] = ['method' => $method, 'url' => $url];
         $fixtures = (string) Config::get('HTTP_FIXTURES');
+        // W testach zapisujemy także treść zapytania, żeby dało się sprawdzić, co wysyłamy do API.
+        self::$log[] = ['method' => $method, 'url' => $url] + ($fixtures !== '' ? ['body' => (string) $body] : []);
         if ($fixtures !== '') {
             return self::fromFixture($fixtures, $method, $url, (string) $body);
         }

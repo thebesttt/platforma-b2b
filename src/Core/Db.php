@@ -20,7 +20,11 @@ final class Db
 
     private function __construct(string $url)
     {
-        if ($url === '' ) {
+        if ($url === '') {
+            // Na serwerze brak adresu bazy oznaczałby zapis do pliku, który znika przy każdym wdrożeniu – wolimy głośny błąd.
+            if (!Config::isDev()) {
+                throw new \RuntimeException('Brak zmiennej DATABASE_URL. Ustaw adres bazy PostgreSQL (albo APP_ENV=dev do pracy lokalnej na SQLite).');
+            }
             $url = 'sqlite:' . APP_ROOT . '/storage/app.sqlite';
         }
         if (str_starts_with($url, 'sqlite:')) {

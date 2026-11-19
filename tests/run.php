@@ -15,6 +15,7 @@ putenv('HTTP_FIXTURES=' . __DIR__ . '/fixtures/http');
 putenv('ANTHROPIC_API_KEY=test-key');
 putenv('CRON_TOKEN=test-cron-token');
 putenv('APP_NAME=Testowa');
+putenv('SIGNUP_OPEN=1');
 
 require __DIR__ . '/../src/bootstrap.php';
 

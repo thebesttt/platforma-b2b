@@ -61,17 +61,23 @@ return [
         eq(false, Receivables::bigEligibility(['demand_bureau' => ''] + $r, $now)['eligible'], 'bez nazwy biura');
         $late = Receivables::bigEligibility(['demand_sent_at' => '2026-11-10'] + $r, $now);
         eq(false, $late['eligible'], 'za mało czasu od wezwania');
-        eq('2026-12-10', $late['eligible_from']);
+        eq('2026-12-10', $late['eligible_from'], 'miesiąc kalendarzowy od wezwania');
+        $edge = ['demand_sent_at' => '2026-10-19'] + $r;
+        eq(false, Receivables::bigEligibility($edge, strtotime('2026-11-18 12:00:00'))['eligible'], 'dzień przed upływem miesiąca');
+        ok(Receivables::bigEligibility($edge, strtotime('2026-11-19 00:00:01'))['eligible'], 'równo miesiąc po wezwaniu');
         eq(78, Receivables::daysOverdue($r, $now));
         eq(40, Receivables::compensationEur(5000));
         eq(70, Receivables::compensationEur(5000.01));
+        eq(70, Receivables::compensationEur(49999.99));
+        eq(100, Receivables::compensationEur(50000), 'od 50 000 zł: 100 euro');
         eq(100, Receivables::compensationEur(60000));
     },
     'Wezwanie do zapłaty zawiera ostrzeżenie z nazwą biura' => function () {
         $letter = Receivables::demandLetter(['amount' => 1200, 'invoice_no' => 'FV/1/2026', 'issued_at' => '2026-08-01', 'due_at' => '2026-09-01', 'demand_bureau' => 'Krajowy Rejestr Długów BIG S.A.'], ['name' => 'Dłużnik sp. z o.o.', 'nip' => '1234563218', 'address' => 'Warszawa'], ['name' => 'Wierzyciel sp. z o.o.', 'nip' => '7181968222']);
         contains("1\u{00A0}200,00\u{00A0}zł", $letter['body']);
         contains('Krajowy Rejestr Długów BIG S.A.', $letter['body']);
-        contains('art. 14 ust. 1 pkt 4', $letter['body']);
+        contains('art. 15 ust. 1 pkt 3', $letter['body']);
+        contains('sprzeciwu wobec zamiaru przekazania danych', $letter['body'], 'pouczenie o sprzeciwie (art. 15a)');
         contains('40 euro', $letter['body']);
     },
 ];

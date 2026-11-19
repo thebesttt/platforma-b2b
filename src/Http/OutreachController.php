@@ -137,6 +137,12 @@ final class OutreachController extends Controller
         $subject = mb_substr($r->str('subject'), 0, 250);
         $body = mb_substr(str_replace("\r\n", "\n", (string) ($r->post['body'] ?? '')), 0, 20000);
 
+        if ($r->str('action') === 'keep') {
+            return $this->renderCompose($c, $kind, $subject, $body);
+        }
+        if ($r->str('action') !== 'switch' && $r->str('action') !== 'ai' && $r->str('action') !== 'save') {
+            return $this->renderCompose($c, $kind, $subject, $body);
+        }
         if ($r->str('action') === 'switch') {
             $draft = Outreach::draft($kind, $c, Auth::org() ?? [], Auth::user());
             return $this->renderCompose($c, $kind, $draft['subject'], $draft['body']);
@@ -186,6 +192,8 @@ final class OutreachController extends Controller
         AuditLog::add('message.create', 'message', $id, [
             'kind' => $kind, 'risk' => $risk['level'], 'basis' => $c['basis'],
             'ack' => $risk['needs_ack'] ? RiskPolicy::ACK_TEXT : null,
+            'forwarded_for' => (string) ($r->server['HTTP_X_FORWARDED_FOR'] ?? ''),
+            'user_agent' => mb_substr((string) ($r->server['HTTP_USER_AGENT'] ?? ''), 0, 200),
         ], $r->ip());
         return $this->redirect('/wiadomosci/' . $id, 'Wiadomość gotowa do wysłania z Twojej skrzynki.');
     }

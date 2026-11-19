@@ -43,6 +43,11 @@ final class App
                 Session::flash('info', 'Zaloguj się, aby kontynuować.');
                 return Response::redirect('/logowanie?next=' . rawurlencode($request->path));
             }
+            // Gdy przesłane pliki przekraczają limit serwera, PHP odrzuca całe zapytanie (puste pola formularza).
+            if ($request->method === 'POST' && !$request->post && (int) ($request->server['CONTENT_LENGTH'] ?? 0) > 0
+                && str_starts_with((string) ($request->server['CONTENT_TYPE'] ?? ''), 'multipart/form-data')) {
+                return Response::html(View::render('errors/message', ['title' => 'Pliki są za duże', 'message' => 'Łączny rozmiar przesłanych plików przekracza limit serwera. Wgraj mniej plików naraz albo mniejsze pliki.'], Auth::check() ? 'app' : 'public'), 413);
+            }
             if ($request->method === 'POST' && ($opts['csrf'] ?? true) && !Csrf::check($request)) {
                 return Response::html(View::render('errors/message', ['title' => 'Formularz wygasł', 'message' => 'Odśwież stronę i spróbuj ponownie.'], Auth::check() ? 'app' : 'public'), 419);
             }

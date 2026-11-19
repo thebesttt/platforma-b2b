@@ -25,7 +25,8 @@ final class SettingsController extends Controller
     public function save(Request $r): Response
     {
         if (!Auth::isOwner()) {
-            return $this->redirect('/ustawienia', 'Dane firmy zmienia właściciel konta.', 'error');
+            $this->db()->update('users', ['name' => mb_substr($r->str('user_name'), 0, 120)], 'id = ?', [Auth::id()]);
+            return $this->redirect('/ustawienia', 'Zapisano Twoje imię i nazwisko. Dane firmy zmienia właściciel konta.', 'info');
         }
         $nip = Nip::clean($r->str('nip'));
         if ($nip !== '' && !Nip::valid($nip)) {
@@ -53,7 +54,7 @@ final class SettingsController extends Controller
             return $this->redirect('/ustawienia#haslo', 'Obecne hasło jest nieprawidłowe.', 'error');
         }
         $new = (string) $r->input('new', '');
-        if (mb_strlen($new) < 10) {
+        if (mb_strlen($new) < 10 || strlen($new) > Auth::MAX_PASSWORD_BYTES) {
             return $this->redirect('/ustawienia#haslo', 'Nowe hasło musi mieć co najmniej 10 znaków.', 'error');
         }
         $this->db()->update('users', ['password_hash' => Auth::hash($new)], 'id = ?', [Auth::id()]);
@@ -95,6 +96,20 @@ final class SettingsController extends Controller
         return $this->redirect('/ustawienia/uokik', $saved ? 'Zapisano ' . $saved . ' ' . plural($saved, 'decyzję', 'decyzje', 'decyzji') . '.' : 'Nie znaleziono decyzji w plikach. Zapisz stronę listy jako „HTML”.', $saved ? 'success' : 'error');
     }
 
+    /** Krótkie zapytanie kontrolne do modelu AI – sprawdza klucz, nazwę modelu i połączenie. Tylko administrator platformy. */
+    public function testAi(Request $r): Response
+    {
+        if (!Auth::isAdmin()) {
+            return $this->notFound();
+        }
+        $res = Claude::complete('Odpowiadasz jednym słowem.', 'Napisz słowo: działa', 20);
+        if (!$res['ok']) {
+            return $this->redirect('/ustawienia', 'Test AI nieudany. ' . $res['error'], 'error');
+        }
+        $u = $res['usage'] ?? [];
+        return $this->redirect('/ustawienia', 'AI działa. Model ' . config('AI_MODEL') . ' odpowiedział: „' . truncate((string) $res['text'], 40) . '” (tokeny: ' . (int) ($u['input_tokens'] ?? 0) . ' wejście, ' . (int) ($u['output_tokens'] ?? 0) . ' wyjście).');
+    }
+
     /** Właściciel dodaje członka zespołu z hasłem startowym, które przekazuje mu osobiście. */
     public function invite(Request $r): Response
     {
@@ -103,7 +118,7 @@ final class SettingsController extends Controller
         }
         $email = mb_strtolower($r->str('email'));
         $password = (string) $r->input('password', '');
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($password) < 10) {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($password) < 10 || strlen($password) > Auth::MAX_PASSWORD_BYTES) {
             return $this->redirect('/ustawienia#zespol', 'Podaj e-mail i hasło startowe (co najmniej 10 znaków).', 'error');
         }
         if ($this->db()->val('SELECT 1 FROM users WHERE email = ?', [$email])) {

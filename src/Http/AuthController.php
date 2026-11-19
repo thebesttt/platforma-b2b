@@ -42,17 +42,28 @@ final class AuthController extends Controller
         return $this->redirect($this->safeNext($r->str('next')) ?: '/pulpit');
     }
 
+    /** Rejestracja otwarta dla wszystkich (SIGNUP_OPEN=1) albo tylko z kodem zaproszenia (SIGNUP_CODE). */
+    public static function signupAllowed(string $code): bool
+    {
+        if ((string) config('SIGNUP_OPEN') === '1') {
+            return true;
+        }
+        $expected = (string) config('SIGNUP_CODE');
+        return $expected !== '' && $code !== '' && hash_equals($expected, $code);
+    }
+
     public function registerForm(Request $r): Response
     {
-        if ((string) config('SIGNUP_OPEN') !== '1') {
-            return $this->view('errors/message', ['title' => 'Rejestracja zamknięta', 'message' => 'Nowe konta zakłada administrator. Napisz do nas, a przygotujemy dostęp.'], 'public');
+        if (!self::signupAllowed($r->str('kod'))) {
+            return Response::html(\App\Core\View::render('errors/message', ['title' => 'Rejestracja na zaproszenie', 'message' => 'Konto założysz z linku z zaproszeniem. Jeśli go nie masz, poproś o niego administratora platformy.'], 'public'), 403);
         }
-        return $this->view('auth/register', ['title' => 'Załóż konto', 'v' => []], 'public');
+        return $this->view('auth/register', ['title' => 'Załóż konto', 'v' => [], 'kod' => $r->str('kod')], 'public');
     }
 
     public function register(Request $r): Response
     {
-        if ((string) config('SIGNUP_OPEN') !== '1') {
+        $kod = $r->str('kod');
+        if (!self::signupAllowed($kod)) {
             return $this->redirect('/rejestracja');
         }
         $v = ['company' => $r->str('company'), 'nip' => $r->str('nip'), 'name' => $r->str('name'), 'email' => $r->str('email')];
@@ -64,12 +75,12 @@ final class AuthController extends Controller
             $res = Auth::register($v['company'], $v['nip'], $v['name'], $v['email'], (string) $r->input('password', ''));
             if ($res['ok']) {
                 Auth::login((int) $res['user_id']);
-                AuditLog::add('auth.register', 'user', (int) $res['user_id'], ['terms_accepted_at' => now_utc()], $r->ip());
+                AuditLog::add('auth.register', 'user', (int) $res['user_id'], ['terms_accepted_at' => now_utc(), 'invited' => (string) config('SIGNUP_OPEN') !== '1'], $r->ip());
                 return $this->redirect('/pulpit', 'Konto gotowe. Zacznij od profilu przetargowego – na jego podstawie codziennie dobierzemy ogłoszenia.');
             }
             $error = $res['error'];
         }
-        return Response::html(\App\Core\View::render('auth/register', ['title' => 'Załóż konto', 'v' => $v, 'error' => $error], 'public'), 422);
+        return Response::html(\App\Core\View::render('auth/register', ['title' => 'Załóż konto', 'v' => $v, 'error' => $error, 'kod' => $kod], 'public'), 422);
     }
 
     public function logout(Request $r): Response

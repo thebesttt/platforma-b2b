@@ -2,7 +2,7 @@
   <div>
     <p class="crumbs"><a href="/kontrahenci">Kontrahenci</a> / <a href="/kontrahenci/<?= e($c['nip']) ?>#naleznosci"><?= e($c['name']) ?></a> / Wezwanie do zapłaty</p>
     <h1>Wezwanie do zapłaty</h1>
-    <p class="muted small">Sprawdź treść, pobierz plik Word, podpisz i wyślij listem poleconym albo e-mailem, jeśli umowa na to pozwala.</p>
+    <p class="muted small">Sprawdź treść, pobierz plik Word, podpisz i wyślij listem poleconym albo doręcz do rąk własnych. E-mail liczy się tylko wtedy, gdy umowa z dłużnikiem przewiduje wezwania na adres e-mail wskazany w umowie.</p>
   </div>
   <div class="row-flex">
     <a class="btn" href="/naleznosci/<?= (int) $rec['id'] ?>/wezwanie?<?= e(http_build_query(['format' => 'docx', 'bureau' => $rec['demand_bureau'] ?? ''])) ?>">Pobierz .docx</a>

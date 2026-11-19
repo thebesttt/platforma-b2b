@@ -20,11 +20,20 @@ final class BzpClient
      * Ogłoszenia opublikowane od podanej chwili (UTC), znormalizowane.
      * @return array<int, array> lista rekordów do zapisania w tabeli tenders
      */
+    /** Gdy pobieranie przerwał limit stron: chwila publikacji (UTC), od której trzeba kontynuować. Null = pobrano wszystko. */
+    public ?string $continueFrom = null;
+
+    /** Liczba zapytań, które nie zwróciły poprawnej odpowiedzi (do raportu z importu). */
+    public int $failedRequests = 0;
+
     public function since(string $fromUtc, int $maxPages = 120, ?callable $sleep = null): array
     {
         $out = [];
+        $this->continueFrom = null;
+        $this->failedRequests = 0;
         $from = gmdate('Y-m-d\TH:i:s\Z', strtotime($fromUtc . ' UTC'));
         foreach (self::NOTICE_TYPES as $type) {
+            $lastPublished = null;
             for ($page = 1; $page <= $maxPages; $page++) {
                 $url = self::BASE . '/Search?' . http_build_query([
                     'NoticeType' => $type,
@@ -35,21 +44,44 @@ final class BzpClient
                     'PageSize' => 10,
                 ]);
                 $rows = Http::getJson($url);
+                if ($rows === null) {
+                    // Błąd sieci lub serwera: jedna ponowna próba, potem kontynuacja od ostatniego pobranego ogłoszenia w kolejnym imporcie.
+                    usleep(1500000);
+                    $rows = Http::getJson($url);
+                    if ($rows === null) {
+                        $this->failedRequests++;
+                        $this->markContinue($lastPublished ?? gmdate('Y-m-d H:i:s', strtotime($fromUtc . ' UTC')));
+                        break;
+                    }
+                }
                 if (!$rows) {
                     break;
                 }
                 foreach ($rows as $row) {
                     if (is_array($row) && !empty($row['objectId'])) {
-                        $out[$row['objectId']] = self::normalize($row);
+                        $t = self::normalize($row);
+                        $out[$row['objectId']] = $t;
+                        $lastPublished = $t['published_at'] ?? $lastPublished;
                     }
                 }
                 if (count($rows) < 10) {
                     break;
                 }
+                if ($page === $maxPages) {
+                    // Więcej ogłoszeń niż limit stron – nic nie gubimy, następne pobranie zaczyna od tego miejsca.
+                    $this->markContinue($lastPublished ?? gmdate('Y-m-d H:i:s', strtotime($fromUtc . ' UTC')));
+                }
                 $sleep ? $sleep() : usleep(150000);
             }
         }
         return array_values($out);
+    }
+
+    private function markContinue(string $utc): void
+    {
+        if ($this->continueFrom === null || $utc < $this->continueFrom) {
+            $this->continueFrom = $utc;
+        }
     }
 
     public function noticeHtml(string $objectId): ?string

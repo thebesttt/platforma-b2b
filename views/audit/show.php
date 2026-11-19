@@ -8,7 +8,7 @@ $passed = $v['passed'] ?? [];
     <p class="crumbs"><a href="/audyt">Audyt</a> / <?= e($row['host']) ?></p>
     <div class="row-flex"><?= App\Core\View::partial('partials/audit_score', ['v' => $v]) ?><span class="muted small">na 100 punktów · <?= e(local_dt($row['created_at'], 'd.m.Y H:i')) ?><?= !empty($v['psi_done']) ? ' · z pomiarem PageSpeed' : '' ?></span></div>
     <h1><?= e($row['host']) ?></h1>
-    <p class="muted small" style="margin:0"><a href="<?= e($v['final_url'] ?? $row['url']) ?>" target="_blank" rel="noopener nofollow"><?= e($v['final_url'] ?? $row['url']) ?></a></p>
+    <p class="muted small" style="margin:0"><a href="<?= e(safe_url($v['final_url'] ?? $row['url'])) ?>" target="_blank" rel="noopener nofollow"><?= e($v['final_url'] ?? $row['url']) ?></a></p>
   </div>
   <form method="post" action="/audyt" class="no-print"><?= csrf_field() ?><input type="hidden" name="url" value="<?= e($row['url']) ?>"><input type="hidden" name="label" value="<?= e($v['label'] ?? '') ?>"><button class="btn ghost" type="submit" data-busy="Sprawdzam…">Sprawdź ponownie</button></form>
 </header>

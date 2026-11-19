@@ -28,7 +28,7 @@ $lvl = ['high' => ['high', 'wysokie'], 'mid' => ['mid', 'średnie'], 'low' => ['
   <div class="row-flex no-print">
     <form class="inline" method="post" action="/oferty"><?= csrf_field() ?><input type="hidden" name="tender_id" value="<?= (int) $tender['id'] ?>"><button class="btn" type="submit">Utwórz szkic oferty</button></form>
     <?php if ($tender['deadline_at']): ?><a class="btn ghost" href="/przetargi/<?= (int) $tender['id'] ?>/kalendarz">Dodaj terminy do kalendarza</a><?php endif ?>
-    <?php if ($tender['url']): ?><a class="btn ghost" href="<?= e($tender['url']) ?>" target="_blank" rel="noopener">Ogłoszenie w <?= e(strtoupper((string) $tender['source'])) ?></a><?php endif ?>
+    <?php if ($tender['url']): ?><a class="btn ghost" href="<?= e(safe_url($tender['url'])) ?>" target="_blank" rel="noopener">Ogłoszenie w <?= e(strtoupper((string) $tender['source'])) ?></a><?php endif ?>
     <?php if ($match): ?>
       <?php if ($match['status'] !== 'saved'): ?><form class="inline" method="post" action="/przetargi/<?= (int) $tender['id'] ?>/status"><?= csrf_field() ?><input type="hidden" name="status" value="saved"><button class="btn ghost" type="submit">Zapisz</button></form><?php endif ?>
       <?php if ($match['status'] !== 'dismissed'): ?><form class="inline" method="post" action="/przetargi/<?= (int) $tender['id'] ?>/status"><?= csrf_field() ?><input type="hidden" name="status" value="dismissed"><button class="btn ghost" type="submit">Nie interesuje mnie</button></form>
@@ -135,7 +135,7 @@ $lvl = ['high' => ['high', 'wysokie'], 'mid' => ['mid', 'średnie'], 'low' => ['
 
     <section class="card" id="dokumenty" aria-labelledby="t-docs">
       <h2 id="t-docs" style="margin-bottom:8px">Dokumenty</h2>
-      <?php if ($tender['documents_url']): ?><p class="small"><a href="<?= e($tender['documents_url']) ?>" target="_blank" rel="noopener">Pobierz SWZ ze strony zamawiającego</a>, a potem wgraj pliki tutaj.</p><?php endif ?>
+      <?php if ($tender['documents_url']): ?><p class="small"><a href="<?= e(safe_url($tender['documents_url'])) ?>" target="_blank" rel="noopener">Pobierz SWZ ze strony zamawiającego</a>, a potem wgraj pliki tutaj.</p><?php endif ?>
       <?php if ($documents): ?>
         <ul class="list-plain">
           <?php foreach ($documents as $doc): ?>
@@ -156,9 +156,10 @@ $lvl = ['high' => ['high', 'wysokie'], 'mid' => ['mid', 'średnie'], 'low' => ['
     </section>
 
     <section class="card" aria-labelledby="t-check">
-      <h2 id="t-check" style="margin-bottom:8px">Do złożenia z ofertą</h2>
+      <h2 id="t-check" style="margin-bottom:4px">Do złożenia z ofertą</h2>
+      <p class="muted xs" style="margin:0 0 4px">Pełną listę z miejscami na dane znajdziesz w szkicu oferty.</p>
       <?php foreach ($docsList as $doc): ?>
-        <label class="check" style="border-top:1px solid var(--line-soft)"><input type="checkbox"> <span><?= e($doc['name'] ?? '') ?><?php if (!empty($doc['source'])): ?> <span class="src"><?= e($doc['source']) ?></span><?php endif ?></span></label>
+        <div class="kv-row"><p class="v"><?= e($doc['name'] ?? '') ?></p><?php if (!empty($doc['source'])): ?><span class="src"><?= e($doc['source']) ?></span><?php endif ?></div>
       <?php endforeach ?>
     </section>
 

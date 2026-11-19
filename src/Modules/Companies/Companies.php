@@ -26,7 +26,7 @@ final class Companies
      * Zwraca kartę firmy, odświeżając dane z rejestrów, jeśli są starsze niż doba (albo $force).
      * @return array{ok: bool, company?: array, error?: string, changes?: string[]}
      */
-    public static function lookup(string $nip, bool $force = false): array
+    public static function lookup(string $nip, bool $force = false, ?array $prefetchedWl = null): array
     {
         $nip = Nip::clean($nip);
         if (!Nip::valid($nip)) {
@@ -37,7 +37,8 @@ final class Companies
             return ['ok' => true, 'company' => $existing, 'changes' => []];
         }
 
-        $wl = Registries::whiteList($nip);
+        // $prefetchedWl: wynik z zapytania zbiorczego (odświeżanie obserwowanych firm).
+        $wl = $prefetchedWl ?? Registries::whiteList($nip);
         if (!$wl['ok']) {
             if ($existing) {
                 return ['ok' => true, 'company' => $existing, 'changes' => [], 'error' => $wl['error'] . ' Pokazujemy dane z ' . local_dt($existing['refreshed_at']) . '.'];
@@ -171,13 +172,21 @@ final class Companies
         );
         $done = 0;
         $changed = 0;
+        $failed = 0;
+        // Biała lista: jedno zapytanie na 30 firm zamiast 30 osobnych (API ma dzienny limit zapytań).
+        $wl = Registries::whiteListMany(array_column($rows, 'nip'));
         foreach ($rows as $r) {
-            $res = self::lookup($r['nip'], true);
+            $pre = $wl[$r['nip']] ?? null;
+            if ($pre && !$pre['ok']) {
+                $failed++;
+                continue; // rejestr niedostępny – zostawiamy dotychczasowe dane, spróbujemy jutro
+            }
+            $res = self::lookup($r['nip'], true, $pre);
             $done++;
             $changed += count($res['changes'] ?? []);
-            usleep(300000);
+            usleep(200000);
         }
-        return ['checked' => $done, 'changes' => $changed];
+        return ['checked' => $done, 'changes' => $changed, 'failed' => $failed];
     }
 
     public static function isWatched(int $orgId, int $companyId): bool

@@ -52,6 +52,9 @@ final class Response
             'X-Frame-Options' => 'DENY',
             'Content-Security-Policy' => "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; form-action 'self' mailto:; frame-ancestors 'none'; base-uri 'self'",
         ];
+        if (\App\Core\App::$request?->isHttps()) {
+            $defaults['Strict-Transport-Security'] = 'max-age=31536000';
+        }
         if (!headers_sent()) {
             foreach (array_merge($defaults, $this->headers) as $k => $v) {
                 header($k . ': ' . $v);

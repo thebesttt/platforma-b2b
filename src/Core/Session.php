@@ -51,6 +51,11 @@ final class Session implements SessionHandlerInterface
 
     public function write(string $id, string $data): bool
     {
+        // Pusta sesja (np. robot na stronie głównej) nie zajmuje miejsca w bazie.
+        if ($data === '') {
+            Db::get()->run('DELETE FROM sessions WHERE id = ?', [hash('sha256', $id)]);
+            return true;
+        }
         Db::get()->upsert('sessions', [
             'id' => hash('sha256', $id),
             'data' => $data,

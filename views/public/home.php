@@ -3,12 +3,13 @@
     <h1>Przetargi, oferty i sprawdzeni kontrahenci w jednym miejscu</h1>
     <p class="lead">Codziennie dobieramy ogłoszenia z BZP i TED do profilu Twojej firmy, przygotowujemy szkic oferty na podstawie SWZ i Twoich referencji, a przed podpisaniem umowy pokazujemy sygnały ryzyka płatniczego zamawiającego.</p>
     <div class="row-flex">
-      <?php if ((string) config('SIGNUP_OPEN') === '1'): ?><a class="btn" href="/rejestracja">Załóż konto – 14 dni bez opłat</a><?php endif ?>
+      <?php if ((string) config('SIGNUP_OPEN') === '1'): ?><a class="btn" href="/rejestracja">Załóż konto</a><?php endif ?>
       <a class="btn ghost" href="/logowanie">Zaloguj się</a>
     </div>
+    <?php if ((string) config('SIGNUP_OPEN') !== '1'): ?><p class="muted small" style="margin:12px 0 0">Platforma działa na razie na zaproszenie.</p><?php endif ?>
   </div>
   <div class="card stack-sm" aria-label="Przykład dopasowania">
-    <div class="between" style="align-items:center"><span class="chip info">Dopasowanie 92/100</span><span class="muted small">BZP · tryb podstawowy</span></div>
+    <div class="between" style="align-items:center"><span class="chip info">Dopasowanie 92/100</span><span class="chip neutral">Przykład</span></div>
     <h3>Przebudowa drogi powiatowej na odcinku 2,4 km</h3>
     <p class="muted small" style="margin:0">Powiat Przykładowy · wartość szacunkowa 2,9 mln zł · składanie ofert za 9 dni</p>
     <div class="kv-row"><div><p class="k">Dlaczego pasuje</p><p class="v">Kod CPV 45233000 z Twojego profilu, województwo mazowieckie, wartość w Twoim przedziale</p></div></div>

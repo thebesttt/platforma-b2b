@@ -16,6 +16,7 @@ return [
     '#^POST https://api\.ted\.europa\.eu/v3/notices/search#' => 'ted_search_p1.json',
 
     // Biała lista VAT: firma testowa (NIP 1234563218), nieprawidłowy NIP, pozostałe – brak w wykazie.
+    '#^GET https://wl-api\.mf\.gov\.pl/api/search/nips/#' => 'wl_nips.json',
     '#^GET https://wl-api\.mf\.gov\.pl/api/search/nip/1234563218\?#' => 'wl_1234563218.json',
     '#^GET https://wl-api\.mf\.gov\.pl/api/search/nip/7181968222\?#' => 'wl_7181968222.json',
     '#^GET https://wl-api\.mf\.gov\.pl/api/search/nip/1234563219\?#' => $json(['code' => 'WL-115', 'message' => 'Nieprawidłowy NIP.'], 400),

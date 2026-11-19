@@ -36,7 +36,9 @@ final class CronController
             'watchlist' => Companies::refreshWatched(),
             default => self::daily(),
         };
-        return Response::json(['ok' => true, 'task' => $task, 'result' => $result]);
+        // Błędy importu zwracamy kodem 500, żeby zadanie w GitHub Actions było widoczne jako nieudane.
+        $errors = $task === 'import' ? ($result['errors'] ?? []) : ($result['import']['errors'] ?? []);
+        return Response::json(['ok' => !$errors, 'task' => $task, 'result' => $result], $errors ? 500 : 200);
     }
 
     /** Codzienny zestaw: decyzje UOKiK (raz w tygodniu), import przetargów, odświeżenie obserwowanych firm, sprzątanie. */
@@ -44,10 +46,16 @@ final class CronController
     {
         $out = [];
         $lastUokik = Kv::get('uokik:last_sync');
-        if (!$lastUokik || strtotime((string) $lastUokik . ' UTC') < time() - 6 * 86400) {
+        $lastTry = Kv::get('uokik:last_try');
+        if ((!$lastUokik || strtotime((string) $lastUokik . ' UTC') < time() - 6 * 86400)
+            && (!$lastTry || strtotime((string) $lastTry . ' UTC') < time() - 6 * 86400)) {
+            // Rejestr UOKiK bywa niedostępny z serwerów poza Polską – to ostrzeżenie, nie błąd całego zadania.
+            Kv::set('uokik:last_try', now_utc());
             try {
                 $out['uokik'] = Uokik::sync();
-                Kv::set('uokik:last_sync', now_utc());
+                if (($out['uokik']['saved'] ?? 0) > 0) {
+                    Kv::set('uokik:last_sync', now_utc());
+                }
             } catch (\Throwable $e) {
                 $out['uokik'] = ['error' => $e->getMessage()];
             }

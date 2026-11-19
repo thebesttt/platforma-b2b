@@ -9,6 +9,9 @@ use App\Core\Kv;
 /** Codzienny import ogłoszeń z BZP i TED, potem dopasowanie do profili. */
 final class Importer
 {
+    /** Ile razy w jednym imporcie wolno kontynuować pobieranie po osiągnięciu limitu stron (każda runda to do 2400 ogłoszeń). */
+    public const MAX_ROUNDS = 6;
+
     /** @return array{bzp: int, ted: int, matches: int, errors: string[]} */
     public static function run(?string $sinceUtc = null): array
     {
@@ -18,11 +21,25 @@ final class Importer
 
         $bzpSince = $sinceUtc ?? (Kv::get('import:bzp:until') ?: gmdate('Y-m-d H:i:s', time() - 3 * 86400));
         try {
-            foreach ((new BzpClient())->since((string) $bzpSince) as $t) {
-                Tenders::save($t);
-                $result['bzp']++;
+            $bzp = new BzpClient();
+            $from = (string) $bzpSince;
+            // Jedno pobranie ma limit stron; przy zaległościach (pierwszy import, przerwa) kontynuujemy od ostatniego ogłoszenia.
+            for ($round = 0; $round < self::MAX_ROUNDS; $round++) {
+                $rows = $bzp->since($from);
+                foreach ($rows as $t) {
+                    Tenders::save($t);
+                }
+                $result['bzp'] += count($rows);
+                if ($bzp->failedRequests > 0) {
+                    $errors[] = 'BZP: serwer nie odpowiedział na ' . $bzp->failedRequests . ' ' . plural($bzp->failedRequests, 'zapytanie', 'zapytania', 'zapytań') . ' – brakujące ogłoszenia pobierzemy przy następnym imporcie.';
+                }
+                if ($bzp->continueFrom === null || $bzp->continueFrom <= $from || $bzp->failedRequests > 0) {
+                    break;
+                }
+                $from = $bzp->continueFrom;
             }
-            Kv::set('import:bzp:until', gmdate('Y-m-d H:i:s', strtotime($startedAt . ' UTC') - 600));
+            // Punkt startu następnego importu: miejsce przerwania albo chwila rozpoczęcia tego importu (z zakładką 10 minut).
+            Kv::set('import:bzp:until', $bzp->continueFrom ?? gmdate('Y-m-d H:i:s', strtotime($startedAt . ' UTC') - 600));
         } catch (\Throwable $e) {
             $errors[] = 'BZP: ' . $e->getMessage();
         }

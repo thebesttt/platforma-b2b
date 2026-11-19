@@ -54,6 +54,8 @@ final class Docx
     private static function para(string $text, ?string $style = null): string
     {
         $pPr = $style ? '<w:pPr><w:pStyle w:val="' . $style . '"/></w:pPr>' : '';
+        // XML 1.0 nie dopuszcza znaków sterujących (np. \f z tekstu PDF) – Word odmawia otwarcia takiego pliku.
+        $text = preg_replace('/[^\x{9}\x{A}\x{D}\x{20}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]/u', '', mb_scrub($text, 'UTF-8')) ?? '';
         $t = htmlspecialchars($text, ENT_XML1 | ENT_QUOTES, 'UTF-8');
         return '<w:p>' . $pPr . '<w:r><w:t xml:space="preserve">' . $t . '</w:t></w:r></w:p>';
     }

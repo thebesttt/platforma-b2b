@@ -36,8 +36,9 @@ try {
             $out($applied ? 'Zastosowano: ' . implode(', ', $applied) : 'Baza aktualna.');
             break;
         case 'import':
-            $out(Importer::run($argv[2] ?? null));
-            break;
+            $res = Importer::run($argv[2] ?? null);
+            $out($res);
+            exit(empty($res['errors']) ? 0 : 2);
         case 'uokik:sync':
             $out(Uokik::sync((int) ($argv[2] ?? 6)));
             break;
@@ -52,7 +53,12 @@ try {
             $out(Companies::refreshWatched((int) ($argv[2] ?? 80)));
             break;
         case 'daily':
-            $out(App\Http\CronController::daily());
+            $res = App\Http\CronController::daily();
+            $out($res);
+            if (!empty($res['import']['errors'])) {
+                fwrite(STDERR, "Import zakończył się z błędami – szczegóły powyżej.\n");
+                exit(2);
+            }
             break;
         case 'user:create':
             [$email, $password, $company] = [$argv[2] ?? '', $argv[3] ?? '', $argv[4] ?? ''];

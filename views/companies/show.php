@@ -75,7 +75,7 @@ $hasUokik = !empty($signals['uokik']);
                 <summary class="small">Wezwanie do zapłaty i wpis do biura informacji gospodarczej</summary>
                 <div class="cols" style="margin-top:12px;gap:16px">
                   <div class="main">
-                    <p class="small" style="font-weight:600;margin:0 0 4px">Warunki wpisu do BIG (art. 14 ustawy o udostępnianiu informacji gospodarczych)</p>
+                    <p class="small" style="font-weight:600;margin:0 0 4px">Warunki wpisu do BIG (art. 15 ustawy o udostępnianiu informacji gospodarczych)</p>
                     <ul class="list-plain">
                       <?php foreach ($big['checks'] as $chk): ?><li class="small"><span class="chip <?= $chk['ok'] ? 'low' : 'neutral' ?>"><?= $chk['ok'] ? 'spełniony' : 'brak' ?></span> <?= e($chk['text']) ?></li><?php endforeach ?>
                     </ul>
@@ -132,7 +132,7 @@ $hasUokik = !empty($signals['uokik']);
         <?php if (isset($krs['capital']) && $krs['capital'] !== null): ?><dt>Kapitał zakładowy</dt><dd><?= e(money_pl($krs['capital'])) ?></dd><?php endif ?>
         <?php if (!empty($krs['pkd'][0])): ?><dt>Działalność</dt><dd><?= e(is_array($krs['pkd'][0]) ? implode(' ', $krs['pkd'][0]) : $krs['pkd'][0]) ?></dd><?php endif ?>
         <?php if (!empty($krs['last_statement_period_end'])): ?><dt>Ostatnie sprawozdanie</dt><dd>za okres do <?= e(date('d.m.Y', strtotime($krs['last_statement_period_end']))) ?></dd><?php endif ?>
-        <?php if (!empty($krs['board'])): ?><dt>Zarząd</dt><dd><?= e(implode(', ', array_map(static fn ($b) => is_array($b) ? implode(' ', array_filter($b)) : (string) $b, (array) $krs['board']))) ?></dd><?php endif ?>
+        <?php if (!empty($krs['board'])): $bn = count((array) $krs['board']); ?><dt>Zarząd</dt><dd><?= $bn ?> <?= plural($bn, 'osoba', 'osoby', 'osób') ?>: <?= e(mb_strtolower(implode(', ', array_map('to_text', (array) $krs['board'])))) ?><br><span class="xs muted">KRS nie udostępnia nazwisk przez API.</span></dd><?php endif ?>
         <?php if (!empty($krs['representation'])): ?><dt>Reprezentacja</dt><dd><?= e(truncate((string) $krs['representation'], 200)) ?></dd><?php endif ?>
         <?php if ($wl): ?><dt>Rachunki na białej liście</dt><dd><?= (int) ($wl['accountCount'] ?? 0) ?><?= !empty($wl['hasVirtualAccounts']) ? ' (w tym wirtualne)' : '' ?></dd><?php endif ?>
         <?php if (!empty($krs['website'])): ?><dt>Strona</dt><dd><?= e($krs['website']) ?></dd><?php endif ?>
@@ -145,7 +145,7 @@ $hasUokik = !empty($signals['uokik']);
       <h2 id="t-uokik" style="margin-bottom:8px">Decyzje UOKiK</h2>
       <ul class="list-plain">
         <?php foreach ($signals['uokik'] as $u): ?>
-          <li class="small"><strong><?= e($u['signature']) ?></strong><?= $u['decided_at'] ? ' z ' . e(date('d.m.Y', strtotime($u['decided_at']))) : '' ?><br><?= e($u['company_name']) ?><?php if (($u['matched_by'] ?? '') === 'nazwa'): ?><br><span class="xs muted">Dopasowano po nazwie firmy – sprawdź w treści decyzji, czy to ten sam podmiot.</span><?php endif ?><?php if (!empty($u['url'])): ?><br><a href="<?= e($u['url']) ?>" target="_blank" rel="noopener">Treść decyzji</a><?php endif ?></li>
+          <li class="small"><strong><?= e($u['signature']) ?></strong><?= $u['decided_at'] ? ' z ' . e(date('d.m.Y', strtotime($u['decided_at']))) : '' ?><br><?= e($u['company_name']) ?><?php if (($u['matched_by'] ?? '') === 'nazwa'): ?><br><span class="xs muted">Dopasowano po nazwie firmy – sprawdź w treści decyzji, czy to ten sam podmiot.</span><?php endif ?><?php if (!empty($u['url'])): ?><br><a href="<?= e(safe_url($u['url'])) ?>" target="_blank" rel="noopener">Treść decyzji</a><?php endif ?></li>
         <?php endforeach ?>
       </ul>
     </section>

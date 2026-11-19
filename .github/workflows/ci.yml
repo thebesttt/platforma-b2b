@@ -46,10 +46,15 @@ jobs:
           docker network create net
           docker run -d --name db --network net -e POSTGRES_PASSWORD=pg -e POSTGRES_DB=platforma postgres:16
           docker run -d --name app --network net -p 10000:10000 \
-            -e DATABASE_URL=postgres://postgres:pg@db:5432/platforma -e CRON_TOKEN=ci-token -e APP_SECRET=ci-secret platforma-b2b
+            -e DATABASE_URL=postgres://postgres:pg@db:5432/platforma -e CRON_TOKEN=ci-token -e APP_SECRET=ci-secret \
+            -e SIGNUP_OPEN=0 -e SIGNUP_CODE=ci-kod platforma-b2b
           for i in $(seq 1 60); do curl -fs http://localhost:10000/zdrowie > /dev/null && break; sleep 2; done
       - name: Test dymny
-        run: sh tests/smoke.sh http://localhost:10000
+        run: sh tests/smoke.sh http://localhost:10000 ci-kod ci-token
+      - name: Kontener bez DATABASE_URL nie startuje
+        run: |
+          if docker run --rm platforma-b2b true 2> err.txt; then echo "kontener wystartował bez bazy"; exit 1; fi
+          grep -q "DATABASE_URL" err.txt
       - name: Tekst z PDF (pdftotext w obrazie)
         run: docker exec app sh -c 'command -v pdftotext'
       - name: Logi kontenera
