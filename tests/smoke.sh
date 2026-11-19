@@ -69,8 +69,12 @@ curl -fsS -c "$JAR" -b "$JAR" "$BASE/profile" | grep -q "Roboty drogowe" || fail
 
 # Import z tokenem (tylko gdy podano token): sprawdza połączenie z BZP/TED z tego serwera.
 if [ -n "$CRON" ]; then
+  code=$(curl -s -o /dev/null -w '%{http_code}' -H "X-Cron-Token: $CRON" "$BASE/cron/run?task=watchlist")
+  [ "$code" = "200" ] || fail "cron z nagłówkiem X-Cron-Token zwraca $code"
   code=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $CRON" "$BASE/cron/run?task=watchlist")
-  [ "$code" = "200" ] || fail "cron z tokenem zwraca $code"
+  [ "$code" = "200" ] || fail "cron z nagłówkiem Authorization zwraca $code"
+  code=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H "X-Cron-Token: $CRON" "$BASE/cron/run?task=watchlist")
+  [ "$code" = "200" ] || fail "cron metodą POST zwraca $code"
 fi
 rm -f "$JAR" "$HDR"
 echo "Test dymny OK: $BASE"

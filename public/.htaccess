@@ -1,5 +1,7 @@
 Options -Indexes
 RewriteEngine On
+# Apache nie przekazuje nagłówka Authorization do PHP – potrzebny przy zadaniach cyklicznych (/cron/run).
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^ index.php [QSA,L]
 <FilesMatch "\.(css|js)$">

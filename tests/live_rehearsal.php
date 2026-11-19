@@ -120,6 +120,12 @@ foreach ($sample as $t) {
     $c['weights100'] += (abs($sum - 100) < 0.6) ? 1 : 0;
     if (empty($d['deadline']) || empty($d['criteria']) || empty($d['descriptions'])) {
         $bad[] = $t['external_id'] . ' (termin: ' . (empty($d['deadline']) ? 'brak' : 'ok') . ', kryteria: ' . count($d['criteria'] ?? []) . ', opis: ' . count($d['descriptions'] ?? []) . ')';
+        // Diagnostyka: jaki to rodzaj ogłoszenia i jak wygląda jego treść.
+        $html = (string) (new App\Modules\Tenders\BzpClient())->noticeHtml((string) $t['external_id']);
+        $fields = App\Modules\Tenders\BzpNoticeParser::fields($html);
+        echo '  [diagnostyka] ' . $t['external_id'] . ' | typ: ' . $t['notice_type'] . ' | ' . truncate((string) $t['title'], 70) . ' | HTML: ' . strlen($html) . ' B | pól: ' . count($fields) . "\n";
+        echo '    pola: ' . truncate(implode(' ¦ ', array_map(static fn ($f) => $f['code'] . ' ' . truncate($f['label'], 40), array_slice($fields, 0, 14))), 700) . "\n";
+        echo '    tekst: ' . truncate(html_entity_decode(strip_tags($html)), 400) . "\n";
     }
     $rules = Analysis::rules(Tenders::find((int) $t['id']) ?? $t, $d); // nie może rzucić wyjątku na żadnym ogłoszeniu
 }

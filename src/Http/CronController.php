@@ -15,15 +15,14 @@ use App\Modules\Tenders\Importer;
 
 /**
  * Zadania cykliczne uruchamiane z zewnątrz (GitHub Actions co rano, cron hostingu):
- *   GET/POST /cron/run?task=daily  z nagłówkiem „Authorization: Bearer <CRON_TOKEN>” albo parametrem token.
+ *   GET/POST /cron/run?task=daily  z nagłówkiem „X-Cron-Token: <CRON_TOKEN>” (albo „Authorization: Bearer …”, albo parametrem token).
  */
 final class CronController
 {
     public function run(Request $r): Response
     {
         $token = (string) Config::get('CRON_TOKEN');
-        $sent = (string) ($r->server['HTTP_AUTHORIZATION'] ?? '');
-        $sent = str_starts_with($sent, 'Bearer ') ? substr($sent, 7) : $r->str('token');
+        $sent = self::sentToken($r);
         if ($token === '' || !hash_equals($token, $sent)) {
             return Response::json(['ok' => false, 'error' => 'unauthorized'], 401);
         }
@@ -39,6 +38,27 @@ final class CronController
         // Błędy importu zwracamy kodem 500, żeby zadanie w GitHub Actions było widoczne jako nieudane.
         $errors = $task === 'import' ? ($result['errors'] ?? []) : ($result['import']['errors'] ?? []);
         return Response::json(['ok' => !$errors, 'task' => $task, 'result' => $result], $errors ? 500 : 200);
+    }
+
+    /**
+     * Token z nagłówka X-Cron-Token, z „Authorization: Bearer …” albo z parametru token.
+     * Apache z mod_php nie przekazuje nagłówka Authorization do \$_SERVER, stąd kilka źródeł.
+     */
+    private static function sentToken(Request $r): string
+    {
+        $custom = trim((string) ($r->server['HTTP_X_CRON_TOKEN'] ?? ''));
+        if ($custom !== '') {
+            return $custom;
+        }
+        $auth = (string) ($r->server['HTTP_AUTHORIZATION'] ?? $r->server['REDIRECT_HTTP_AUTHORIZATION'] ?? '');
+        if ($auth === '' && function_exists('apache_request_headers')) {
+            foreach ((array) apache_request_headers() as $k => $v) {
+                if (strtolower((string) $k) === 'authorization') {
+                    $auth = (string) $v;
+                }
+            }
+        }
+        return str_starts_with($auth, 'Bearer ') ? trim(substr($auth, 7)) : $r->str('token');
     }
 
     /** Codzienny zestaw: decyzje UOKiK (raz w tygodniu), import przetargów, odświeżenie obserwowanych firm, sprzątanie. */

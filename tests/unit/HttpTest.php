@@ -175,6 +175,12 @@ return [
     },
     'Zadania cykliczne: token wymagany' => function () {
         eq(401, http('GET', '/cron/run', [], ['token' => 'zly'])->status);
+        $with = static fn (array $server) => App\Core\App::handle(new App\Core\Request('POST', '/cron/run', ['task' => 'watchlist'], [], [], $server))->status;
+        eq(200, $with(['HTTP_X_CRON_TOKEN' => 'test-cron-token']), 'nagłówek X-Cron-Token');
+        eq(200, $with(['HTTP_AUTHORIZATION' => 'Bearer test-cron-token']), 'nagłówek Authorization');
+        eq(200, $with(['REDIRECT_HTTP_AUTHORIZATION' => 'Bearer test-cron-token']), 'nagłówek po przepisaniu adresu przez Apache');
+        eq(401, $with(['HTTP_X_CRON_TOKEN' => 'zly']), 'zły token w nagłówku');
+        eq(401, $with([]), 'bez tokenu');
         $r = http('GET', '/cron/run', [], ['token' => 'test-cron-token', 'task' => 'import']);
         eq(200, $r->status);
         $j = json_decode($r->body, true);
