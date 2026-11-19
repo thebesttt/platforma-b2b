@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Buduje mockup z jednego źródła prawdy: src/rules.json (wytyczne) i src/sample.json (dane przykładowe).
+"""Buduje mockup z jednego źródła prawdy: src/rules.json (wytyczne), src/sample.json i src/leads.json (audyt i zapytania),
+src/platform.json (pozostałe moduły) oraz src/page.html i src/js/*.js (wygląd i zachowanie).
 
 Wynik:
   public/index.html  - pełna strona do wdrożenia na Cloudflare (Workers Static Assets albo Pages),
@@ -8,6 +9,8 @@ Wynik:
 """
 import json
 import re
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -15,6 +18,8 @@ ROOT = Path(__file__).parent
 rules = json.loads((ROOT / 'src/rules.json').read_text(encoding='utf-8'))
 sample = json.loads((ROOT / 'src/sample.json').read_text(encoding='utf-8'))
 leads = json.loads((ROOT / 'src/leads.json').read_text(encoding='utf-8'))
+plat = json.loads((ROOT / 'src/platform.json').read_text(encoding='utf-8'))
+views = '\n'.join(f.read_text(encoding='utf-8') for f in sorted((ROOT / 'src/js').glob('*.js')))
 page = (ROOT / 'src/page.html').read_text(encoding='utf-8')
 
 # --- Kontrola spójności wytycznych -------------------------------------------------------------
@@ -63,6 +68,55 @@ for lead in leads['leads']:
 steps = [s[1] for s in leads['funnel']]
 if steps != sorted(steps, reverse=True) or steps[0] != leads['ab']['b'][1] or steps[3] != leads['ab']['b'][2]:
     errors.append('Lejek: kroki muszą maleć i zgadzać się z wariantem „Kwalifikator” w teście.')
+# Pozostałe moduły: odwołania między danymi muszą wskazywać istniejące rzeczy.
+view_ids = set(re.findall(r"\{ id: '([a-z]+)', label:", page + views))
+for group in plat['functions']:
+    for name, view, state, _note in group['items']:
+        if view not in view_ids:
+            errors.append(f"Lista funkcji: „{name}” wskazuje nieistniejący widok {view}.")
+        if state not in plat['states']:
+            errors.append(f"Lista funkcji: „{name}” ma nieznany stan {state}.")
+contact_ids = {c['id'] for c in plat['contacts']}
+for c in plat['contacts']:
+    if c['basis'] not in plat['bases']:
+        errors.append(f"Kontakt {c['company']}: nieznana podstawa kontaktu.")
+for r in plat['rfqs']:
+    if r['contact'] is not None and r['contact'] not in contact_ids:
+        errors.append(f"Zapytanie ofertowe {r['company']}: nieznany kontakt.")
+for entry in plat['log']:
+    if entry['kind'] not in plat['kinds']:
+        errors.append('Dziennik: nieznany rodzaj wiadomości.')
+tender_ids = {t['id'] for t in plat['tenders']}
+company_ids = {c['id'] for c in plat['companies']}
+for ref in [plat['tender_card']['id'], plat['offer']['tender']] + [t[2] for t in plat['terms']]:
+    if ref not in tender_ids:
+        errors.append(f'Nieznany przetarg {ref}.')
+for t in plat['tenders']:
+    if t['buyer_company'] and t['buyer_company'] not in company_ids:
+        errors.append(f"Przetarg {t['id']}: nieznana firma zamawiającego.")
+    if t['cpv_main'] not in t['cpv_all']:
+        errors.append(f"Przetarg {t['id']}: główny kod CPV musi być na liście kodów.")
+for r in plat['receivables']:
+    if r['company'] not in company_ids:
+        errors.append(f"Należność {r['invoice']}: nieznana firma.")
+tech = plat['tech']
+if sum(c[2] for c in tech['cats']) != 100:
+    errors.append('Audyt techniczny: wagi kategorii muszą dawać 100.')
+own = [r for r in tech['rivals'] if r[1] == 'Moja strona']
+if len(own) != 1 or own[0][2] != [round(100 * c[1] / c[2]) for c in tech['cats']]:
+    errors.append('Audyt techniczny: procenty własnej strony w porównaniu muszą wynikać z punktów kategorii.')
+if own and own[0][3] != sum(1 for i in tech['issues'] if i[0] == 'critical'):
+    errors.append('Audyt techniczny: liczba krytycznych w porównaniu musi zgadzać się z listą poprawek.')
+ads = plat['ads']
+for pl in ads['platforms']:
+    if not (len(pl['spend']) == len(pl['clicks']) == len(pl['conv']) == len(ads['weeks']) == 8):
+        errors.append(f"Reklamy {pl['name']}: każda seria musi mieć 8 tygodni.")
+    for key, prev_key, src in (('spend', 'prev_spend', 'spend'), ('conv', 'prev_conv', 'conv')):
+        mine = [c for c in ads['campaigns'] if c['platform'] == pl['id']]
+        if sum(c[key] for c in mine) != sum(pl[src][4:]) or sum(c[prev_key] for c in mine) != sum(pl[src][:4]):
+            errors.append(f"Reklamy {pl['name']}: suma kampanii ({key}) musi zgadzać się z danymi tygodniowymi.")
+if len(plat['gsc']['clicks']) != len(plat['gsc']['weeks']):
+    errors.append('Search Console: liczba tygodni i wartości musi być taka sama.')
 if errors:
     sys.exit('Błędy:\n- ' + '\n- '.join(errors))
 
@@ -71,8 +125,16 @@ def embed(obj):
     return json.dumps(obj, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
 
 
-built = page.replace('/*__RULES__*/null', embed(rules)).replace('/*__SAMPLE__*/null', embed(sample)).replace('/*__LEADS__*/null', embed(leads))
+built = (page.replace('/*__RULES__*/null', embed(rules)).replace('/*__SAMPLE__*/null', embed(sample)).replace('/*__LEADS__*/null', embed(leads))
+         .replace('/*__PLATFORM__*/null', embed(plat)).replace('/*__VIEWS__*/', views))
 assert '/*__' not in built
+
+# Kontrola składni skryptu, jeśli jest Node.js. Błąd składni zatrzymałby całą stronę.
+script = built[built.index('<script>') + 8:built.rindex('</script>')]
+if shutil.which('node'):
+    check = subprocess.run(['node', '--check', '-'], input=script, text=True, capture_output=True)
+    if check.returncode:
+        sys.exit('Błąd składni w skrypcie strony:\n' + check.stderr[:1500])
 
 head, body = built.split('</style>', 1)
 head = head.replace('<meta name="claude:viewport-fit-sides" content="cover">\n', '') + '</style>'
@@ -124,4 +186,4 @@ for name, text in (('artifact.html', built), ('public/index.html', full), ('WYTY
     if re.search('[' + chr(0x2013) + chr(0x2014) + ']', text):
         sys.exit(f'{name}: znaleziono pauzę lub półpauzę, użyj zwykłego łącznika.')
     (ROOT / name).write_text(text, encoding='utf-8')
-print(f'OK: {len(codes)} wskaźników, {total} pkt, public/index.html {len(full) // 1024} kB')
+print(f"OK: {len(codes)} wskaźników, {total} pkt, {len(view_ids)} widoków, {sum(len(g['items']) for g in plat['functions'])} funkcji na liście, public/index.html {len(full) // 1024} kB")

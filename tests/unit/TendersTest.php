@@ -122,6 +122,9 @@ return [
         eq(null, Matcher::score(['deadline_at' => '2020-01-01 00:00:00'] + $t, $p), 'termin minął');
         $out = Matcher::score(['value_estimated' => 9000000] + $t, $p);
         ok(in_array('Wartość poza Twoim zakresem', $out['reasons'], true));
+        // Słowo z polskimi znakami pasuje do tekstu bez względu na zapis, a w uzasadnieniu zostaje tak, jak je wpisano.
+        $pl = Matcher::score(['title' => 'Prowadzenie profili: MEDIA SPOŁECZNOŚCIOWE urzędu'] + $t, ['keywords' => "Media  Społecznościowe\nmedia spolecznosciowe"] + $p);
+        ok(in_array('Słowa kluczowe: media społecznościowe', $pl['reasons'], true), 'zapis użytkownika w uzasadnieniu: ' . json_encode($pl['reasons'], JSON_UNESCAPED_UNICODE));
     },
     'Szczegóły BZP pobierane leniwie i zapamiętywane' => function () {
         import_fixtures();

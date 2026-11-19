@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>Mockup audytu i zapytań</title>
+<title>Mockup panelu PerfectData</title>
 <style>
 /* Motyw PerfectData: granat i złoto ze strony perfectdata.pl, czcionka systemowa.
    Układ: nagłówek jak na stronie, niżej arkusz pomiarowy. Jedna mocna rzecz to linijka 100 punktów, reszta to spokojne wiersze na liniach. */
@@ -14,6 +14,7 @@
   --gold: #d4a94a; --gold-hi: #e8c97a; --gold-lo: #a87f2c; --on-gold: #14100a;
   --text: #f2f3f7; --muted: #9aa3b8;
   --good: #4ade80; --mid: #f0a04b; --bad: #f87171; --bar: #34436a;
+  --s1: #3987e5; --s2: #d55181; --grid: #1b2438; /* dwie serie wykresów: sprawdzone walidatorem na obu tłach, osobne od barw stanu i od złota */
   --r-s: 9px; --r-m: 14px; --r-l: 18px;
   --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
@@ -45,13 +46,16 @@ ul, ol, dl, dd { margin: 0; padding: 0; }
 .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-weight: 700; font-size: 18px; letter-spacing: -0.02em; }
 .logo-mark { width: 30px; height: 30px; border: 1.5px solid var(--gold); border-radius: 7px; display: grid; place-items: center; font-size: 12px; letter-spacing: 0; color: var(--gold); }
 .logo b { color: var(--gold); font-weight: 700; }
-.mods { display: flex; gap: 22px; flex: 1; }
-.mods a { color: var(--text); text-decoration: none; font-size: 14px; font-weight: 500; padding: 8px 0; border-bottom: 2px solid transparent; }
+.mods { display: flex; gap: 20px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.mods::-webkit-scrollbar { display: none; }
+.mods a { flex: none; white-space: nowrap; color: var(--text); text-decoration: none; font-size: 14px; font-weight: 500; padding: 8px 0; border-bottom: 2px solid transparent; }
 .mods a.on { border-bottom-color: var(--gold); }
 .mods a:hover { color: var(--gold-hi); }
 .back { font-size: 13.5px; color: var(--muted); }
 .page { display: flex; flex-direction: column; gap: 28px; padding-block: 36px 72px; }
-@media (max-width: 600px) { .back { display: none; } .mods { justify-content: flex-end; gap: 18px; } .page { padding-block: 24px 56px; gap: 24px; } }
+@media (max-width: 1040px) { .back { display: none; } }
+@media (max-width: 860px) { .top-in { gap: 4px 28px; padding-bottom: 0; } .mods { order: 3; flex-basis: 100%; } .mods a { padding: 8px 0 10px; } }
+@media (max-width: 600px) { .page { padding-block: 24px 56px; gap: 24px; } }
 .client .agency-only { display: none; }
 
 .head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px 24px; }
@@ -190,7 +194,7 @@ td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space:
 .meter { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 14px; font-size: 14.5px; }
 .meter .hbar { grid-column: 1 / -1; }
 .qa { list-style: none; display: flex; flex-direction: column; gap: 7px; font-size: 14.5px; }
-.qa li { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 12px; }
+.qa li { display: grid; grid-template-columns: var(--qa, 96px) minmax(0, 1fr); gap: 12px; }
 /* Pytania kwalifikatora: pytanie z lewej, odpowiedzi z punktami z prawej */
 .q { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 6px 40px; padding: 18px 0; border-bottom: 1px solid var(--line); }
 .q h3 { line-height: 1.4; }
@@ -243,6 +247,58 @@ code { font: 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 .w-foot .btn { min-height: 42px; padding: 0 14px; }
 .err { color: var(--bad); font-size: 13.5px; }
 .seller-num { font-size: 52px; font-weight: 700; line-height: 1; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+/* ===== Nowe moduły ===== */
+.field select, .field textarea { width: 100%; min-height: 44px; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--r-s); background: var(--ink); color: var(--text); font: 15px/1.5 var(--font); }
+.field textarea { min-height: 120px; resize: vertical; }
+.field select:focus-visible, .field textarea:focus-visible { border-color: var(--gold); outline-offset: 0; }
+.stack > .field { flex: 0 0 auto; }
+.btn.sm { min-height: 36px; padding: 0 14px; font-size: 13.5px; }
+.btn[disabled] { opacity: .45; cursor: not-allowed; filter: none; box-shadow: none; }
+.acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+@media (max-width: 560px) { .switch.wide { display: grid; grid-template-columns: 1fr 1fr; width: 100%; } .switch.wide button:nth-child(odd) { border-left: 0; } .switch.wide button:nth-child(n+3) { border-top: 1px solid var(--line); } }
+.note.warn { border-left-color: var(--bad); }
+.pick { display: flex; flex-direction: column; gap: 6px; border: 0; padding: 0; margin: 0; min-width: 0; }
+.pick label { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 2px 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-s); cursor: pointer; font-weight: 600; }
+.pick label:has(input:checked) { border-color: var(--gold); background: var(--panel); }
+.pick input { accent-color: var(--gold); margin-top: 5px; }
+.pick small { grid-column: 2; font-size: 13px; font-weight: 400; color: var(--muted); }
+.msg { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-s); padding: 14px 16px; white-space: pre-wrap; font-size: 14.5px; overflow-wrap: anywhere; }
+.msg b { display: block; margin-bottom: 8px; }
+.src { color: var(--muted); font-size: 12.5px; }
+.chk { color: var(--mid); font-size: 12.5px; font-weight: 600; white-space: nowrap; border-bottom: 1px dashed currentColor; }
+.doc p { margin-bottom: 8px; max-width: 86ch; }
+.step-h { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.step-h .n { color: var(--gold); font-weight: 700; }
+/* Wiersz listy: lewa kolumna stała, treść, stan, akcja */
+.item { display: grid; grid-template-columns: var(--c1, 132px) minmax(0, 1fr) auto; gap: 4px 20px; align-items: baseline; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.item > .lead-col { font-size: 13.5px; color: var(--muted); }
+.item p + p { color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+.item .end { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: flex-end; }
+.item .big { font-size: 26px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; }
+@media (max-width: 700px) { .item { grid-template-columns: minmax(0, 1fr); } .item .end { justify-content: flex-start; } }
+.score-line { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+.debt summary { grid-template-columns: 12px 70px minmax(0, 1.3fr) minmax(0, .6fr) 190px 150px; }
+@media (max-width: 760px) { .debt summary { grid-template-columns: 12px 60px minmax(0, 1fr); } }
+.fn > a { color: var(--text); font-weight: 600; text-decoration-color: var(--line); }
+.fn > a:hover { color: var(--gold-hi); text-decoration-color: currentColor; }
+.own td { background: var(--panel); }
+.own td:first-child { box-shadow: inset 2px 0 0 var(--gold); padding-left: 12px; }
+.delta.neg { color: var(--bad); }
+/* Wykres: jedna oś, cienkie linie, opisy w barwie tekstu, nie serii */
+.chart { min-width: 0; }
+.chart svg { display: block; width: 100%; overflow: visible; outline-offset: 4px; }
+.chart text { font: 12px var(--font); fill: var(--muted); font-variant-numeric: tabular-nums; }
+.chart .val { fill: var(--text); font-weight: 600; }
+.keys { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 13.5px; }
+.key { display: inline-flex; align-items: center; gap: 8px; }
+.key i { width: 16px; height: 3px; border-radius: 2px; flex: none; }
+.tip { position: fixed; z-index: 20; pointer-events: none; background: var(--raised); border: 1px solid var(--line); border-radius: var(--r-s); padding: 8px 12px; font-size: 13px; box-shadow: 0 12px 32px rgba(0, 0, 0, .4); max-width: 240px; }
+.tip b { display: block; margin-bottom: 4px; color: var(--muted); font-weight: 500; }
+.tip div { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.tip div strong { font-variant-numeric: tabular-nums; }
+.tip i { width: 12px; height: 3px; border-radius: 2px; flex: none; }
+details.more > summary { cursor: pointer; font-size: 13.5px; color: var(--muted); padding: 6px 0; }
+details.more > summary:hover { color: var(--text); }
 @media (prefers-reduced-motion: reduce) { .row summary::before { transition: none; } }
 </style>
 </head>
@@ -251,10 +307,8 @@ code { font: 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 <div id="shell">
 <div class="mock"><div class="wrap"><b>Mockup.</b> Wygląd według perfectdata.pl. Dane są fikcyjne, nic nie jest mierzone ani wysyłane.</div></div>
 <header class="top"><div class="wrap top-in">
-  <a class="logo" href="#raport" aria-label="PerfectData"><span class="logo-mark" aria-hidden="true">PD</span><span>Perfect<b>Data</b></span></a>
-  <nav class="mods agency-only" aria-label="Moduły">
-    <a href="#raport" id="navAudit">Audyt AI</a><a href="#zapytania" id="navLeads">Zapytania</a>
-  </nav>
+  <a class="logo" href="#pulpit" aria-label="PerfectData, pulpit"><span class="logo-mark" aria-hidden="true">PD</span><span>Perfect<b>Data</b></span></a>
+  <nav class="mods agency-only" aria-label="Moduły" id="mods"></nav>
   <a class="back agency-only" href="https://perfectdata.pl" target="_blank" rel="noopener">perfectdata.pl</a>
 </div></header>
 <main class="wrap page">
@@ -267,22 +321,9 @@ code { font: 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     </div>
     <button class="btn ghost" id="clientBtn" type="button">Podgląd dla klienta</button>
   </header>
-  <nav class="tabs" aria-label="Części audytu" id="tabs">
-    <a href="#raport">Raport</a><a href="#wytyczne">Wytyczne wskaźników</a><a href="#postep">Przed i po</a><a href="#cytowania">Cytowania w AI</a><a href="#strony" class="agency-only">Strony witryny</a>
-  </nav>
-  <nav class="tabs" aria-label="Części modułu zapytań" id="tabsLeads" hidden>
-    <a href="#zapytania">Zapytania</a><a href="#kwalifikator">Zasady kwalifikacji</a><a href="#widzet">Podgląd widżetu</a><a href="#wyniki">Wyniki</a>
-  </nav>
-
-  <section id="v-raport" class="stack" style="gap:44px" aria-label="Raport"></section>
-  <section id="v-wytyczne" class="stack" style="gap:44px" aria-label="Wytyczne wskaźników" hidden></section>
-  <section id="v-postep" class="stack" style="gap:36px" aria-label="Przed i po" hidden></section>
-  <section id="v-cytowania" class="stack" style="gap:36px" aria-label="Cytowania w AI" hidden></section>
-  <section id="v-strony" class="stack" aria-label="Strony witryny" hidden></section>
-  <section id="v-zapytania" class="stack" style="gap:32px" aria-label="Zapytania" hidden></section>
-  <section id="v-kwalifikator" class="stack" style="gap:44px" aria-label="Zasady kwalifikacji" hidden></section>
-  <section id="v-widzet" aria-label="Podgląd widżetu" hidden></section>
-  <section id="v-wyniki" class="stack" style="gap:44px" aria-label="Wyniki" hidden></section>
+  <nav class="tabs" aria-label="Części modułu" id="tabs"></nav>
+  <div id="views"></div>
+  <div class="tip" id="tip" role="status" hidden></div>
 </main>
 </div>
 
@@ -290,6 +331,17 @@ code { font: 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 const RULES = {"version":"2026-11-19","levels":{"good":85,"mid":60},"sources":{"g_guide":{"who":"Google","label":"Google: optymalizacja pod funkcje generatywnej AI w wyszukiwarce (10.07.2026)","url":"https://developers.google.com/search/docs/fundamentals/ai-optimization-guide","short":"Google: przewodnik AI"},"g_features":{"who":"Google","label":"Google: funkcje AI a Twoja witryna (10.12.2025)","url":"https://developers.google.com/search/docs/appearance/ai-features","short":"Google: funkcje AI"},"g_snippet":{"who":"Google","label":"Google: fragmenty i meta description","url":"https://developers.google.com/search/docs/appearance/snippet","short":"Google: fragmenty"},"g_title":{"who":"Google","label":"Google: linki tytułowe","url":"https://developers.google.com/search/docs/appearance/title-link","short":"Google: tytuły"},"g_helpful":{"who":"Google","label":"Google: tworzenie pomocnych, wiarygodnych treści","url":"https://developers.google.com/search/docs/fundamentals/creating-helpful-content","short":"Google: pomocne treści"},"g_article":{"who":"Google","label":"Google: dane strukturalne Article (8.09.2026)","url":"https://developers.google.com/search/docs/data-types/article","short":"Google: Article"},"g_faq":{"who":"Google","label":"Google: koniec wyników rozszerzonych FAQ od 7.05.2026 (omówienie ppc.land)","url":"https://ppc.land/google-kills-faq-rich-results-what-seos-saw-coming-since-2019/","short":"Google: FAQ"},"cwv":{"who":"Google","label":"web.dev: Core Web Vitals","url":"https://web.dev/articles/vitals","short":"web.dev"},"openai":{"who":"Boty AI","label":"OpenAI: przegląd botów (OAI-SearchBot, GPTBot, ChatGPT-User)","url":"https://developers.openai.com/api/docs/bots.md","short":"OpenAI"},"anthropic":{"who":"Boty AI","label":"Anthropic: boty ClaudeBot, Claude-User, Claude-SearchBot","url":"https://support.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler","short":"Anthropic"},"perplexity":{"who":"Boty AI","label":"Perplexity: boty PerplexityBot i Perplexity-User","url":"https://docs.perplexity.ai/docs/resources/perplexity-crawlers.md","short":"Perplexity"},"cloudflare":{"who":"Boty AI","label":"Cloudflare: zasady dostępu botów AI (Search, Agents, Training)","url":"https://developers.cloudflare.com/bots/additional-configurations/block-ai-bots/","short":"Cloudflare"},"ms_ads":{"who":"Microsoft","label":"Microsoft: optymalizacja treści pod odpowiedzi AI (10.2025)","url":"https://about.ads.microsoft.com/en/blog/post/october-2025/optimizing-your-content-for-inclusion-in-ai-search-answers","short":"Microsoft"},"bing_perf":{"who":"Microsoft","label":"Bing: raport AI Performance w Bing Webmaster Tools (02.2026)","url":"https://blogs.bing.com/webmaster/February-2026/Introducing-AI-Performance-in-Bing-Webmaster-Tools-Public-Preview","short":"Bing: raport AI"},"bing_guide":{"who":"Microsoft","label":"Bing: wytyczne dla webmasterów z częścią o GEO (omówienie Search Engine Journal, 02.2026)","url":"https://www.searchenginejournal.com/bing-adds-geo-to-official-guidelines-expands-ai-abuse-definitions/568442/","short":"Bing: wytyczne"},"geo":{"who":"Badanie","label":"Badanie GEO: Generative Engine Optimization (Aggarwal i in., KDD 2024)","url":"https://arxiv.org/html/2311.09735v3","short":"Badanie GEO"},"vercel":{"who":"Badanie","label":"Badanie Vercel i MERJ: boty AI a JavaScript (12.2024)","url":"https://vercel.com/blog/the-rise-of-the-ai-crawler","short":"Badanie Vercel"}},"groups":[{"id":"A","name":"Dostęp dla wyszukiwarek i botów AI","short":"Dostęp","lead":"Jeśli bot nie pobierze strony albo nie wolno mu pokazać fragmentu, reszta wskaźników nie ma znaczenia."},{"id":"B","name":"Zrozumiała struktura","short":"Struktura","lead":"Tytuł, nagłówki i dane strukturalne mówią, o czym jest strona i gdzie leży odpowiedź."},{"id":"C","name":"Wiarygodność i dowody","short":"Wiarygodność","lead":"Kto to napisał, kiedy i na jakiej podstawie."},{"id":"D","name":"Odpowiedź na pytania","short":"Odpowiedzi","lead":"Czy strona odpowiada na pytanie z frazy i na pytania poboczne, które AI zadaje przy okazji."},{"id":"E","name":"Szybkość i wygoda","short":"Szybkość","lead":"Strona ma działać szybko i poprawnie na telefonie."}],"rules":[{"code":"A1","group":"A","name":"Kod odpowiedzi","max":4,"partial":2,"required":true,"what":"Czy adres odpowiada poprawnie, bez łańcucha przekierowań.","how":"Pobieramy adres tak jak przeglądarka i liczymy przekierowania.","good":"Kod 200 po najwyżej 1 przekierowaniu.","mid":"Kod 200 po 2 lub więcej przekierowaniach.","bad":"Kod 4xx lub 5xx, pętla przekierowań albo brak odpowiedzi w 15 s.","fix":"Linkuj od razu do adresu docelowego i usuń pośrednie przekierowania.","basis":["g_features"]},{"code":"A2","group":"A","name":"Indeksowanie","max":6,"partial":3,"required":true,"what":"Czy strona może trafić do indeksu wyszukiwarki.","how":"Sprawdzamy znacznik meta robots, nagłówek X-Robots-Tag i adres kanoniczny.","good":"Brak noindex. Adres kanoniczny wskazuje tę samą stronę.","mid":"Brak noindex, ale brakuje adresu kanonicznego.","bad":"Jest noindex albo adres kanoniczny wskazuje inną stronę.","fix":"Usuń noindex i ustaw rel=canonical na własny adres strony.","basis":["g_features","g_guide"],"note":"Brak adresu kanonicznego nie blokuje indeksowania. Punktujemy go, bo wskazuje wyszukiwarce właściwy adres, gdy ta sama treść jest pod kilkoma adresami."},{"code":"A3","group":"A","name":"Fragment i cytat","max":4,"partial":2,"required":true,"what":"Czy wyszukiwarka może pokazać fragment strony. Bez tego strona nie będzie źródłem w odpowiedziach AI Google.","how":"Szukamy dyrektyw nosnippet, max-snippet i noarchive oraz atrybutu data-nosnippet.","good":"Brak nosnippet, max-snippet:0 i noarchive. Treść główna jest poza data-nosnippet.","mid":"max-snippet poniżej 160 znaków, data-nosnippet na części treści głównej albo noarchive.","bad":"nosnippet albo max-snippet:0.","fix":"Usuń ograniczenia fragmentu ze stron, które mają być cytowane. Atrybut data-nosnippet zostaw tylko na elementach, których nie chcesz pokazywać.","note":"Według wytycznych Bing dyrektywa noarchive wyłącza treść z odpowiedzi Copilota. Na Google nie wpływa, dlatego to stan „Do poprawy”, a nie „Źle”.","convention":"Próg 160 znaków jest umowny.","basis":["g_features","g_snippet","bing_guide"]},{"code":"A4","group":"A","name":"robots.txt dla botów wyszukiwania","max":8,"partial":4,"required":true,"what":"Czy boty, które budują wyniki wyszukiwania i odpowiedzi AI, mogą pobrać ten adres.","how":"Czytamy robots.txt i sprawdzamy reguły dla 5 botów: Googlebot, Bingbot, OAI-SearchBot (ChatGPT), PerplexityBot i Claude-SearchBot.","good":"Wszystkie 5 botów ma dostęp do adresu.","mid":"Googlebot i Bingbot mają dostęp, ale co najmniej 1 bot AI jest zablokowany.","bad":"Zablokowany Googlebot albo Bingbot.","fix":"Usuń regułę Disallow dla wymienionych botów. OpenAI i Perplexity podają, że zmiana działa po ok. 24 godzinach.","note":"Boty treningowe (GPTBot, ClaudeBot, Google-Extended) pokazujemy osobno i bez punktów. Ich blokada nie wpływa na wyszukiwanie. To decyzja właściciela strony.","basis":["openai","anthropic","perplexity","g_features"]},{"code":"A5","group":"A","name":"Serwer i CDN wpuszczają boty","max":4,"partial":2,"what":"Czy zapora, CDN lub hosting nie odrzucają botów mimo zgody w robots.txt.","how":"Wysyłamy 5 zapytań z nagłówkiem User-Agent każdego bota i porównujemy odpowiedź z odpowiedzią dla przeglądarki.","good":"5 z 5 zapytań zwraca kod 200 i tę samą treść co przeglądarce.","mid":"Kod 200 dla wszystkich, ale odpowiedź dla bota trwa ponad 5 s.","bad":"Co najmniej 1 bot dostaje kod 403, 429 albo stronę z testem zamiast treści.","fix":"W panelu CDN lub zapory zezwól na boty wyszukiwania AI. W Cloudflare: Security, Settings, AI Crawler and Agent access policies, kategoria Search na Allow.","note":"Test wychodzi z naszego serwera. Zapora, która weryfikuje adresy IP botów, może potraktować prawdziwego bota inaczej. Ostateczne potwierdzenie daje dziennik serwera.","convention":"Próg 5 s jest umowny.","basis":["g_features","perplexity","cloudflare"]},{"code":"A6","group":"A","name":"Treść bez JavaScript","max":4,"partial":2,"what":"Czy treść jest w kodzie HTML wysyłanym przez serwer. Według badania z 2024 r. boty OpenAI, Anthropic i Perplexity nie uruchamiają JavaScript.","how":"Porównujemy liczbę słów treści głównej w HTML z serwera i po uruchomieniu skryptów w przeglądarce.","good":"Co najmniej 90% słów treści głównej i nagłówek H1 są w HTML z serwera.","mid":"50-89% słów treści głównej.","bad":"Mniej niż 50% słów albo brak H1 w HTML z serwera.","fix":"Renderuj treść po stronie serwera. Skrypty zostaw do dodatków: opinii, czatu, liczników.","convention":"Progi 90% i 50% są umowne.","basis":["vercel","g_features","ms_ads"],"note":"Google uruchamia JavaScript, więc ten wskaźnik dotyczy pozostałych botów AI. Badanie jest z grudnia 2024 r. Jeśli boty zaczną uruchamiać skrypty, zmienimy wskaźnik w nowej wersji wytycznych."},{"code":"B1","group":"B","name":"Tytuł strony","max":4,"partial":2,"what":"Czy strona ma własny, opisowy tytuł.","how":"Odczytujemy znacznik title i porównujemy go z tytułami innych sprawdzonych stron witryny.","good":"Tytuł jest, opisuje treść i nie powtarza się na innych sprawdzonych stronach.","mid":"Tytuł powtarza się na innej stronie albo jest ogólnikiem (np. „Strona główna”).","bad":"Brak znacznika title albo jest pusty.","fix":"Napisz własny, opisowy tytuł dla każdej strony. Nazwę marki dodaj krótko na końcu.","note":"Google nie podaje limitu długości tytułu. Tytuł ponad ok. 60 znaków może zostać ucięty w wynikach, więc pokazujemy to jako wskazówkę bez punktów.","basis":["g_title","ms_ads"]},{"code":"B2","group":"B","name":"Opis strony","max":3,"partial":1,"what":"Meta description: krótki opis, którego wyszukiwarka może użyć jako fragmentu.","how":"Odczytujemy meta description i porównujemy z opisami innych sprawdzonych stron.","good":"Opis jest i nie powtarza się na innych sprawdzonych stronach.","mid":"Opis jest, ale taki sam jak na innej stronie.","bad":"Brak opisu.","fix":"Opisz w 1-2 zdaniach, co czytelnik znajdzie na stronie. Bez listy słów kluczowych.","note":"Google nie podaje limitu długości opisu.","basis":["g_snippet","ms_ads"]},{"code":"B3","group":"B","name":"Nagłówek H1","max":4,"partial":2,"what":"Czy strona ma jeden główny nagłówek zgodny z tytułem.","how":"Liczymy nagłówki H1 i porównujemy słowa H1 ze słowami tytułu (bez spójników i nazwy marki).","good":"Dokładnie jeden H1, a co najmniej połowa jego słów jest też w tytule.","mid":"Kilka H1 albo mniej niż połowa wspólnych słów z tytułem.","bad":"Brak H1 albo H1 jest pusty.","fix":"Zostaw jeden H1, który mówi to samo co tytuł strony.","convention":"Próg połowy wspólnych słów jest umowny.","basis":["g_title","ms_ads"]},{"code":"B4","group":"B","name":"Nagłówki sekcji","max":4,"partial":2,"what":"Czy treść jest podzielona na sekcje z konkretnymi nagłówkami.","how":"Sprawdzamy trzy warunki: co najmniej 2 nagłówki H2 na stronie powyżej 300 słów, poziomy po kolei (bez przeskoku z H2 do H4), brak ogólników z listy (np. „Informacje”, „Dowiedz się więcej”).","good":"Spełnione 3 z 3 warunków.","mid":"Spełnione 2 z 3 warunków.","bad":"Spełniony 1 warunek albo żaden.","fix":"Podziel treść na sekcje. Nagłówek ma mówić, o czym jest sekcja, najlepiej jako pytanie albo konkretny temat.","convention":"Próg 300 słów i lista ogólników są umowne.","basis":["g_guide","ms_ads","bing_perf"]},{"code":"B5","group":"B","name":"Bez ścian tekstu","max":3,"partial":1,"what":"Czy akapity są na tyle krótkie, że widać granice między myślami.","how":"Liczymy słowa w każdym akapicie treści głównej.","good":"Żaden akapit nie ma więcej niż 150 słów.","mid":"1-2 akapity powyżej 150 słów.","bad":"3 lub więcej akapitów powyżej 150 słów.","fix":"Podziel długie akapity. Kroki i porównania zapisz jako listę albo tabelę.","convention":"Próg 150 słów jest umowny.","basis":["ms_ads","g_guide"]},{"code":"B6","group":"B","name":"Treść jako tekst","max":3,"partial":1,"what":"Czy ważne informacje są tekstem, a nie tylko obrazem albo plikiem PDF.","how":"Liczymy zdjęcia w treści głównej z opisem alt. Sprawdzamy, czy cena, parametry i kroki są w HTML.","good":"Co najmniej 90% zdjęć w treści ma opis alt, a kluczowe dane są tekstem.","mid":"50-89% zdjęć ma opis alt.","bad":"Mniej niż 50% zdjęć ma opis alt albo kluczowe dane są tylko na obrazie lub w PDF.","fix":"Dodaj opisy alt. Parametry, ceny i kroki zapisz w HTML.","convention":"Progi 90% i 50% są umowne.","basis":["g_features","ms_ads"]},{"code":"B7","group":"B","name":"Dane strukturalne","max":4,"partial":2,"what":"Czy dane strukturalne są poprawne i zgodne z tym, co widać na stronie.","how":"Odczytujemy JSON-LD, sprawdzamy składnię i typ, porównujemy wartości (tytuł, autor, data, cena) z widoczną treścią.","good":"JSON-LD bez błędów, typ pasuje do strony (artykuł: Article lub BlogPosting, produkt: Product, strona główna: Organization i WebSite), wartości zgodne z treścią.","mid":"Brak danych strukturalnych albo dane niepełne.","bad":"Błąd składni albo wartości sprzeczne z widoczną treścią.","fix":"Dodaj JSON-LD właściwy dla rodzaju strony i trzymaj go w zgodzie z treścią.","note":"Google nie wymaga danych strukturalnych do odpowiedzi AI. Punktujemy je, bo dają wyniki rozszerzone i zaleca je Microsoft. Typ FAQPage jest bez punktów: od 7.05.2026 nie daje wyników rozszerzonych w Google.","basis":["g_features","g_guide","ms_ads","g_faq"]},{"code":"C1","group":"C","name":"Autor","max":5,"partial":2,"what":"Czy wiadomo, kto napisał treść.","how":"Szukamy podpisu autora, linku do strony o autorze lub „O nas” i właściwości author w danych strukturalnych.","good":"Widoczne imię i nazwisko autora, link do strony o autorze, autor w danych strukturalnych (Person z name i url).","mid":"Podpis jest, ale brakuje linku albo danych strukturalnych.","bad":"Brak informacji o autorze.","fix":"Podpisz treść prawdziwym autorem i podlinkuj jego stronę z opisem doświadczenia.","note":"Na stronach produktów i ofert zamiast autora sprawdzamy wydawcę (Organization). Zmyślony autor to oszustwo według Google.","basis":["g_helpful","g_article"]},{"code":"C2","group":"C","name":"Daty","max":4,"partial":2,"what":"Czy widać, kiedy treść powstała i kiedy była aktualizowana.","how":"Szukamy widocznej daty i porównujemy ją z datePublished i dateModified w danych strukturalnych (format ISO 8601).","good":"Widoczna data publikacji lub aktualizacji i ta sama data w danych strukturalnych.","mid":"Data jest widoczna, ale brakuje jej w danych strukturalnych albo różni się o ponad 1 dzień.","bad":"Brak daty. Także wtedy, gdy data zmieniła się między audytami, a treść nie.","fix":"Pokaż datę aktualizacji i zmieniaj ją tylko razem z treścią.","note":"Google ostrzega przed zmianą daty bez zmiany treści.","basis":["g_article","g_helpful","bing_perf"]},{"code":"C3","group":"C","name":"Źródła","max":4,"partial":2,"what":"Czy twierdzenia i liczby mają podane źródło.","how":"Liczymy linki z treści głównej do zewnętrznych źródeł. Nie liczymy linków do własnej witryny, sklepów i mediów społecznościowych.","good":"Co najmniej 2 źródła na 1000 słów treści, minimum 2.","mid":"1 źródło.","bad":"Brak źródeł.","fix":"Podlinkuj dane, normy i badania, na które się powołujesz.","note":"W badaniu GEO dodanie źródeł podniosło widoczność w odpowiedzi AI o 28%. Test był na symulowanym silniku, nie na ChatGPT ani Google.","convention":"Próg 2 źródeł na 1000 słów jest umowny.","basis":["geo","g_helpful","bing_perf"]},{"code":"C4","group":"C","name":"Konkretne dane","max":3,"partial":1,"what":"Czy treść podaje liczby i parametry zamiast ogólników.","how":"Liczymy zdania z liczbą i jednostką (np. 15 barów, 1450 W, 2 lata gwarancji) na 1000 słów treści.","good":"Co najmniej 5 takich zdań na 1000 słów.","mid":"2-4 na 1000 słów.","bad":"0-1 na 1000 słów.","fix":"Zamień ogólniki na parametry. Zamiast „cichy ekspres” napisz „ekspres o głośności 52 dB”.","note":"W badaniu GEO dodanie statystyk podniosło widoczność o 31% (symulowany silnik).","convention":"Progi są umowne.","basis":["geo","ms_ads"]},{"code":"C5","group":"C","name":"Dane firmy","max":4,"partial":2,"what":"Czy wiadomo, jaka firma stoi za stroną.","how":"Sprawdzamy trzy warunki: Organization w danych strukturalnych (name, url, logo), linki do stron „Kontakt” i „O nas”, te same dane firmy w stopce i na stronie kontaktowej.","good":"Spełnione 3 z 3 warunków.","mid":"Spełnione 2 z 3 warunków.","bad":"Spełniony 1 warunek albo żaden.","fix":"Dodaj dane Organization, stronę „O nas” i ujednolić nazwę, adres i NIP w całej witrynie.","basis":["g_helpful","bing_guide"]},{"code":"D1","group":"D","name":"Odpowiedź na początku","max":5,"partial":2,"ai":true,"what":"Czy strona od razu odpowiada na pytanie z frazy.","how":"Model AI czyta pierwsze 300 słów po H1 i wskazuje zdanie, które odpowiada na główne pytanie. Raport pokazuje to zdanie i jego pozycję.","good":"Bezpośrednia odpowiedź w pierwszych 100 słowach.","mid":"Odpowiedź między 101. a 300. słowem.","bad":"Brak bezpośredniej odpowiedzi w pierwszych 300 słowach.","fix":"Zacznij od odpowiedzi w 1-2 zdaniach. Szczegóły i wyjątki podaj niżej.","convention":"Progi 100 i 300 słów są umowne.","basis":["bing_guide","ms_ads"]},{"code":"D2","group":"D","name":"Pytania poboczne","max":7,"partial":3,"ai":true,"what":"Na ile pytań pobocznych odpowiada strona. Wyszukiwarki AI rozbijają jedno zapytanie na kilka i szukają odpowiedzi na każde.","how":"Przy pierwszym audycie ustalamy 10 pytań pobocznych do frazy i zamrażamy listę. Przy każdym audycie model AI sprawdza, na które pytania strona odpowiada, i podaje cytat.","good":"Odpowiedź na co najmniej 8 z 10 pytań.","mid":"Odpowiedź na 5-7 pytań.","bad":"Odpowiedź na 4 pytania lub mniej.","fix":"Dopisz brakujące odpowiedzi na tej samej stronie, każdą pod własnym nagłówkiem.","note":"Nie twórz osobnych stron pod każdą odmianę pytania. Google traktuje to jako nadużycie (scaled content abuse).","convention":"Liczba 10 pytań i progi są umowne. Listę pytań zatwierdza opiekun klienta.","basis":["g_guide","g_features","bing_perf"]},{"code":"D3","group":"D","name":"Jeden temat, jedna nazwa","max":3,"partial":1,"what":"Czy strona trzyma się jednego tematu i nazywa go zawsze tak samo.","how":"Porównujemy nazwę głównego tematu w tytule, H1, pierwszym akapicie i danych strukturalnych.","good":"Ta sama nazwa w 4 z 4 miejsc.","mid":"Ta sama nazwa w 3 z 4 miejsc.","bad":"Ta sama nazwa w 2 miejscach lub mniej.","fix":"Nazywaj produkt, usługę lub temat zawsze tak samo. Jedna strona, jeden temat.","basis":["bing_guide","bing_perf"]},{"code":"E1","group":"E","name":"Core Web Vitals","max":6,"partial":3,"parts":true,"what":"Szybkość ładowania, reakcja na kliknięcie i stabilność układu u prawdziwych użytkowników.","how":"Bierzemy dane użytkowników Chrome z 28 dni (75. percentyl, telefon) z PageSpeed Insights. Gdy ich brak, pokazujemy pomiar laboratoryjny i to oznaczamy.","good":"LCP do 2,5 s, INP do 200 ms, CLS do 0,1. Po 2 pkt za każdy z trzech wskaźników.","mid":"LCP do 4,0 s, INP do 500 ms, CLS do 0,25. Po 1 pkt.","bad":"Powyżej tych wartości. 0 pkt.","fix":"Zmniejsz i wczytuj z wyprzedzeniem główne zdjęcie, ogranicz skrypty, podaj wymiary obrazów i miejsc na reklamy.","basis":["cwv","g_guide"]},{"code":"E2","group":"E","name":"Wygląd na telefonie","max":2,"partial":1,"what":"Czy strona dopasowuje się do ekranu telefonu.","how":"Sprawdzamy meta viewport i szerokość strony przy ekranie 360 px.","good":"Jest meta viewport i strona nie przewija się w poziomie.","mid":"Jest meta viewport, ale strona przewija się w poziomie.","bad":"Brak meta viewport.","fix":"Dodaj meta viewport i usuń elementy o stałej szerokości.","basis":["g_guide"]},{"code":"E3","group":"E","name":"HTTPS","max":2,"partial":1,"what":"Czy strona działa bezpiecznie po HTTPS.","how":"Sprawdzamy certyfikat, przekierowanie z http i zasoby ładowane po http.","good":"HTTPS działa, http przekierowuje, żaden zasób nie ładuje się po http.","mid":"HTTPS działa, ale część zasobów ładuje się po http.","bad":"Brak HTTPS albo błąd certyfikatu.","fix":"Włącz przekierowanie na HTTPS i popraw adresy zasobów.","basis":["g_guide"]}],"unscored":[{"name":"Długość tytułu ponad 60 znaków","why":"Google nie podaje limitu długości. Długi tytuł może zostać ucięty w wynikach, więc to wskazówka, nie błąd.","basis":["g_title"]},{"name":"Długość treści na tle konkurencji","why":"Google pisze wprost, że nie ma idealnej długości strony. Dopisywanie tekstu dla samej długości nie pomaga.","basis":["g_guide"]},{"name":"Sekcje po 200-500 słów (CitationOne: Chunk Optimization)","why":"Google: „There's no requirement to break your content into tiny pieces for AI to better understand it.” Dzielimy treść dla czytelnika, nie pod licznik słów.","basis":["g_guide"]},{"name":"Nasycenie terminami na tle TOP 10 (TF-IDF)","why":"Google podaje, że systemy rozumieją synonimy i intencję. Bing zalicza sztucznie konstruowany język do nadużyć. W badaniu GEO upychanie słów kluczowych obniżyło widoczność o 8%.","basis":["g_guide","bing_guide","geo"]},{"name":"Strona czynna zamiast biernej (CitationOne: Semantic Roles)","why":"Nie znaleźliśmy oficjalnego źródła ani badania, które to potwierdza.","basis":[]},{"name":"Plik llms.txt","why":"Google go nie używa. Plik nie pomaga i nie szkodzi w Google. Można go mieć dla innych usług.","basis":["g_guide","g_features"]},{"name":"FAQPage w danych strukturalnych","why":"Od 7.05.2026 wyniki rozszerzone FAQ nie pojawiają się w Google. Znaczniki można zostawić. Sekcja pytań i odpowiedzi w treści nadal ma sens i liczy się we wskaźniku D2.","basis":["g_faq","bing_perf"]},{"name":"Boty treningowe: GPTBot, ClaudeBot, Google-Extended","why":"Służą do trenowania modeli, nie do wyszukiwania. Blokada nie zmienia widoczności w ChatGPT, Claude ani Google. To decyzja właściciela strony.","basis":["openai","anthropic","g_features"]},{"name":"IndexNow","why":"Microsoft zaleca go do szybkiego zgłaszania zmian w Bing. Nie wpływa na Google, więc pokazujemy go jako wskazówkę.","basis":["bing_perf"]}]};
 const SAMPLE = {"client":"Sklep Przykładowy (dane fikcyjne)","url":"https://sklep-przykladowy.example/poradnik/ekspres-cisnieniowy-do-domu","title":"Jaki ekspres ciśnieniowy do domu wybrać","phrase":"jaki ekspres ciśnieniowy do domu","audits":[{"id":"a","label":"przed pracami","date":"14.10.2026"},{"id":"b","label":"po pracach","date":"18.11.2026"}],"results":{"A1":{"a":["good","Kod 200, 1 przekierowanie (z http na https)"],"b":["good","Kod 200, 1 przekierowanie (z http na https)"]},"A2":{"a":["good","Brak noindex, adres kanoniczny wskazuje tę stronę"],"b":["good","Brak noindex, adres kanoniczny wskazuje tę stronę"]},"A3":{"a":["good","Brak ograniczeń fragmentu"],"b":["good","Brak ograniczeń fragmentu"]},"A4":{"a":["mid","4 z 5 botów ma dostęp, zablokowany OAI-SearchBot","robots.txt, wiersze 14-15: „User-agent: OAI-SearchBot” i „Disallow: /”. Bez punktów: GPTBot zablokowany, ClaudeBot i Google-Extended dozwolone."],"b":["good","5 z 5 botów ma dostęp","Bez punktów: GPTBot nadal zablokowany. To decyzja właściciela i nie wpływa na wyszukiwanie."]},"A5":{"a":["bad","3 z 5: PerplexityBot i Claude-SearchBot dostają kod 403","Odpowiedź zawiera nagłówek cf-mitigated: challenge. Zapora CDN blokuje kategorię botów AI."],"b":["good","5 z 5 zapytań z kodem 200"]},"A6":{"a":["mid","64% słów treści w HTML z serwera","Tabela porównawcza modeli (412 słów) pojawia się dopiero po uruchomieniu skryptu."],"b":["good","97% słów treści w HTML z serwera"]},"B1":{"a":["good","Unikalny, 71 znaków","Wskazówka bez punktów: tytuł ponad 60 znaków może zostać ucięty w wynikach."],"b":["good","Unikalny, 54 znaki"]},"B2":{"a":["bad","Brak meta description"],"b":["good","Jest, 148 znaków, nie powtarza się"]},"B3":{"a":["mid","1 H1: „Poradnik”, 0 wspólnych słów z tytułem"],"b":["good","1 H1, 5 z 6 słów jest też w tytule"]},"B4":{"a":["mid","2 z 3: nagłówek „Informacje” jest ogólnikiem","6 nagłówków H2, poziomy po kolei."],"b":["good","3 z 3: 8 nagłówków H2, poziomy po kolei, bez ogólników"]},"B5":{"a":["mid","2 akapity powyżej 150 słów (212 i 187 słów)"],"b":["good","Najdłuższy akapit ma 96 słów"]},"B6":{"a":["mid","7 z 12 zdjęć ma opis alt (58%)"],"b":["good","12 z 12 zdjęć ma opis alt"]},"B7":{"a":["mid","Article bez autora i daty aktualizacji"],"b":["good","Article, BreadcrumbList i Organization, wartości zgodne z treścią"]},"C1":{"a":["bad","Brak podpisu autora"],"b":["good","Podpis, strona autora i Person w danych strukturalnych"]},"C2":{"a":["mid","Data widoczna (3.02.2026), brak jej w danych strukturalnych"],"b":["good","Aktualizacja 12.11.2026, zgodna z dateModified","Treść zmieniła się między audytami (inny skrót treści), więc zmiana daty jest uzasadniona."]},"C3":{"a":["bad","0 źródeł na 1840 słów"],"b":["good","5 źródeł na 2130 słów"]},"C4":{"a":["mid","3 zdania z liczbą i jednostką na 1000 słów"],"b":["good","8 zdań z liczbą i jednostką na 1000 słów"]},"C5":{"a":["mid","2 z 3: brak strony „O nas”"],"b":["mid","2 z 3: strona „O nas” jest w przygotowaniu"]},"D1":{"a":["mid","Odpowiedź dopiero w 214. słowie","Wskazane zdanie: „Do domu najczęściej wystarczy ekspres kolbowy albo automatyczny o ciśnieniu 15 barów.”"],"b":["good","Odpowiedź w 31. słowie","Wskazane zdanie: „Do domu najczęściej wystarczy ekspres kolbowy albo automatyczny o ciśnieniu 15 barów.”"]},"D2":{"a":["mid","Odpowiedź na 5 z 10 pytań"],"b":["good","Odpowiedź na 9 z 10 pytań"]},"D3":{"a":["good","4 z 4: „ekspres ciśnieniowy”"],"b":["good","4 z 4: „ekspres ciśnieniowy”"]},"E1":{"a":["parts","LCP 3,4 s; INP 180 ms; CLS 0,21","Dane użytkowników Chrome z 28 dni, telefon.",[1,2,1]],"b":["parts","LCP 2,3 s; INP 170 ms; CLS 0,12","Dane użytkowników Chrome z 28 dni, telefon. CLS: baner z kodem rabatowym przesuwa treść.",[2,2,1]]},"E2":{"a":["good","Meta viewport jest, brak przewijania w poziomie"],"b":["good","Meta viewport jest, brak przewijania w poziomie"]},"E3":{"a":["good","HTTPS działa, brak zasobów po http"],"b":["good","HTTPS działa, brak zasobów po http"]}},"questions":[["Czym różni się ekspres kolbowy od automatycznego?",true,true],["Jakie ciśnienie powinien mieć ekspres do domu?",true,true],["Ile kosztuje dobry ekspres ciśnieniowy do domu?",false,true],["Czy warto dopłacić do ekspresu z młynkiem?",true,true],["Jak często trzeba odkamieniać ekspres?",false,true],["Jaki ekspres wybrać do małej kuchni?",false,true],["Ile prądu zużywa ekspres ciśnieniowy?",false,true],["Jaka kawa nadaje się do ekspresu ciśnieniowego?",true,true],["Czy ekspres ciśnieniowy spieni mleko?",true,true],["Ile lat działa ekspres i jak wygląda serwis?",false,false]],"engines":["ChatGPT (wyszukiwanie)","Perplexity","Gemini z wyszukiwarką Google"],"runs":3,"citations":[["jaki ekspres ciśnieniowy do domu",[0,1,0],[2,3,1]],["Ile kosztuje dobry ekspres ciśnieniowy do domu?",[0,0,0],[1,2,0]],["Jak często trzeba odkamieniać ekspres?",[0,0,0],[3,2,2]],["Ile prądu zużywa ekspres ciśnieniowy?",[0,0,0],[0,1,0]]],"rivals":[["porownywarka.example",21],["magazyn-kawowy.example",14],["forum-baristow.example",9]],"pages":[["/poradnik/ekspres-cisnieniowy-do-domu","jaki ekspres ciśnieniowy do domu",97,"Brak strony „O nas”"],["/ekspres-kolbowy-model-x","ekspres kolbowy model x opinie",88,"CLS 0,14: zdjęcia bez wymiarów"],["/","sklep z ekspresami do kawy",81,"Brak strony „O nas”"],["/poradnik/jak-odkamienic-ekspres","jak odkamienić ekspres",74,"Odpowiedź na 5 z 10 pytań pobocznych"],["/ekspresy-kolbowe","ekspresy kolbowe",68,"Brak opisu strony, 2 akapity powyżej 150 słów"],["/blog/nowosci-w-ofercie","nowości ekspresy 2026",47,"PerplexityBot dostaje kod 403"]]};
 const LEADS = {"version":"2026-11-19","company":"PerfectData","pages":"strona główna, cennik i 4 strony usług","levels":{"hot":70,"talk":40},"questions":[{"id":"need","text":"W czym możemy pomóc?","label":"Potrzeba","options":[["SEO i GEO: widoczność w Google i w odpowiedziach AI",25],["Google Ads",25],["Meta Ads",20],["Strona lub landing page",20],["Jeszcze nie wiem, potrzebuję diagnozy",10]]},{"id":"business","text":"Co sprzedajesz?","label":"Rodzaj firmy","options":[["Produkty lub usługi dla firm",15],["Prowadzę sklep internetowy",15],["Usługi dla klientów indywidualnych",10],["Coś innego",5]]},{"id":"when","text":"Kiedy chcesz zacząć?","label":"Termin","options":[["Od razu",25],["W ciągu miesiąca",20],["W tym kwartale",10],["Na razie się rozglądam",0]]},{"id":"budget","text":"Jaki miesięczny budżet na obsługę przewidujesz? Bez budżetu na reklamy.","label":"Budżet","options":[["Powyżej 5000 zł",25],["2000-5000 zł",20],["1000-2000 zł",15],["Poniżej 1000 zł",5],["Jeszcze nie wiem",10]]}],"phone_points":10,"greeting":"Dzień dobry. Jestem asystentem AI PerfectData. Zadam 4 krótkie pytania, żeby od razu skierować Cię do właściwej osoby.","url_prompt":"Podaj adres strony. Przed rozmową sprawdzimy, jak widzą ją wyszukiwarki i boty AI.","thanks":"Dziękujemy. Odezwiemy się najpóźniej w następnym dniu roboczym.","leads":[{"at":"19.11.2026, 09:12","company":"Hurtownia Narzędzi Stalmet (przykład)","person":"Anna K.","email":"anna@stalmet.example","phone":true,"answers":[0,0,0,0],"status":"Nowe","consent":false,"page":"/uslugi/seo-geo","nip":["good","Czynny podatnik VAT, wpis w KRS bez zmian."],"shop":"stalmet.example","audit":48,"summary":"Sprzedaje narzędzia firmom. Chce, żeby oferta pojawiała się w odpowiedziach AI na pytania o dobór narzędzi."},{"at":"19.11.2026, 08:40","company":"Rowery Koło (przykład)","person":"Marek W.","email":"marek@rowery-kolo.example","phone":true,"answers":[1,1,1,1],"status":"W kontakcie","consent":true,"page":"/uslugi/google-ads","nip":null,"shop":"rowery-kolo.example","audit":61,"summary":"Sklep internetowy. Kampanie prowadzi sam, a koszt zamówienia rośnie od wiosny."},{"at":"18.11.2026, 21:57","company":"Dom i Styl (przykład)","person":"Katarzyna B.","email":"biuro@dom-i-styl.example","phone":false,"answers":[3,1,1,1],"status":"Nowe","consent":false,"page":"/","nip":["bad","Spółka w likwidacji według KRS. Sprawdź kontrahenta przed wyceną."],"shop":"dom-i-styl.example","audit":39,"summary":"Chce nową stronę sprzedażową. Zapytanie wysłane poza godzinami pracy."},{"at":"18.11.2026, 14:05","company":"Kancelaria Podatkowa Nowak (przykład)","person":"Ewa N.","email":"ewa@kancelaria-nowak.example","phone":false,"answers":[2,2,0,3],"status":"Oferta wysłana","consent":false,"page":"/uslugi/meta-ads","nip":null,"shop":"kancelaria-nowak.example","audit":44,"summary":"Szuka klientów indywidualnych z okolicy. Chce zacząć od małej kampanii."},{"at":"18.11.2026, 11:30","company":"Herbaty Świata (przykład)","person":"Piotr N.","email":"piotr@herbaty-swiata.example","phone":true,"answers":[4,1,2,4],"status":"Nowe","consent":true,"page":"/diagnoza","nip":null,"shop":null,"audit":null,"summary":"Po bezpłatnej diagnozie chce omówić najsłabszy obszar: pomiar konwersji."},{"at":"17.11.2026, 16:48","company":"Auto Części 24 (przykład)","person":"Tomasz R.","email":"tomasz@auto-czesci-24.example","phone":false,"answers":[3,3,3,3],"status":"Nowe","consent":false,"page":"/blog/","nip":null,"shop":null,"audit":null,"summary":"Pyta ogólnie o koszt strony. Bez konkretnego terminu."}],"knowledge":{"library":6,"pages":14,"read_at":"18.11.2026"},"limits":{"messages":12,"daily":300,"budget":150},"funnel":[["Odsłony stron z widżetem",1265],["Rozpoczęte rozmowy",148],["Odpowiedzi na wszystkie pytania",61],["Zostawiony kontakt",29],["Zapytania pilne",11]],"ab":{"days":30,"a":["Zwykły formularz",1240,21],"b":["Kwalifikator",1265,29]}};
+const PLAT = {"today":"2026-11-19","org":{"name":"PerfectData","user":"Jan K.","site":"perfectdata.pl"},"states":{"silnik":["good","Działa w silniku"],"plan":["plain","Do zbudowania"],"zgoda":["mid","Czeka na zgodę Google i Meta"]},"functions":[{"module":"Zapytania","items":[["Kwalifikator zamiast formularza: pytania, punkty, progi","kwalifikator","plan","Etap 1 planu."],["Lista zapytań z oceną, sprawdzeniem firmy i podstawą kontaktu","zapytania","plan","Etap 1. Sprawdzenie firmy i podstawy kontaktu już działają w silniku."],["Widżet na stronę z informacją o AI i klauzulą RODO","widzet","plan","Etap 1. Kod trafi na stronę dopiero po Twojej zgodzie."],["Czat AI z bazy wiedzy firmy, z limitami","kwalifikator","plan","Etap 3."],["Lejek i test: formularz czy kwalifikator","wyniki","plan","Etap 3."]]},{"module":"Klienci","items":[["Kontakty z zapisaną podstawą kontaktu","kontakty","silnik",""],["Szkic wiadomości: regułowy albo AI z treści strony odbiorcy","wiadomosc","silnik",""],["Ekran ryzyka prawnego przed wysyłką, decyzja należy do Ciebie","wiadomosc","silnik","Potwierdzenie trafia do dziennika."],["Blokada po sprzeciwie odbiorcy","wiadomosc","silnik","Jedyna twarda blokada."],["Dziennik decyzji i wysłanych wiadomości","wysylka","silnik",""],["Wysyłka z własnej skrzynki","wysylka","silnik","Dziś przez program pocztowy albo plik .eml. Gmail i Microsoft 365 są w planie."],["Zapytania ofertowe firm jako kanał o najniższym ryzyku","rfq","plan","Podstawa „zapytanie ofertowe” już jest. Do zbudowania jest zbieranie zapytań ze źródeł."],["Opis idealnego klienta ze strony firmy","firmy","plan",""],["Wyszukiwanie firm: branża, region, wielkość, wiek, kondycja, przetargi","firmy","plan",""],["Sekwencje z przypomnieniami i dziennymi limitami","wysylka","plan",""],["Wykrywanie odpowiedzi i wypisań","wysylka","plan","Wypisanie można dziś zaznaczyć ręcznie w karcie kontaktu."]]},{"module":"Audyt AI","items":[["Wynik 0-100 z 24 wskaźników i jawnymi progami","raport","plan","Etap 2. Wytyczne są gotowe."],["Lista zadań z punktami i warunkiem zaliczenia","raport","plan","Etap 2."],["Wytyczne wskaźników ze źródłami","wytyczne","plan","Treść gotowa, ekran w etapie 2."],["Porównanie przed i po","postep","plan","Etap 2."],["Cytowania w wyszukiwarkach AI","cytowania","plan","Etap 3."],["Audyt wielu stron z mapy witryny","strony","plan","Etap 3."],["Raport dla klienta pod publicznym linkiem","raport","plan","Etap 2. Przycisk „Podgląd dla klienta”."]]},{"module":"SEO i strona","items":[["Audyt techniczny: bezpieczeństwo, platforma, szybkość, SEO, analityka i RODO","technika","silnik","Ten sam silnik co w PrestaCheck."],["Lista poprawek z priorytetem","technika","silnik","Szacowany czas pracy jest do dodania."],["Porównanie z konkurentami","konkurenci","silnik",""],["Widoczność w Google z Search Console klienta","google","plan","Wymaga podłączenia konta klienta."],["Wizytówka Google: oceny i kompletność","google","plan",""]]},{"module":"Reklamy","items":[["Podłączenie kont Google Ads i Meta","reklamy","zgoda","Google: dostęp Basic do API. Meta: weryfikacja firmy i przegląd aplikacji."],["Wydatki, kliknięcia, konwersje i koszt konwersji w jednym widoku","reklamy","zgoda",""],["Porównanie okresów","reklamy","zgoda",""],["Alerty: budżet, wzrost kosztu konwersji o 30%, wstrzymana kampania","alerty","zgoda",""],["Wstrzymanie i wznowienie kampanii, zmiana budżetu z potwierdzeniem","kampanie","zgoda",""],["Dziennik zmian w kampaniach","kampanie","zgoda",""]]},{"module":"Przetargi","items":[["Codzienny import ogłoszeń z BZP i TED","przetargi","silnik","Sprawdzony na 2195 prawdziwych ogłoszeniach."],["Profil firmy: CPV, słowa kluczowe, województwa, wartość","profil","silnik",""],["Dopasowanie 0-100 z uzasadnieniem","przetargi","silnik",""],["Karta przetargu: wadium, kryteria, terminy, warunki ze wskazaniem źródła","przetarg","silnik",""],["Analiza SWZ przez AI: warunki, kary, płatności, ryzyka","przetarg","silnik","Wymaga klucza API."],["Pytania do dokumentacji","przetarg","silnik",""],["Kalendarz terminów","terminy","silnik","Plik .ics do własnego kalendarza."],["Poranny e-mail z nowymi przetargami","profil","plan","Wymaga wysyłki e-maili z platformy."],["Wyniki przetargów: kto wygrywa i za ile","przetargi","plan","Etap 4."]]},{"module":"Oferty i wnioski","items":[["Biblioteka firmy: referencje, osoby, certyfikaty, polisy, opisy","biblioteka","silnik",""],["Szkic oferty z ogłoszenia, SWZ i biblioteki","oferta","silnik",""],["Zdania bez źródła oznaczone do sprawdzenia","oferta","silnik",""],["Lista dokumentów do złożenia","oferta","silnik","Lista działa. Odhaczanie gotowych dokumentów jest do dodania."],["Eksport do .docx","oferta","silnik",""],["Wniosek o dotację według regulaminu naboru","dotacje","silnik",""],["Baza otwartych naborów","dotacje","plan","Dziś nabór wpisujesz ręcznie."],["Ocena, czy firma kwalifikuje się do naboru","dotacje","plan",""],["Praca kilku osób nad jedną ofertą","oferta","plan","Wymaga zaproszeń do zespołu."]]},{"module":"Kontrahenci","items":[["Karta firmy po NIP: wykaz VAT, rachunki, KRS, zarząd","kontrahent","silnik",""],["Ocena ryzyka płatniczego 0-100 z listą sygnałów","kontrahent","silnik","Tylko dane publiczne."],["Decyzje UOKiK o zatorach płatniczych","kontrahent","silnik",""],["Obserwowane firmy i alerty o zmianach","obserwowane","silnik",""],["Należności: wezwanie do zapłaty i warunki wpisu do BIG","naleznosci","silnik","Długi widzi tylko Twoja firma."],["Upadłości i restrukturyzacje z Krajowego Rejestru Zadłużonych","kontrahent","plan","Etap 4."],["Szacowany czas płacenia dostawcom ze sprawozdań","kontrahent","plan","Etap 4."],["Wpis długu do BIG z platformy","naleznosci","plan","Wymaga umowy z biurem."]]}],"contacts":[{"id":1,"company":"Hurtownia Narzędzi Stalmet (przykład)","person":"Anna K.","email":"anna@stalmet.example","site":"stalmet.example","basis":"rfq","detail":"zapytanie z widżetu: SEO i GEO","at":"19.11.2026","unsub":null},{"id":2,"company":"Rowery Koło (przykład)","person":"Marek W.","email":"marek@rowery-kolo.example","site":"rowery-kolo.example","basis":"consent","detail":"zgoda zaznaczona w widżecie","at":"19.11.2026","unsub":null},{"id":3,"company":"Biuro Rachunkowe Liczydło (przykład)","person":"Zofia M.","email":"biuro@liczydlo.example","site":"liczydlo.example","basis":"client","detail":"kampania Google Ads od 03.2026","at":"02.03.2026","unsub":null},{"id":4,"company":"Auto Części 24 (przykład)","person":"Tomasz R.","email":"tomasz@auto-czesci-24.example","site":"auto-czesci-24.example","basis":"none","detail":"","at":"","unsub":null},{"id":5,"company":"Hurtownia Elektryczna Volt (przykład)","person":"","email":"oferty@volt.example","site":"volt.example","basis":"rfq","detail":"zapytanie ofertowe na stronie firmy: kampania Google Ads","at":"17.11.2026","unsub":null},{"id":6,"company":"Meble Dąb (przykład)","person":"Piotr S.","email":"piotr@meble-dab.example","site":"meble-dab.example","basis":"none","detail":"","at":"","unsub":"03.11.2026"}],"bases":{"none":"Brak podstawy, adres z publicznego źródła","rfq":"Zapytanie ofertowe od tej firmy","consent":"Zgoda na informacje handlowe e-mailem","client":"Obecny klient (wcześniejsza współpraca)"},"kinds":{"rfq_reply":["Odpowiedź na zapytanie ofertowe","Firma sama poprosiła o oferty i podała adres. Odpowiadasz na jej prośbę."],"consented":["Oferta do firmy, która wyraziła zgodę","Odbiorca zgodził się na informacje handlowe e-mailem albo jest Twoim klientem i o to prosił."],"consent_request":["Prośba o zgodę na przesłanie oferty","Krótka wiadomość bez treści reklamowej z pytaniem, czy możesz przesłać ofertę."],"cold_offer":["Oferta bez zgody odbiorcy","Informacja handlowa wysłana bez wcześniejszej zgody."]},"law":{"pke":["Art. 398 Prawa komunikacji elektronicznej: informacja handlowa wymaga uprzedniej zgody odbiorcy, także firmy.","Kara Prezesa UKE: do 3% przychodu z poprzedniego roku albo do 1 mln zł, zależnie od tego, która kwota jest wyższa (art. 444 ust. 1 pkt 81 i art. 446 ust. 5).","Dodatkowo wykroczenie zagrożone grzywną, ścigane na żądanie odbiorcy (art. 448), oraz roszczenia z tytułu czynu nieuczciwej konkurencji."],"consent_request":["Sąd Apelacyjny w Warszawie (wyrok z 12.12.2019, VII AGa 1567/18) uznał SMS z prośbą o zgodę za informację handlową, bo pośrednio promował nadawcę. Wyrok zapadł na gruncie poprzednich przepisów.","Nie znamy orzeczenia, które pod nowymi przepisami ocenia e-mail z samą prośbą o zgodę. Sprawa jest sporna."],"unsub":"Art. 21 RODO: po sprzeciwie dane nie mogą być przetwarzane na potrzeby marketingu bezpośredniego.","ack":"Zapoznałem się z ryzykiem. Sam decyduję o wysłaniu tej wiadomości i odpowiedzialność za wysyłkę ponosi moja firma."},"log":[{"at":"18.11.2026, 15:02","who":"Jan K.","company":"Hurtownia Elektryczna Volt (przykład)","kind":"rfq_reply","level":"low","ack":false},{"at":"12.11.2026, 10:41","who":"Jan K.","company":"Auto Części 24 (przykład)","kind":"consent_request","level":"high","ack":true}],"icp":"Sklepy internetowe i firmy usługowe, które mają już stronę i wydają na reklamę co najmniej 1000 zł miesięcznie, ale nie mierzą, z której kampanii przychodzą zamówienia.","search":[{"company":"Sklep Ogrodnik (przykład)","pkd":"Sklepy internetowe","region":"mazowieckie","size":"10-49 osób","age":9,"condition":"dobra","tenders":false,"reason":"Reklamy Google prowadzą na stronę bez pomiaru konwersji."},{"company":"Kwiaciarnia Internetowa Fiołek (przykład)","pkd":"Sklepy internetowe","region":"łódzkie","size":"do 9 osób","age":4,"condition":"dobra","tenders":false,"reason":"Strona blokuje boty wyszukiwarek AI w robots.txt."},{"company":"Okna Jasne (przykład)","pkd":"Budownictwo i wykończenia","region":"mazowieckie","size":"50-249 osób","age":17,"condition":"dobra","tenders":true,"reason":"Startuje w przetargach, a strona nie ma opisu realizacji."},{"company":"Gabinet Stomatologiczny Uśmiech (przykład)","pkd":"Usługi medyczne","region":"śląskie","size":"do 9 osób","age":6,"condition":"dobra","tenders":false,"reason":"Wizytówka Google bez godzin otwarcia i zdjęć."},{"company":"Transport Szybki (przykład)","pkd":"Transport i logistyka","region":"łódzkie","size":"10-49 osób","age":2,"condition":"podwyższone ryzyko","tenders":true,"reason":"Młoda spółka z szybkim wzrostem zatrudnienia, brak strony ofertowej."},{"company":"Hotel Nad Stawem (przykład)","pkd":"Hotele i gastronomia","region":"mazowieckie","size":"10-49 osób","age":12,"condition":"dobra","tenders":false,"reason":"Rezerwacje tylko przez pośredników, własna strona bez systemu rezerwacji."},{"company":"Meble Dąb (przykład)","pkd":"Sklepy internetowe","region":"śląskie","size":"10-49 osób","age":14,"condition":"dobra","tenders":false,"reason":"Wypisał się z wiadomości 03.11.2026. Platforma nie pozwoli wysłać mu oferty."},{"company":"Budimpex S.A. (przykład)","pkd":"Budownictwo i wykończenia","region":"mazowieckie","size":"50-249 osób","age":21,"condition":"podwyższone ryzyko","tenders":true,"reason":"Decyzja UOKiK o opóźnianiu płatności. Sprawdź przed wyceną."}],"rfqs":[{"contact":5,"company":"Hurtownia Elektryczna Volt (przykład)","title":"Szukamy agencji do prowadzenia kampanii Google Ads","where":"strona firmy, zakładka „Zapytania ofertowe”","published":"17.11.2026","deadline":"28.11.2026","address":"oferty@volt.example"},{"contact":null,"company":"Spółdzielnia Mleczarska Łąka (przykład)","title":"Nowa strona internetowa z katalogiem produktów","where":"Baza Konkurencyjności (przykład wpisu)","published":"14.11.2026","deadline":"02.12.2026","address":"zamowienia@laka.example"},{"contact":null,"company":"Centrum Szkoleń Kurs (przykład)","title":"Pozycjonowanie i treści na blog przez 12 miesięcy","where":"strona firmy","published":"10.11.2026","deadline":"25.11.2026","address":"biuro@kurs.example"}],"sequence":{"name":"Odpowiedź na zapytanie ofertowe","limit":30,"steps":[["Dzień 0","Odpowiedź z ofertą","Wysyłasz po potwierdzeniu ekranu ryzyka."],["Dzień 4","Przypomnienie","Krótkie pytanie, czy oferta dotarła. Tylko gdy nie było odpowiedzi."],["Dzień 10","Ostatnia wiadomość","Informacja, że nie będziesz pisać ponownie."]],"stops":["Odbiorca odpisał","Odbiorca się wypisał","Minął termin składania ofert"],"running":[["Hurtownia Elektryczna Volt (przykład)","Dzień 0 wysłany 18.11.2026","Przypomnienie 22.11.2026"],["Centrum Szkoleń Kurs (przykład)","Odpowiedź odbiorcy 16.11.2026","Zatrzymana"]]},"tech":{"site":"sklep-przykladowy.example","at":"18.11.2026","cats":[["Bezpieczeństwo",21,30],["Wersja platformy",20,20],["Szybkość",11,20],["SEO",14,20],["Analityka i RODO",6,10]],"issues":[["critical","Bezpieczeństwo","Brak nagłówka Content-Security-Policy","Dodaj nagłówek na serwerze albo w CDN. Zacznij od trybu report-only.",120],["critical","Szybkość","Odpowiedź serwera 1,9 s","Włącz pamięć podręczną stron i sprawdź zapytania do bazy na stronie głównej.",240],["warning","Bezpieczeństwo","Ciasteczko sesji bez atrybutu Secure","Ustaw Secure i SameSite w konfiguracji sesji.",30],["warning","SEO","14 podstron bez opisu meta","Uzupełnij opisy, zaczynając od stron kategorii.",180],["warning","Analityka i RODO","Skrypt analityki ładuje się przed zgodą","Uruchamiaj analitykę dopiero po zgodzie w banerze.",120],["warning","Szybkość","Zdjęcia produktów bez formatu WebP","Włącz konwersję zdjęć w sklepie albo w CDN.",60],["info","SEO","Mapa witryny nie zawiera wpisów z bloga","Dodaj blog do mapy witryny.",30]],"ok":["Certyfikat TLS ważny do 03.2027","Przekierowanie z http na https","Aktualna wersja platformy sklepu","Plik robots.txt i mapa witryny są dostępne","Dane strukturalne Product na kartach produktów"],"rivals":[["sklep-przykladowy.example","Moja strona",[70,100,55,70,60],2],["kawowy-swiat.example","Konkurent",[87,100,80,85,80],0],["ekspresy-online.example","Konkurent",[60,50,70,75,100],3],["dom-baristy.example","Konkurent",[93,100,45,60,40],1]]},"gsc":{"weeks":["21.09","28.09","05.10","12.10","19.10","26.10","02.11","09.11"],"clicks":[412,430,455,448,470,502,530,561],"impressions":48200,"position":"14,2","queries":[["jaki ekspres ciśnieniowy do domu",318,6400,"7,1"],["ekspres kolbowy czy automatyczny",244,5100,"8,4"],["odkamienianie ekspresu",201,7900,"11,8"],["ekspres do małej kuchni",148,3300,"9,6"],["kawa do ekspresu ciśnieniowego",97,6100,"18,3"]],"profile":{"rating":"4,6","reviews":87,"checks":[[true,"Nazwa, adres i telefon zgodne ze stroną"],[true,"Kategoria główna ustawiona"],[true,"Godziny otwarcia"],[false,"Godziny w święta"],[true,"Co najmniej 10 zdjęć"],[true,"Opis firmy"],[false,"Odpowiedzi na opinie z ostatnich 90 dni (5 bez odpowiedzi)"],[true,"Link do strony z poprawnym adresem"]]}},"ads":{"client":"Sklep Przykładowy (dane fikcyjne)","weeks":["21.09","28.09","05.10","12.10","19.10","26.10","02.11","09.11"],"platforms":[{"id":"google","name":"Google Ads","spend":[1180,1210,1250,1190,1320,1400,1460,1510],"clicks":[610,640,655,630,690,720,735,760],"conv":[31,33,34,30,33,32,31,30],"month_budget":4400,"month_spend":4040},{"id":"meta","name":"Meta Ads","spend":[820,840,810,860,900,940,980,1010],"clicks":[980,1010,960,1040,1090,1130,1150,1190],"conv":[22,23,21,24,20,19,17,16],"month_budget":4500,"month_spend":2715}],"campaigns":[{"id":"c1","platform":"google","name":"Wyszukiwarka: ekspresy","active":true,"budget":115,"spend":3200,"conv":78,"prev_spend":2700,"prev_conv":80},{"id":"c2","platform":"google","name":"Performance Max: sklep","active":true,"budget":70,"spend":1890,"conv":41,"prev_spend":1580,"prev_conv":40},{"id":"c3","platform":"google","name":"Remarketing","active":false,"budget":25,"spend":600,"conv":7,"prev_spend":550,"prev_conv":8,"paused":"17.11.2026"},{"id":"c4","platform":"meta","name":"Zapytania: formularz","active":true,"budget":90,"spend":2450,"conv":52,"prev_spend":2100,"prev_conv":62},{"id":"c5","platform":"meta","name":"Ruch na poradnik","active":true,"budget":50,"spend":1380,"conv":20,"prev_spend":1230,"prev_conv":28}],"changes":[{"at":"17.11.2026, 09:14","who":"Jan K.","what":"Remarketing: wstrzymano kampanię"},{"at":"10.11.2026, 16:30","who":"Jan K.","what":"Wyszukiwarka: ekspresy: budżet dzienny ze 100 zł na 115 zł"}]},"profile":{"name":"Marketing i strony WWW","cpv":["79340000","79341400","79342000","72413000","79416000"],"keywords":["kampania promocyjna","media społecznościowe","strona internetowa","pozycjonowanie","google ads"],"exclude":["druk","gadżety"],"regions":["mazowieckie","łódzkie","śląskie"],"min":20000,"max":400000},"tenders":[{"id":"t1","source":"BZP","title":"Kampania promocyjna marki turystycznej regionu w internecie","buyer":"Urząd Marszałkowski Województwa Przykładowego (przykład)","buyer_company":"b1","cpv_main":"79341400","cpv_all":["79341400","79342000"],"region":"mazowieckie","value":180000,"deadline":"2026-11-27T10:00","text":"kampania promocyjna w wyszukiwarce i mediach społecznościowych, google ads, materiały wideo"},{"id":"t2","source":"BZP","title":"Budowa i utrzymanie strony internetowej muzeum","buyer":"Muzeum Regionalne w Przykładowie (przykład)","buyer_company":null,"cpv_main":"72413000","cpv_all":["72413000","72212224"],"region":"łódzkie","value":65000,"deadline":"2026-12-04T12:00","text":"strona internetowa zgodna z WCAG 2.1, system zarządzania treścią, utrzymanie przez 24 miesiące"},{"id":"t3","source":"BZP","title":"Prowadzenie profili urzędu w mediach społecznościowych w 2027 r.","buyer":"Urząd Miasta Przykładowo (przykład)","buyer_company":null,"cpv_main":"79342000","cpv_all":["79342000"],"region":"śląskie","value":null,"deadline":"2026-12-09T09:00","text":"media społecznościowe, 20 publikacji miesięcznie, moderacja komentarzy"},{"id":"t4","source":"BZP","title":"Pozycjonowanie serwisu informacyjnego i audyt SEO","buyer":"Powiatowy Urząd Pracy w Przykładzie (przykład)","buyer_company":null,"cpv_main":"79340000","cpv_all":["79340000"],"region":"mazowieckie","value":15000,"deadline":"2026-11-21T10:00","text":"pozycjonowanie serwisu, audyt seo, raport miesięczny"},{"id":"t5","source":"TED","title":"Usługi komunikacji i promocji projektu unijnego","buyer":"Agencja Rozwoju Przykładowego (przykład)","buyer_company":null,"cpv_main":"79416000","cpv_all":["79416000","79952000"],"region":"mazowieckie","value":620000,"deadline":"2026-12-15T12:00","text":"obsługa public relations, organizacja konferencji, materiały informacyjne"},{"id":"t6","source":"BZP","title":"Dostawa materiałów promocyjnych z nadrukiem","buyer":"Starostwo Powiatowe w Przykładzie (przykład)","buyer_company":null,"cpv_main":"79342000","cpv_all":["79342000","22462000"],"region":"mazowieckie","value":30000,"deadline":"2026-12-02T10:00","text":"druk ulotek i gadżety z logo powiatu"},{"id":"t7","source":"BZP","title":"Kampania Google Ads dla portu lotniczego","buyer":"Port Lotniczy Przykładowo (przykład)","buyer_company":null,"cpv_main":"79341400","cpv_all":["79341400"],"region":"pomorskie","value":90000,"deadline":"2026-12-10T10:00","text":"google ads, kampania promocyjna połączeń"}],"tender_card":{"id":"t1","notice":[["Przedmiot","Przygotowanie i prowadzenie przez 6 miesięcy kampanii promującej markę turystyczną regionu w wyszukiwarce i mediach społecznościowych.","sekcja 4.2.2"],["Termin wykonania","6 miesięcy od podpisania umowy","sekcja 4.2.10"],["Kryteria oceny","Cena 60%, koncepcja kampanii 30%, doświadczenie zespołu 10%","sekcja 4.3"],["Warunki udziału","2 kampanie internetowe o budżecie co najmniej 80 000 zł brutto każda w ostatnich 3 latach","sekcja 5.4"],["Wadium","3 000 zł","sekcja 6.4"],["Składanie ofert","27.11.2026, 10:00, platforma e-Zamówienia","sekcje 8.1-8.2"],["Związanie ofertą","do 26.12.2026","sekcja 8.4"]],"ai":{"docs":["SWZ.pdf","OPZ.pdf","wzor-umowy.pdf"],"summary":"Zamawiający oczekuje kampanii z gwarantowanymi wynikami: co najmniej 2 mln wyświetleń i 60 tys. wejść na stronę. Płatność w trzech częściach po raportach. Kary są wysokie przy opóźnieniu raportów.","items":[["Warunki udziału","Dwie kampanie o budżecie co najmniej 80 000 zł brutto każda, potwierdzone referencjami. Kierownik kampanii z co najmniej 3-letnim doświadczeniem.","SWZ, rozdz. VIII"],["Płatności","Trzy części: 30% po zatwierdzeniu koncepcji, 40% po 3 miesiącach, 30% po raporcie końcowym. Termin płatności 30 dni.","wzór umowy, § 7"],["Kary umowne","0,5% wynagrodzenia za każdy dzień opóźnienia raportu, 10% za niewykonanie wskaźników, limit kar 30%.","wzór umowy, § 10"],["Wskaźniki do osiągnięcia","2 000 000 wyświetleń i 60 000 wejść na stronę kampanii.","OPZ, pkt 3.2"],["Prawa autorskie","Przeniesienie praw do wszystkich materiałów bez dodatkowego wynagrodzenia.","wzór umowy, § 12"]],"questions":["Czy wskaźnik 60 000 wejść liczony jest według Google Analytics zamawiającego, czy raportów platform reklamowych?","Czy budżet mediowy jest częścią wynagrodzenia, czy zamawiający opłaca go osobno?"],"qa":{"q":"Czy mogę polegać na doświadczeniu podwykonawcy?","a":"Tak. SWZ dopuszcza poleganie na zasobach innych podmiotów w zakresie doświadczenia, pod warunkiem złożenia zobowiązania tego podmiotu razem z ofertą.","src":"SWZ, rozdz. IX, pkt 2"}},"risks":[["bad","Kara 10% za niewykonanie wskaźników. Wynik zależy także od sezonu i budżetu mediowego.","wzór umowy, § 10"],["mid","Wadium 3 000 zł musi wpłynąć przed terminem składania ofert.","sekcja 6.4"],["mid","Brak zaliczek. Kampanię finansujesz do pierwszej płatności.","wzór umowy, § 7"]],"docs":[["Formularz ofertowy",true],["Oświadczenie o niepodleganiu wykluczeniu i spełnianiu warunków (art. 125 ust. 1)",true],["Wykaz usług z dowodami należytego wykonania",false],["Koncepcja kampanii (kryterium oceny)",false],["Dowód wniesienia wadium",false],["Pełnomocnictwo, jeśli ofertę podpisuje pełnomocnik",true]]},"terms":[["2026-11-21T10:00","Składanie ofert","t4"],["2026-11-24T23:59","Ostatni dzień na pytania do zamawiającego","t1"],["2026-11-27T10:00","Składanie ofert","t1"],["2026-12-04T12:00","Składanie ofert","t2"],["2026-12-09T09:00","Składanie ofert","t3"],["2026-12-26T23:59","Koniec związania ofertą","t1"]],"offer":{"tender":"t1","sections":[["Dane wykonawcy","Wykonawca: PerfectData, NIP [NIP] ⟦sprawdź⟧\nZamawiający: Urząd Marszałkowski Województwa Przykładowego (przykład) ⟦źródło: ogłoszenie⟧\nCena: [CENA] zł brutto ⟦sprawdź⟧"],["Sposób realizacji","Kampanię poprowadzimy w wyszukiwarce i mediach społecznościowych przez 6 miesięcy. ⟦źródło: OPZ, pkt 2.1⟧\nRaport z wynikami przekażemy do 5. dnia każdego miesiąca. ⟦źródło: wzór umowy, § 6⟧\nOrganizacja prac: [harmonogram, etapy, zespół]. ⟦sprawdź⟧"],["Doświadczenie","Kampania Google Ads i Meta dla sklepu internetowego, budżet 96 000 zł, 2025 r. ⟦źródło: biblioteka: Referencja 1⟧\nKampania promocyjna wydarzenia miejskiego, budżet 84 000 zł, 2024 r. ⟦źródło: biblioteka: Referencja 2⟧"],["Zespół","Kierownik kampanii: Jan K., 6 lat doświadczenia w kampaniach płatnych. ⟦źródło: biblioteka: Jan K.⟧\nSpecjalista ds. treści: [imię i nazwisko]. ⟦sprawdź⟧"]]},"grants":{"calls":[{"name":"Cyfryzacja małych firm, program regionalny (przykład naboru)","until":"15.01.2027","amount":"do 150 000 zł, dofinansowanie 50%","checks":[[true,"Mikro, małe albo średnie przedsiębiorstwo"],[true,"Siedziba w województwie objętym programem"],[true,"Działalność od co najmniej 12 miesięcy"],[false,"Brak pomocy de minimis powyżej limitu: do sprawdzenia w zaświadczeniach"]]},{"name":"Wejście na rynki zagraniczne (przykład naboru)","until":"28.02.2027","amount":"do 400 000 zł, dofinansowanie 70%","checks":[[true,"Mikro, małe albo średnie przedsiębiorstwo"],[false,"Przychody ze sprzedaży własnego produktu: agencja sprzedaje usługi"],[true,"Brak zaległości podatkowych i składkowych"]]}],"sections":[["Wnioskodawca","PerfectData, NIP [NIP] ⟦sprawdź⟧"],["Opis projektu","Wgraj regulamin naboru i kryteria oceny, a AI napisze tę sekcję na ich podstawie. ⟦sprawdź⟧"],["Budżet","Zestawienie wydatków: [kategoria, kwota, uzasadnienie]. Kwalifikowalność wydatków sprawdź w regulaminie naboru. ⟦sprawdź⟧"],["Potencjał","Kampania Google Ads i Meta dla sklepu internetowego, 2025 r. ⟦źródło: biblioteka: Referencja 1⟧"]]},"library":[["Referencja (zrealizowane zlecenie)","Referencja 1 (przykład)","Kampania Google Ads i Meta dla sklepu internetowego, budżet 96 000 zł, 2025 r."],["Referencja (zrealizowane zlecenie)","Referencja 2 (przykład)","Kampania promocyjna wydarzenia miejskiego, budżet 84 000 zł, 2024 r."],["Osoba (CV, uprawnienia)","Jan K. (przykład)","Kierownik kampanii, 6 lat doświadczenia w kampaniach płatnych."],["Certyfikat lub uprawnienie firmy","Certyfikat partnera platformy reklamowej (przykład)","Ważny do 06.2027."],["Polisa OC","Polisa OC działalności (przykład)","Suma gwarancyjna 500 000 zł, ważna do 31.12.2026."],["Gotowy opis (np. o firmie, metodyka)","O firmie (przykład)","Krótki opis firmy używany w ofertach i wiadomościach."]],"companies":[{"id":"b1","name":"Urząd Marszałkowski Województwa Przykładowego (przykład)","nip":"000-000-00-01","form":"jednostka samorządu terytorialnego","since":"1999","accounts":3,"board":[],"watched":true,"signals":[["none","Czynny podatnik VAT","Firma jest zarejestrowana jako czynny podatnik VAT.","Wykaz podatników VAT",0]],"uokik":[],"changes":[]},{"id":"b2","name":"Budimpex S.A. (przykład)","nip":"000-000-00-02","form":"spółka akcyjna","since":"2005","accounts":0,"board":["Prezes zarządu","Członek zarządu"],"watched":true,"signals":[["high","Decyzja UOKiK o nadmiernym opóźnianiu płatności","Decyzja przykładowa DZP-0/2026, wydana 14.05.2026. Kara za opóźnianie płatności dostawcom.","Decyzje Prezesa UOKiK (zatory płatnicze)",35],["mid","Brak rachunku na białej liście","Czynny podatnik VAT bez zgłoszonego rachunku firmowego. Przed przelewem potwierdź numer konta.","Wykaz podatników VAT",10],["none","Czynny podatnik VAT","Firma jest zarejestrowana jako czynny podatnik VAT.","Wykaz podatników VAT",0]],"uokik":["Decyzja przykładowa DZP-0/2026 z 14.05.2026"],"changes":[["12.11.2026","Z wykazu VAT zniknął rachunek bankowy"],["03.10.2026","Zmiana w zarządzie: nowy członek zarządu"]]},{"id":"b3","name":"Dom i Styl sp. z o.o. w likwidacji (przykład)","nip":"000-000-00-03","form":"spółka z ograniczoną odpowiedzialnością","since":"2019","accounts":1,"board":["Likwidator"],"watched":true,"signals":[["high","Likwidacja, upadłość lub restrukturyzacja w KRS","Dział 6 odpisu KRS zawiera informację o likwidacji, upadłości albo restrukturyzacji.","KRS, dział 6",40],["high","Wpisy o zaległościach lub wierzytelnościach w KRS","Dział 4 odpisu KRS zawiera wpisy o zaległościach podatkowych lub składkowych.","KRS, dział 4",30],["mid","Brak aktualnego sprawozdania finansowego","Ostatnie złożone sprawozdanie dotyczy okresu do 31.12.2023.","KRS, dział 3",15],["info","Minimalny kapitał zakładowy","Kapitał 5 000 zł. Za długi spółki odpowiada głównie jej majątek.","KRS, dział 1",3],["none","Czynny podatnik VAT","Firma jest zarejestrowana jako czynny podatnik VAT.","Wykaz podatników VAT",0]],"uokik":[],"changes":[["06.11.2026","W KRS pojawił się wpis o otwarciu likwidacji"]]},{"id":"b4","name":"Hurtownia Narzędzi Stalmet (przykład)","nip":"000-000-00-04","form":"spółka z ograniczoną odpowiedzialnością","since":"2011","accounts":2,"board":["Prezes zarządu"],"watched":false,"signals":[["none","Czynny podatnik VAT","Firma jest zarejestrowana jako czynny podatnik VAT.","Wykaz podatników VAT",0]],"uokik":[],"changes":[]}],"receivables":[{"company":"b2","invoice":"FV/2026/09/014","amount":12300,"issued":"2026-09-16","due":"2026-09-30","demand":"2026-10-14","bureau":"Biuro Przykładowe S.A., ul. Wzorcowa 1, Warszawa (przykład)"},{"company":"b3","invoice":"FV/2026/10/031","amount":3690,"issued":"2026-10-14","due":"2026-10-28","demand":"2026-11-05","bureau":"Biuro Przykładowe S.A., ul. Wzorcowa 1, Warszawa (przykład)"},{"company":"b4","invoice":"FV/2026/11/002","amount":430,"issued":"2026-10-27","due":"2026-11-10","demand":null,"bureau":""}]};
+
+/* Mockup liczy wszystko względem jednej daty, żeby terminy i dni po terminie nie zmieniały się z dnia na dzień. */
+const TODAY = new Date(PLAT.today + 'T12:00:00');
+const num = (n, d = 0) => { const [a, b] = Math.abs(n).toFixed(d).split('.'); return (n < 0 ? '-' : '') + a.replace(/\B(?=(\d{3})+$)/g, '\u00a0') + (b ? ',' + b : ''); };
+const zl = (n, d = 0) => num(n, d) + '\u00a0zł';
+const dpl = (iso) => { const [d, t] = iso.split('T'), [y, m, dd] = d.split('-'); return `${dd}.${m}.${y}` + (t && t !== '23:59' ? ', ' + t : ''); };
+const daysTo = (iso) => Math.round((new Date(iso.slice(0, 10) + 'T12:00:00') - TODAY) / 86400000);
+const dni = (n) => n + (n === 1 ? ' dzień' : ' dni');
+const put = (id, html) => { document.getElementById('v-' + id).innerHTML = html; };
+const MODS = [], ACTIONS = {}, CHANGES = {}, FORMS = {};
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const LABEL = { good: 'Dobrze', mid: 'Do poprawy', bad: 'Źle' };
@@ -342,20 +394,6 @@ function ruler(audit, interactive) {
     }).join('');
     return `<div class="rg" style="flex:${max} 1 ${max * 5}px"><div class="segs">${segs}</div><div class="rg-l"><span><b>${gr.id}</b>${esc(gr.short)}</span><span class="num">${pts} / ${max}</span></div></div>`;
   }).join('') + `</div>`;
-}
-
-function renderHead(module) {
-  const crumbs = document.getElementById('crumbs'), fact = (k, v) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`;
-  if (module === 'zapytania') {
-    crumbs.textContent = 'Zapytania ze strony';
-    document.getElementById('pageTitle').textContent = 'Zapytania z perfectdata.pl';
-    document.getElementById('pageMeta').innerHTML = fact('Widżet działa na', LEADS.pages) + fact('Zasady kwalifikacji', 'wersja ' + LEADS.version);
-    return;
-  }
-  const a = auditOf(state.audit);
-  crumbs.textContent = 'Audyt treści pod wyszukiwarki i AI';
-  document.getElementById('pageTitle').textContent = SAMPLE.title;
-  document.getElementById('pageMeta').innerHTML = fact('Klient', SAMPLE.client) + fact('Adres', SAMPLE.url) + fact('Fraza', SAMPLE.phrase) + fact('Audyt z', a.date) + fact('Wytyczne', 'wersja ' + RULES.version);
 }
 
 function renderReport() {
@@ -581,7 +619,7 @@ function renderQualifier() {
         <li>Budżet AI: <b>${LEADS.limits.budget} zł</b> miesięcznie. Po przekroczeniu działają same pytania, bez czatu.</li>
         <li>Pytania kwalifikujące nie zużywają AI.</li></ul></div>
     </div>
-    <div class="sec"><div class="sec-h"><h2>Wymogi</h2></div><ul class="qa" style="padding-top:16px">
+    <div class="sec"><div class="sec-h"><h2>Wymogi</h2></div><ul class="qa" style="padding-top:16px;--qa:124px">
         ${req(true, 'Informacja na początku rozmowy, że odpowiada asystent AI.', 'AI Act, od 2.08.2026')}
         ${req(true, 'Klauzula informacyjna przy podaniu kontaktu.', 'RODO')}
         ${req(true, 'Zgoda na oferty osobno i domyślnie odznaczona.', 'Prawo komunikacji elektronicznej')}
@@ -666,40 +704,819 @@ function renderResults() {
       <li>Wariant przydziela serwer, bez plików cookie.</li></ul></div>`;
 }
 
-/* ===== Nawigacja ===== */
-const MODULES = {
-  audyt: { views: ['raport', 'wytyczne', 'postep', 'cytowania', 'strony'], tabs: 'tabs', nav: 'navAudit' },
-  zapytania: { views: ['zapytania', 'kwalifikator', 'widzet', 'wyniki'], tabs: 'tabsLeads', nav: 'navLeads' },
+/* ===== Moduły ===== */
+MODS.push({ id: 'zapytania', order: 2, label: 'Zapytania', about: 'Kwalifikator na stronie zamiast formularza: ocena zapytania z jawnych zasad, sprawdzenie firmy, czat AI i test na liczbach.',
+  head: () => ({ crumbs: 'Zapytania ze strony', title: 'Zapytania z perfectdata.pl', facts: [['Widżet działa na', LEADS.pages], ['Zasady kwalifikacji', 'wersja ' + LEADS.version]] }),
+  views: [{ id: 'zapytania', label: 'Zapytania', gap: 32, render: renderLeads }, { id: 'kwalifikator', label: 'Zasady kwalifikacji', gap: 44, render: renderQualifier },
+    { id: 'widzet', label: 'Podgląd widżetu', gap: 0, render: renderWidget }, { id: 'wyniki', label: 'Wyniki', gap: 44, render: renderResults }] });
+MODS.push({ id: 'audyt', order: 4, label: 'Audyt AI', client: true, about: 'Audyt treści pod wyszukiwarki i AI: 24 wskaźniki, 100 punktów, lista zadań, porównanie przed i po, raport dla klienta.',
+  head: () => ({ crumbs: 'Audyt treści pod wyszukiwarki i AI', title: SAMPLE.title,
+    facts: [['Klient', SAMPLE.client], ['Adres', SAMPLE.url], ['Fraza', SAMPLE.phrase], ['Audyt z', auditOf(state.audit).date], ['Wytyczne', 'wersja ' + RULES.version]] }),
+  views: [{ id: 'raport', label: 'Raport', gap: 44, render: renderReport }, { id: 'wytyczne', label: 'Wytyczne wskaźników', gap: 44, render: renderGuide },
+    { id: 'postep', label: 'Przed i po', gap: 36, render: renderProgress }, { id: 'cytowania', label: 'Cytowania w AI', gap: 36, render: renderCitations },
+    { id: 'strony', label: 'Strony witryny', agency: true, render: renderPages }] });
+
+/* ===== Wykres liniowy =====
+   Jedna oś, linie 2 px, kropka na końcu z obwódką w kolorze tła, wartość przy końcu linii.
+   Po najechaniu albo po strzałkach z klawiatury: pionowa linia i dymek ze wszystkimi seriami.
+   Wykres rysujemy dopiero w widocznym widoku, w jego rzeczywistej szerokości, żeby tekst nie malał na telefonie. */
+const CHARTS = {};
+function chart(id, def) { CHARTS[id] = def; return `<div class="chart" data-chart="${id}"></div>`; }
+function niceMax(v) {
+  const p = Math.pow(10, Math.floor(Math.log10(v / 4)));
+  for (const k of [1, 2, 2.5, 5, 10]) if (k * p * 4 >= v) return k * p * 4;
+  return 40 * p;
+}
+const keys = (series) => `<div class="keys">${series.map((s) => `<span class="key"><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join('')}</div>`;
+const dataTable = (def, first) => `<details class="more"><summary>Pokaż dane w tabeli</summary><div class="table-wrap"><table><thead><tr><th>${esc(first)}</th>${def.series.map((s) => `<th class="n">${esc(s.name)}</th>`).join('')}</tr></thead><tbody>` +
+  def.labels.map((l, i) => `<tr><td>${esc(l)}</td>${def.series.map((s) => `<td class="n">${esc((def.tipFmt || num)(s.values[i]))}</td>`).join('')}</tr>`).join('') + `</tbody></table></div></details>`;
+
+function drawCharts() {
+  for (const el of document.querySelectorAll('.chart[data-chart]')) {
+    const W = Math.floor(el.clientWidth), def = CHARTS[el.dataset.chart];
+    if (!W || !def) continue;
+    const H = 230, L = 46, R = 64, T = 12, B = 28, n = def.labels.length;
+    const max = niceMax(Math.max(...def.series.flatMap((s) => s.values)));
+    const x = (i) => L + (W - L - R) * i / (n - 1), y = (v) => T + (H - T - B) * (1 - v / max);
+    const fmt = def.fmt || ((v) => num(v));
+    let g = '';
+    for (let k = 0; k <= 4; k++) {
+      const v = max * k / 4;
+      g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" style="stroke:var(--grid)" stroke-width="1"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${esc(fmt(v))}</text>`;
+    }
+    const step = W < 480 ? 2 : 1;
+    def.labels.forEach((l, i) => { if ((n - 1 - i) % step === 0) g += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${esc(l)}</text>`; });
+    const ends = def.series.map((s) => y(s.values[n - 1]));
+    const labelEnds = def.series.length === 1 || Math.abs(ends[0] - ends[1]) >= 16;
+    def.series.forEach((s, k) => {
+      g += `<polyline fill="none" style="stroke:${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="${s.values.map((v, i) => x(i).toFixed(1) + ',' + y(v).toFixed(1)).join(' ')}"/>`;
+      g += `<circle cx="${x(n - 1)}" cy="${ends[k]}" r="4.5" style="fill:${s.color};stroke:var(--ink)" stroke-width="2"/>`;
+      if (labelEnds) g += `<text class="val" x="${x(n - 1) + 10}" y="${ends[k] + 4}">${esc((def.endFmt || fmt)(s.values[n - 1]))}</text>`;
+    });
+    g += `<g class="hover" visibility="hidden"><line y1="${T}" y2="${H - B}" style="stroke:var(--muted)" stroke-width="1"/>${def.series.map((s) => `<circle r="4.5" style="fill:${s.color};stroke:var(--ink)" stroke-width="2"/>`).join('')}</g>`;
+    el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" tabindex="0" aria-label="${esc(def.title)}. Strzałki w lewo i w prawo pokazują kolejne wartości.">${g}</svg>`;
+    el._geo = { W, L, R, n, x, y };
+    el._i = undefined;
+  }
+}
+function chartAt(el, i) {
+  const def = CHARTS[el.dataset.chart], geo = el._geo, svg = el.querySelector('svg'), hov = svg.querySelector('.hover'), line = hov.querySelector('line');
+  hov.setAttribute('visibility', 'visible');
+  line.setAttribute('x1', geo.x(i)); line.setAttribute('x2', geo.x(i));
+  hov.querySelectorAll('circle').forEach((c, k) => { c.setAttribute('cx', geo.x(i)); c.setAttribute('cy', geo.y(def.series[k].values[i])); });
+  const tip = document.getElementById('tip');
+  tip.textContent = '';
+  const head = document.createElement('b');
+  head.textContent = (def.prefix || '') + def.labels[i];
+  tip.appendChild(head);
+  for (const s of def.series) {
+    const row = document.createElement('div'), key = document.createElement('i'), v = document.createElement('strong'), name = document.createElement('span');
+    key.style.background = s.color; v.textContent = (def.tipFmt || num)(s.values[i]); name.textContent = s.name;
+    row.append(key, v, name); tip.appendChild(row);
+  }
+  tip.hidden = false;
+  const r = svg.getBoundingClientRect(), px = r.left + geo.x(i), tw = tip.offsetWidth;
+  tip.style.left = Math.max(8, Math.min(window.innerWidth - tw - 8, px + 14 + tw > window.innerWidth ? px - tw - 14 : px + 14)) + 'px';
+  tip.style.top = Math.max(8, r.top + 6) + 'px';
+  el._i = i;
+}
+function hideTip() {
+  const tip = document.getElementById('tip');
+  if (tip) tip.hidden = true;
+  for (const h of document.querySelectorAll('.chart .hover')) h.setAttribute('visibility', 'hidden');
+}
+const chartOf = (e) => { const el = e.target.closest ? e.target.closest('.chart') : null; return el && el._geo ? el : null; };
+document.addEventListener('pointermove', (e) => {
+  const el = chartOf(e);
+  if (!el) return;
+  const r = el.querySelector('svg').getBoundingClientRect(), g = el._geo;
+  chartAt(el, Math.max(0, Math.min(g.n - 1, Math.round((e.clientX - r.left - g.L) / ((g.W - g.L - g.R) / (g.n - 1))))));
+});
+document.addEventListener('pointerout', (e) => { const el = chartOf(e); if (el && !el.contains(e.relatedTarget)) hideTip(); });
+document.addEventListener('focusin', (e) => { const el = chartOf(e); if (el) chartAt(el, el._i === undefined ? el._geo.n - 1 : el._i); });
+document.addEventListener('focusout', (e) => { if (chartOf(e)) hideTip(); });
+document.addEventListener('keydown', (e) => {
+  const el = chartOf(e);
+  if (!el || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+  e.preventDefault();
+  const i = el._i === undefined ? el._geo.n - 1 : el._i;
+  chartAt(el, Math.max(0, Math.min(el._geo.n - 1, i + (e.key === 'ArrowLeft' ? -1 : 1))));
+});
+
+/* ===== Wspólne dla nowych modułów ===== */
+/* Każdy ekran mówi, czy funkcja działa już w silniku, jest w planie, czy czeka na zgodę z zewnątrz. */
+const stan = (key, text) => { const [cls, label] = PLAT.states[key]; return `<p class="small muted">${st(cls, label)}<span style="margin-left:10px">${text}</span></p>`; };
+const lata = (n) => n + (n === 1 ? ' rok' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? ' lata' : ' lat'));
+const proc = (v, sign) => (sign && v > 0 ? '+' : '') + num(v, 1) + '%';
+/* Znaczniki z silnika ofert: zdanie ze źródłem albo zdanie do sprawdzenia przed złożeniem. */
+const marks = (text) => esc(text).replace(/⟦źródło: ([^⟧]+)⟧/g, '<span class="src">źródło: $1</span>').replace(/⟦sprawdź⟧/g, '<span class="chk">sprawdź</span>');
+const unsourced = (sections) => sections.reduce((n, s) => n + (s[1].match(/⟦sprawdź⟧/g) || []).length, 0);
+const secHead = (title, lead, right) => `<div class="sec-h"><h2>${title}</h2>${right ? `<span class="sec-pts">${right}</span>` : ''}${lead ? `<p>${lead}</p>` : ''}</div>`;
+const checkList = (rows, yes, no) => `<ul class="qa" style="--qa:${Math.round(26 + 8.2 * Math.max(yes.length, no.length))}px">${rows.map(([ok, text]) => `<li>${st(ok ? 'good' : 'bad', ok ? yes : no)}<span>${esc(text)}</span></li>`).join('')}</ul>`;
+
+/* ===== Pulpit ===== */
+/* Lista na dziś powstaje z danych wszystkich modułów, tymi samymi funkcjami, które liczą ich ekrany. */
+function todayItems() {
+  const items = [];
+  const scored = LEADS.leads.map((l) => ({ l, pts: leadScore(l.answers, l.phone).pts }));
+  const fresh = scored.filter((x) => x.l.status === 'Nowe'), hot = fresh.filter((x) => x.pts >= LEADS.levels.hot), risky = fresh.filter((x) => x.l.nip && x.l.nip[0] === 'bad');
+  if (fresh.length) items.push([hot.length ? 'bad' : 'mid', 'Zapytania', `Nowe zapytania: ${fresh.length}, w tym pilne: ${hot.length}`, risky.length ? `Ostrzeżenia o kontrahencie: ${risky.length}. Sprawdź firmę przed wyceną.` : 'Zacznij od pilnych.', 'zapytania']);
+  for (const { t, m } of matchAll().ok) {
+    const d = daysTo(t.deadline);
+    if (m.score >= 70 && d <= 10) items.push([d <= 3 ? 'bad' : 'mid', 'Przetargi', `Oferta do ${dpl(t.deadline)}, zostało ${dni(d)}`, `${t.title}, dopasowanie ${m.score}.`, t.id === PLAT.tender_card.id ? 'przetarg' : 'przetargi']);
+  }
+  for (const c of PLAT.companies.filter((x) => x.watched)) {
+    for (const [at, what] of c.changes) {
+      if (-daysTo(at.split('.').reverse().join('-')) <= 14) items.push([companyRisk(c).cls === 'bad' ? 'bad' : 'mid', 'Kontrahenci', what, `${c.name}, ${at}.`, 'obserwowane']);
+    }
+  }
+  const debts = PLAT.receivables.map(bigCheck);
+  if (debts.length) items.push(['mid', 'Należności', `Po terminie: ${zl(PLAT.receivables.reduce((a, r) => a + r.amount, 0))}`, `Warunki wpisu do BIG spełnia faktur: ${debts.filter((b) => b.eligible).length}.`, 'naleznosci']);
+  const alerts = adsAlerts();
+  if (alerts.length) items.push([alerts.some((a) => a[0] === 'bad') ? 'bad' : 'mid', 'Reklamy', `Alerty w kampaniach: ${alerts.length}`, alerts[0][1] + '.', 'alerty']);
+  const weak = SAMPLE.pages.filter((p) => p[2] < RULES.levels.mid).sort((a, b) => a[2] - b[2]);
+  if (weak.length) items.push(['mid', 'Audyt AI', `Strony poniżej ${RULES.levels.mid} pkt: ${weak.length}`, `Najsłabsza: ${weak[0][0]}, ${weak[0][2]} pkt.`, 'strony']);
+  for (const r of PLAT.sequence.running) if (r[2].startsWith('Przypomnienie')) items.push(['plain', 'Klienci', r[2], r[0] + '.', 'wysylka']);
+  const order = { bad: 0, mid: 1, plain: 2 };
+  return items.sort((a, b) => order[a[0]] - order[b[0]]);
+}
+
+function renderDesk() {
+  const items = todayItems(), label = { bad: 'pilne', mid: 'do zrobienia', plain: 'informacja' };
+  put('pulpit', `<div class="sec">${secHead('Dziś', 'Lista powstaje z danych wszystkich modułów. Najpierw sprawy pilne.', items.length)}` +
+    items.map(([cls, mod, title, detail, view]) => `<div class="item"><span class="lead-col">${esc(mod)}</span><div><p><b>${esc(title)}</b></p><p>${esc(detail)}</p></div><div class="end">${st(cls, label[cls])}<a href="#${view}">Otwórz</a></div></div>`).join('') + `</div>
+    <div class="sec">${secHead('Moduły', 'Każdy moduł ma zakładki pod tytułem strony. Stan każdej funkcji jest w zakładce <a href="#funkcje">Lista funkcji</a>.', MODS.length - 1)}` +
+    MODS.filter((m) => m.id !== 'pulpit').map((m) => `<div class="item"><span style="font-weight:600">${esc(m.label)}</span><div><p>${esc(m.about)}</p></div><div class="end"><a href="#${m.views[0].id}">Otwórz</a></div></div>`).join('') + `</div>`);
+}
+
+function renderFunctions() {
+  const all = PLAT.functions.flatMap((g) => g.items), count = (k) => all.filter((f) => f[2] === k).length;
+  put('funkcje', `<div class="counts"><div><b>${all.length}</b><span>funkcji w mockupie</span></div><div><b id="fnEngine">${count('silnik')}</b><span>działa w silniku</span></div>
+      <div><b>${count('plan')}</b><span>do zbudowania</span></div><div><b>${count('zgoda')}</b><span>czeka na zgodę Google i Meta</span></div></div>
+    <p class="note">Mockup pokazuje każdą funkcję na przykładowych danych. „Działa w silniku” znaczy, że kod jest w repozytorium i przechodzi testy. Silnik nie jest jeszcze uruchomiony online.</p>` +
+    PLAT.functions.map((g) => `<div class="sec">${secHead(esc(g.module), '', g.items.length)}` +
+      g.items.map(([name, view, key, note]) => `<div class="item fn" style="--c1:minmax(0,1.25fr)"><a href="#${view}">${esc(name)}</a><span class="small muted">${esc(note)}</span><div class="end">${st(PLAT.states[key][0], PLAT.states[key][1])}</div></div>`).join('') + `</div>`).join(''));
+}
+
+MODS.push({ id: 'pulpit', order: 1, label: 'Pulpit', about: '',
+  head: (v) => v.id === 'pulpit' ? { crumbs: 'Panel PerfectData', title: 'Pulpit', facts: [['Dzień', dpl(PLAT.today)], ['Użytkownik', PLAT.org.user + ' (przykład)']] } : { crumbs: 'Panel PerfectData', title: 'Lista funkcji' },
+  views: [{ id: 'pulpit', label: 'Dziś', gap: 40, render: renderDesk }, { id: 'funkcje', label: 'Lista funkcji', gap: 32, render: renderFunctions }] });
+
+/* ===== Klienci i wiadomości ===== */
+state.k = { contact: 4, kind: 'cold_offer', ack: false, saved: false, f: { pkd: '', region: '', tenders: '' } };
+const RISK = { low: ['good', 'niskie'], high: ['mid', 'wysokie'], very_high: ['bad', 'bardzo wysokie'] };
+const contactOf = (id) => PLAT.contacts.find((c) => c.id === id);
+const basisLine = (c) => PLAT.bases[c.basis] + (c.detail ? ': ' + c.detail : '') + (c.at ? ' (' + c.at + ')' : '');
+
+/* Ocena ryzyka prawnego wiadomości. Te same reguły co w silniku (RiskPolicy): platforma pokazuje ryzyko,
+   decyzję podejmuje użytkownik, a jedyna twarda blokada to sprzeciw odbiorcy. */
+function assessMessage(kind, c) {
+  const has = (...b) => b.includes(c.basis), pke = PLAT.law.pke, basis = ['Podstawa kontaktu: ' + basisLine(c)];
+  if (c.unsub && kind !== 'rfq_reply') {
+    return { level: 'very_high', blocked: true, ack: true, lead: 'Odbiorca wypisał się z wiadomości. Nie możesz wysyłać mu ofert ani próśb o zgodę.', reasons: ['Sprzeciw zapisano ' + c.unsub + '.'], law: [PLAT.law.unsub] };
+  }
+  let level, lead, reasons = [], law = [];
+  if (kind === 'rfq_reply') {
+    if (has('rfq')) { level = 'low'; lead = 'Firma sama poprosiła o oferty. Odpowiedź na zapytanie nie wymaga osobnej zgody marketingowej.'; reasons = basis; }
+    else { level = 'high'; lead = 'W karcie kontaktu nie ma zapisanego zapytania ofertowego od tej firmy. Bez niego wiadomość może zostać uznana za niezamówioną informację handlową.'; reasons = ['Dopisz w karcie kontaktu, gdzie i kiedy firma prosiła o oferty, np. link do zapytania.']; law = pke; }
+  } else if (kind === 'consented') {
+    if (has('consent', 'client')) { level = 'low'; lead = 'Odbiorca wyraził zgodę albo jest Twoim klientem. Pamiętaj o łatwym sposobie wypisania się w stopce.'; reasons = basis; }
+    else { level = 'very_high'; lead = 'W karcie kontaktu nie ma zapisanej zgody. Wysłanie oferty bez zgody narusza przepisy o informacji handlowej.'; reasons = ['Zapisz w karcie kontaktu, kiedy i w jaki sposób odbiorca wyraził zgodę.']; law = pke; }
+  } else if (kind === 'consent_request') {
+    level = has('consent', 'client', 'rfq') ? 'low' : 'high';
+    lead = level === 'low' ? 'Masz już podstawę kontaktu. Zamiast prosić o zgodę możesz od razu odpowiedzieć albo wysłać ofertę.'
+      : 'Prośba o zgodę wysłana e-mailem bez wcześniejszej zgody to sprawa sporna. Sądy uznawały takie wiadomości za pośrednią promocję nadawcy.';
+    if (level === 'high') { law = pke.concat(PLAT.law.consent_request); reasons = ['Wiadomość nie może zawierać oferty, cen ani opisu usług. Tylko pytanie o zgodę.']; }
+  } else if (has('consent', 'client')) {
+    level = 'low'; lead = 'Masz zapisaną zgodę lub relację z klientem, więc to w praktyce oferta za zgodą.'; reasons = basis;
+  } else {
+    level = 'very_high'; lead = 'Informacja handlowa bez wcześniejszej zgody odbiorcy jest zakazana, także wobec firm.'; law = pke;
+    reasons = ['Odbiorca może złożyć skargę do Prezesa UKE albo pozew z tytułu nieuczciwej konkurencji.'];
+  }
+  return { level, blocked: false, ack: level !== 'low', lead, reasons, law };
+}
+
+/* Szkic regułowy, bez AI. Szablony jak w silniku. */
+function draftMessage(kind, c) {
+  const greet = c.person ? 'Dzień dobry, ' + c.person + ',' : 'Dzień dobry,';
+  const sig = PLAT.org.user + '\n' + PLAT.org.name + '\n' + PLAT.org.site;
+  const optOut = '\n\nJeśli nie chcą Państwo otrzymywać od nas wiadomości, wystarczy odpisać „rezygnuję”.';
+  const about = '[Krótki opis oferty dopasowany do firmy odbiorcy]';
+  if (kind === 'rfq_reply') return ['Odpowiedź na zapytanie ofertowe', `${greet}\n\ndziękujemy za zapytanie ofertowe. W załączeniu przesyłamy ofertę.\n\nCena: [CENA] zł netto\nTermin realizacji: [TERMIN]\nWarunki płatności: [WARUNKI]\n\nChętnie odpowiemy na pytania i doprecyzujemy zakres.\n\nZ poważaniem\n${sig}`];
+  if (kind === 'consented') return ['Oferta ' + PLAT.org.name, `${greet}\n\nzgodnie z Państwa zgodą przesyłamy informację o naszej ofercie.\n\n${about}\n\nCzy możemy umówić krótką rozmowę w przyszłym tygodniu?\n\nZ poważaniem\n${sig}${optOut}`];
+  if (kind === 'consent_request') return ['Czy możemy przesłać ofertę?', `${greet}\n\nczy wyrażają Państwo zgodę na przesłanie na ten adres e-mail jednej wiadomości z ofertą firmy ${PLAT.org.name}?\n\nWystarczy odpowiedzieć „tak”. Jeśli nie odpowiedzą Państwo, nie będziemy pisać ponownie.\n\nZ poważaniem\n${sig}`];
+  return ['Propozycja współpracy: ' + PLAT.org.name, `${greet}\n\n${about}\n\nCzy możemy przesłać szczegóły?\n\nZ poważaniem\n${sig}${optOut}`];
+}
+
+function renderContacts() {
+  const rows = PLAT.contacts.map((c) => `<div class="item" style="--c1:250px">
+      <div><b>${esc(c.company)}</b><p class="small muted">${esc((c.person ? c.person + ', ' : '') + c.email)}</p></div>
+      <div><p>${esc(basisLine(c))}</p>${c.unsub ? `<p class="warn">Wypisał się ${esc(c.unsub)}. Oferty i prośby o zgodę są zablokowane.</p>` : ''}</div>
+      <div class="end">${c.unsub ? st('bad', 'sprzeciw') : (c.basis === 'none' ? st('mid', 'brak podstawy') : st('good', 'jest podstawa'))}<button class="btn ghost sm" type="button" data-act="k-write" data-id="${c.id}">Napisz</button></div></div>`).join('');
+  put('kontakty', stan('silnik', 'Kontakty, podstawy kontaktu i historia wiadomości.') +
+    `<div class="sec">${secHead('Kontakty', 'Przy każdym kontakcie zapisujesz, skąd masz adres i od kiedy. Od tej podstawy zależy ryzyko wiadomości.', PLAT.contacts.length)}${rows}</div>
+    <div class="sec">${secHead('Skąd biorą się kontakty')}<ul class="list" style="padding-top:16px">
+      <li><b>Zapytania ze strony.</b> Każde zapytanie z widżetu zapisuje się z podstawą „zapytanie od tej firmy”. <a href="#zapytania">Zobacz zapytania</a></li>
+      <li><b>Zapytania ofertowe firm.</b> Firma, która publikuje zapytanie i adres do ofert, sama prosi o kontakt. <a href="#rfq">Zobacz zapytania ofertowe</a></li>
+      <li><b>Wyszukiwanie firm.</b> Kontakt dodany z wyszukiwarki ma podstawę „brak”. Przed wysyłką zobaczysz ekran ryzyka. <a href="#firmy">Szukaj firm</a></li>
+      <li><b>Własne kontakty.</b> Klienci i osoby, które zostawiły zgodę, np. na targach albo w formularzu.</li></ul></div>`);
+}
+
+function renderSearch() {
+  const f = state.k.f, uniq = (k) => [...new Set(PLAT.search.map((x) => x[k]))].sort((a, b) => a.localeCompare(b, 'pl'));
+  const sel = (id, label, key, opts) => `<label class="field" for="${id}">${label}<select id="${id}" data-on="k-filter" data-key="${key}"><option value="">Wszystkie</option>${opts.map(([v, t]) => `<option value="${esc(v)}"${f[key] === v ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></label>`;
+  const found = PLAT.search.filter((x) => (!f.pkd || x.pkd === f.pkd) && (!f.region || x.region === f.region) && (!f.tenders || (f.tenders === 'tak') === x.tenders));
+  const rows = found.map((x) => {
+    const known = PLAT.contacts.find((c) => c.company === x.company);
+    return `<div class="item" style="--c1:250px">
+      <div><b>${esc(x.company)}</b><p class="small muted">${esc(x.pkd)}, ${esc(x.region)}</p></div>
+      <div><p>${esc(x.reason)}</p><p>${esc(x.size)}, działa ${lata(x.age)}${x.tenders ? ', startuje w przetargach' : ''}</p></div>
+      <div class="end">${st(x.condition === 'dobra' ? 'good' : 'mid', 'kondycja: ' + x.condition)}${known ? `<span class="small muted" tabindex="-1" data-added="${esc(x.company)}">${known.unsub ? 'W kontaktach, wypisany' : 'W kontaktach'}</span>` : `<button class="btn ghost sm" type="button" data-act="k-add" data-name="${esc(x.company)}">Dodaj do kontaktów</button>`}</div></div>`;
+  }).join('');
+  put('firmy', stan('plan', 'Wyszukiwarki firm nie ma jeszcze w silniku. Ekran pokazuje, jak ma działać.') +
+    `<div class="sec">${secHead('Idealny klient', 'Opis powstaje z treści Twojej strony. Zatwierdzasz go albo poprawiasz, zanim posłuży do wyszukiwania.')}
+      <p style="padding-top:14px;max-width:78ch">${esc(PLAT.icp)}</p></div>
+    <div class="sec">${secHead('Firmy pasujące do opisu', 'Dane z rejestrów publicznych. Powód kontaktu pochodzi z audytu strony firmy.', found.length + ' z ' + PLAT.search.length)}
+      <div class="filters" style="padding:16px 0 6px">${sel('fPkd', 'Branża', 'pkd', uniq('pkd').map((v) => [v, v]))}${sel('fRegion', 'Województwo', 'region', uniq('region').map((v) => [v, v]))}${sel('fTenders', 'Przetargi', 'tenders', [['tak', 'Startuje w przetargach'], ['nie', 'Nie startuje']])}</div>
+      ${rows || '<p class="muted" style="padding:16px 0">Żadna firma nie pasuje do tych filtrów. Zmień albo wyczyść jeden z nich.</p>'}</div>
+    <p class="note">Firma z wyszukiwarki nie prosiła o kontakt. Dodajesz ją z podstawą „brak”, a przy wiadomości zobaczysz ekran ryzyka. Niższe ryzyko mają <a href="#rfq">zapytania ofertowe firm</a>.</p>`);
+}
+
+function renderRfq() {
+  const rows = PLAT.rfqs.map((r, i) => {
+    const d = daysTo(r.deadline.split('.').reverse().join('-'));
+    return `<div class="item" style="--c1:250px">
+      <div><b>${esc(r.company)}</b><p class="small muted">${esc(r.where)}</p></div>
+      <div><p>${esc(r.title)}</p><p>Opublikowano ${esc(r.published)}, oferty na adres ${esc(r.address)}</p></div>
+      <div class="end">${st(d <= 7 ? 'mid' : 'plain', 'do ' + r.deadline + ', ' + dni(d))}<button class="btn ghost sm" type="button" data-act="k-rfq" data-i="${i}">Odpowiedz</button></div></div>`;
+  }).join('');
+  put('rfq', stan('plan', 'Podstawa kontaktu „zapytanie ofertowe” działa w silniku. Zbieranie zapytań ze źródeł jest do zbudowania.') +
+    `<div class="sec">${secHead('Zapytania ofertowe firm', 'Firma, która publikuje zapytanie i adres do składania ofert, sama prosi o ofertę. To kanał o najniższym ryzyku prawnym.', PLAT.rfqs.length)}${rows}</div>
+    <div class="sec">${secHead('Źródła')}<ul class="list" style="padding-top:16px">
+      <li>Strony firm z zakładką zapytań ofertowych.</li><li>Baza Konkurencyjności: zamówienia firm z dotacjami.</li><li>Platformy zakupowe i biuletyny informacji publicznej.</li></ul></div>`);
+}
+
+function renderMessage() {
+  const k = state.k, c = contactOf(k.contact), a = assessMessage(k.kind, c), [subj, body] = draftMessage(k.kind, c), lv = RISK[a.level];
+  const kinds = Object.entries(PLAT.kinds).map(([id, [title, note]]) => `<label for="kind-${id}"><input type="radio" name="kind" id="kind-${id}" value="${id}" data-on="k-kind"${k.kind === id ? ' checked' : ''}><span>${esc(title)}</span><small>${esc(note)}</small></label>`).join('');
+  let decision;
+  if (k.saved) {
+    decision = `<p class="note" id="kSaved" tabindex="-1">Decyzja zapisana. W panelu w tym miejscu otwiera się Twój program pocztowy z gotową wiadomością albo pobiera się plik .eml. Wysyłka idzie z Twojej skrzynki, nie z platformy. <a href="#wysylka">Zobacz dziennik</a></p>`;
+  } else if (a.blocked) {
+    decision = `<p class="note warn" id="kBlocked">Wysyłka jest zablokowana. To jedyna twarda blokada w platformie: odbiorca zgłosił sprzeciw.</p>`;
+  } else {
+    decision = (a.ack ? `<label class="check" for="kAck" style="color:var(--text)"><input type="checkbox" id="kAck" data-on="k-ack"${k.ack ? ' checked' : ''}><span>${esc(PLAT.law.ack)}</span></label>` : `<p class="muted">Ryzyko niskie. Potwierdzenie nie jest potrzebne.</p>`) +
+      `<div class="acts"><button class="btn" type="button" id="kSend" data-act="k-send"${a.ack && !k.ack ? ' disabled' : ''}>Zapisz decyzję i przygotuj wiadomość</button></div>
+      ${a.ack ? '<p class="small muted">Potwierdzenie trafi do dziennika: kto, kiedy, do kogo i z jaką treścią.</p>' : ''}`;
+  }
+  put('wiadomosc', stan('silnik', 'Szkice, ocena ryzyka, potwierdzenie i dziennik.') + `<div class="two">
+    <div class="stack" style="gap:30px">
+      <div class="stack"><div class="step-h"><h2><span class="n">1.</span> Odbiorca i rodzaj wiadomości</h2></div>
+        <label class="field" for="kContact">Odbiorca<select id="kContact" data-on="k-contact">${PLAT.contacts.map((x) => `<option value="${x.id}"${x.id === c.id ? ' selected' : ''}>${esc(x.company)}</option>`).join('')}</select></label>
+        <p class="small muted">Podstawa kontaktu: ${esc(basisLine(c))}${c.unsub ? '. Wypisał się ' + esc(c.unsub) + '.' : ''}</p>
+        <fieldset class="pick"><legend class="sr-only">Rodzaj wiadomości</legend>${kinds}</fieldset></div>
+      <div class="stack"><div class="step-h"><h2><span class="n">2.</span> Treść</h2></div>
+        <div class="msg"><b>${esc(subj)}</b>${esc(body)}</div>
+        <p class="small muted">Szkic z szablonu. W panelu przycisk „Napisz z AI” czyta stronę odbiorcy i dopisuje jedno zdanie o jego działalności. Prośba o zgodę nigdy nie zawiera oferty.</p></div>
+    </div>
+    <div class="stack" style="gap:30px">
+      <div class="stack"><div class="step-h"><h2><span class="n">3.</span> Ryzyko prawne</h2><span id="kLevel">${st(lv[0], lv[1])}</span></div>
+        <p>${esc(a.lead)}</p>
+        ${a.reasons.length ? `<ul class="list">${a.reasons.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}
+        ${a.law.length ? `<div><h3 style="margin-bottom:8px">Przepisy i orzeczenia</h3><ul class="list small muted">${a.law.map((r) => `<li>${esc(r)}</li>`).join('')}</ul></div>` : ''}</div>
+      <div class="stack"><div class="step-h"><h2><span class="n">4.</span> Twoja decyzja</h2></div>${decision}
+        <p class="small muted">Platforma pokazuje ryzyko i nie decyduje za Ciebie. To podsumowanie przepisów, nie porada prawna.</p></div>
+    </div></div>`);
+}
+
+function renderSending() {
+  const s = PLAT.sequence;
+  put('wysylka', `<div class="sec">${secHead('Dziennik decyzji', 'Każda przygotowana wiadomość zostawia wpis. Przy ryzyku wysokim wpis zawiera Twoje potwierdzenie.', PLAT.log.length)}
+      ${stan('silnik', 'Dziennik i potwierdzenia.')}
+      <div class="table-wrap"><table style="min-width:680px"><thead><tr><th>Kiedy</th><th>Kto</th><th>Odbiorca</th><th>Rodzaj wiadomości</th><th>Ryzyko</th><th>Potwierdzenie</th></tr></thead><tbody>` +
+      PLAT.log.map((l) => `<tr><td class="num">${esc(l.at)}</td><td>${esc(l.who)}</td><td>${esc(l.company)}</td><td>${esc(PLAT.kinds[l.kind][0])}</td><td>${st(RISK[l.level][0], RISK[l.level][1])}</td><td>${l.ack ? 'Ryzyko potwierdzone' : 'Nie było wymagane'}</td></tr>`).join('') + `</tbody></table></div></div>
+    <div class="two">
+      <div class="sec">${secHead('Sekwencja: ' + esc(s.name))}${stan('plan', 'Dziś każdą wiadomość przygotowujesz ręcznie.')}` +
+        s.steps.map(([day, what, note]) => `<div class="item" style="--c1:70px"><span class="lead-col">${esc(day)}</span><div><p><b>${esc(what)}</b></p><p>${esc(note)}</p></div><span></span></div>`).join('') +
+        `<p class="small muted" style="padding-top:12px">Sekwencja zatrzymuje się, gdy: ${s.stops.map((x) => esc(x.toLowerCase())).join(', ')}. Limit: ${s.limit} wiadomości dziennie z jednej skrzynki.</p></div>
+      <div class="stack" style="gap:28px">
+        <div class="sec">${secHead('W toku')}<div class="table-wrap"><table><thead><tr><th>Firma</th><th>Ostatni krok</th><th>Następny</th></tr></thead><tbody>${s.running.map((r) => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('')}</tbody></table></div></div>
+        <div class="sec">${secHead('Skąd idzie wysyłka')}<ul class="list" style="padding-top:16px">
+          <li><b>Zawsze z Twojej skrzynki</b>, nigdy z domen platformy.</li>
+          <li><b>Dziś:</b> platforma otwiera program pocztowy z gotową wiadomością albo daje plik .eml.</li>
+          <li><b>W planie:</b> połączenie z Gmailem i Microsoft 365, wtedy platforma sama wykryje odpowiedź i wypisanie.</li>
+          <li><b>Wypisanie</b> blokuje kolejne oferty do tej firmy dla całego konta.</li></ul></div>
+      </div>
+    </div>`);
+}
+
+const resetDecision = () => { state.k.ack = false; state.k.saved = false; };
+const refocus = (id) => { const el = document.getElementById(id); if (el) el.focus(); };
+ACTIONS['k-write'] = (el) => { state.k.contact = Number(el.dataset.id); resetDecision(); rerender('wiadomosc'); go('wiadomosc'); };
+ACTIONS['k-add'] = (el) => {
+  const x = PLAT.search.find((s) => s.company === el.dataset.name);
+  PLAT.contacts.push({ id: Math.max(...PLAT.contacts.map((c) => c.id)) + 1, company: x.company, person: '', email: 'adres ze strony firmy', site: '', basis: 'none', detail: '', at: '', unsub: null });
+  rerender('firmy', 'kontakty', 'wiadomosc');
+  const done = [...document.querySelectorAll('[data-added]')].find((e) => e.dataset.added === x.company);
+  if (done) done.focus();
 };
+ACTIONS['k-rfq'] = (el) => {
+  const r = PLAT.rfqs[Number(el.dataset.i)];
+  if (!r.contact) {
+    r.contact = Math.max(...PLAT.contacts.map((c) => c.id)) + 1;
+    PLAT.contacts.push({ id: r.contact, company: r.company, person: '', email: r.address, site: '', basis: 'rfq', detail: 'zapytanie ofertowe: ' + r.title, at: r.published, unsub: null });
+  }
+  state.k.contact = r.contact; state.k.kind = 'rfq_reply'; resetDecision();
+  rerender('kontakty', 'wiadomosc'); go('wiadomosc');
+};
+ACTIONS['k-send'] = () => {
+  const k = state.k, c = contactOf(k.contact), a = assessMessage(k.kind, c);
+  if (a.blocked || (a.ack && !k.ack)) return;
+  PLAT.log.unshift({ at: 'przed chwilą', who: PLAT.org.user, company: c.company, kind: k.kind, level: a.level, ack: a.ack });
+  k.saved = true; rerender('wiadomosc', 'wysylka'); refocus('kSaved');
+};
+CHANGES['k-contact'] = (el) => { state.k.contact = Number(el.value); resetDecision(); rerender('wiadomosc'); refocus('kContact'); };
+CHANGES['k-kind'] = (el) => { state.k.kind = el.value; resetDecision(); rerender('wiadomosc'); refocus('kind-' + el.value); };
+CHANGES['k-ack'] = (el) => { state.k.ack = el.checked; rerender('wiadomosc'); refocus('kAck'); };
+CHANGES['k-filter'] = (el) => { state.k.f[el.dataset.key] = el.value; rerender('firmy'); refocus(el.id); };
+
+MODS.push({ id: 'klienci', order: 3, label: 'Klienci', about: 'Kontakty z podstawą kontaktu, wiadomości z ekranem ryzyka, zapytania ofertowe firm i wyszukiwanie firm.',
+  head: (v) => ({ crumbs: 'Klienci i wiadomości', title: { kontakty: 'Kontakty', firmy: 'Szukaj firm', rfq: 'Zapytania ofertowe firm', wiadomosc: 'Nowa wiadomość', wysylka: 'Wysyłka i dziennik' }[v.id] }),
+  views: [{ id: 'kontakty', label: 'Kontakty', render: renderContacts }, { id: 'wiadomosc', label: 'Wiadomość', gap: 28, render: renderMessage }, { id: 'rfq', label: 'Zapytania ofertowe', render: renderRfq },
+    { id: 'firmy', label: 'Szukaj firm', render: renderSearch }, { id: 'wysylka', label: 'Wysyłka i dziennik', gap: 40, render: renderSending }] });
+
+/* ===== SEO i strona: audyt techniczny, konkurenci, dane z Google ===== */
+const SEV = { critical: ['bad', 'Krytyczne'], warning: ['mid', 'Do poprawy'], info: ['plain', 'Wskazówka'] };
+const mins = (m) => m >= 60 ? num(m / 60, m % 60 ? 1 : 0) + ' godz.' : m + ' min';
+const techTotal = () => PLAT.tech.cats.reduce((a, c) => a + c[1], 0);
+/* Wynik strony z procentów kategorii: każda kategoria ma swoją wagę, razem 100. */
+const siteTotal = (pcts) => Math.round(pcts.reduce((a, p, i) => a + p * PLAT.tech.cats[i][2] / 100, 0));
+
+function renderTech() {
+  const t = PLAT.tech, total = techTotal(), time = t.issues.reduce((a, i) => a + i[4], 0);
+  put('technika', stan('silnik', 'Ten sam silnik co w PrestaCheck. Szacowany czas pracy jest do dodania.') +
+    `<div class="two">
+      <div class="stack"><div class="score-line"><span class="seller-num">${total}</span><div class="ro-side"><span class="muted">na 100 punktów</span>${st(level(total))}</div></div>
+        <p class="small muted">Strona ${esc(t.site)}, audyt z ${esc(t.at)}. Dobrze od 85 pkt, do poprawy od 60 pkt.</p></div>
+      <div class="stack">${t.cats.map(([name, pts, max]) => `<div class="meter"><span>${esc(name)}</span><span class="num muted">${pts} / ${max}</span><div class="hbar key"><i style="width:${Math.round(100 * pts / max)}%"></i></div></div>`).join('')}</div>
+    </div>
+    <div class="sec">${secHead('Do poprawy', 'Od najpilniejszych. Szacowany czas pracy programisty razem: ' + mins(time), t.issues.length)}` +
+      t.issues.map(([sev, cat, title, fix, m]) => `<div class="item" style="--c1:150px"><span class="lead-col">${esc(cat)}</span><div><p><b>${esc(title)}</b></p><p>${esc(fix)}</p></div><div class="end">${st(SEV[sev][0], SEV[sev][1])}<span class="num muted" style="min-width:64px;text-align:right">${mins(m)}</span></div></div>`).join('') + `</div>
+    <div class="sec">${secHead('W porządku', '', t.ok.length)}<ul class="qa" style="padding-top:16px">${t.ok.map((x) => `<li>${st('good', 'jest')}<span>${esc(x)}</span></li>`).join('')}</ul></div>
+    <p class="note">Ten audyt sprawdza technikę strony. Treść pod wyszukiwarki i AI ocenia <a href="#raport">Audyt AI</a>.</p>`);
+}
+
+function renderRivals() {
+  const t = PLAT.tech, cats = t.cats.map((c) => c[0]), own = t.rivals.find((r) => r[1] === 'Moja strona'), others = t.rivals.filter((r) => r !== own);
+  /* Strata do najlepszego konkurenta przeliczona na punkty wyniku (procent razy waga kategorii) wskazuje, od czego zacząć. */
+  const gaps = cats.map((name, i) => { const best = Math.max(...others.map((r) => r[2][i])); return { name, mine: own[2][i], best, pts: (best - own[2][i]) * t.cats[i][2] / 100 }; }).sort((a, b) => b.pts - a.pts);
+  const g = gaps[0];
+  put('konkurenci', stan('silnik', 'Porównanie najnowszych audytów każdej domeny.') +
+    `<div class="sec">${secHead('Twoja strona na tle konkurencji', 'Wynik każdej kategorii w procentach. Strony konkurentów dodajesz w audycie z etykietą „Konkurent”.')}
+      <div class="table-wrap"><table style="min-width:760px"><thead><tr><th>Strona</th><th class="n">Wynik</th>${cats.map((c) => `<th class="n">${esc(c)}</th>`).join('')}<th class="n">Krytyczne</th></tr></thead><tbody>` +
+      t.rivals.map((r) => `<tr${r === own ? ' class="own"' : ''}><td><b>${esc(r[0])}</b><br><span class="small muted">${esc(r[1])}</span></td><td class="n"><b>${siteTotal(r[2])}</b></td>${r[2].map((p) => `<td class="n">${p}</td>`).join('')}<td class="n">${r[3]}</td></tr>`).join('') + `</tbody></table></div></div>
+    <p id="rivalGap"><b>Najwięcej tracisz w kategorii: ${esc(g.name)}.</b> Twoja strona ma ${g.mine}%, najlepszy konkurent ${g.best}%. To ok. ${num(g.pts)} pkt wyniku. Zadania z tej kategorii są w zakładce <a href="#technika">Audyt techniczny</a>.</p>`);
+}
+
+function renderGoogle() {
+  const g = PLAT.gsc, cur = g.clicks.slice(4).reduce((a, b) => a + b, 0), prev = g.clicks.slice(0, 4).reduce((a, b) => a + b, 0), p = g.profile;
+  const def = { title: 'Kliknięcia z Google tygodniami', labels: g.weeks, prefix: 'Tydzień od ', series: [{ name: 'Kliknięcia', color: 'var(--s1)', values: g.clicks }] };
+  const done = p.checks.filter((c) => c[0]).length;
+  put('google', stan('plan', 'Dane są przykładowe. W panelu pojawią się po podłączeniu konta Google klienta.') +
+    `<div class="sec">${secHead('Widoczność w Google', 'Dane z Search Console klienta, ostatnie 28 dni.')}
+      <div class="counts" style="padding:18px 0 6px">
+        <div><b>${num(cur)}</b><span>kliknięć, <span class="delta${cur < prev ? ' neg' : ''}">${proc(100 * (cur - prev) / prev, true)}</span> do poprzednich 28 dni</span></div>
+        <div><b>${num(g.impressions)}</b><span>wyświetleń</span></div>
+        <div><b>${proc(100 * cur / g.impressions)}</b><span>klikalność</span></div>
+        <div><b>${esc(g.position)}</b><span>średnia pozycja</span></div></div>
+      <h3 style="padding-top:14px">Kliknięcia tygodniami</h3>${chart('gsc', def)}${dataTable(def, 'Tydzień od')}</div>
+    <div class="two">
+      <div class="sec">${secHead('Zapytania z największą liczbą kliknięć')}<div class="table-wrap"><table><thead><tr><th>Zapytanie</th><th class="n">Kliknięcia</th><th class="n">Wyświetlenia</th><th class="n">Klikalność</th><th class="n">Pozycja</th></tr></thead><tbody>` +
+        g.queries.map((q) => `<tr><td>${esc(q[0])}</td><td class="n">${num(q[1])}</td><td class="n">${num(q[2])}</td><td class="n">${proc(100 * q[1] / q[2])}</td><td class="n">${esc(q[3])}</td></tr>`).join('') + `</tbody></table></div></div>
+      <div class="sec">${secHead('Wizytówka Google', '', done + ' z ' + p.checks.length)}
+        <p style="padding:14px 0 12px">Ocena <b>${esc(p.rating)}</b> z ${p.reviews} opinii.</p>${checkList(p.checks, 'jest', 'brak')}</div>
+    </div>`);
+}
+
+MODS.push({ id: 'seo', order: 5, label: 'SEO i strona', about: 'Audyt techniczny strony, porównanie z konkurentami, dane z Search Console i wizytówki Google.',
+  head: (v) => ({ crumbs: 'Audyt widoczności, SEO i konkurencji', title: { technika: 'Audyt techniczny strony', konkurenci: 'Konkurenci', google: 'Widoczność w Google' }[v.id], facts: [['Klient', SAMPLE.client], ['Strona', PLAT.tech.site]] }),
+  views: [{ id: 'technika', label: 'Audyt techniczny', render: renderTech }, { id: 'konkurenci', label: 'Konkurenci', gap: 24, render: renderRivals }, { id: 'google', label: 'Google', gap: 40, render: renderGoogle }] });
+
+/* ===== Reklamy: Google Ads i Meta Ads ===== */
+state.ads = { metric: 'cpa', confirm: null, error: '' };
+const sum = (a) => a.reduce((x, y) => x + y, 0);
+const METRICS = { cpa: ['Koszt konwersji', (v) => zl(v, 2)], spend: ['Wydatki', (v) => zl(v)], conv: ['Konwersje', (v) => num(v)], clicks: ['Kliknięcia', (v) => num(v)] };
+const AD_COLOR = { google: 'var(--s1)', meta: 'var(--s2)' };
+const change = (cur, prev) => 100 * (cur - prev) / prev;
+/* Dwa okresy po 4 tygodnie: bieżący i poprzedni. Koszt konwersji to wydatki podzielone przez konwersje. */
+function period(rows) {
+  const mk = (from) => { const part = (k) => sum(rows.map((p) => sum(p[k].slice(from, from + 4)))), spend = part('spend'), conv = part('conv'); return { spend, clicks: part('clicks'), conv, cpa: spend / conv }; };
+  return { cur: mk(4), prev: mk(0) };
+}
+/* Wzrost kosztu jest zły, wzrost konwersji dobry. Wydatki i kliknięcia pokazujemy bez oceny. */
+function delta(k, cur, prev) {
+  const ch = change(cur, prev), cls = k === 'cpa' ? (ch > 0 ? ' delta neg' : ' delta') : (k === 'conv' ? (ch < 0 ? ' delta neg' : ' delta') : ' muted');
+  return `<span class="small${cls}">${proc(ch, true)}</span>`;
+}
+const campaignOf = (id) => PLAT.ads.campaigns.find((c) => c.id === id);
+const platformName = (id) => PLAT.ads.platforms.find((p) => p.id === id).name;
+
+/* Alerty liczone z danych: budżet wykorzystany w co najmniej 90%, koszt konwersji wyższy o co najmniej 30%, kampania wstrzymana. */
+function adsAlerts() {
+  const out = [], left = new Date(TODAY.getFullYear(), TODAY.getMonth() + 1, 0).getDate() - TODAY.getDate();
+  for (const p of PLAT.ads.platforms) {
+    const used = p.month_spend / p.month_budget;
+    if (used >= 0.9) out.push(['bad', `Budżet miesięczny ${p.name} wykorzystany w ${Math.round(100 * used)}%`, `Wydano ${zl(p.month_spend)} z ${zl(p.month_budget)}, do końca miesiąca ${dni(left)}.`]);
+  }
+  for (const c of PLAT.ads.campaigns) {
+    const cur = c.spend / c.conv, prev = c.prev_spend / c.prev_conv, ch = change(cur, prev);
+    if (c.active && ch >= 30) out.push(['mid', `Koszt konwersji w kampanii „${c.name}” wzrósł o ${num(ch)}%`, `${zl(cur, 2)} wobec ${zl(prev, 2)} w poprzednich 4 tygodniach.`]);
+    if (!c.active) out.push(['plain', `Kampania „${c.name}” jest wstrzymana`, 'Wstrzymano ' + (c.paused || 'przed chwilą') + '.']);
+  }
+  return out;
+}
+const ALERT = { bad: 'pilne', mid: 'do sprawdzenia', plain: 'informacja' };
+const adsNote = () => stan('zgoda', 'Dane są przykładowe. Podłączenie kont wymaga zatwierdzenia platformy przez Google i Meta.');
+
+function renderAds() {
+  const A = PLAT.ads, m = state.ads.metric, rows = A.platforms.map((p) => [p.name, period([p]), p.id]).concat([['Razem', period(A.platforms), null]]);
+  const cell = (k, r) => `<td class="n">${METRICS[k][1](r.cur[k])}<br>${delta(k, r.cur[k], r.prev[k])}</td>`;
+  const def = { title: METRICS[m][0] + ' tygodniami, Google Ads i Meta Ads', labels: A.weeks, prefix: 'Tydzień od ', tipFmt: METRICS[m][1], endFmt: (v) => num(v, m === 'cpa' ? 2 : 0),
+    series: A.platforms.map((p) => ({ name: p.name, color: AD_COLOR[p.id], values: p.spend.map((s, i) => m === 'cpa' ? s / p.conv[i] : p[m][i]) })) };
+  put('reklamy', adsNote() +
+    `<div class="sec">${secHead('Ostatnie 4 tygodnie', 'Pod każdą liczbą zmiana wobec poprzednich 4 tygodni.')}
+      <div class="table-wrap"><table style="min-width:620px"><thead><tr><th>Konto</th><th class="n">Wydatki</th><th class="n">Kliknięcia</th><th class="n">Konwersje</th><th class="n">Koszt konwersji</th></tr></thead><tbody>` +
+      rows.map(([name, r, id]) => `<tr><td>${id ? `<span class="key"><i style="background:${AD_COLOR[id]}"></i><b>${esc(name)}</b></span>` : `<b>${esc(name)}</b>`}</td>${['spend', 'clicks', 'conv', 'cpa'].map((k) => cell(k, r)).join('')}</tr>`).join('') + `</tbody></table></div></div>
+    <div class="sec">${secHead('Przebieg tygodniami')}
+      <div class="bar-row" style="padding:16px 0 12px"><div class="switch wide" role="group" aria-label="Wybierz miarę">${Object.entries(METRICS).map(([k, v]) => `<button type="button" data-act="ad-metric" data-m="${k}" aria-pressed="${k === m}">${v[0]}</button>`).join('')}</div>${keys(def.series)}</div>
+      <p class="small muted" style="padding-bottom:6px">${esc(METRICS[m][0])}${m === 'cpa' || m === 'spend' ? ', zł' : ''}</p>${chart('ads', def)}${dataTable(def, 'Tydzień od')}</div>
+    <p class="note">Alerty z tych danych: ${adsAlerts().length}. <a href="#alerty">Zobacz alerty</a></p>`);
+}
+
+function renderCampaigns() {
+  const A = PLAT.ads, cf = state.ads.confirm;
+  const row = (c) => {
+    const cur = c.spend / c.conv, prev = c.prev_spend / c.prev_conv;
+    let h = `<tr${cf && cf.id === c.id ? ' class="own"' : ''}><td><span class="key"><i style="background:${AD_COLOR[c.platform]}"></i><b>${esc(c.name)}</b></span><br><span class="small muted">${esc(platformName(c.platform))}</span></td>
+      <td>${st(c.active ? 'good' : 'plain', c.active ? 'aktywna' : 'wstrzymana')}</td><td class="n">${zl(c.budget)}</td><td class="n">${zl(c.spend)}</td><td class="n">${num(c.conv)}</td>
+      <td class="n">${zl(cur, 2)}<br>${delta('cpa', cur, prev)}</td>
+      <td><div class="acts"><button class="btn ghost sm" type="button" data-act="ad-ask" data-type="toggle" data-id="${c.id}">${c.active ? 'Wstrzymaj' : 'Wznów'}</button><button class="btn ghost sm" type="button" data-act="ad-ask" data-type="budget" data-id="${c.id}">Zmień budżet</button></div></td></tr>`;
+    return h;
+  };
+  let ask = '';
+  if (cf) {
+    const c = campaignOf(cf.id);
+    ask = `<div class="panel" id="adAsk" style="margin-top:16px">` + (cf.type === 'toggle'
+      ? `<div class="acts"><span style="flex:1 1 260px"><b>${c.active ? 'Wstrzymać' : 'Wznowić'} kampanię „${esc(c.name)}”?</b> Zmiana trafi do dziennika.</span><button class="btn sm" type="button" id="adOk" data-act="ad-ok">Potwierdź</button><button class="btn ghost sm" type="button" data-act="ad-cancel">Anuluj</button></div>`
+      : `<form class="form" id="adBudgetForm" novalidate><label class="field" for="adBudget" style="flex:1 1 220px;max-width:320px">Nowy budżet dzienny kampanii „${esc(c.name)}”, zł<input id="adBudget" type="text" inputmode="numeric" autocomplete="off" value="${c.budget}"></label>
+          <button class="btn sm" type="submit">Potwierdź zmianę</button><button class="btn ghost sm" type="button" data-act="ad-cancel">Anuluj</button>
+          ${state.ads.error ? `<p class="err" role="alert" style="flex-basis:100%">${esc(state.ads.error)}</p>` : `<p class="small muted" style="flex-basis:100%">Teraz ${zl(c.budget)} dziennie. Zmiana trafi do dziennika.</p>`}</form>`) + `</div>`;
+  }
+  put('kampanie', adsNote() +
+    `<div class="sec">${secHead('Kampanie', 'Wydatki i konwersje z ostatnich 4 tygodni. Każda zmiana wymaga potwierdzenia.', A.campaigns.length)}${ask}
+      <div class="table-wrap"><table style="min-width:900px"><thead><tr><th>Kampania</th><th>Stan</th><th class="n">Budżet dzienny</th><th class="n">Wydatki</th><th class="n">Konwersje</th><th class="n">Koszt konwersji</th><th>Zmiana</th></tr></thead><tbody>${A.campaigns.map(row).join('')}</tbody></table></div></div>
+    <div class="sec">${secHead('Dziennik zmian', 'Kto, kiedy i co zmienił w kampaniach z tego panelu.', A.changes.length)}
+      <div class="table-wrap"><table id="adLog"><thead><tr><th>Kiedy</th><th>Kto</th><th>Zmiana</th></tr></thead><tbody>${A.changes.map((x) => `<tr><td class="num">${esc(x.at)}</td><td>${esc(x.who)}</td><td>${esc(x.what)}</td></tr>`).join('')}</tbody></table></div></div>`);
+}
+
+function renderAlerts() {
+  const list = adsAlerts();
+  put('alerty', adsNote() +
+    `<div class="sec">${secHead('Alerty', 'Liczone z danych kampanii przy każdym odświeżeniu.', list.length)}` +
+      (list.length ? list.map(([cls, title, detail]) => `<div class="item" style="--c1:130px"><span>${st(cls, ALERT[cls])}</span><div><p><b>${esc(title)}</b></p><p>${esc(detail)}</p></div><div class="end"><a href="#kampanie">Kampanie</a></div></div>`).join('') : '<p class="muted" style="padding-top:14px">Brak alertów.</p>') + `</div>
+    <div class="sec">${secHead('Kiedy powstaje alert')}<ul class="list" style="padding-top:16px">
+      <li><b>Budżet:</b> wydano co najmniej 90% miesięcznego budżetu konta.</li>
+      <li><b>Koszt konwersji:</b> wzrost o co najmniej 30% wobec poprzednich 4 tygodni w aktywnej kampanii.</li>
+      <li><b>Kampania wstrzymana:</b> ręcznie albo przez platformę reklamową, np. po odrzuceniu reklamy.</li>
+      <li>Alert trafia też na pulpit. Powiadomienie e-mail wymaga wysyłki e-maili z platformy.</li></ul></div>`);
+}
+
+ACTIONS['ad-metric'] = (el) => { state.ads.metric = el.dataset.m; rerender('reklamy'); const b = document.querySelector(`[data-act="ad-metric"][data-m="${el.dataset.m}"]`); if (b) b.focus(); };
+ACTIONS['ad-ask'] = (el) => { state.ads.confirm = { id: el.dataset.id, type: el.dataset.type }; state.ads.error = ''; rerender('kampanie'); refocus(el.dataset.type === 'toggle' ? 'adOk' : 'adBudget'); };
+ACTIONS['ad-cancel'] = () => { state.ads.confirm = null; rerender('kampanie'); };
+function adLog(what) { PLAT.ads.changes.unshift({ at: 'przed chwilą', who: PLAT.org.user, what }); state.ads.confirm = null; rerender('kampanie', 'alerty', 'reklamy', 'pulpit'); }
+ACTIONS['ad-ok'] = () => {
+  const c = campaignOf(state.ads.confirm.id);
+  c.active = !c.active; c.paused = null;
+  adLog(`${c.name}: ${c.active ? 'wznowiono' : 'wstrzymano'} kampanię`);
+};
+FORMS.adBudgetForm = () => {
+  const c = campaignOf(state.ads.confirm.id), raw = document.getElementById('adBudget').value.trim(), v = Number(raw);
+  if (!/^\d+$/.test(raw) || v < 1 || v > 10000) { state.ads.error = 'Wpisz kwotę w pełnych złotych, od 1 do 10 000.'; rerender('kampanie'); refocus('adBudget'); return; }
+  if (v === c.budget) { state.ads.error = 'To jest obecny budżet. Wpisz inną kwotę albo anuluj.'; rerender('kampanie'); refocus('adBudget'); return; }
+  const old = c.budget;
+  c.budget = v; state.ads.error = '';
+  adLog(`${c.name}: budżet dzienny z ${num(old)} zł na ${num(v)} zł`);
+};
+
+MODS.push({ id: 'reklamy', order: 6, label: 'Reklamy', about: 'Wydatki, konwersje i koszt konwersji z Google Ads i Meta w jednym widoku, alerty i proste zarządzanie kampaniami.',
+  head: (v) => ({ crumbs: 'Google Ads i Meta Ads', title: { reklamy: 'Wyniki reklam', kampanie: 'Kampanie', alerty: 'Alerty' }[v.id], facts: [['Klient', PLAT.ads.client], ['Okres', '19.10-15.11.2026'], ['Porównanie z', '21.09-18.10.2026']] }),
+  views: [{ id: 'reklamy', label: 'Wyniki', render: renderAds }, { id: 'kampanie', label: 'Kampanie', render: renderCampaigns }, { id: 'alerty', label: 'Alerty', render: renderAlerts }] });
+
+/* ===== Przetargi ===== */
+const norm = (s) => s.toLowerCase().replace(/[ąćęłńóśźż]/g, (c) => ({ ą: 'a', ć: 'c', ę: 'e', ł: 'l', ń: 'n', ó: 'o', ś: 's', ź: 'z', ż: 'z' }[c])).replace(/[^a-z0-9]+/g, ' ').trim();
+const daysExact = (iso) => (new Date(iso + ':00') - TODAY) / 86400000;
+
+/* Dopasowanie ogłoszenia do profilu. Te same reguły i punkty co w silniku (Matcher::score):
+   województwo 10, kod CPV do 60, słowa kluczowe do 40, wartość +10 albo -25, mniej niż 3 dni na ofertę -15. */
+function matchTender(t, p) {
+  const text = ' ' + norm(t.title + ' ' + t.text) + ' ', reasons = [];
+  let score = 0;
+  if (p.regions.length) {
+    if (!p.regions.includes(t.region)) return { out: 'województwo spoza profilu: ' + t.region };
+    score += 10; reasons.push('Województwo: ' + t.region);
+  }
+  for (const kw of p.exclude) if (text.includes(' ' + norm(kw))) return { out: 'słowo wykluczające: ' + kw };
+  let best = 0, code = '';
+  for (const raw of p.cpv) {
+    const prefix = raw.replace(/\D/g, '').replace(/0+$/, '');
+    if (prefix.length < 2) continue;
+    for (const c of t.cpv_all) {
+      if (!c.startsWith(prefix)) continue;
+      const pts = (c === t.cpv_main ? 50 : 38) + Math.min(10, (prefix.length - 2) * 2);
+      if (pts > best) { best = pts; code = c; }
+    }
+  }
+  if (best) { score += Math.min(60, best); reasons.push('Kod CPV ' + code + (code === t.cpv_main ? ' (główny)' : '')); }
+  const hits = p.keywords.filter((kw) => text.includes(' ' + norm(kw)));
+  if (hits.length) { score += Math.min(40, 20 + 10 * (hits.length - 1)); reasons.push('Słowa kluczowe: ' + hits.slice(0, 4).join(', ')); }
+  if (!best && !hits.length) return { out: 'brak kodu CPV i słów kluczowych z profilu' };
+  if (t.value !== null) {
+    if (t.value < p.min || t.value > p.max) { score -= 25; reasons.push('Wartość poza Twoim zakresem'); }
+    else { score += 10; reasons.push('Wartość w Twoim zakresie'); }
+  }
+  if (daysExact(t.deadline) < 3) { score -= 15; reasons.push('Mniej niż 3 dni na ofertę'); }
+  return { score: Math.max(0, Math.min(100, score)), reasons };
+}
+function matchAll() {
+  const all = PLAT.tenders.map((t) => ({ t, m: matchTender(t, PLAT.profile) }));
+  return { ok: all.filter((x) => !x.m.out).sort((a, b) => b.m.score - a.m.score), out: all.filter((x) => x.m.out) };
+}
+const tenderOf = (id) => PLAT.tenders.find((t) => t.id === id);
+const leftState = (d, text) => st(d <= 3 ? 'bad' : (d <= 7 ? 'mid' : 'plain'), text);
+
+function renderTenders() {
+  const { ok, out } = matchAll(), next = ok.slice().sort((a, b) => a.t.deadline.localeCompare(b.t.deadline))[0];
+  put('przetargi', stan('silnik', 'Import z BZP i TED oraz dopasowanie do profilu. Ogłoszenia w mockupie są zmyślone.') +
+    `<div class="counts">
+      <div><b>${ok.length}</b><span>dopasowanych ogłoszeń</span></div><div><b>${ok.filter((x) => x.m.score >= 70).length}</b><span>z oceną od 70 pkt</span></div>
+      <div><b>${dni(daysTo(next.t.deadline))}</b><span>do najbliższego terminu</span></div><div><b>${out.length}</b><span>odrzuconych przez profil</span></div></div>
+    <div class="sec">${secHead('Dopasowane przetargi', 'Ocena 0-100 liczona z profilu „' + esc(PLAT.profile.name) + '”. Pod tytułem widać, z czego wynika.', ok.length)}` +
+      ok.map(({ t, m }) => { const d = daysTo(t.deadline), card = t.id === PLAT.tender_card.id; return `<div class="item" style="--c1:58px">
+        <span class="big" data-score="${t.id}">${m.score}</span>
+        <div><p><b>${card ? `<a href="#przetarg">${esc(t.title)}</a>` : esc(t.title)}</b></p><p>${esc(t.buyer)}, ${esc(t.source)}${t.value === null ? '' : ', ' + zl(t.value)}</p><p>${esc(m.reasons.join('. '))}.</p></div>
+        <div class="end">${leftState(d, 'do ' + dpl(t.deadline) + ', ' + dni(d))}</div></div>`; }).join('') + `</div>
+    <div class="sec">${secHead('Odrzucone przez profil', 'Te ogłoszenia nie trafiają na listę ani do porannego e-maila.', out.length)}` +
+      out.map(({ t, m }) => `<div class="item" style="--c1:58px"><span></span><div><p>${esc(t.title)}</p><p>${esc(t.buyer)}</p></div><div class="end"><span class="small muted">${esc(m.out)}</span></div></div>`).join('') + `</div>`);
+}
+
+function renderTender() {
+  const c = PLAT.tender_card, t = tenderOf(c.id), buyer = companyOf(t.buyer_company), r = companyRisk(buyer), missing = c.docs.filter((d) => !d[1]).length;
+  const rowsOf = (list) => list.map(([label, value, src]) => `<div class="item" style="--c1:150px"><span class="lead-col">${esc(label)}</span><div><p>${esc(value)}</p></div><div class="end"><span class="src">${esc(src)}</span></div></div>`).join('');
+  put('przetarg', stan('silnik', 'Karta z ogłoszenia i analiza dokumentów przez AI. Analiza wymaga klucza API.') +
+    `<div class="sec">${secHead('Najważniejsze z ogłoszenia', 'Każdy punkt ma wskazaną sekcję ogłoszenia.')}${rowsOf(c.notice)}</div>
+    <div class="sec">${secHead('Analiza dokumentacji (AI)', 'Wgrane pliki: ' + esc(c.ai.docs.join(', ')) + '. AI pisze tylko z tych dokumentów i podaje rozdział.')}
+      <p style="padding:14px 0 6px;max-width:80ch">${esc(c.ai.summary)}</p>${rowsOf(c.ai.items)}</div>
+    <div class="two">
+      <div class="sec">${secHead('Na co uważać')}` + c.risks.map(([cls, text, src]) => `<div class="item" style="--c1:96px"><span>${st(cls, cls === 'bad' ? 'wysokie' : 'średnie')}</span><div><p>${esc(text)}</p><p class="src">${esc(src)}</p></div><span></span></div>`).join('') + `</div>
+      <div class="stack" style="gap:28px">
+        <div class="sec">${secHead('Pytania warte zadania zamawiającemu')}<ul class="list" style="padding-top:16px">${c.ai.questions.map((q) => `<li>${esc(q)}</li>`).join('')}</ul></div>
+        <div class="sec">${secHead('Zamawiający jako płatnik')}<p style="padding-top:14px">${st(r.cls, 'ryzyko ' + r.label.toLowerCase())}<span style="margin-left:10px">${r.score} / 100, tylko dane publiczne.</span> <a href="#kontrahent" data-act="co-open" data-id="${buyer.id}">Otwórz kartę firmy</a></p></div>
+      </div>
+    </div>
+    <div class="sec">${secHead('Zapytaj dokumentację', 'Odpowiedź powstaje tylko z wgranych plików i zawsze podaje źródło.')}
+      <div class="stack" style="padding-top:16px;max-width:80ch"><p><b>${esc(c.ai.qa.q)}</b></p><p>${esc(c.ai.qa.a)} <span class="src">${esc(c.ai.qa.src)}</span></p>
+        <form class="form" id="tenderAsk"><label class="field" for="tq">Twoje pytanie<input id="tq" type="text" placeholder="np. Jaki jest termin płatności?"></label><button class="btn ghost" type="submit">Zapytaj</button></form>
+        <p class="note" id="tqNote" hidden>W mockupie jest tylko przykładowe pytanie powyżej. W panelu AI odpowiada z wgranych dokumentów i podaje rozdział.</p></div></div>
+    <div class="sec">${secHead('Do złożenia z ofertą', 'Lista wynika z ogłoszenia i dokumentów. Odhaczanie gotowych pozycji jest do dodania w silniku.', 'brakuje ' + missing)}<div style="padding-top:16px">${checkList(c.docs.map(([text, ok]) => [ok, text]), 'gotowe', 'brakuje')}</div>
+      <div class="acts" style="padding-top:18px"><a class="btn" href="#oferta">Otwórz szkic oferty</a><a class="btn ghost" href="#terminy">Terminy</a></div></div>`);
+}
+
+function renderProfile() {
+  const p = PLAT.profile, row = (k, v) => `<dt>${k}</dt><dd>${esc(v)}</dd>`;
+  put('profil', stan('silnik', 'Profil i dopasowanie działają. Poranny e-mail jest w planie, bo platforma nie wysyła jeszcze e-maili.') +
+    `<div class="two">
+      <div class="sec">${secHead('Profil: ' + esc(p.name), 'Firma może mieć kilka profili, np. osobno dla stron WWW i dla kampanii.')}
+        <dl class="kv" style="padding-top:16px;grid-template-columns:150px minmax(0,1fr)">${row('Kody CPV', p.cpv.join(', '))}${row('Słowa kluczowe', p.keywords.join(', '))}${row('Słowa wykluczające', p.exclude.join(', '))}
+          ${row('Województwa', p.regions.join(', '))}${row('Wartość', 'od ' + zl(p.min) + ' do ' + zl(p.max))}${row('Źródła', 'BZP i TED')}${row('Poranny e-mail', 'w planie')}</dl></div>
+      <div class="sec">${secHead('Jak liczymy dopasowanie', 'Ocena od 0 do 100. Te same reguły dają zawsze ten sam wynik.')}
+        <div class="table-wrap"><table><thead><tr><th>Co sprawdzamy</th><th class="n">Punkty</th></tr></thead><tbody>
+          <tr><td>Kod CPV z profilu jest głównym kodem ogłoszenia</td><td class="n">50-60</td></tr>
+          <tr><td>Kod CPV z profilu jest kodem dodatkowym</td><td class="n">38-48</td></tr>
+          <tr><td>Słowa kluczowe w tytule i opisie: pierwsze 20, każde kolejne 10</td><td class="n">do 40</td></tr>
+          <tr><td>Województwo z profilu</td><td class="n">10</td></tr>
+          <tr><td>Wartość w Twoim zakresie</td><td class="n">10</td></tr>
+          <tr><td>Wartość poza Twoim zakresem</td><td class="n">-25</td></tr>
+          <tr><td>Mniej niż 3 dni na ofertę</td><td class="n">-15</td></tr></tbody></table></div>
+        <p class="small muted" style="padding-top:12px">Ogłoszenie odpada całkiem, gdy ma słowo wykluczające, jest z innego województwa albo nie pasuje ani kodem, ani słowem.</p></div>
+    </div>`);
+}
+
+function renderTerms() {
+  put('terminy', stan('silnik', 'Terminy z kart przetargów. W panelu każdy termin dodasz do własnego kalendarza plikiem .ics.') +
+    `<div class="sec">${secHead('Terminy', 'Od najbliższego. Dni liczone od ' + dpl(PLAT.today) + '.', PLAT.terms.length)}` +
+      PLAT.terms.map(([at, what, id]) => { const d = daysTo(at); return `<div class="item" style="--c1:150px"><span class="num"><b>${dpl(at)}</b></span><div><p><b>${esc(what)}</b></p><p>${esc(tenderOf(id).title)}</p></div><div class="end">${leftState(d, 'za ' + dni(d))}</div></div>`; }).join('') + `</div>`);
+}
+
+FORMS.tenderAsk = () => { document.getElementById('tqNote').hidden = false; };
+
+MODS.push({ id: 'przetargi', order: 7, label: 'Przetargi', about: 'Codzienny import ogłoszeń z BZP i TED, dopasowanie do profilu, karta przetargu z analizą SWZ i kalendarz terminów.',
+  head: (v) => {
+    if (v.id !== 'przetarg') return { crumbs: 'Przetargi', title: { przetargi: 'Dopasowane przetargi', profil: 'Profil przetargowy', terminy: 'Kalendarz terminów' }[v.id] };
+    const t = tenderOf(PLAT.tender_card.id);
+    return { crumbs: 'Przetargi, karta ogłoszenia', title: t.title, facts: [['Zamawiający', t.buyer], ['Źródło', t.source], ['Wartość', zl(t.value)], ['Składanie ofert', dpl(t.deadline)], ['Dopasowanie', matchTender(t, PLAT.profile).score + ' / 100']] };
+  },
+  views: [{ id: 'przetargi', label: 'Dopasowane', gap: 32, render: renderTenders }, { id: 'przetarg', label: 'Karta przetargu', gap: 40, render: renderTender }, { id: 'profil', label: 'Profil', render: renderProfile }, { id: 'terminy', label: 'Terminy', render: renderTerms }] });
+
+/* ===== Oferty i wnioski ===== */
+const docOf = (sections) => sections.map(([title, body]) => `<div class="doc" style="padding:16px 0;border-bottom:1px solid var(--line)"><h3 style="margin-bottom:8px">${esc(title)}</h3>${body.split('\n').map((l) => `<p>${marks(l)}</p>`).join('')}</div>`).join('');
+
+function renderOffer() {
+  const o = PLAT.offer, t = tenderOf(o.tender), todo = unsourced(o.sections), docs = PLAT.tender_card.docs;
+  put('oferta', stan('silnik', 'Szkic z ogłoszenia, analizy SWZ i biblioteki firmy. Eksport do .docx.') +
+    `<p class="note">AI pisze szkic, człowiek zatwierdza i podpisuje. Platforma niczego nie składa sama.</p>
+    <div class="sec">${secHead('Szkic oferty', 'Każde zdanie ma źródło albo znacznik „sprawdź”. Zdania ze znacznikiem trzeba potwierdzić albo usunąć przed złożeniem.', 'do sprawdzenia: ' + todo)}${docOf(o.sections)}</div>
+    <div class="two">
+      <div class="sec">${secHead('Do złożenia z ofertą', 'Ta sama lista co w karcie przetargu.', 'brakuje ' + docs.filter((d) => !d[1]).length)}<div style="padding-top:16px">${checkList(docs.map(([text, ok]) => [ok, text]), 'gotowe', 'brakuje')}</div></div>
+      <div class="sec">${secHead('Co dalej')}<ul class="list" style="padding-top:16px">
+        <li>Uzupełnij miejsca w nawiasach kwadratowych: cenę, harmonogram, osoby.</li>
+        <li>Dodaj brakujące referencje w <a href="#biblioteka">bibliotece firmy</a>. Pojawią się w szkicu same.</li>
+        <li>Termin składania ofert: <b>${dpl(t.deadline)}</b>, zostało ${dni(daysTo(t.deadline))}.</li></ul>
+        <div class="acts" style="padding-top:16px"><button class="btn" type="button" data-note>Pobierz .docx</button><p class="note" hidden style="flex-basis:100%">W mockupie nie ma pliku. W panelu ten przycisk pobiera ofertę w formacie .docx.</p></div></div>
+    </div>`);
+}
+
+function renderGrants() {
+  const g = PLAT.grants;
+  put('dotacje', `<div class="sec">${secHead('Otwarte nabory', 'Dla każdego naboru platforma sprawdza warunki, które da się ocenić z danych firmy.', g.calls.length)}${stan('plan', 'Bazy naborów i oceny warunków nie ma jeszcze w silniku. Dziś nabór wpisujesz ręcznie.')}` +
+      g.calls.map((c) => { const open = c.checks.filter((x) => !x[0]).length; return `<div style="padding:18px 0;border-bottom:1px solid var(--line)" class="stack">
+        <div class="bar-row"><div><h3>${esc(c.name)}</h3><p class="small muted">Wnioski do ${esc(c.until)}, ${esc(c.amount)}</p></div>${st(open ? 'mid' : 'good', open ? 'do sprawdzenia: ' + open : 'warunki spełnione')}</div>
+        ${checkList(c.checks, 'spełnione', 'do sprawdzenia')}</div>`; }).join('') + `</div>
+    <div class="sec">${secHead('Wniosek o dotację', 'Sekcje wniosku wynikają z regulaminu naboru. Po wgraniu regulaminu i kryteriów AI pisze każdą sekcję na ich podstawie.', 'do sprawdzenia: ' + unsourced(g.sections))}${stan('silnik', 'Wniosek z własnymi sekcjami i dokumentami naboru.')}${docOf(g.sections)}</div>`);
+}
+
+function renderLibrary() {
+  const kinds = [...new Set(PLAT.library.map((i) => i[0]))];
+  put('biblioteka', stan('silnik', 'Z biblioteki korzystają szkice ofert, wniosków i wiadomości.') +
+    `<div class="sec">${secHead('Biblioteka firmy', 'Wpisujesz raz, a szkice biorą stąd fakty ze wskazaniem źródła. AI nie wymyśla referencji ani liczb.', PLAT.library.length)}` +
+      kinds.map((k) => PLAT.library.filter((i) => i[0] === k).map((i, n) => `<div class="item" style="--c1:250px"><span class="lead-col">${n ? '' : esc(k)}</span><div><p><b>${esc(i[1])}</b></p><p>${esc(i[2])}</p></div><span></span></div>`).join('')).join('') + `</div>`);
+}
+
+MODS.push({ id: 'oferty', order: 8, label: 'Oferty', about: 'Szkic oferty z ogłoszenia i biblioteki firmy, lista dokumentów, wnioski o dotacje i eksport do .docx.',
+  head: (v) => v.id === 'oferta'
+    ? { crumbs: 'Oferty i wnioski', title: 'Oferta: ' + tenderOf(PLAT.offer.tender).title, facts: [['Zamawiający', tenderOf(PLAT.offer.tender).buyer], ['Składanie ofert', dpl(tenderOf(PLAT.offer.tender).deadline)]] }
+    : { crumbs: 'Oferty i wnioski', title: { dotacje: 'Wnioski o dotacje', biblioteka: 'Biblioteka firmy' }[v.id] },
+  views: [{ id: 'oferta', label: 'Oferta', render: renderOffer }, { id: 'dotacje', label: 'Dotacje', gap: 40, render: renderGrants }, { id: 'biblioteka', label: 'Biblioteka firmy', render: renderLibrary }] });
+
+/* ===== Kontrahenci i należności ===== */
+state.co = { id: 'b2', letter: 0 };
+const companyOf = (id) => PLAT.companies.find((c) => c.id === id);
+const SIGNAL = { high: ['bad', 'wysoki'], mid: ['mid', 'średni'], info: ['plain', 'informacja'], none: ['good', 'w porządku'] };
+
+/* Ocena ryzyka płatniczego jak w silniku (Risk::assess): 5 punktów na start plus wagi sygnałów, najwyżej 100.
+   Tylko dane publiczne. Długów zgłoszonych przez użytkowników tu nie ma. */
+function companyRisk(c) {
+  const score = Math.max(0, Math.min(100, 5 + c.signals.reduce((a, s) => a + s[4], 0)));
+  const [label, cls] = score >= 70 ? ['Wysokie', 'bad'] : (score >= 45 ? ['Podwyższone', 'mid'] : (score >= 20 ? ['Umiarkowane', 'mid'] : ['Niskie', 'good']));
+  return { score, label, cls };
+}
+const overdue = (r) => Math.max(0, -daysTo(r.due));
+const addMonth = (iso) => { const [y, m, d] = iso.split('-').map(Number), x = new Date(y, m, d, 12); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
+/* Warunki wpisu do BIG dla dłużnika niebędącego konsumentem (art. 15 i 15a ustawy), jak w silniku. */
+function bigCheck(r) {
+  const days = overdue(r), wait = r.demand ? addMonth(r.demand) : null, waitOk = wait !== null && PLAT.today >= wait;
+  const checks = [
+    [true, 'Należność nie została zapłacona'],
+    [r.amount >= 500, 'Łączna kwota zaległości co najmniej 500 zł (dłużnik niebędący konsumentem)'],
+    [days >= 30, `Wymagalna od co najmniej 30 dni (teraz: ${dni(days)} po terminie)`],
+    [!!r.demand, 'Wysłane wezwanie do zapłaty z ostrzeżeniem o zamiarze przekazania danych do biura i informacją o prawie do sprzeciwu'],
+    [!!r.bureau, 'W wezwaniu podano firmę i adres siedziby biura informacji gospodarczej'],
+    [waitOk, 'Minął co najmniej miesiąc od wysłania wezwania'],
+  ];
+  const eligible = checks.every((c) => c[0]);
+  return { checks, eligible, days, from: !eligible && wait && !waitOk ? wait : null };
+}
+const compensation = (amount) => amount <= 5000 ? 40 : (amount < 50000 ? 70 : 100);
+function demandLetter(r) {
+  const c = companyOf(r.company);
+  return [`Wezwanie do zapłaty: faktura ${r.invoice}`,
+    `${dpl(PLAT.today)}\n\nWierzyciel: ${PLAT.org.name}\nDłużnik: ${c.name}, NIP ${c.nip}\n\nWEZWANIE DO ZAPŁATY\n\nWzywamy do zapłaty kwoty ${zl(r.amount)} z tytułu faktury nr ${r.invoice} z dnia ${dpl(r.issued)}, której termin płatności upłynął ${dpl(r.due)}, wraz z odsetkami ustawowymi za opóźnienie w transakcjach handlowych oraz rekompensatą za koszty odzyskiwania należności w wysokości równowartości ${compensation(r.amount)} euro, w terminie 7 dni od dnia otrzymania niniejszego wezwania.` +
+    (r.bureau ? `\n\nJednocześnie informujemy, że w przypadku braku zapłaty w terminie miesiąca od dnia doręczenia niniejszego wezwania zamierzamy przekazać dane dotyczące zobowiązania do biura informacji gospodarczej: ${r.bureau} (art. 15 ust. 1 pkt 3 ustawy o udostępnianiu informacji gospodarczych i wymianie danych gospodarczych).\n\nInformujemy o możliwości zgłoszenia nam sprzeciwu wobec zamiaru przekazania danych do biura (art. 15a tej ustawy).` : '') +
+    `\n\nZ poważaniem\n${PLAT.org.name}`];
+}
+
+function renderCompany() {
+  const c = companyOf(state.co.id), r = companyRisk(c), mine = PLAT.receivables.filter((x) => x.company === c.id);
+  put('kontrahent', stan('silnik', 'Wykaz VAT, KRS i decyzje UOKiK. Firmy w mockupie są zmyślone.') +
+    `<div class="form"><label class="field" for="coPick" style="flex:0 1 460px">Firma<select id="coPick" data-on="co-pick">${PLAT.companies.map((x) => `<option value="${x.id}"${x.id === c.id ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select></label>
+      <button class="btn ghost" type="button" data-act="co-watch" id="coWatch">${c.watched ? 'Przestań obserwować' : 'Obserwuj firmę'}</button></div>
+    <p class="small muted">W panelu wpisujesz NIP, a karta powstaje z rejestrów w kilka sekund.</p>
+    <div class="two">
+      <div class="stack"><div class="score-line"><span class="seller-num" id="coScore">${r.score}</span><div class="ro-side"><span class="muted">ryzyko płatnicze, 0-100</span>${st(r.cls, r.label)}</div></div>
+        <div class="hbar key"><i style="width:${r.score}%"></i></div>
+        <p class="small muted">Im więcej punktów, tym większe ryzyko. Od 70 wysokie, od 45 podwyższone, od 20 umiarkowane. Ocena powstaje tylko z danych publicznych.</p></div>
+      <dl class="kv" style="grid-template-columns:150px minmax(0,1fr)"><dt>NIP</dt><dd class="num">${esc(c.nip)}</dd><dt>Forma</dt><dd>${esc(c.form)}</dd><dt>Działa od</dt><dd>${esc(c.since)}</dd>
+        <dt>Rachunki w wykazie VAT</dt><dd>${c.accounts}</dd><dt>Zarząd</dt><dd>${c.board.length ? esc(c.board.join(', ')) : 'nie dotyczy'}</dd><dt>Obserwacja</dt><dd>${c.watched ? 'włączona, zmiany w rejestrach dają alert' : 'wyłączona'}</dd></dl>
+    </div>
+    <div class="sec">${secHead('Z czego wynika ocena', 'Każdy sygnał ma źródło i wagę. Na start każda firma ma 5 punktów.', r.score + ' pkt')}` +
+      c.signals.map(([lv, title, detail, src, w]) => `<div class="item" style="--c1:120px"><span>${st(SIGNAL[lv][0], SIGNAL[lv][1])}</span><div><p><b>${esc(title)}</b></p><p>${esc(detail)} <span class="src">${esc(src)}</span></p></div><div class="end"><span class="num${w ? '' : ' muted'}">${w ? '+' + w : '0'}</span></div></div>`).join('') + `</div>
+    <div class="two">
+      <div class="sec">${secHead('Zmiany od początku obserwacji', '', c.changes.length)}${c.changes.length ? c.changes.map(([at, what]) => `<div class="item" style="--c1:96px"><span class="lead-col num">${esc(at)}</span><div><p>${esc(what)}</p></div><span></span></div>`).join('') : '<p class="muted" style="padding-top:14px">Bez zmian w rejestrach.</p>'}</div>
+      <div class="sec">${secHead('Twoje należności od tej firmy', '', mine.length)}${mine.length ? mine.map((x) => `<div class="item" style="--c1:150px"><span class="lead-col">${esc(x.invoice)}</span><div><p><b>${zl(x.amount)}</b>, ${dni(overdue(x))} po terminie</p></div><div class="end"><a href="#naleznosci">Należności</a></div></div>`).join('') : '<p class="muted" style="padding-top:14px">Brak zapisanych należności.</p>'}</div>
+    </div>
+    <p class="note">W planie: upadłości i restrukturyzacje z Krajowego Rejestru Zadłużonych oraz szacowany czas płacenia dostawcom ze sprawozdań finansowych.</p>`);
+}
+
+function renderWatch() {
+  const watched = PLAT.companies.filter((c) => c.watched);
+  const changes = watched.flatMap((c) => c.changes.map(([at, what]) => ({ at, what, c }))).sort((a, b) => b.at.split('.').reverse().join('').localeCompare(a.at.split('.').reverse().join('')));
+  put('obserwowane', stan('silnik', 'Platforma codziennie porównuje rejestry z poprzednim stanem. Powiadomienie e-mail jest w planie.') +
+    `<div class="sec">${secHead('Alerty', 'Zmiany w rejestrach u obserwowanych firm, od najnowszej.', changes.length)}` +
+      changes.map((x) => `<div class="item" style="--c1:96px"><span class="lead-col num">${esc(x.at)}</span><div><p><b>${esc(x.what)}</b></p><p>${esc(x.c.name)}</p></div><div class="end"><a href="#kontrahent" data-act="co-open" data-id="${x.c.id}">Karta firmy</a></div></div>`).join('') + `</div>
+    <div class="sec">${secHead('Obserwowane firmy', '', watched.length)}` +
+      watched.map((c) => { const r = companyRisk(c); return `<div class="item" style="--c1:58px"><span class="big">${r.score}</span><div><p><b>${esc(c.name)}</b></p><p>${esc(c.form)}, NIP ${esc(c.nip)}</p></div><div class="end">${st(r.cls, 'ryzyko ' + r.label.toLowerCase())}<a href="#kontrahent" data-act="co-open" data-id="${c.id}">Karta firmy</a></div></div>`; }).join('') + `</div>`);
+}
+
+function renderReceivables() {
+  const rows = PLAT.receivables.map((r, i) => ({ r, i, b: bigCheck(r), c: companyOf(r.company) })), total = rows.reduce((a, x) => a + x.r.amount, 0), [title, body] = demandLetter(PLAT.receivables[state.co.letter]);
+  put('naleznosci', stan('silnik', 'Należności, wezwanie do zapłaty w .docx i lista warunków wpisu do BIG.') +
+    `<p class="note">Te dane widzi tylko Twoja firma. Platforma nie pokazuje długów innym użytkownikom, bo zakazuje tego ustawa o udostępnianiu informacji gospodarczych. Wpisu do biura dokonuje wierzyciel.</p>
+    <div class="counts"><div><b>${zl(total)}</b><span>po terminie</span></div><div><b>${rows.length}</b><span>liczba faktur</span></div><div><b>${rows.filter((x) => x.b.eligible).length}</b><span>spełnia warunki wpisu do BIG</span></div></div>
+    <div class="sec">${secHead('Należności po terminie', 'Rozwiń fakturę, żeby zobaczyć warunki wpisu do biura informacji gospodarczej.')}` +
+      rows.map(({ r, i, b, c }) => `<details class="row lead debt"${i === 0 ? ' open' : ''}><summary>
+          <span class="l-score" style="font-size:16px">${b.days}<span class="small muted" style="font-weight:400"> dni</span></span>
+          <span class="l-who">${esc(c.name)}<span>${esc(r.invoice)}, termin ${dpl(r.due)}</span></span>
+          <span class="c-val num">${zl(r.amount)}</span>${st(b.eligible ? 'good' : 'plain', b.eligible ? 'można wpisać do BIG' : 'warunki niespełnione')}<span class="l-status">${r.demand ? 'wezwanie ' + dpl(r.demand) : 'bez wezwania'}</span></summary>
+        <div class="row-body"><div class="stack">${checkList(b.checks, 'spełniony', 'niespełniony')}
+            ${b.from ? `<p class="small muted">Wpis możliwy najwcześniej ${dpl(b.from)}, jeśli spełnione będą pozostałe warunki.</p>` : ''}</div>
+          <div class="stack"><p>Rekompensata za koszty odzyskiwania: <b>${compensation(r.amount)} euro</b> (art. 10 ustawy o przeciwdziałaniu nadmiernym opóźnieniom).</p>
+            <div class="acts"><button class="btn ghost sm" type="button" data-act="co-letter" data-i="${i}">Pokaż wezwanie do zapłaty</button><a href="#kontrahent" data-act="co-open" data-id="${c.id}">Karta firmy</a></div></div></div></details>`).join('') + `</div>
+    <div class="sec" id="letter">${secHead('Wezwanie do zapłaty', 'W panelu pobierasz je jako plik .docx. Treść zawiera ostrzeżenie o biurze i pouczenie o sprzeciwie, gdy wpisano biuro.')}
+      <div class="msg" style="margin-top:16px;max-width:86ch"><b>${esc(title)}</b>${esc(body)}</div></div>`);
+}
+
+ACTIONS['co-open'] = (el) => { state.co.id = el.dataset.id; rerender('kontrahent'); };
+ACTIONS['co-watch'] = () => { const c = companyOf(state.co.id); c.watched = !c.watched; rerender('kontrahent', 'obserwowane', 'pulpit'); refocus('coWatch'); };
+ACTIONS['co-letter'] = (el) => { state.co.letter = Number(el.dataset.i); rerender('naleznosci'); const l = document.getElementById('letter'); if (l) l.scrollIntoView({ block: 'start' }); };
+CHANGES['co-pick'] = (el) => { state.co.id = el.value; rerender('kontrahent'); refocus('coPick'); };
+
+MODS.push({ id: 'kontrahenci', order: 9, label: 'Kontrahenci', about: 'Karta firmy po NIP z oceną ryzyka płatniczego, obserwowanie zmian w rejestrach i należności z warunkami wpisu do BIG.',
+  head: (v) => ({ crumbs: 'Wiarygodność kontrahentów', title: { kontrahent: 'Karta firmy', obserwowane: 'Obserwowane firmy', naleznosci: 'Należności' }[v.id] }),
+  views: [{ id: 'kontrahent', label: 'Karta firmy', gap: 32, render: renderCompany }, { id: 'obserwowane', label: 'Obserwowane i alerty', render: renderWatch }, { id: 'naleznosci', label: 'Należności', gap: 32, render: renderReceivables }] });
+
+
+/* ===== Nawigacja ===== */
+MODS.sort((a, b) => a.order - b.order);
+const START = 'pulpit';
+const allViews = () => MODS.flatMap((m) => m.views.map((v) => ({ m, v })));
+function rerender(...ids) { for (const { v } of allViews()) if (ids.includes(v.id)) v.render(); drawCharts(); }
 function current() {
-  const h = location.hash.slice(1);
-  for (const [module, def] of Object.entries(MODULES)) if (def.views.includes(h)) return { module, view: h };
-  return { module: 'audyt', view: 'raport' };
+  const h = location.hash.slice(1), all = allViews();
+  return all.find((x) => x.v.id === h) || all.find((x) => x.v.id === START);
 }
 function setClient(on) {
   document.getElementById('shell').classList.toggle('client', on);
   document.getElementById('clientNote').hidden = !on;
   document.getElementById('clientBtn').textContent = on ? 'Wróć do widoku agencji' : 'Podgląd dla klienta';
 }
+let lastView = null;
 function show() {
-  const cur = current();
-  if (cur.module !== 'audyt') setClient(false);
-  for (const [module, def] of Object.entries(MODULES)) {
-    const on = module === cur.module, nav = document.getElementById(def.nav);
-    for (const id of def.views) document.getElementById('v-' + id).hidden = id !== cur.view;
-    document.getElementById(def.tabs).hidden = !on;
-    nav.classList.toggle('on', on);
-    if (on) nav.setAttribute('aria-current', 'true'); else nav.removeAttribute('aria-current');
-    for (const a of document.querySelectorAll('#' + def.tabs + ' a')) { if (a.getAttribute('href') === '#' + cur.view) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
+  const { m, v } = current();
+  if (!m.client) setClient(false);
+  for (const x of allViews()) document.getElementById('v-' + x.v.id).hidden = x.v.id !== v.id;
+  const nav = document.getElementById('mods');
+  for (const a of nav.querySelectorAll('a')) {
+    const on = a.dataset.mod === m.id;
+    a.classList.toggle('on', on);
+    if (on) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
   }
-  document.getElementById('clientBtn').hidden = cur.module !== 'audyt';
-  renderHead(cur.module);
+  const tabs = document.getElementById('tabs');
+  tabs.hidden = m.views.length < 2;
+  tabs.innerHTML = m.views.map((x) => `<a href="#${x.id}"${x.agency ? ' class="agency-only"' : ''}${x.id === v.id ? ' aria-current="page"' : ''}>${esc(x.label)}</a>`).join('');
+  document.getElementById('clientBtn').hidden = !m.client;
+  const h = m.head(v);
+  document.getElementById('crumbs').textContent = h.crumbs;
+  document.getElementById('pageTitle').textContent = h.title;
+  const meta = document.getElementById('pageMeta');
+  meta.hidden = !(h.facts && h.facts.length);
+  meta.innerHTML = (h.facts || []).map(([k, val]) => `<div><dt>${esc(k)}</dt><dd>${esc(val)}</dd></div>`).join('');
+  const on = nav.querySelector('a.on');
+  if (on && (on.offsetLeft < nav.scrollLeft + nav.offsetLeft || on.offsetLeft + on.offsetWidth > nav.offsetLeft + nav.scrollLeft + nav.clientWidth)) nav.scrollLeft = on.offsetLeft - nav.offsetLeft - 16;
+  if (lastView && lastView !== v.id) window.scrollTo(0, 0);
+  lastView = v.id;
+  hideTip(); drawCharts();
 }
-function renderAll() { renderReport(); renderGuide(); renderProgress(); renderCitations(); renderPages(); renderLeads(); renderQualifier(); renderWidget(); renderResults(); show(); }
+function renderAll() { for (const { v } of allViews()) v.render(); show(); }
+function go(view) { if (location.hash === '#' + view) show(); else location.hash = '#' + view; }
+
+document.getElementById('mods').innerHTML = MODS.map((m) => `<a href="#${m.views[0].id}" data-mod="${m.id}">${esc(m.label)}</a>`).join('');
+document.getElementById('views').innerHTML = allViews().map(({ v }) => `<section id="v-${v.id}"${v.gap === 0 ? '' : ` class="stack" style="gap:${v.gap || 36}px"`} aria-label="${esc(v.label)}" hidden></section>`).join('');
 
 document.addEventListener('click', (e) => {
+  const act = e.target.closest('[data-act]');
+  if (act && ACTIONS[act.dataset.act]) { ACTIONS[act.dataset.act](act, e); return; }
   const b = e.target.closest('[data-audit]');
-  if (b) { state.audit = b.dataset.audit; renderAll(); return; }
+  if (b) { state.audit = b.dataset.audit; rerender('raport', 'wytyczne', 'postep', 'cytowania', 'strony'); show(); return; }
   const seg = e.target.closest('[data-rule]');
   if (seg) { const row = document.getElementById('r-' + seg.dataset.rule); if (row) { row.open = true; row.scrollIntoView({ block: 'center' }); row.querySelector('summary').focus({ preventScroll: true }); } return; }
   const opt = e.target.closest('[data-opt]');
@@ -709,7 +1526,12 @@ document.addEventListener('click', (e) => {
   const note = e.target.closest('[data-note]');
   if (note) note.nextElementSibling.hidden = !note.nextElementSibling.hidden;
 });
+document.addEventListener('change', (e) => {
+  const el = e.target.closest('[data-on]');
+  if (el && CHANGES[el.dataset.on]) CHANGES[el.dataset.on](el, e);
+});
 document.addEventListener('submit', (e) => {
+  if (FORMS[e.target.id]) { e.preventDefault(); FORMS[e.target.id](e.target); return; }
   const w = state.w, val = (id) => document.getElementById(id).value.trim();
   if (e.target.id === 'auditForm') { e.preventDefault(); document.getElementById('formNote').hidden = false; }
   if (e.target.id === 'wShop') { e.preventDefault(); w.shop = val('wUrl').slice(0, 120) || null; w.step = 5; renderWidget(); }
@@ -732,7 +1554,7 @@ document.addEventListener('submit', (e) => {
       nip: val('wNip') ? ['plain', 'NIP podany. W panelu sprawdzimy go w wykazie VAT i KRS.'] : null, shop: w.shop, audit: null,
       summary: 'Zapytanie utworzone w podglądzie widżetu. W panelu streszczenie pisze AI na podstawie odpowiedzi.',
     });
-    w.step = 6; renderLeads(); renderWidget();
+    w.step = 6; rerender('zapytania', 'widzet', 'pulpit');
   }
 });
 document.getElementById('clientBtn').addEventListener('click', () => {
@@ -741,6 +1563,8 @@ document.getElementById('clientBtn').addEventListener('click', () => {
   if (on && location.hash === '#strony') location.hash = '#raport';
 });
 window.addEventListener('hashchange', show);
+let resizeTimer = null;
+window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(drawCharts, 120); });
 renderAll();
 </script>
 </body>

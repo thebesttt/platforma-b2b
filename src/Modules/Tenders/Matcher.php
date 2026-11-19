@@ -71,11 +71,11 @@ final class Matcher
             $reasons[] = 'Kod CPV ' . $bestCode . ($bestCode === $cpvMain ? ' (główny)' : '');
         }
 
-        // Słowa kluczowe w tytule i opisie.
+        // Słowa kluczowe w tytule i opisie. Porównujemy bez polskich znaków, a w uzasadnieniu pokazujemy słowo w zapisie użytkownika.
         $hits = [];
-        foreach (self::lines($profile['keywords'] ?? '') as $kw) {
-            if ($kw !== '' && str_contains(' ' . $text . ' ', ' ' . $kw)) {
-                $hits[] = $kw;
+        foreach (self::keywordMap($profile['keywords'] ?? '') as $kw => $shown) {
+            if (str_contains(' ' . $text . ' ', ' ' . $kw)) {
+                $hits[] = $shown;
             }
         }
         if ($hits) {
@@ -188,6 +188,19 @@ final class Matcher
     private static function words(?string $s): array
     {
         return array_values(array_filter(preg_split('/[\s,;]+/u', trim((string) $s)) ?: [], static fn ($w) => $w !== ''));
+    }
+
+    /** @return array<string, string> słowo znormalizowane do porównań => to samo słowo w zapisie użytkownika (małymi literami) */
+    private static function keywordMap(?string $s): array
+    {
+        $map = [];
+        foreach (preg_split('/[\r\n,;]+/u', (string) $s) ?: [] as $part) {
+            $key = search_text($part);
+            if ($key !== '' && !isset($map[$key])) {
+                $map[$key] = mb_strtolower(trim(preg_replace('/\s+/u', ' ', $part) ?? ''));
+            }
+        }
+        return $map;
     }
 
     /** Słowa kluczowe: po jednym w linii albo po przecinku, znormalizowane. */

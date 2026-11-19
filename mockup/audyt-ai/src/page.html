@@ -1,4 +1,4 @@
-<title>Mockup audytu i zapytań</title>
+<title>Mockup panelu PerfectData</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* Motyw PerfectData: granat i złoto ze strony perfectdata.pl, czcionka systemowa.
@@ -9,6 +9,7 @@
   --gold: #d4a94a; --gold-hi: #e8c97a; --gold-lo: #a87f2c; --on-gold: #14100a;
   --text: #f2f3f7; --muted: #9aa3b8;
   --good: #4ade80; --mid: #f0a04b; --bad: #f87171; --bar: #34436a;
+  --s1: #3987e5; --s2: #d55181; --grid: #1b2438; /* dwie serie wykresów: sprawdzone walidatorem na obu tłach, osobne od barw stanu i od złota */
   --r-s: 9px; --r-m: 14px; --r-l: 18px;
   --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
@@ -40,13 +41,16 @@ ul, ol, dl, dd { margin: 0; padding: 0; }
 .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-weight: 700; font-size: 18px; letter-spacing: -0.02em; }
 .logo-mark { width: 30px; height: 30px; border: 1.5px solid var(--gold); border-radius: 7px; display: grid; place-items: center; font-size: 12px; letter-spacing: 0; color: var(--gold); }
 .logo b { color: var(--gold); font-weight: 700; }
-.mods { display: flex; gap: 22px; flex: 1; }
-.mods a { color: var(--text); text-decoration: none; font-size: 14px; font-weight: 500; padding: 8px 0; border-bottom: 2px solid transparent; }
+.mods { display: flex; gap: 20px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.mods::-webkit-scrollbar { display: none; }
+.mods a { flex: none; white-space: nowrap; color: var(--text); text-decoration: none; font-size: 14px; font-weight: 500; padding: 8px 0; border-bottom: 2px solid transparent; }
 .mods a.on { border-bottom-color: var(--gold); }
 .mods a:hover { color: var(--gold-hi); }
 .back { font-size: 13.5px; color: var(--muted); }
 .page { display: flex; flex-direction: column; gap: 28px; padding-block: 36px 72px; }
-@media (max-width: 600px) { .back { display: none; } .mods { justify-content: flex-end; gap: 18px; } .page { padding-block: 24px 56px; gap: 24px; } }
+@media (max-width: 1040px) { .back { display: none; } }
+@media (max-width: 860px) { .top-in { gap: 4px 28px; padding-bottom: 0; } .mods { order: 3; flex-basis: 100%; } .mods a { padding: 8px 0 10px; } }
+@media (max-width: 600px) { .page { padding-block: 24px 56px; gap: 24px; } }
 .client .agency-only { display: none; }
 
 .head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px 24px; }
@@ -185,7 +189,7 @@ td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space:
 .meter { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 14px; font-size: 14.5px; }
 .meter .hbar { grid-column: 1 / -1; }
 .qa { list-style: none; display: flex; flex-direction: column; gap: 7px; font-size: 14.5px; }
-.qa li { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 12px; }
+.qa li { display: grid; grid-template-columns: var(--qa, 96px) minmax(0, 1fr); gap: 12px; }
 /* Pytania kwalifikatora: pytanie z lewej, odpowiedzi z punktami z prawej */
 .q { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 6px 40px; padding: 18px 0; border-bottom: 1px solid var(--line); }
 .q h3 { line-height: 1.4; }
@@ -238,16 +242,66 @@ code { font: 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 .w-foot .btn { min-height: 42px; padding: 0 14px; }
 .err { color: var(--bad); font-size: 13.5px; }
 .seller-num { font-size: 52px; font-weight: 700; line-height: 1; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+/* ===== Nowe moduły ===== */
+.field select, .field textarea { width: 100%; min-height: 44px; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--r-s); background: var(--ink); color: var(--text); font: 15px/1.5 var(--font); }
+.field textarea { min-height: 120px; resize: vertical; }
+.field select:focus-visible, .field textarea:focus-visible { border-color: var(--gold); outline-offset: 0; }
+.stack > .field { flex: 0 0 auto; }
+.btn.sm { min-height: 36px; padding: 0 14px; font-size: 13.5px; }
+.btn[disabled] { opacity: .45; cursor: not-allowed; filter: none; box-shadow: none; }
+.acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+@media (max-width: 560px) { .switch.wide { display: grid; grid-template-columns: 1fr 1fr; width: 100%; } .switch.wide button:nth-child(odd) { border-left: 0; } .switch.wide button:nth-child(n+3) { border-top: 1px solid var(--line); } }
+.note.warn { border-left-color: var(--bad); }
+.pick { display: flex; flex-direction: column; gap: 6px; border: 0; padding: 0; margin: 0; min-width: 0; }
+.pick label { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 2px 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-s); cursor: pointer; font-weight: 600; }
+.pick label:has(input:checked) { border-color: var(--gold); background: var(--panel); }
+.pick input { accent-color: var(--gold); margin-top: 5px; }
+.pick small { grid-column: 2; font-size: 13px; font-weight: 400; color: var(--muted); }
+.msg { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-s); padding: 14px 16px; white-space: pre-wrap; font-size: 14.5px; overflow-wrap: anywhere; }
+.msg b { display: block; margin-bottom: 8px; }
+.src { color: var(--muted); font-size: 12.5px; }
+.chk { color: var(--mid); font-size: 12.5px; font-weight: 600; white-space: nowrap; border-bottom: 1px dashed currentColor; }
+.doc p { margin-bottom: 8px; max-width: 86ch; }
+.step-h { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.step-h .n { color: var(--gold); font-weight: 700; }
+/* Wiersz listy: lewa kolumna stała, treść, stan, akcja */
+.item { display: grid; grid-template-columns: var(--c1, 132px) minmax(0, 1fr) auto; gap: 4px 20px; align-items: baseline; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.item > .lead-col { font-size: 13.5px; color: var(--muted); }
+.item p + p { color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+.item .end { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: flex-end; }
+.item .big { font-size: 26px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; }
+@media (max-width: 700px) { .item { grid-template-columns: minmax(0, 1fr); } .item .end { justify-content: flex-start; } }
+.score-line { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+.debt summary { grid-template-columns: 12px 70px minmax(0, 1.3fr) minmax(0, .6fr) 190px 150px; }
+@media (max-width: 760px) { .debt summary { grid-template-columns: 12px 60px minmax(0, 1fr); } }
+.fn > a { color: var(--text); font-weight: 600; text-decoration-color: var(--line); }
+.fn > a:hover { color: var(--gold-hi); text-decoration-color: currentColor; }
+.own td { background: var(--panel); }
+.own td:first-child { box-shadow: inset 2px 0 0 var(--gold); padding-left: 12px; }
+.delta.neg { color: var(--bad); }
+/* Wykres: jedna oś, cienkie linie, opisy w barwie tekstu, nie serii */
+.chart { min-width: 0; }
+.chart svg { display: block; width: 100%; overflow: visible; outline-offset: 4px; }
+.chart text { font: 12px var(--font); fill: var(--muted); font-variant-numeric: tabular-nums; }
+.chart .val { fill: var(--text); font-weight: 600; }
+.keys { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 13.5px; }
+.key { display: inline-flex; align-items: center; gap: 8px; }
+.key i { width: 16px; height: 3px; border-radius: 2px; flex: none; }
+.tip { position: fixed; z-index: 20; pointer-events: none; background: var(--raised); border: 1px solid var(--line); border-radius: var(--r-s); padding: 8px 12px; font-size: 13px; box-shadow: 0 12px 32px rgba(0, 0, 0, .4); max-width: 240px; }
+.tip b { display: block; margin-bottom: 4px; color: var(--muted); font-weight: 500; }
+.tip div { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.tip div strong { font-variant-numeric: tabular-nums; }
+.tip i { width: 12px; height: 3px; border-radius: 2px; flex: none; }
+details.more > summary { cursor: pointer; font-size: 13.5px; color: var(--muted); padding: 6px 0; }
+details.more > summary:hover { color: var(--text); }
 @media (prefers-reduced-motion: reduce) { .row summary::before { transition: none; } }
 </style>
 
 <div id="shell">
 <div class="mock"><div class="wrap"><b>Mockup.</b> Wygląd według perfectdata.pl. Dane są fikcyjne, nic nie jest mierzone ani wysyłane.</div></div>
 <header class="top"><div class="wrap top-in">
-  <a class="logo" href="#raport" aria-label="PerfectData"><span class="logo-mark" aria-hidden="true">PD</span><span>Perfect<b>Data</b></span></a>
-  <nav class="mods agency-only" aria-label="Moduły">
-    <a href="#raport" id="navAudit">Audyt AI</a><a href="#zapytania" id="navLeads">Zapytania</a>
-  </nav>
+  <a class="logo" href="#pulpit" aria-label="PerfectData, pulpit"><span class="logo-mark" aria-hidden="true">PD</span><span>Perfect<b>Data</b></span></a>
+  <nav class="mods agency-only" aria-label="Moduły" id="mods"></nav>
   <a class="back agency-only" href="https://perfectdata.pl" target="_blank" rel="noopener">perfectdata.pl</a>
 </div></header>
 <main class="wrap page">
@@ -260,22 +314,9 @@ code { font: 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     </div>
     <button class="btn ghost" id="clientBtn" type="button">Podgląd dla klienta</button>
   </header>
-  <nav class="tabs" aria-label="Części audytu" id="tabs">
-    <a href="#raport">Raport</a><a href="#wytyczne">Wytyczne wskaźników</a><a href="#postep">Przed i po</a><a href="#cytowania">Cytowania w AI</a><a href="#strony" class="agency-only">Strony witryny</a>
-  </nav>
-  <nav class="tabs" aria-label="Części modułu zapytań" id="tabsLeads" hidden>
-    <a href="#zapytania">Zapytania</a><a href="#kwalifikator">Zasady kwalifikacji</a><a href="#widzet">Podgląd widżetu</a><a href="#wyniki">Wyniki</a>
-  </nav>
-
-  <section id="v-raport" class="stack" style="gap:44px" aria-label="Raport"></section>
-  <section id="v-wytyczne" class="stack" style="gap:44px" aria-label="Wytyczne wskaźników" hidden></section>
-  <section id="v-postep" class="stack" style="gap:36px" aria-label="Przed i po" hidden></section>
-  <section id="v-cytowania" class="stack" style="gap:36px" aria-label="Cytowania w AI" hidden></section>
-  <section id="v-strony" class="stack" aria-label="Strony witryny" hidden></section>
-  <section id="v-zapytania" class="stack" style="gap:32px" aria-label="Zapytania" hidden></section>
-  <section id="v-kwalifikator" class="stack" style="gap:44px" aria-label="Zasady kwalifikacji" hidden></section>
-  <section id="v-widzet" aria-label="Podgląd widżetu" hidden></section>
-  <section id="v-wyniki" class="stack" style="gap:44px" aria-label="Wyniki" hidden></section>
+  <nav class="tabs" aria-label="Części modułu" id="tabs"></nav>
+  <div id="views"></div>
+  <div class="tip" id="tip" role="status" hidden></div>
 </main>
 </div>
 
@@ -283,6 +324,17 @@ code { font: 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 const RULES = /*__RULES__*/null;
 const SAMPLE = /*__SAMPLE__*/null;
 const LEADS = /*__LEADS__*/null;
+const PLAT = /*__PLATFORM__*/null;
+
+/* Mockup liczy wszystko względem jednej daty, żeby terminy i dni po terminie nie zmieniały się z dnia na dzień. */
+const TODAY = new Date(PLAT.today + 'T12:00:00');
+const num = (n, d = 0) => { const [a, b] = Math.abs(n).toFixed(d).split('.'); return (n < 0 ? '-' : '') + a.replace(/\B(?=(\d{3})+$)/g, '\u00a0') + (b ? ',' + b : ''); };
+const zl = (n, d = 0) => num(n, d) + '\u00a0zł';
+const dpl = (iso) => { const [d, t] = iso.split('T'), [y, m, dd] = d.split('-'); return `${dd}.${m}.${y}` + (t && t !== '23:59' ? ', ' + t : ''); };
+const daysTo = (iso) => Math.round((new Date(iso.slice(0, 10) + 'T12:00:00') - TODAY) / 86400000);
+const dni = (n) => n + (n === 1 ? ' dzień' : ' dni');
+const put = (id, html) => { document.getElementById('v-' + id).innerHTML = html; };
+const MODS = [], ACTIONS = {}, CHANGES = {}, FORMS = {};
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const LABEL = { good: 'Dobrze', mid: 'Do poprawy', bad: 'Źle' };
@@ -335,20 +387,6 @@ function ruler(audit, interactive) {
     }).join('');
     return `<div class="rg" style="flex:${max} 1 ${max * 5}px"><div class="segs">${segs}</div><div class="rg-l"><span><b>${gr.id}</b>${esc(gr.short)}</span><span class="num">${pts} / ${max}</span></div></div>`;
   }).join('') + `</div>`;
-}
-
-function renderHead(module) {
-  const crumbs = document.getElementById('crumbs'), fact = (k, v) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`;
-  if (module === 'zapytania') {
-    crumbs.textContent = 'Zapytania ze strony';
-    document.getElementById('pageTitle').textContent = 'Zapytania z perfectdata.pl';
-    document.getElementById('pageMeta').innerHTML = fact('Widżet działa na', LEADS.pages) + fact('Zasady kwalifikacji', 'wersja ' + LEADS.version);
-    return;
-  }
-  const a = auditOf(state.audit);
-  crumbs.textContent = 'Audyt treści pod wyszukiwarki i AI';
-  document.getElementById('pageTitle').textContent = SAMPLE.title;
-  document.getElementById('pageMeta').innerHTML = fact('Klient', SAMPLE.client) + fact('Adres', SAMPLE.url) + fact('Fraza', SAMPLE.phrase) + fact('Audyt z', a.date) + fact('Wytyczne', 'wersja ' + RULES.version);
 }
 
 function renderReport() {
@@ -574,7 +612,7 @@ function renderQualifier() {
         <li>Budżet AI: <b>${LEADS.limits.budget} zł</b> miesięcznie. Po przekroczeniu działają same pytania, bez czatu.</li>
         <li>Pytania kwalifikujące nie zużywają AI.</li></ul></div>
     </div>
-    <div class="sec"><div class="sec-h"><h2>Wymogi</h2></div><ul class="qa" style="padding-top:16px">
+    <div class="sec"><div class="sec-h"><h2>Wymogi</h2></div><ul class="qa" style="padding-top:16px;--qa:124px">
         ${req(true, 'Informacja na początku rozmowy, że odpowiada asystent AI.', 'AI Act, od 2.08.2026')}
         ${req(true, 'Klauzula informacyjna przy podaniu kontaktu.', 'RODO')}
         ${req(true, 'Zgoda na oferty osobno i domyślnie odznaczona.', 'Prawo komunikacji elektronicznej')}
@@ -659,40 +697,72 @@ function renderResults() {
       <li>Wariant przydziela serwer, bez plików cookie.</li></ul></div>`;
 }
 
+/* ===== Moduły ===== */
+MODS.push({ id: 'zapytania', order: 2, label: 'Zapytania', about: 'Kwalifikator na stronie zamiast formularza: ocena zapytania z jawnych zasad, sprawdzenie firmy, czat AI i test na liczbach.',
+  head: () => ({ crumbs: 'Zapytania ze strony', title: 'Zapytania z perfectdata.pl', facts: [['Widżet działa na', LEADS.pages], ['Zasady kwalifikacji', 'wersja ' + LEADS.version]] }),
+  views: [{ id: 'zapytania', label: 'Zapytania', gap: 32, render: renderLeads }, { id: 'kwalifikator', label: 'Zasady kwalifikacji', gap: 44, render: renderQualifier },
+    { id: 'widzet', label: 'Podgląd widżetu', gap: 0, render: renderWidget }, { id: 'wyniki', label: 'Wyniki', gap: 44, render: renderResults }] });
+MODS.push({ id: 'audyt', order: 4, label: 'Audyt AI', client: true, about: 'Audyt treści pod wyszukiwarki i AI: 24 wskaźniki, 100 punktów, lista zadań, porównanie przed i po, raport dla klienta.',
+  head: () => ({ crumbs: 'Audyt treści pod wyszukiwarki i AI', title: SAMPLE.title,
+    facts: [['Klient', SAMPLE.client], ['Adres', SAMPLE.url], ['Fraza', SAMPLE.phrase], ['Audyt z', auditOf(state.audit).date], ['Wytyczne', 'wersja ' + RULES.version]] }),
+  views: [{ id: 'raport', label: 'Raport', gap: 44, render: renderReport }, { id: 'wytyczne', label: 'Wytyczne wskaźników', gap: 44, render: renderGuide },
+    { id: 'postep', label: 'Przed i po', gap: 36, render: renderProgress }, { id: 'cytowania', label: 'Cytowania w AI', gap: 36, render: renderCitations },
+    { id: 'strony', label: 'Strony witryny', agency: true, render: renderPages }] });
+
+/*__VIEWS__*/
+
 /* ===== Nawigacja ===== */
-const MODULES = {
-  audyt: { views: ['raport', 'wytyczne', 'postep', 'cytowania', 'strony'], tabs: 'tabs', nav: 'navAudit' },
-  zapytania: { views: ['zapytania', 'kwalifikator', 'widzet', 'wyniki'], tabs: 'tabsLeads', nav: 'navLeads' },
-};
+MODS.sort((a, b) => a.order - b.order);
+const START = 'pulpit';
+const allViews = () => MODS.flatMap((m) => m.views.map((v) => ({ m, v })));
+function rerender(...ids) { for (const { v } of allViews()) if (ids.includes(v.id)) v.render(); drawCharts(); }
 function current() {
-  const h = location.hash.slice(1);
-  for (const [module, def] of Object.entries(MODULES)) if (def.views.includes(h)) return { module, view: h };
-  return { module: 'audyt', view: 'raport' };
+  const h = location.hash.slice(1), all = allViews();
+  return all.find((x) => x.v.id === h) || all.find((x) => x.v.id === START);
 }
 function setClient(on) {
   document.getElementById('shell').classList.toggle('client', on);
   document.getElementById('clientNote').hidden = !on;
   document.getElementById('clientBtn').textContent = on ? 'Wróć do widoku agencji' : 'Podgląd dla klienta';
 }
+let lastView = null;
 function show() {
-  const cur = current();
-  if (cur.module !== 'audyt') setClient(false);
-  for (const [module, def] of Object.entries(MODULES)) {
-    const on = module === cur.module, nav = document.getElementById(def.nav);
-    for (const id of def.views) document.getElementById('v-' + id).hidden = id !== cur.view;
-    document.getElementById(def.tabs).hidden = !on;
-    nav.classList.toggle('on', on);
-    if (on) nav.setAttribute('aria-current', 'true'); else nav.removeAttribute('aria-current');
-    for (const a of document.querySelectorAll('#' + def.tabs + ' a')) { if (a.getAttribute('href') === '#' + cur.view) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
+  const { m, v } = current();
+  if (!m.client) setClient(false);
+  for (const x of allViews()) document.getElementById('v-' + x.v.id).hidden = x.v.id !== v.id;
+  const nav = document.getElementById('mods');
+  for (const a of nav.querySelectorAll('a')) {
+    const on = a.dataset.mod === m.id;
+    a.classList.toggle('on', on);
+    if (on) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
   }
-  document.getElementById('clientBtn').hidden = cur.module !== 'audyt';
-  renderHead(cur.module);
+  const tabs = document.getElementById('tabs');
+  tabs.hidden = m.views.length < 2;
+  tabs.innerHTML = m.views.map((x) => `<a href="#${x.id}"${x.agency ? ' class="agency-only"' : ''}${x.id === v.id ? ' aria-current="page"' : ''}>${esc(x.label)}</a>`).join('');
+  document.getElementById('clientBtn').hidden = !m.client;
+  const h = m.head(v);
+  document.getElementById('crumbs').textContent = h.crumbs;
+  document.getElementById('pageTitle').textContent = h.title;
+  const meta = document.getElementById('pageMeta');
+  meta.hidden = !(h.facts && h.facts.length);
+  meta.innerHTML = (h.facts || []).map(([k, val]) => `<div><dt>${esc(k)}</dt><dd>${esc(val)}</dd></div>`).join('');
+  const on = nav.querySelector('a.on');
+  if (on && (on.offsetLeft < nav.scrollLeft + nav.offsetLeft || on.offsetLeft + on.offsetWidth > nav.offsetLeft + nav.scrollLeft + nav.clientWidth)) nav.scrollLeft = on.offsetLeft - nav.offsetLeft - 16;
+  if (lastView && lastView !== v.id) window.scrollTo(0, 0);
+  lastView = v.id;
+  hideTip(); drawCharts();
 }
-function renderAll() { renderReport(); renderGuide(); renderProgress(); renderCitations(); renderPages(); renderLeads(); renderQualifier(); renderWidget(); renderResults(); show(); }
+function renderAll() { for (const { v } of allViews()) v.render(); show(); }
+function go(view) { if (location.hash === '#' + view) show(); else location.hash = '#' + view; }
+
+document.getElementById('mods').innerHTML = MODS.map((m) => `<a href="#${m.views[0].id}" data-mod="${m.id}">${esc(m.label)}</a>`).join('');
+document.getElementById('views').innerHTML = allViews().map(({ v }) => `<section id="v-${v.id}"${v.gap === 0 ? '' : ` class="stack" style="gap:${v.gap || 36}px"`} aria-label="${esc(v.label)}" hidden></section>`).join('');
 
 document.addEventListener('click', (e) => {
+  const act = e.target.closest('[data-act]');
+  if (act && ACTIONS[act.dataset.act]) { ACTIONS[act.dataset.act](act, e); return; }
   const b = e.target.closest('[data-audit]');
-  if (b) { state.audit = b.dataset.audit; renderAll(); return; }
+  if (b) { state.audit = b.dataset.audit; rerender('raport', 'wytyczne', 'postep', 'cytowania', 'strony'); show(); return; }
   const seg = e.target.closest('[data-rule]');
   if (seg) { const row = document.getElementById('r-' + seg.dataset.rule); if (row) { row.open = true; row.scrollIntoView({ block: 'center' }); row.querySelector('summary').focus({ preventScroll: true }); } return; }
   const opt = e.target.closest('[data-opt]');
@@ -702,7 +772,12 @@ document.addEventListener('click', (e) => {
   const note = e.target.closest('[data-note]');
   if (note) note.nextElementSibling.hidden = !note.nextElementSibling.hidden;
 });
+document.addEventListener('change', (e) => {
+  const el = e.target.closest('[data-on]');
+  if (el && CHANGES[el.dataset.on]) CHANGES[el.dataset.on](el, e);
+});
 document.addEventListener('submit', (e) => {
+  if (FORMS[e.target.id]) { e.preventDefault(); FORMS[e.target.id](e.target); return; }
   const w = state.w, val = (id) => document.getElementById(id).value.trim();
   if (e.target.id === 'auditForm') { e.preventDefault(); document.getElementById('formNote').hidden = false; }
   if (e.target.id === 'wShop') { e.preventDefault(); w.shop = val('wUrl').slice(0, 120) || null; w.step = 5; renderWidget(); }
@@ -725,7 +800,7 @@ document.addEventListener('submit', (e) => {
       nip: val('wNip') ? ['plain', 'NIP podany. W panelu sprawdzimy go w wykazie VAT i KRS.'] : null, shop: w.shop, audit: null,
       summary: 'Zapytanie utworzone w podglądzie widżetu. W panelu streszczenie pisze AI na podstawie odpowiedzi.',
     });
-    w.step = 6; renderLeads(); renderWidget();
+    w.step = 6; rerender('zapytania', 'widzet', 'pulpit');
   }
 });
 document.getElementById('clientBtn').addEventListener('click', () => {
@@ -734,5 +809,7 @@ document.getElementById('clientBtn').addEventListener('click', () => {
   if (on && location.hash === '#strony') location.hash = '#raport';
 });
 window.addEventListener('hashchange', show);
+let resizeTimer = null;
+window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(drawCharts, 120); });
 renderAll();
 </script>

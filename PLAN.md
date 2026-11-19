@@ -9,7 +9,7 @@ Na perfectdata.pl nic nie zostało zainstalowane. Kod trafi na stronę dopiero p
 ## Co jest gotowe
 
 - **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`. Konta, firmy, klienci, bezpieczne pobieranie stron, klient AI z dziennikiem zużycia, 68 testów. Gotowa do uruchomienia w Render.
-- **Mockup dwóch modułów w wyglądzie PerfectData:** `mockup/audyt-ai`. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip` do wgrania na Cloudflare. Dane są fikcyjne.
+- **Mockup całego panelu w wyglądzie PerfectData:** `mockup/audyt-ai`. 9 modułów i 32 ekrany, każda funkcja z opisu produktu na przykładowych danych. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip` do wgrania na Cloudflare.
 - **Wytyczne audytu:** 24 wskaźniki, 100 pkt, każdy z progami i podstawą. Plik `mockup/audyt-ai/WYTYCZNE.md`.
 - **Plany modułów:** `PLAN-ZAPYTANIA.md` (zapytania ze strony) i `PLAN-AUDYT-AI.md` (audyt treści pod wyszukiwarki i AI).
 
@@ -20,7 +20,7 @@ Panel i raporty wyglądają jak perfectdata.pl, żeby klient agencji widział je
 - **Kolory ze strony** (odczytane ze stylów perfectdata.pl 19.11.2026): tło `#0a0e1a`, panel `#0f1524`, powierzchnia `#151c2e`, linie `#232d45`, złoto `#d4a94a` (jaśniejsze `#e8c97a`, ciemniejsze `#a87f2c`), tekst `#f2f3f7`, tekst pomocniczy `#9aa3b8`.
 - **Czcionka systemowa**, ta sama co na stronie. Panel nie pobiera żadnych czcionek ani skryptów z zewnątrz.
 - **Jeden ciemny motyw**, bo strona ma tylko ciemny.
-- **Układ:** nagłówek jak na stronie (logo, moduły „Audyt AI” i „Zapytania”, link do perfectdata.pl), pod nim zakładki modułu. Bez bocznego menu platformy.
+- **Układ:** nagłówek jak na stronie (logo, 9 modułów, link do perfectdata.pl), pod nim zakładki modułu. Bez bocznego menu platformy. Na telefonie pasek modułów przewija się w bok.
 - **Złoto ma jedno znaczenie:** zdobyte punkty, główny przycisk i aktywna pozycja menu. Nie służy do ozdoby.
 - **Linijka 100 punktów** w raporcie audytu. Każdy z 24 wskaźników to odcinek o szerokości równej jego wadze. Złote wypełnienie to zdobyte punkty, czerwona ramka to wskaźnik z zerem. Kliknięcie odcinka otwiera wskaźnik. Ta sama linijka pokazuje stan „przed” i „po”.
 - **Stany rozróżnia kształt i słowo, nie sam kolor:** pełne koło „Dobrze”, pół koła „Do poprawy”, pierścień „Źle”.
@@ -28,7 +28,33 @@ Panel i raporty wyglądają jak perfectdata.pl, żeby klient agencji widział je
 - **Przycisk główny i pola formularzy** jak na stronie: złoty gradient z ciemnym tekstem, pola na tle strony z cienką ramką.
 - **Logo:** w mockupie jest przybliżenie tekstowe. Przy wdrożeniu zastąpi je plik logo ze strony.
 
-W platformie wygląd i zestaw modułów będą ustawieniem organizacji (pole `settings_json` w tabeli `organizations`, bez nowej tabeli). PerfectData zobaczy tylko: Zapytania, Audyt AI, Klienci i Ustawienia. Ten sam silnik obsłuży później inne firmy z ich wyglądem.
+W platformie wygląd i zestaw modułów będą ustawieniem organizacji (pole `settings_json` w tabeli `organizations`, bez nowej tabeli). Mockup pokazuje wszystkie moduły, bo tak ma wyglądać pełny panel. Moduł, którego firma nie używa, można wyłączyć w ustawieniach. Ten sam silnik obsłuży później inne firmy z ich wyglądem.
+
+## Funkcje i ich stan
+
+Mockup pokazuje 60 funkcji. Zakładka „Lista funkcji” na pulpicie podaje stan każdej z nich i prowadzi do ekranu.
+
+| Moduł | Działa w silniku | Do zbudowania | Czeka na zgodę Google i Meta |
+|---|---|---|---|
+| Zapytania | 0 | 5 | 0 |
+| Klienci | 6 | 5 | 0 |
+| Audyt AI | 0 | 7 | 0 |
+| SEO i strona | 3 | 2 | 0 |
+| Reklamy | 0 | 0 | 6 |
+| Przetargi | 7 | 2 | 0 |
+| Oferty i wnioski | 6 | 3 | 0 |
+| Kontrahenci | 5 | 3 | 0 |
+| Razem | 27 | 27 | 6 |
+
+„Działa w silniku” znaczy, że kod jest w repozytorium i przechodzi testy. Silnik nie jest jeszcze uruchomiony online (etap 0).
+
+Gdzie w planie są funkcje do zbudowania:
+
+- **Zapytania i Audyt AI:** etapy 1-3.
+- **Klienci:** zbieranie zapytań ofertowych, opis idealnego klienta, wyszukiwarka firm, sekwencje i wykrywanie odpowiedzi są w etapie 4d.
+- **SEO i strona:** Search Console i wizytówka Google są w etapie 4d.
+- **Reklamy:** wnioski do Google i Meta warto złożyć już teraz, bo zgody trwają tygodnie. Do tego czasu ekran pokazuje dane przykładowe.
+- **Przetargi, Oferty, Kontrahenci:** brakujące funkcje są w etapach 4a i 4d.
 
 ## Etap 0. Uruchomienie silnika (ok. 2 godziny pracy właściciela)
 
@@ -74,9 +100,9 @@ Wynik etapu: narzędzie nadaje się do pracy z klientem SEO i GEO. Raport „Prz
 - **Test cytowań i lista stron z mapy witryny** (etap 3 audytu).
 - **Dane z kont klienta:** Search Console i Bing Webmaster Tools (etap 4 audytu).
 
-## Etap 4. Platforma dla innych firm
+## Etap 4. Pozostałe moduły i sprzedaż platformy
 
-Moduły sprawdzone na PerfectData stają się częścią oferty platformy. Reszta planu platformy nie zmienia się.
+Przetargi, oferty, kontrahenci, kontakty i wiadomości działają w silniku od razu po uruchomieniu (etap 0). Ten etap dodaje brakujące funkcje tych modułów i przygotowuje sprzedaż platformy innym firmom.
 
 ### 4a. Braki przed pilotażem
 
@@ -122,6 +148,14 @@ Do sprawdzenia po wdrożeniu: czy rejestr decyzji UOKiK przyjmuje połączenia z
 5. **Wpis długu do BIG z platformy.** KRD ma API, ale wymaga umowy. Trzeba zapytać KRD i BIG InfoMonitor o współpracę partnerską.
 6. **Wysyłka z Gmaila i Microsoft 365** zamiast pliku .eml. Uprawnienie Gmaila do wysyłania wymaga weryfikacji aplikacji przez Google.
 7. **Serwer pośredniczący w Polsce** dla rejestru UOKiK, jeśli blokada adresów zagranicznych się potwierdzi.
+8. **Pozyskiwanie klientów:**
+   - zbieranie zapytań ofertowych firm ze źródeł (strony firm, Baza Konkurencyjności, platformy zakupowe),
+   - opis idealnego klienta z treści strony firmy,
+   - wyszukiwarka firm: branża, region, wielkość, wiek, kondycja, udział w przetargach,
+   - sekwencje z przypomnieniami i dziennym limitem. Wymagają połączenia ze skrzynką (punkt 6).
+9. **Widoczność w Google:** dane z Search Console klienta i ocena wizytówki Google.
+10. **Dotacje:** baza otwartych naborów i ocena, czy firma spełnia warunki.
+11. **Drobne uzupełnienia:** odhaczanie gotowych dokumentów w ofercie i szacowany czas pracy przy poprawkach z audytu technicznego.
 
 ## Decyzje właściciela
 
@@ -151,6 +185,7 @@ Potrzebne przed etapem 4:
 Silnik:
 
 - 68 testów automatycznych na SQLite i PostgreSQL, w tym próba wstrzyknięcia HTML w każdym polu na każdej stronie, wszystkie akcje zapisu i izolacja danych między firmami.
+- Poprawka znaleziona przy budowie mockupu: w uzasadnieniu dopasowania przetargu słowa kluczowe były pokazywane bez polskich znaków. Teraz są w zapisie użytkownika.
 - Obraz Docker z bazą PostgreSQL: test dymny w GitHub Actions (nagłówki bezpieczeństwa, pliki statyczne, rejestracja z kodem, zapis formularza, zadania cykliczne, brak startu bez bazy).
 - Ten sam obraz z zasobami najmniejszej instancji Render (512 MB RAM, 0,1 CPU): start w 2 s, 60 zapytań naraz obsłużonych, ok. 30 MB zajętej pamięci.
 - Próba generalna na prawdziwych danych: import 1334 ogłoszeń z BZP i 861 z TED z 2 dni bez błędów i duplikatów, parser na 40 losowych ogłoszeniach (w tym krótkie ogłoszenia poniżej progu ustawy Pzp), 75 stron aplikacji i 6 szkiców ofert na prawdziwych ogłoszeniach, karty 10 prawdziwych firm (w tym poprawnie wykryta spółka w likwidacji).
@@ -158,14 +193,17 @@ Silnik:
 - Import przy bazie w innym regionie niż GitHub Actions (symulowane opóźnienie 100 ms): 2200 ogłoszeń i 10 profili w kilkanaście sekund. Przed poprawką trwałoby to ponad pół godziny.
 - Przepisy cytowane w aplikacji sprawdzone w źródłach.
 
-Mockup w wyglądzie PerfectData:
+Mockup całego panelu:
 
-- 9 widoków w 4 szerokościach ekranu (340, 390, 820 i 1366 px): bez błędów w konsoli, bez poziomego przewijania i bez uciętego tekstu w przyciskach i zakładkach.
-- Liczby liczone z danych, nie wpisane ręcznie: wynik audytu 53 i 97 pkt, oceny zapytań 100, 90, 75, 60, 55 i 30 pkt, wynik testu z = 1,07.
-- Cała rozmowa w widżecie: błędny e-mail zatrzymuje wysyłkę i nie kasuje pozostałych pól, kod HTML wpisany w pole wyświetla się jako tekst.
-- Obsługa klawiaturą: każdy odcinek linijki i każdy wiersz da się otworzyć klawiszem, fokus jest widoczny.
-- Kontrast tekstu na tle co najmniej 7:1 (wymagane minimum to 4,5:1).
-- Strona nie pobiera żadnych zasobów z sieci.
+- 32 ekrany w 4 szerokościach (340, 390, 820 i 1366 px): bez błędów w konsoli, bez poziomego przewijania, bez uciętego tekstu w przyciskach i oznaczeniach stanu, bez nachodzących na siebie elementów.
+- Reguły przeniesione z silnika dają te same wyniki co kod PHP: ryzyko prawne wiadomości (24 kombinacje kontaktu i rodzaju wiadomości), dopasowanie 7 przetargów, warunki wpisu do BIG dla 3 należności i etykiety oceny 4 firm. Razem 38 porównań, wszystkie zgodne.
+- Liczby liczone z danych, nie wpisane ręcznie: wynik audytu 53 i 97 pkt, oceny zapytań, dopasowania przetargów 100, 96, 86, 44 i 41, oceny firm 5, 50 i 93, koszt konwersji i jego zmiana, alerty reklam, wynik testu z = 1,07.
+- Ekran ryzyka wiadomości: przy ryzyku wysokim przycisk działa dopiero po potwierdzeniu, decyzja trafia do dziennika, a przy sprzeciwie odbiorcy wysyłka jest zablokowana.
+- Kampanie: wstrzymanie i zmiana budżetu wymagają potwierdzenia, trafiają do dziennika i zmieniają listę alertów. Błędna kwota zatrzymuje zmianę.
+- Widżet: błędny e-mail zatrzymuje wysyłkę i nie kasuje pozostałych pól, kod HTML wpisany w pole wyświetla się jako tekst.
+- Wykresy: wartości pod kursorem i po strzałkach z klawiatury, te same dane w tabeli pod wykresem. Dwa kolory serii sprawdzone pod kątem rozróżnialności dla osób z zaburzeniami widzenia barw.
+- Obsługa klawiaturą z widocznym fokusem, kontrast tekstu na tle co najmniej 7:1 (wymagane minimum to 4,5:1).
+- Strona nie pobiera żadnych zasobów z sieci. Żaden link na pulpicie i liście funkcji nie prowadzi donikąd.
 
 Czego nie dało się sprawdzić:
 

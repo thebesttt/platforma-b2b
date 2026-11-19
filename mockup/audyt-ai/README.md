@@ -1,20 +1,47 @@
-# Mockup: audyt treści i zapytania ze strony
+# Mockup panelu PerfectData
 
-Klikalny mockup dwóch modułów panelu PerfectData: „Audyt AI” (audyt treści pod wyszukiwarki i AI) oraz „Zapytania” (zapytania ze strony). Dane są przykładowe, nic nie jest mierzone ani wysyłane.
+Klikalny mockup całego panelu: 9 modułów, 32 ekrany. Pokazuje każdą funkcję z opisu produktu na przykładowych danych. Nic nie jest mierzone ani wysyłane.
+
+| Moduł | Ekrany |
+|---|---|
+| Pulpit | Dziś, Lista funkcji (60 funkcji ze stanem: działa w silniku, do zbudowania, czeka na zgodę Google i Meta) |
+| Zapytania | Zapytania, Zasady kwalifikacji, Podgląd widżetu, Wyniki |
+| Klienci | Kontakty, Wiadomość z ekranem ryzyka i decyzją, Zapytania ofertowe, Szukaj firm, Wysyłka i dziennik |
+| Audyt AI | Raport, Wytyczne wskaźników, Przed i po, Cytowania w AI, Strony witryny |
+| SEO i strona | Audyt techniczny, Konkurenci, Google (Search Console i wizytówka) |
+| Reklamy | Wyniki, Kampanie z potwierdzeniem zmian i dziennikiem, Alerty |
+| Przetargi | Dopasowane, Karta przetargu z analizą SWZ, Profil, Terminy |
+| Oferty | Oferta, Dotacje, Biblioteka firmy |
+| Kontrahenci | Karta firmy, Obserwowane i alerty, Należności |
 
 ## Wygląd
 
 Mockup ma wygląd perfectdata.pl: kolory odczytane ze stylów strony 19.11.2026 (zmienne na początku `src/page.html`), czcionka systemowa, jeden ciemny motyw, nagłówek jak na stronie. Strona nie pobiera nic z sieci. Logo jest przybliżeniem tekstowym, przy wdrożeniu zastąpi je plik logo ze strony. Zasady wyglądu są opisane w `PLAN.md` w głównym folderze.
 
+## Reguły przeniesione z silnika
+
+Cztery obliczenia w mockupie to kopie reguł z kodu PHP. Wyniki porównałem z silnikiem na danych mockupu: 38 porównań, wszystkie zgodne.
+
+| Co liczy mockup | Funkcja w mockupie | Źródło w silniku |
+|---|---|---|
+| Ryzyko prawne wiadomości | `assessMessage` w `src/js/40-klienci.js` | `src/Modules/Outreach/RiskPolicy.php` |
+| Dopasowanie przetargu 0-100 | `matchTender` w `src/js/70-przetargi.js` | `src/Modules/Tenders/Matcher.php` |
+| Warunki wpisu do BIG i rekompensata | `bigCheck`, `compensation` w `src/js/90-kontrahenci.js` | `src/Modules/Companies/Receivables.php` |
+| Ocena ryzyka płatniczego | `companyRisk` w `src/js/90-kontrahenci.js` | `src/Modules/Companies/Risk.php` |
+
+Po zmianie reguły w silniku trzeba poprawić też mockup.
+
 ## Co tu jest
 
-- `src/rules.json` - wytyczne wskaźników: 24 wskaźniki, 100 pkt, progi, punkty, podstawa. Jedno źródło prawdy.
-- `src/sample.json` - dane przykładowe: dwa audyty tej samej strony (przed i po pracach).
+- `src/rules.json` - wytyczne audytu AI: 24 wskaźniki, 100 pkt, progi, punkty, podstawa. Jedno źródło prawdy.
+- `src/sample.json` - dane audytu AI: dwa audyty tej samej strony (przed i po pracach).
 - `src/leads.json` - zasady kwalifikacji zapytań (pytania, punkty, progi) i przykładowe zapytania.
-- `src/page.html` - wygląd i zachowanie strony.
-- `build.py` - składa stronę i sprawdza spójność: suma 100 pkt w wytycznych i w zasadach kwalifikacji, komplet progów, źródła.
+- `src/platform.json` - dane pozostałych modułów i lista funkcji ze stanem.
+- `src/page.html` - wygląd, wspólne funkcje, audyt AI i zapytania.
+- `src/js/*.js` - wykres i widoki pozostałych modułów, po jednym pliku na moduł.
+- `build.py` - składa stronę i sprawdza spójność danych: sumy punktów, odwołania między danymi, zgodność sum kampanii z danymi tygodniowymi, składnię skryptu.
 - `public/index.html` - gotowa strona do wdrożenia.
-- `WYTYCZNE.md` - te same wytyczne jako dokument.
+- `WYTYCZNE.md` - wytyczne audytu AI jako dokument.
 
 Po zmianie w `src/` uruchom `python3 build.py`.
 
