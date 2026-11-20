@@ -12,6 +12,12 @@ final class Nav
 {
     private static ?array $counts = null;
 
+    /** Czyści liczniki zapamiętane w tym procesie (testy uruchamiają wiele zapytań w jednym procesie). */
+    public static function reset(): void
+    {
+        self::$counts = null;
+    }
+
     public static function counts(): array
     {
         if (self::$counts !== null) {
@@ -19,7 +25,7 @@ final class Nav
         }
         $org = Auth::orgId();
         if (!$org) {
-            return self::$counts = ['matches' => 0, 'alerts' => 0, 'profiles' => 0];
+            return self::$counts = ['matches' => 0, 'alerts' => 0, 'profiles' => 0, 'leads' => 0];
         }
         $db = Db::get();
         return self::$counts = [
@@ -29,6 +35,7 @@ final class Nav
             ),
             'alerts' => (int) $db->val('SELECT COUNT(*) FROM alerts WHERE org_id = ? AND read_at IS NULL', [$org]),
             'profiles' => (int) $db->val('SELECT COUNT(*) FROM tender_profiles WHERE org_id = ? AND active = 1', [$org]),
+            'leads' => (int) $db->val("SELECT COUNT(*) FROM inbound_leads WHERE org_id = ? AND status = 'new'", [$org]),
         ];
     }
 }

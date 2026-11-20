@@ -1,11 +1,12 @@
-# Platforma B2B: przetargi, oferty, kontrahenci
+# Panel PerfectData: zapytania ze strony, audyt, klienci, przetargi, oferty, kontrahenci
 
-Aplikacja SaaS dla małych i średnich firm, które startują w zamówieniach publicznych i sprzedają innym firmom. Nazwa robocza produktu to `[Nazwa]`, ustawiana zmienną `APP_NAME`.
+Aplikacja dla firm, które sprzedają innym firmom. Zbiera i ocenia zapytania ze strony, sprawdza strony i kontrahentów, pilnuje ryzyka prawnego wiadomości i dobiera przetargi. Nazwę i wygląd ustawiają zmienne `APP_NAME` i `APP_THEME` (`perfectdata` to granat i złoto ze strony perfectdata.pl, puste to wygląd standardowy). Każda firma może w Ustawieniach wybrać wygląd i moduły widoczne w menu.
 
 ## Moduły
 
 | Moduł | Co robi | Źródła danych |
 |---|---|---|
+| Zapytania ze strony | Widżet wklejany na stronę firmy zadaje odwiedzającemu kilka pytań zamiast pustego formularza. Program liczy ocenę 0-100 z jawnej tabeli punktów, zapisuje kontakt z podstawą „zapytanie od tej firmy”, wysyła powiadomienie e-mail, sprawdza firmę po NIP i audytuje podaną stronę. Czat AI odpowiada wyłącznie z bazy wiedzy firmy. Test dwóch wersji (zwykły formularz i pytania) z testem istotności. | Odpowiedzi odwiedzającego, biała lista VAT, KRS, silnik audytu, Claude API |
 | Przetargi | Codzienny import ogłoszeń i dopasowanie do profili firmy (CPV, słowa kluczowe, województwa, wartość) z uzasadnieniem oceny. Karta przetargu pokazuje wadium, kryteria, terminy i warunki z treści ogłoszenia, każdy punkt ze wskazaniem źródła. Terminy można dodać do kalendarza (.ics). | BZP (API e-Zamówień), TED API v3 |
 | Analiza SWZ (AI) | Wgrywasz SWZ, OPZ i wzór umowy (PDF, DOCX, TXT). AI wypisuje warunki udziału, kary, płatności i ryzyka ze wskazaniem rozdziału. Odpowiada też na pytania do dokumentacji. | Dokumenty użytkownika, Claude API |
 | Oferty i wnioski | Szkic oferty: formularz, sposób realizacji, doświadczenie, zespół i lista dokumentów, z danych ogłoszenia i biblioteki firmy. Wnioski o dotacje mają osobne sekcje i korzystają z regulaminu naboru. Zdania bez źródła są oznaczone ⟦sprawdź⟧. Eksport do .docx. | Ogłoszenie, SWZ, regulamin, biblioteka firmy |
@@ -23,6 +24,10 @@ Aplikacja SaaS dla małych i średnich firm, które startują w zamówieniach pu
   - co najmniej 500 zł,
   - wymagalne od co najmniej 30 dni,
   - wezwanie wysłane co najmniej miesiąc wcześniej, z firmą i adresem biura oraz pouczeniem o prawie do sprzeciwu (art. 15a).
+- **Zapytania ze strony.** Ocenę liczy program, nie AI: te same odpowiedzi dają zawsze tę samą ocenę, a na karcie zapytania widać, za co są punkty. Punkty i progi nie trafiają do przeglądarki odwiedzającego. Zmiana zasad podnosi ich wersję i działa tylko dla kolejnych zapytań.
+  - Widżet odpowiada tylko stronom wpisanym w ustawieniach (nagłówek `Origin`). Nie zapisuje plików cookie ani niczego w pamięci przeglądarki. Zamiast adresu IP zapisujemy jego skrót z solą zmienianą co dobę.
+  - Zgoda na oferty e-mailem to osobne, niezaznaczone pole. Odpowiedź na zapytanie jej nie wymaga, kolejne oferty tak. Treść i datę zgody zapisujemy przy kontakcie.
+  - Czat ma limit pytań na rozmowę i limit odpowiedzi na miesiąc. Treść od odwiedzającego trafia do modelu jako dane, nie jako polecenie.
 - **AI.** Model pisze wyłącznie z podanych materiałów. Każdy punkt analizy ma źródło, a zdania bez źródła są oznaczone do sprawdzenia. Bez klucza `ANTHROPIC_API_KEY` działa analiza regułowa, a przyciski AI są nieaktywne.
 
 ## Technologia
@@ -67,11 +72,12 @@ Bez dostępu do sieci można pracować na zapisanych odpowiedziach API. Wtedy do
 ## Wdrożenie na Render.com
 
 1. W Render wybierz **New → Blueprint** i wskaż to repozytorium. Plik `render.yaml` utworzy aplikację (Docker) i bazę PostgreSQL.
-2. Render zapyta o dwie zmienne:
-   - `ANTHROPIC_API_KEY` (funkcje AI),
-   - `ADMIN_EMAILS` (Twój e-mail: test połączenia z AI i ręczna aktualizacja decyzji UOKiK w Ustawieniach).
+2. Render zapyta o cztery zmienne. Każdą można uzupełnić później w zakładce Environment:
+   - `ANTHROPIC_API_KEY` (funkcje AI: czat w widżecie, analiza dokumentów, szkice),
+   - `ADMIN_EMAILS` (Twój e-mail: test połączenia z AI i z pocztą, ręczna aktualizacja decyzji UOKiK),
+   - `RESEND_API_KEY` i `MAIL_FROM` (wysyłka e-maili: powiadomienia o zapytaniach, reset hasła, zaproszenia do zespołu). Klucz założysz na resend.com. Adres nadawcy musi być w domenie zweryfikowanej w Resend, np. `Panel PerfectData <panel@perfectdata.pl>`.
 
-   Pozostałe ustawia się same. Opcjonalne (`PSI_KEY`, `APP_NAME`, `TERMS_URL`, `PRIVACY_URL`, `APP_URL` przy własnej domenie) dodasz później w zakładce Environment.
+   Pozostałe ustawia się same. Opcjonalne (`PSI_KEY`, `TERMS_URL`, `PRIVACY_URL`, `APP_URL` przy własnej domenie) dodasz później.
 3. Załóż pierwsze konto. Rejestracja jest domyślnie zamknięta (`SIGNUP_OPEN=0`), a Render generuje kod zaproszenia `SIGNUP_CODE`. Odczytaj go w zakładce Environment i otwórz `/rejestracja?kod=<kod>`. Ten sam link wyślesz firmom z pilotażu. Otwartą rejestrację (`SIGNUP_OPEN=1`) włącz dopiero, gdy będą regulamin i polityka prywatności (`TERMS_URL`, `PRIVACY_URL`).
 4. Włącz codzienny import w GitHub: **Settings → Secrets and variables → Actions**. Wybierz jeden wariant:
    - `DATABASE_URL`: zewnętrzny adres bazy z Render („External Database URL”). Import działa wtedy w GitHub Actions. Ten wariant jest zalecany.
@@ -88,6 +94,8 @@ Darmowa baza PostgreSQL na Render wygasa po 30 dniach. Przed pierwszymi klientam
 |---|---|
 | `DATABASE_URL` | `postgres://user:haslo@host:5432/baza` (opcjonalnie `?sslmode=require`). Pusta oznacza SQLite. |
 | `APP_SECRET` | Losowy sekret (Render generuje go sam). |
+| `APP_THEME` | `perfectdata` włącza wygląd PerfectData (plik `public/assets/theme-perfectdata.css`). Logo: plik `public/assets/brand/logo.svg` (albo `.png`, `.webp`). Bez pliku w nagłówku jest logo tekstowe. |
+| `RESEND_API_KEY`, `MAIL_FROM` | Wysyłka e-maili przez Resend. Bez nich panel działa, ale nie wysyła powiadomień ani linków do ustawienia hasła. Każda wiadomość, także nieudana, trafia do tabeli `outbox` i jest widoczna w Ustawieniach. Przy `APP_ENV=dev` wiadomości są tylko zapisywane. |
 | `APP_NAME`, `APP_URL` | Nazwa produktu i adres publiczny. `APP_URL` jest opcjonalny: na Render aplikacja bierze adres z `RENDER_EXTERNAL_URL`. Ustaw go przy własnej domenie. |
 | `ANTHROPIC_API_KEY`, `AI_MODEL` | Claude API, domyślnie `claude-sonnet-5-5`. `AI_MAX_INPUT_CHARS` ogranicza długość dokumentacji wysyłanej do modelu (domyślnie 300 000 znaków). Dokumentacja idzie jako blok z pamięcią podręczną, więc kolejne pytania o ten sam przetarg są tańsze. Zużycie tokenów trafia do `audit_log` (`ai.call`). |
 | `CRON_TOKEN` | Token do `/cron/run`, przekazywany w nagłówku `X-Cron-Token`. |
@@ -105,7 +113,8 @@ Komenda `php bin/console daily`, endpoint `/cron/run?task=daily` i workflow `.gi
 2. import ogłoszeń z BZP i TED od ostatniego importu,
 3. dopasowanie ogłoszeń do profili,
 4. odświeżenie obserwowanych kontrahentów (alerty o zmianach),
-5. sprzątanie: sesje, wygasłe wpisy i ogłoszenia po terminie starsze niż 120 dni bez ofert.
+5. zapytania ze strony: sprawdzenie firmy i strony dla zapytań, których nikt jeszcze nie otworzył, oraz usunięcie rozmów bez zostawionego kontaktu starszych niż 30 dni,
+6. sprzątanie: sesje, wygasłe wpisy i ogłoszenia po terminie starsze niż 120 dni bez ofert.
 
 ### Rejestr decyzji UOKiK
 
@@ -138,7 +147,8 @@ Workflowy w GitHub Actions:
 
 - **Biała lista VAT** ma dzienny limit zapytań na adres serwera. Dlatego obserwowane firmy odświeżamy zapytaniami zbiorczymi (30 firm naraz), a jedna firma może sprawdzić 40 nowych kontrahentów dziennie.
 - **Firmy spoza wykazu VAT** (zwolnione z VAT, część jednostek publicznych) nie mają karty, bo nie mamy skąd pobrać danych. Rozwiązaniem będzie integracja z CEIDG.
-- **Wysyłka e-maili.** Platforma nie wysyła jeszcze żadnych e-maili: nie ma resetu hasła ani powiadomień. Hasło zmienia się w Ustawieniach.
+- **Wysyłka e-maili** wymaga klucza Resend i zweryfikowanej domeny nadawcy. Bez nich nie ma powiadomień o zapytaniach ani linków do ustawienia hasła, a właściciel konta podaje nowym osobom hasło startowe. Oferty do klientów nadal wychodzą ze skrzynki użytkownika, nie z platformy.
+- **Widżet zapytań** wymaga wklejenia jednej linii kodu na stronę firmy i wpisania jej domeny w ustawieniach widżetu. Jeśli strona ma nagłówek `Content-Security-Policy`, trzeba dopisać adres panelu do `script-src` i `connect-src`.
 - **Funkcje AI** są przetestowane na zapisanych odpowiedziach w formacie API. Pierwsze prawdziwe zapytanie warto wykonać przyciskiem „Sprawdź połączenie z AI” w Ustawieniach (dla `ADMIN_EMAILS`).
 
 ## Plan rozwoju

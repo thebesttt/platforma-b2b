@@ -27,13 +27,19 @@ services:
       - key: CRON_TOKEN            # ten sam token wpisz w GitHub → Settings → Secrets → CRON_TOKEN (codzienny import)
         generateValue: true
       - key: APP_NAME              # nazwa produktu widoczna w aplikacji
-        value: "[Nazwa]"
-      # Render zapyta o dwie wartości poniżej przy tworzeniu usługi. Obie można uzupełnić później w zakładce Environment.
+        value: PerfectData
+      - key: APP_THEME             # perfectdata = granat i złoto jak na perfectdata.pl; puste = wygląd standardowy
+        value: perfectdata
+      # Render zapyta o wartości oznaczone „sync: false” przy tworzeniu usługi. Każdą można uzupełnić później w zakładce Environment.
       - key: ANTHROPIC_API_KEY     # klucz API Claude - bez niego działa analiza regułowa, a funkcje AI są wyłączone
         sync: false
       - key: AI_MODEL
         value: claude-sonnet-5-5
-      - key: ADMIN_EMAILS          # Twój e-mail: dostęp do ręcznej aktualizacji decyzji UOKiK (Ustawienia → Decyzje UOKiK)
+      - key: ADMIN_EMAILS          # Twój e-mail: test połączenia z AI i z pocztą, ręczna aktualizacja decyzji UOKiK
+        sync: false
+      - key: RESEND_API_KEY        # klucz z resend.com - bez niego panel nie wysyła powiadomień o zapytaniach ani linków do hasła
+        sync: false
+      - key: MAIL_FROM             # nadawca w domenie zweryfikowanej w Resend, np. Panel PerfectData <panel@perfectdata.pl>
         sync: false
       - key: SIGNUP_OPEN           # 0 = rejestracja tylko z linku z kodem (zalecane do czasu regulaminu), 1 = otwarta dla wszystkich
         value: "0"

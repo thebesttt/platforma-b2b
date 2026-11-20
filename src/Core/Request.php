@@ -8,6 +8,9 @@ final class Request
 {
     public array $params = [];
 
+    /** Surowa treść zapytania. W testach ustawiana wprost. */
+    public ?string $rawBody = null;
+
     public function __construct(
         public readonly string $method,
         public readonly string $path,
@@ -31,6 +34,23 @@ final class Request
             $_FILES,
             $_SERVER
         );
+    }
+
+    public function body(): string
+    {
+        return $this->rawBody ??= (string) file_get_contents('php://input');
+    }
+
+    /** Treść zapytania jako JSON (tablica); pusta tablica, gdy to nie jest poprawny obiekt JSON. */
+    public function json(): array
+    {
+        $j = json_decode($this->body(), true);
+        return is_array($j) ? $j : [];
+    }
+
+    public function header(string $name): string
+    {
+        return trim((string) ($this->server['HTTP_' . strtoupper(str_replace('-', '_', $name))] ?? ''));
     }
 
     public function input(string $key, mixed $default = null): mixed

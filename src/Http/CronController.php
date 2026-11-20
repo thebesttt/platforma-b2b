@@ -11,6 +11,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Modules\Companies\Companies;
 use App\Modules\Companies\Uokik;
+use App\Modules\Inbound\Inbound;
 use App\Modules\Tenders\Importer;
 
 /**
@@ -61,7 +62,7 @@ final class CronController
         return str_starts_with($auth, 'Bearer ') ? trim(substr($auth, 7)) : $r->str('token');
     }
 
-    /** Codzienny zestaw: decyzje UOKiK (raz w tygodniu), import przetargów, odświeżenie obserwowanych firm, sprzątanie. */
+    /** Codzienny zestaw: decyzje UOKiK (raz w tygodniu), import przetargów, odświeżenie obserwowanych firm, zapytania ze strony, sprzątanie. */
     public static function daily(): array
     {
         $out = [];
@@ -85,6 +86,13 @@ final class CronController
             $out['watchlist'] = Companies::refreshWatched();
         } catch (\Throwable $e) {
             $out['watchlist'] = ['error' => $e->getMessage()];
+        }
+        // Zapytania ze strony: sprawdzenie firmy i strony dla zapytań, których nikt jeszcze nie otworzył, oraz sprzątanie
+        // rozmów bez zostawionego kontaktu (po 30 dniach).
+        try {
+            $out['inbound'] = ['enriched' => Inbound::enrichPending(), 'removed_conversations' => Inbound::cleanup()];
+        } catch (\Throwable $e) {
+            $out['inbound'] = ['error' => $e->getMessage()];
         }
         $db = Db::get();
         $db->run('DELETE FROM sessions WHERE expires_at < ?', [time()]);

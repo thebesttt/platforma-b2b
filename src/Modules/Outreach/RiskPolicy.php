@@ -53,6 +53,8 @@ final class RiskPolicy
     {
         $basis = (string) ($contact['basis'] ?? 'none');
         $unsub = !empty($contact['unsubscribed_at']);
+        // Zgoda zaznaczona w formularzu na stronie działa jak zgoda z karty kontaktu, także gdy podstawą jest zapytanie.
+        $consented = in_array($basis, ['consent', 'client'], true) || !empty($contact['marketing_consent_at']);
         $reasons = [];
         $law = [];
 
@@ -81,7 +83,7 @@ final class RiskPolicy
                 }
                 break;
             case 'consented':
-                if (in_array($basis, ['consent', 'client'], true)) {
+                if ($consented) {
                     $level = 'low';
                     $lead = 'Odbiorca wyraził zgodę albo jest Twoim klientem. Pamiętaj o łatwym sposobie wypisania się w stopce.';
                     $reasons[] = 'Podstawa kontaktu: ' . self::basisLine($contact);
@@ -93,7 +95,7 @@ final class RiskPolicy
                 }
                 break;
             case 'consent_request':
-                $level = in_array($basis, ['consent', 'client', 'rfq'], true) ? 'low' : 'high';
+                $level = $consented || $basis === 'rfq' ? 'low' : 'high';
                 $lead = $level === 'low'
                     ? 'Masz już podstawę kontaktu - zamiast prosić o zgodę możesz od razu odpowiedzieć lub wysłać ofertę.'
                     : 'Prośba o zgodę wysłana e-mailem bez wcześniejszej zgody to sprawa sporna. Sądy uznawały takie wiadomości za pośrednią promocję nadawcy.';
@@ -107,7 +109,7 @@ final class RiskPolicy
                 break;
             case 'cold_offer':
             default:
-                if (in_array($basis, ['consent', 'client'], true)) {
+                if ($consented) {
                     $level = 'low';
                     $lead = 'Masz zapisaną zgodę lub relację z klientem, więc to w praktyce oferta za zgodą.';
                     $reasons[] = 'Podstawa kontaktu: ' . self::basisLine($contact);
@@ -147,6 +149,9 @@ final class RiskPolicy
         }
         if (!empty($contact['basis_at'])) {
             $line .= ' (' . date('d.m.Y', strtotime((string) $contact['basis_at'])) . ')';
+        }
+        if (!empty($contact['marketing_consent_at'])) {
+            $line .= '. Zgoda na oferty e-mailem zaznaczona w formularzu ' . local_dt((string) $contact['marketing_consent_at'], 'd.m.Y');
         }
         return $line;
     }

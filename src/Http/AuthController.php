@@ -8,6 +8,7 @@ use App\Core\AuditLog;
 use App\Core\Auth;
 use App\Core\Controller;
 use App\Core\Kv;
+use App\Core\Mailer;
 use App\Core\Request;
 use App\Core\Response;
 
@@ -81,6 +82,71 @@ final class AuthController extends Controller
             $error = $res['error'];
         }
         return Response::html(\App\Core\View::render('auth/register', ['title' => 'Załóż konto', 'v' => $v, 'error' => $error, 'kod' => $kod], 'public'), 422);
+    }
+
+    /** Jednorazowy link do ustawienia hasła. W bazie zostaje tylko skrót tokenu. */
+    public static function passwordLink(int $userId, int $ttl, string $baseUrl): string
+    {
+        $token = bin2hex(random_bytes(24));
+        Kv::set('pwreset:' . hash('sha256', $token), ['user' => $userId], $ttl);
+        return $baseUrl . '/haslo/' . $token;
+    }
+
+    public function forgotForm(Request $r): Response
+    {
+        return $this->view('auth/forgot', ['title' => 'Nowe hasło', 'mail' => Mailer::enabled()], 'public');
+    }
+
+    public function forgot(Request $r): Response
+    {
+        if (Kv::hit('pwreset-ip:' . hash('sha256', $r->ip()), 3600) > 8) {
+            return $this->redirect('/haslo', 'Zbyt wiele prób. Spróbuj za godzinę.', 'error');
+        }
+        if (!Mailer::enabled()) {
+            return $this->redirect('/haslo', 'Wysyłka e-maili nie jest jeszcze skonfigurowana. Poproś właściciela konta o nowe hasło.', 'error');
+        }
+        $email = mb_strtolower($r->str('email'));
+        $u = filter_var($email, FILTER_VALIDATE_EMAIL) ? $this->db()->one('SELECT id, org_id, email FROM users WHERE email = ?', [$email]) : null;
+        if ($u) {
+            $link = self::passwordLink((int) $u['id'], 3600, $r->baseUrl());
+            Mailer::send((string) $u['email'], 'Nowe hasło: ' . config('APP_NAME'),
+                "Ktoś poprosił o nowe hasło do konta w panelu " . config('APP_NAME') . ".\n\nUstaw hasło pod tym adresem (link działa godzinę):\n" . $link
+                . "\n\nJeśli to nie Ty, zignoruj tę wiadomość. Hasło się nie zmieni.", (int) $u['org_id'], 'password_reset');
+            AuditLog::add('auth.reset_request', 'user', (int) $u['id'], [], $r->ip());
+        }
+        // Odpowiedź jest taka sama bez względu na to, czy konto istnieje.
+        return $this->redirect('/logowanie', 'Jeśli to konto istnieje, wysłaliśmy link do ustawienia hasła. Link działa godzinę.', 'info');
+    }
+
+    private function resetUser(string $token): ?array
+    {
+        $row = preg_match('/^[a-f0-9]{48}$/', $token) ? Kv::get('pwreset:' . hash('sha256', $token)) : null;
+        return is_array($row) ? $this->db()->one('SELECT id, org_id, email FROM users WHERE id = ?', [(int) ($row['user'] ?? 0)]) : null;
+    }
+
+    public function resetForm(Request $r): Response
+    {
+        if (!$this->resetUser($r->param('token'))) {
+            return Response::html(\App\Core\View::render('errors/message', ['title' => 'Link wygasł', 'message' => 'Ten link do ustawienia hasła jest nieważny albo został już użyty. Poproś o nowy na stronie logowania.'], 'public'), 404);
+        }
+        return $this->view('auth/reset', ['title' => 'Ustaw hasło', 'token' => $r->param('token')], 'public');
+    }
+
+    public function reset(Request $r): Response
+    {
+        $token = $r->param('token');
+        $u = $this->resetUser($token);
+        if (!$u) {
+            return $this->redirect('/haslo', 'Link wygasł. Poproś o nowy.', 'error');
+        }
+        $new = (string) $r->input('password', '');
+        if (mb_strlen($new) < 10 || strlen($new) > Auth::MAX_PASSWORD_BYTES) {
+            return Response::html(\App\Core\View::render('auth/reset', ['title' => 'Ustaw hasło', 'token' => $token, 'error' => 'Hasło musi mieć co najmniej 10 znaków.'], 'public'), 422);
+        }
+        $this->db()->update('users', ['password_hash' => Auth::hash($new)], 'id = ?', [(int) $u['id']]);
+        Kv::forget('pwreset:' . hash('sha256', $token));
+        AuditLog::add('auth.password_reset', 'user', (int) $u['id'], [], $r->ip());
+        return $this->redirect('/logowanie', 'Hasło ustawione. Zaloguj się.');
     }
 
     public function logout(Request $r): Response

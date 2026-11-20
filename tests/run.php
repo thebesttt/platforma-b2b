@@ -55,6 +55,7 @@ function fresh_db(): App\Core\Db
     (new App\Core\Migrator($db))->migrate();
     $_SESSION = [];
     App\Core\Auth::logout();
+    App\Http\Nav::reset();
     return $db;
 }
 

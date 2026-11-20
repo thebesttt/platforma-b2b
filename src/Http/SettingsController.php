@@ -6,6 +6,8 @@ namespace App\Http;
 
 use App\Core\AuditLog;
 use App\Core\Auth;
+use App\Core\Brand;
+use App\Core\Mailer;
 use App\Core\Controller;
 use App\Core\Nip;
 use App\Core\Request;
@@ -17,8 +19,11 @@ final class SettingsController extends Controller
     public function index(Request $r): Response
     {
         $team = $this->db()->all('SELECT id, name, email, role, last_login_at FROM users WHERE org_id = ? ORDER BY id', [$this->orgId()]);
+        $org = Auth::org();
         return $this->view('settings/index', [
-            'org' => Auth::org(), 'user' => Auth::user(), 'team' => $team, 'aiEnabled' => Claude::enabled(), 'title' => 'Ustawienia',
+            'org' => $org, 'user' => Auth::user(), 'team' => $team, 'aiEnabled' => Claude::enabled(), 'title' => 'Ustawienia',
+            'theme' => Brand::theme($org), 'modules' => Brand::modules($org), 'mail' => Mailer::driver(),
+            'outbox' => $this->db()->all('SELECT recipient, subject, status, error, created_at FROM outbox WHERE org_id = ? ORDER BY id DESC LIMIT 6', [$this->orgId()]),
         ]);
     }
 
@@ -110,7 +115,39 @@ final class SettingsController extends Controller
         return $this->redirect('/ustawienia', 'AI działa. Model ' . config('AI_MODEL') . ' odpowiedział: „' . truncate((string) $res['text'], 40) . '” (tokeny: ' . (int) ($u['input_tokens'] ?? 0) . ' wejście, ' . (int) ($u['output_tokens'] ?? 0) . ' wyjście).');
     }
 
-    /** Właściciel dodaje członka zespołu z hasłem startowym, które przekazuje mu osobiście. */
+    /** Wygląd panelu i widoczne moduły. Ustawia właściciel konta. */
+    public function appearance(Request $r): Response
+    {
+        if (!Auth::isOwner()) {
+            return $this->redirect('/ustawienia', 'Wygląd i moduły ustawia właściciel konta.', 'error');
+        }
+        $theme = $r->str('theme');
+        $picked = array_map('strval', (array) ($r->post['modules'] ?? []));
+        Brand::save($this->orgId(), [
+            'theme' => isset(Brand::THEMES[$theme]) ? $theme : 'default',
+            'modules' => array_values(array_intersect(array_keys(Brand::MODULES), $picked)),
+        ]);
+        AuditLog::add('settings.appearance', 'organization', $this->orgId(), ['theme' => $theme, 'modules' => $picked], $r->ip());
+        return $this->redirect('/ustawienia#wyglad', 'Zapisano wygląd i moduły.');
+    }
+
+    /** Wiadomość kontrolna na adres zalogowanej osoby: sprawdza klucz usługi wysyłkowej i adres nadawcy. */
+    public function testMail(Request $r): Response
+    {
+        if (!Auth::isAdmin()) {
+            return $this->notFound();
+        }
+        $res = Mailer::send((string) Auth::user()['email'], 'Wiadomość kontrolna: ' . config('APP_NAME'),
+            'To jest wiadomość kontrolna z panelu ' . config('APP_NAME') . '. Jeśli ją czytasz, wysyłka e-maili działa.', $this->orgId(), 'test');
+        return $this->redirect('/ustawienia#poczta', $res['ok']
+            ? ($res['status'] === 'sent' ? 'Wysłano wiadomość kontrolną na Twój adres.' : 'Tryb lokalny: wiadomość zapisana w dzienniku, nic nie zostało wysłane.')
+            : 'Nie udało się wysłać. ' . ($res['error'] ?? ''), $res['ok'] ? 'success' : 'error');
+    }
+
+    /**
+     * Właściciel dodaje osobę do zespołu. Gdy działa poczta i hasło jest puste, osoba dostaje e-mail z linkiem
+     * do ustawienia własnego hasła (ważny 3 dni). W przeciwnym razie właściciel podaje hasło startowe.
+     */
     public function invite(Request $r): Response
     {
         if (!Auth::isOwner()) {
@@ -118,8 +155,12 @@ final class SettingsController extends Controller
         }
         $email = mb_strtolower($r->str('email'));
         $password = (string) $r->input('password', '');
+        $byMail = $password === '' && Mailer::enabled();
+        if ($byMail) {
+            $password = bin2hex(random_bytes(20)); // nikt go nie zna: osoba ustawi własne hasło z linku
+        }
         if (!filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($password) < 10 || strlen($password) > Auth::MAX_PASSWORD_BYTES) {
-            return $this->redirect('/ustawienia#zespol', 'Podaj e-mail i hasło startowe (co najmniej 10 znaków).', 'error');
+            return $this->redirect('/ustawienia#zespol', Mailer::enabled() ? 'Podaj poprawny e-mail. Hasło startowe jest opcjonalne, ale musi mieć co najmniej 10 znaków.' : 'Podaj e-mail i hasło startowe (co najmniej 10 znaków).', 'error');
         }
         if ($this->db()->val('SELECT 1 FROM users WHERE email = ?', [$email])) {
             return $this->redirect('/ustawienia#zespol', 'Ten adres e-mail ma już konto.', 'error');
@@ -128,7 +169,14 @@ final class SettingsController extends Controller
             'org_id' => $this->orgId(), 'email' => $email, 'name' => mb_substr($r->str('name'), 0, 120),
             'password_hash' => Auth::hash($password), 'role' => 'member', 'created_at' => now_utc(),
         ]);
-        AuditLog::add('team.add', 'user', $id, ['email' => $email], $r->ip());
+        AuditLog::add('team.add', 'user', $id, ['email' => $email, 'invited_by_mail' => $byMail], $r->ip());
+        if ($byMail) {
+            $link = AuthController::passwordLink($id, 3 * 86400, $r->baseUrl());
+            $sent = Mailer::send($email, 'Zaproszenie do panelu ' . config('APP_NAME'),
+                (Auth::user()['name'] ?: Auth::user()['email']) . ' dodaje Cię do zespołu firmy ' . (Auth::org()['name'] ?? '') . ' w panelu ' . config('APP_NAME')
+                . ".\n\nUstaw swoje hasło pod tym adresem (link działa 3 dni):\n" . $link . "\n\nLogin to ten adres e-mail.", $this->orgId(), 'invite');
+            return $this->redirect('/ustawienia#zespol', $sent['ok'] ? 'Dodano osobę i wysłano jej link do ustawienia hasła.' : 'Dodano osobę, ale e-mail nie wyszedł. ' . ($sent['error'] ?? '') . ' Osoba może użyć „Nie pamiętam hasła” na stronie logowania.', $sent['ok'] ? 'success' : 'error');
+        }
         return $this->redirect('/ustawienia#zespol', 'Dodano osobę do zespołu. Przekaż jej hasło startowe i poproś o zmianę po pierwszym logowaniu.');
     }
 }

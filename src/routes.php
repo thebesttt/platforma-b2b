@@ -9,11 +9,13 @@ use App\Http\AuthController;
 use App\Http\CompanyController;
 use App\Http\CronController;
 use App\Http\DashboardController;
+use App\Http\InboundController;
 use App\Http\LibraryController;
 use App\Http\OfferController;
 use App\Http\OutreachController;
 use App\Http\SettingsController;
 use App\Http\TenderController;
+use App\Http\WidgetController;
 
 return static function (Router $r): void {
     $a = ['auth' => true];
@@ -25,12 +27,36 @@ return static function (Router $r): void {
     $r->get('/rejestracja', [AuthController::class, 'registerForm']);
     $r->post('/rejestracja', [AuthController::class, 'register']);
     $r->post('/wyloguj', [AuthController::class, 'logout']);
+    $r->get('/haslo', [AuthController::class, 'forgotForm']);
+    $r->post('/haslo', [AuthController::class, 'forgot']);
+    $r->get('/haslo/{token}', [AuthController::class, 'resetForm']);
+    $r->post('/haslo/{token}', [AuthController::class, 'reset']);
 
     // Zadania cykliczne (wywołuje GitHub Actions lub cron hostingu z tokenem)
     $r->get('/cron/run', [CronController::class, 'run']);
     $r->post('/cron/run', [CronController::class, 'run'], ['csrf' => false]);
 
+    // Widżet zapytań na stronie firmy: bez logowania, bez sesji i bez tokenu CSRF. Chroni go lista dozwolonych stron i limity.
+    $r->get('/w/{file}', [WidgetController::class, 'script']);
+    $r->post('/w/{id}/start', [WidgetController::class, 'start'], ['csrf' => false]);
+    $r->post('/w/{id}/answer', [WidgetController::class, 'answer'], ['csrf' => false]);
+    $r->post('/w/{id}/ask', [WidgetController::class, 'ask'], ['csrf' => false]);
+    $r->post('/w/{id}/lead', [WidgetController::class, 'lead'], ['csrf' => false]);
+
     $r->get('/pulpit', [DashboardController::class, 'index'], $a);
+
+    // Zapytania ze strony
+    $r->get('/zapytania', [InboundController::class, 'index'], $a);
+    $r->get('/zapytania/ustawienia', [InboundController::class, 'settings'], $a);
+    $r->post('/zapytania/ustawienia', [InboundController::class, 'saveSettings'], $a);
+    $r->get('/zapytania/podglad', [InboundController::class, 'preview'], $a);
+    $r->get('/zapytania/wyniki', [InboundController::class, 'results'], $a);
+    $r->get('/zapytania/wiedza', [InboundController::class, 'knowledge'], $a);
+    $r->post('/zapytania/wiedza', [InboundController::class, 'knowledgeAdd'], $a);
+    $r->post('/zapytania/wiedza/{id}/usun', [InboundController::class, 'knowledgeDelete'], $a);
+    $r->get('/zapytania/{id}', [InboundController::class, 'show'], $a);
+    $r->post('/zapytania/{id}/status', [InboundController::class, 'status'], $a);
+    $r->post('/zapytania/{id}/usun', [InboundController::class, 'delete'], $a);
 
     // Przetargi
     $r->get('/przetargi', [TenderController::class, 'index'], $a);
@@ -102,6 +128,8 @@ return static function (Router $r): void {
     $r->post('/ustawienia/haslo', [SettingsController::class, 'password'], $a);
     $r->post('/ustawienia/zespol', [SettingsController::class, 'invite'], $a);
     $r->post('/ustawienia/test-ai', [SettingsController::class, 'testAi'], $a);
+    $r->post('/ustawienia/wyglad', [SettingsController::class, 'appearance'], $a);
+    $r->post('/ustawienia/test-poczty', [SettingsController::class, 'testMail'], $a);
     $r->get('/ustawienia/uokik', [SettingsController::class, 'uokik'], $a);
     $r->post('/ustawienia/uokik', [SettingsController::class, 'uokikUpload'], $a);
 };

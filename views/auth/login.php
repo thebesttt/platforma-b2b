@@ -8,5 +8,6 @@
     <div class="field"><label for="password">Hasło</label><input id="password" name="password" type="password" autocomplete="current-password" required></div>
     <button class="btn" type="submit">Zaloguj się</button>
   </form>
+  <p class="small" style="margin:0"><a href="/haslo">Nie pamiętam hasła</a></p>
   <?php if ((string) config('SIGNUP_OPEN') === '1'): ?><p class="muted small" style="margin:0">Nie masz konta? <a href="/rejestracja">Załóż konto firmy</a></p><?php else: ?><p class="muted small" style="margin:0">Konta zakładamy na zaproszenie.</p><?php endif ?>
 </div>

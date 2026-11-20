@@ -12,6 +12,7 @@ use App\Core\Db;
 use App\Modules\Audit\Audit;
 use App\Modules\Companies\Companies;
 use App\Modules\Companies\Uokik;
+use App\Modules\Inbound\Inbound;
 use App\Modules\Offers\Offers;
 use App\Modules\Tenders\Importer;
 use App\Modules\Tenders\Matcher;
@@ -89,6 +90,30 @@ function demo_seed(): array
         'basis' => 'rfq', 'basis_detail' => 'zapytanie ofertowe „Utwardzenie placu manewrowego” na stronie firmy', 'basis_at' => date('Y-m-d', strtotime('-4 days')), 'created_at' => now_utc()]);
     $db->insert('contacts', ['org_id' => $org, 'company_name' => 'Przykładowy Deweloper sp. z o.o.', 'email' => 'biuro@example.org', 'basis' => 'none', 'website' => 'https://example.org', 'created_at' => now_utc()]);
     $db->insert('contacts', ['org_id' => $org, 'company_name' => 'Spółdzielnia Mieszkaniowa (przykład)', 'person' => 'Ewa Przykładowa', 'email' => 'zarzad@example.net', 'basis' => 'client', 'basis_detail' => 'remont parkingu w 2025 r., prośba o kolejne oferty', 'created_at' => now_utc()]);
+
+    // Zapytania ze strony: widżet dopuszczony na example.com i przykładowe zapytania przeprowadzone tą samą ścieżką co prawdziwe
+    // (start rozmowy, odpowiedzi, formularz), więc ocena pochodzi z tabeli punktów, a nie z ręki.
+    $w = Inbound::widget($org);
+    $db->update('inbound_widgets', ['origins' => 'example.com', 'texts_json' => json_out(['company' => 'Twoja Firma Drogowa', 'privacy_url' => 'https://example.com/polityka-prywatnosci'])], 'id = ?', [(int) $w['id']]);
+    $w = Inbound::widget($org);
+    $samples = [
+        [[0, 0, 0, 0], ['name' => 'Karolina Przykładowa', 'email' => 'karolina@example.org', 'phone' => '+48 601 000 001', 'nip' => '1234563218', 'message' => 'Zależy nam na starcie przed sezonem. Proszę o telefon po 14.', 'consent' => true], 2],
+        [[1, 1, 1, 2], ['name' => 'Tomasz Przykładowy', 'email' => 'tomasz@example.net', 'message' => 'Mamy sklep od roku, reklamy prowadziliśmy sami.'], 26],
+        [[4, 2, 3, 4], ['email' => 'biuro@example.com'], 50],
+        [[3, 0, 1, 1], ['name' => 'Ewa Przykładowa', 'email' => 'ewa@example.org', 'phone' => '602 000 002'], 75],
+    ];
+    foreach ($samples as $i => [$answers, $form, $hoursAgo]) {
+        $start = Inbound::start($w, 'https://example.com/kontakt', '203.0.113.' . ($i + 1));
+        $conv = Inbound::conversation($w, $start['token']);
+        foreach ($answers as $q => $a) {
+            Inbound::answer($w, Inbound::conversation($w, $start['token']), $q, $a);
+        }
+        $db->run('UPDATE inbound_conversations SET started_at = ? WHERE id = ?', [gmdate('Y-m-d H:i:s', time() - $hoursAgo * 3600 - 90), (int) $conv['id']]);
+        $res = Inbound::lead($w, Inbound::conversation($w, $start['token']), $form, 'http://127.0.0.1');
+        if (!empty($res['lead_id'])) {
+            $db->update('inbound_leads', ['created_at' => gmdate('Y-m-d H:i:s', time() - $hoursAgo * 3600), 'status' => ['new', 'new', 'contact', 'offer'][$i]], 'id = ?', [(int) $res['lead_id']]);
+        }
+    }
 
     return ['ok' => true, 'org_id' => $org, 'login' => 'demo@example.com / demo-haslo-123'];
 }

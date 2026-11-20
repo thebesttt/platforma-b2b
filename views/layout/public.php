@@ -14,10 +14,11 @@ $appName = (string) config('APP_NAME');
 <meta name="description" content="Przetargi dopasowane do Twojej firmy, szkice ofert z AI, sprawdzanie kontrahentów pod kątem zatorów płatniczych i audyt strony w jednym miejscu.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="<?= e(asset('/assets/app.css')) ?>">
+<?php $theme = App\Core\Brand::theme(); $logo = App\Core\Brand::logo(); if ($theme !== 'default'): ?><link rel="stylesheet" href="<?= e(asset('/assets/theme-' . $theme . '.css')) ?>"><?php endif ?>
 </head>
 <body>
 <header class="pub-top">
-  <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"></span><span class="brand-name"><?= e($appName) ?></span></a>
+  <a class="brand" href="/"><?php if ($logo): ?><img src="<?= e($logo) ?>" alt="<?= e($appName) ?>"><?php else: ?><span class="brand-mark" aria-hidden="true"><?= $theme === 'perfectdata' ? 'PD' : '' ?></span><span class="brand-name"><?= $appName === 'PerfectData' ? 'Perfect<b>Data</b>' : e($appName) ?></span><?php endif ?></a>
   <nav class="row-flex">
     <?php if (Auth::check()): ?>
       <a class="btn" href="/pulpit">Przejdź do pulpitu</a>

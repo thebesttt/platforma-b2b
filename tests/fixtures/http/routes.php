@@ -7,7 +7,7 @@
 $json = static fn (mixed $v, int $status = 200) => ['status' => $status, 'body' => json_encode($v, JSON_UNESCAPED_UNICODE)];
 
 return [
-    // BZP – pierwsza strona ogłoszeń o zamówieniu; reszta pusta.
+    // BZP - pierwsza strona ogłoszeń o zamówieniu; reszta pusta.
     '#^GET https://ezamowienia\.gov\.pl/mo-board/api/v1/Board/Search\?NoticeType=ContractNotice&.*&PageNumber=1&#' => 'bzp_search_p1.json',
     '#^GET https://ezamowienia\.gov\.pl/mo-board/api/v1/Board/Search\?#' => $json([]),
     // Ogłoszenie poniżej progu ustawy; wariant „bez-opisu”: zamawiający pominął opis (pkt 3.3) i termin (pkt 3.6).
@@ -25,7 +25,7 @@ return [
     // TED
     '#^POST https://api\.ted\.europa\.eu/v3/notices/search#' => 'ted_search_p1.json',
 
-    // Biała lista VAT: firma testowa (NIP 1234563218), nieprawidłowy NIP, pozostałe – brak w wykazie.
+    // Biała lista VAT: firma testowa (NIP 1234563218), nieprawidłowy NIP, pozostałe - brak w wykazie.
     '#^GET https://wl-api\.mf\.gov\.pl/api/search/nips/#' => 'wl_nips.json',
     '#^GET https://wl-api\.mf\.gov\.pl/api/search/nip/1234563218\?#' => 'wl_1234563218.json',
     '#^GET https://wl-api\.mf\.gov\.pl/api/search/nip/7181968222\?#' => 'wl_7181968222.json',
@@ -36,19 +36,29 @@ return [
     '#^GET https://api-krs\.ms\.gov\.pl/api/krs/OdpisAktualny/0000123456\?rejestr=P#' => 'krs_odpis_przyklad.json',
     '#^GET https://api-krs\.ms\.gov\.pl/api/krs/OdpisAktualny/#' => ['status' => 404, 'body' => ''],
 
-    // UOKiK – decyzje z jednego roku, pozostałe lata puste.
+    // UOKiK - decyzje z jednego roku, pozostałe lata puste.
     '#^GET https://decyzje\.uokik\.gov\.pl/bp/dec_prez\.nsf/UOKiK\?OpenForm&Start=1&Count=9999&Expand=11\.1&#' => 'uokik_zatory_2026.html',
     '#^GET https://decyzje\.uokik\.gov\.pl/bp/dec_prez\.nsf/UOKiK\?OpenForm&Start=1&Count=9999&Expand=11\.2&#' => 'uokik_zatory_test.html',
     '#^GET https://decyzje\.uokik\.gov\.pl/#' => ['status' => 200, 'body' => '<html><body><table></table></body></html>'],
 
-    // Anthropic – odpowiedź zależna od rodzaju zadania (rozpoznawana po treści promptu systemowego).
+    // Anthropic - odpowiedź zależna od rodzaju zadania (rozpoznawana po treści promptu systemowego).
     '#^POST https://api\.anthropic\.com/v1/messages\n.*Analizujesz dokumentację przetargu#s' => 'claude_analysis.json',
     '#^POST https://api\.anthropic\.com/v1/messages\n.*Odpowiadasz na pytania wykonawcy#s' => 'claude_qa.json',
     '#^POST https://api\.anthropic\.com/v1/messages\n.*Piszesz fragment#s' => 'claude_section.json',
     '#^POST https://api\.anthropic\.com/v1/messages\n.*Piszesz e-mail#s' => 'claude_email.json',
+    // Czat w widżecie zapytań: odpowiedź z bazy wiedzy firmy.
+    '#^POST https://api\.anthropic\.com/v1/messages\n.*Jesteś asystentem na stronie firmy#s' => $json([
+        'type' => 'message', 'role' => 'assistant', 'stop_reason' => 'end_turn',
+        'content' => [['type' => 'text', 'text' => 'Tak, prowadzimy kampanie Google Ads. Wycenę przygotujemy po krótkiej rozmowie.']],
+        'usage' => ['input_tokens' => 310, 'output_tokens' => 24],
+    ]),
     '#^POST https://api\.anthropic\.com/v1/messages\n.*Odpowiadasz jednym słowem#s' => $json([
         'type' => 'message', 'role' => 'assistant', 'stop_reason' => 'end_turn',
         'content' => [['type' => 'text', 'text' => 'działa']],
         'usage' => ['input_tokens' => 21, 'output_tokens' => 3],
     ]),
+
+    // Resend: wysyłka e-maili platformy. Adres zaczynający się od „odrzucony” udaje błąd usługi.
+    '#^POST https://api\.resend\.com/emails\n.*"to":\["odrzucony#s' => $json(['statusCode' => 422, 'name' => 'validation_error', 'message' => 'Domena nadawcy nie jest zweryfikowana.'], 422),
+    '#^POST https://api\.resend\.com/emails#' => $json(['id' => 'test-wiadomosc']),
 ];

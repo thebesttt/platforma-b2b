@@ -12,6 +12,7 @@ final class Config
     private const DEFAULTS = [
         'APP_ENV' => 'production',
         'APP_NAME' => '[Nazwa]',
+        'APP_THEME' => '',             // perfectdata = wygląd PerfectData; puste = standardowy. Firma może to zmienić w Ustawieniach.
         'APP_URL' => '',
         'APP_SECRET' => '',
         'DATABASE_URL' => '',

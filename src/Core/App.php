@@ -30,7 +30,10 @@ final class App
                 Db::get()->val('SELECT 1');
                 return Response::text('ok');
             }
-            Session::start($request);
+            // Widżet na stronie klienta działa bez sesji i bez plików cookie.
+            if (!str_starts_with($request->path, '/w/')) {
+                Session::start($request);
+            }
             [$route, $otherMethod] = self::router()->match($request->method, $request->path);
             if (!$route) {
                 return $otherMethod

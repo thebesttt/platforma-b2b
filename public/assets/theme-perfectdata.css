@@ -1,0 +1,82 @@
+/* Wygląd PerfectData: kolory i przyciski ze strony perfectdata.pl, czcionka systemowa, nagłówek zamiast bocznego menu.
+   Ten plik ładuje się po app.css i tylko nadpisuje. Włącza go APP_THEME=perfectdata albo ustawienie firmy. */
+:root {
+  color-scheme: dark;
+  --bg: #0a0e1a;
+  --surface: #0f1524;
+  --raised: #151c2e;
+  --line: #232d45;
+  --line-soft: #19213a;
+  --text: #f2f3f7;
+  --text-2: #dfe3ec;
+  --muted: #9aa3b8;
+  --gold: #d4a94a; --gold-hi: #e8c97a; --gold-lo: #a87f2c; --on-gold: #14100a;
+  --accent: #d4a94a;
+  --accent-hover: #e8c97a;
+  --accent-soft: rgba(212, 169, 74, .12);
+  --accent-line: rgba(212, 169, 74, .45);
+  --low-bg: rgba(74, 222, 128, .12); --low: #4ade80;
+  --mid-bg: rgba(240, 160, 75, .14); --mid: #f0a04b;
+  --high-bg: rgba(248, 113, 113, .14); --high: #f87171; --high-line: rgba(248, 113, 113, .45);
+  --radius: 14px;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-head: var(--font);
+}
+a { color: var(--gold-hi); text-underline-offset: 3px; }
+a:hover { color: var(--text); }
+h1 { letter-spacing: -0.03em; font-weight: 700; }
+h2 { letter-spacing: -0.02em; }
+code { color: var(--text-2); }
+
+/* Nagłówek jak na stronie: logo, moduły w jednym wierszu, konto z prawej */
+.shell { display: block; min-height: 0; }
+.sidebar { position: sticky; top: 0; z-index: 20; flex-direction: row; align-items: center; flex-wrap: wrap; gap: 4px 28px; max-width: none; padding: 10px clamp(16px, 3vw, 40px); background: rgba(10, 14, 26, .9); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-right: 0; border-bottom: 1px solid var(--line); }
+.brand { padding: 0; }
+.brand img { display: block; height: 34px; width: auto; }
+.brand-mark { width: 30px; height: 30px; border: 1.5px solid var(--gold); border-radius: 7px; background: none; color: var(--gold); display: grid; place-items: center; font: 700 12px var(--font); }
+.brand-name { letter-spacing: -0.02em; }
+.brand-name b { color: var(--gold); font-weight: 700; }
+.nav { flex: 1; min-width: 0; flex-direction: row; flex-wrap: wrap; gap: 0 20px; padding: 0; }
+.nav a { flex: none; white-space: nowrap; min-height: 40px; padding: 0; border-radius: 0; color: var(--text); font-weight: 500; border-bottom: 2px solid transparent; }
+.nav a:hover { background: none; color: var(--gold-hi); }
+.nav a.on { background: none; color: var(--text); font-weight: 600; border-bottom-color: var(--gold); }
+.nav-sub { display: none; }
+.org-box { display: flex; align-items: center; gap: 14px; margin: 0; padding: 0; background: none; font-size: 13px; white-space: nowrap; }
+.org-box .muted { display: none; }
+.org-box form { margin: 0; }
+.content { padding: 32px clamp(16px, 3vw, 40px) 64px; }
+@media (max-width: 900px) {
+  /* Na wąskim ekranie menu to jeden przewijany wiersz. Zanikający prawy brzeg pokazuje, że jest dalszy ciąg. */
+  .sidebar { padding-bottom: 0; }
+  .nav { order: 3; flex-basis: 100%; flex-wrap: nowrap; gap: 20px; overflow-x: auto; scrollbar-width: none; padding-right: 28px; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent); }
+  .nav::-webkit-scrollbar { display: none; }
+  .org-box { display: flex; margin-left: auto; }
+  .org-box > div:first-child { display: none; }
+}
+
+/* Elementy */
+.card { background: var(--surface); }
+.btn { border-color: transparent; background: linear-gradient(135deg, var(--gold-hi), var(--gold) 55%, var(--gold-lo)); color: var(--on-gold); border-radius: 9px; }
+.btn:hover { background: linear-gradient(135deg, var(--gold-hi), var(--gold) 55%, var(--gold-lo)); color: var(--on-gold); filter: brightness(1.08); }
+.btn.ghost { background: transparent; color: var(--text); border-color: var(--line); filter: none; }
+.btn.ghost:hover { background: transparent; color: var(--text); border-color: var(--gold); filter: none; }
+.btn.danger { background: transparent; color: var(--high); border-color: var(--high-line); filter: none; }
+.btn.danger:hover { background: var(--high-bg); color: var(--high); filter: none; }
+.btn[disabled], .btn.disabled { background: var(--raised); color: var(--muted); border-color: var(--line); filter: none; }
+.link-btn { color: var(--gold-hi); }
+input[type=text], input[type=email], input[type=password], input[type=number], input[type=date], input[type=url], input[type=search], select, textarea { background: var(--bg); border-color: var(--line); color: var(--text); border-radius: 9px; }
+input::placeholder, textarea::placeholder { color: #6f7a93; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, .btn:focus-visible, a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.opt, .filters a { background: transparent; }
+.filters a.on { color: var(--gold-hi); }
+.info { color: var(--gold-hi); }
+.neutral { background: var(--raised); }
+.notice.info, .flash.info { color: var(--text); }
+.notice.mid { color: var(--text); }
+.notice.high, .flash.error { color: var(--text); box-shadow: inset 2px 0 0 var(--high); }
+.notice.low, .flash.success { color: var(--text); box-shadow: inset 2px 0 0 var(--low); }
+.bar > span { background: var(--gold); }
+.meter i { background: var(--text); }
+.org-box, .empty h3 { color: var(--text); }
+.pub-top { background: rgba(10, 14, 26, .9); }
+@media print { body { background: #fff; color: #000; } }
