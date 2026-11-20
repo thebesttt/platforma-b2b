@@ -69,7 +69,7 @@ function renderSearch() {
       <div><p>${esc(x.reason)}</p><p>${esc(x.size)}, działa ${lata(x.age)}${x.tenders ? ', startuje w przetargach' : ''}</p></div>
       <div class="end">${st(x.condition === 'dobra' ? 'good' : 'mid', 'kondycja: ' + x.condition)}${known ? `<span class="small muted" tabindex="-1" data-added="${esc(x.company)}">${known.unsub ? 'W kontaktach, wypisany' : 'W kontaktach'}</span>` : `<button class="btn ghost sm" type="button" data-act="k-add" data-name="${esc(x.company)}">Dodaj do kontaktów</button>`}</div></div>`;
   }).join('');
-  put('firmy', stan('plan', 'Wyszukiwarki firm nie ma jeszcze w silniku. Ekran pokazuje, jak ma działać.') +
+  put('firmy', stan('plan', 'Opis idealnego klienta działa w silniku. Wyszukiwarka firm jest do zbudowania, ekran pokazuje, jak ma działać.') +
     `<div class="sec">${secHead('Idealny klient', 'Opis powstaje z treści Twojej strony. Zatwierdzasz go albo poprawiasz, zanim posłuży do wyszukiwania.')}
       <p style="padding-top:14px;max-width:78ch">${esc(PLAT.icp)}</p></div>
     <div class="sec">${secHead('Firmy pasujące do opisu', 'Dane z rejestrów publicznych. Powód kontaktu pochodzi z audytu strony firmy.', found.length + ' z ' + PLAT.search.length)}
@@ -132,7 +132,7 @@ function renderSending() {
       <div class="table-wrap"><table style="min-width:680px"><thead><tr><th>Kiedy</th><th>Kto</th><th>Odbiorca</th><th>Rodzaj wiadomości</th><th>Ryzyko</th><th>Potwierdzenie</th></tr></thead><tbody>` +
       PLAT.log.map((l) => `<tr><td class="num">${esc(l.at)}</td><td>${esc(l.who)}</td><td>${esc(l.company)}</td><td>${esc(PLAT.kinds[l.kind][0])}</td><td>${st(RISK[l.level][0], RISK[l.level][1])}</td><td>${l.ack ? 'Ryzyko potwierdzone' : 'Nie było wymagane'}</td></tr>`).join('') + `</tbody></table></div></div>
     <div class="two">
-      <div class="sec">${secHead('Sekwencja: ' + esc(s.name))}${stan('plan', 'Dziś każdą wiadomość przygotowujesz ręcznie.')}` +
+      <div class="sec">${secHead('Sekwencja: ' + esc(s.name))}${stan('silnik', 'Panel pilnuje terminów i przygotowuje treść kolejnych kroków.')}` +
         s.steps.map(([day, what, note]) => `<div class="item" style="--c1:70px"><span class="lead-col">${esc(day)}</span><div><p><b>${esc(what)}</b></p><p>${esc(note)}</p></div><span></span></div>`).join('') +
         `<p class="small muted" style="padding-top:12px">Sekwencja zatrzymuje się, gdy: ${s.stops.map((x) => esc(x.toLowerCase())).join(', ')}. Limit: ${s.limit} wiadomości dziennie z jednej skrzynki.</p></div>
       <div class="stack" style="gap:28px">
@@ -140,7 +140,8 @@ function renderSending() {
         <div class="sec">${secHead('Skąd idzie wysyłka')}<ul class="list" style="padding-top:16px">
           <li><b>Zawsze z Twojej skrzynki</b>, nigdy z domen platformy.</li>
           <li><b>Dziś:</b> platforma otwiera program pocztowy z gotową wiadomością albo daje plik .eml.</li>
-          <li><b>W planie:</b> połączenie z Gmailem i Microsoft 365, wtedy platforma sama wykryje odpowiedź i wypisanie.</li>
+          <li><b>Wypisanie:</b> odbiorca klika adres w stopce oferty, bez logowania.</li>
+          <li><b>W planie:</b> połączenie z Gmailem i Microsoft 365, wtedy platforma sama wykryje odpowiedź.</li>
           <li><b>Wypisanie</b> blokuje kolejne oferty do tej firmy dla całego konta.</li></ul></div>
       </div>
     </div>`);

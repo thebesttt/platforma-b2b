@@ -18,7 +18,7 @@ function renderOffer() {
 
 function renderGrants() {
   const g = PLAT.grants;
-  put('dotacje', `<div class="sec">${secHead('Otwarte nabory', 'Dla każdego naboru platforma sprawdza warunki, które da się ocenić z danych firmy.', g.calls.length)}${stan('plan', 'Bazy naborów i oceny warunków nie ma jeszcze w silniku. Dziś nabór wpisujesz ręcznie.')}` +
+  put('dotacje', `<div class="sec">${secHead('Otwarte nabory', 'Dla każdego naboru platforma sprawdza warunki, które da się ocenić z danych firmy.', g.calls.length)}${stan('silnik', 'Ocena warunków działa na wgranym regulaminie naboru. Bazy naborów jeszcze nie ma: nabór wpisujesz ręcznie.')}` +
       g.calls.map((c) => { const open = c.checks.filter((x) => !x[0]).length; return `<div style="padding:18px 0;border-bottom:1px solid var(--line)" class="stack">
         <div class="bar-row"><div><h3>${esc(c.name)}</h3><p class="small muted">Wnioski do ${esc(c.until)}, ${esc(c.amount)}</p></div>${st(open ? 'mid' : 'good', open ? 'do sprawdzenia: ' + open : 'warunki spełnione')}</div>
         ${checkList(c.checks, 'spełnione', 'do sprawdzenia')}</div>`; }).join('') + `</div>

@@ -73,7 +73,7 @@ function renderTender() {
       <div class="stack" style="padding-top:16px;max-width:80ch"><p><b>${esc(c.ai.qa.q)}</b></p><p>${esc(c.ai.qa.a)} <span class="src">${esc(c.ai.qa.src)}</span></p>
         <form class="form" id="tenderAsk"><label class="field" for="tq">Twoje pytanie<input id="tq" type="text" placeholder="np. Jaki jest termin płatności?"></label><button class="btn ghost" type="submit">Zapytaj</button></form>
         <p class="note" id="tqNote" hidden>W mockupie jest tylko przykładowe pytanie powyżej. W panelu AI odpowiada z wgranych dokumentów i podaje rozdział.</p></div></div>
-    <div class="sec">${secHead('Do złożenia z ofertą', 'Lista wynika z ogłoszenia i dokumentów. Odhaczanie gotowych pozycji jest do dodania w silniku.', 'brakuje ' + missing)}<div style="padding-top:16px">${checkList(c.docs.map(([text, ok]) => [ok, text]), 'gotowe', 'brakuje')}</div>
+    <div class="sec">${secHead('Do złożenia z ofertą', 'Lista wynika z ogłoszenia i dokumentów. W ofercie zespół odhacza gotowe pozycje i dopisuje własne.', 'brakuje ' + missing)}<div style="padding-top:16px">${checkList(c.docs.map(([text, ok]) => [ok, text]), 'gotowe', 'brakuje')}</div>
       <div class="acts" style="padding-top:18px"><a class="btn" href="#oferta">Otwórz szkic oferty</a><a class="btn ghost" href="#terminy">Terminy</a></div></div>`);
 }
 
@@ -83,7 +83,7 @@ function renderProfile() {
     `<div class="two">
       <div class="sec">${secHead('Profil: ' + esc(p.name), 'Firma może mieć kilka profili, np. osobno dla stron WWW i dla kampanii.')}
         <dl class="kv" style="padding-top:16px;grid-template-columns:150px minmax(0,1fr)">${row('Kody CPV', p.cpv.join(', '))}${row('Słowa kluczowe', p.keywords.join(', '))}${row('Słowa wykluczające', p.exclude.join(', '))}
-          ${row('Województwa', p.regions.join(', '))}${row('Wartość', 'od ' + zl(p.min) + ' do ' + zl(p.max))}${row('Źródła', 'BZP i TED')}${row('Poranny e-mail', 'w planie')}</dl></div>
+          ${row('Województwa', p.regions.join(', '))}${row('Wartość', 'od ' + zl(p.min) + ' do ' + zl(p.max))}${row('Źródła', 'BZP i TED')}${row('Poranny e-mail', 'po codziennym imporcie')}</dl></div>
       <div class="sec">${secHead('Jak liczymy dopasowanie', 'Ocena od 0 do 100. Te same reguły dają zawsze ten sam wynik.')}
         <div class="table-wrap"><table><thead><tr><th>Co sprawdzamy</th><th class="n">Punkty</th></tr></thead><tbody>
           <tr><td>Kod CPV z profilu jest głównym kodem ogłoszenia</td><td class="n">50-60</td></tr>

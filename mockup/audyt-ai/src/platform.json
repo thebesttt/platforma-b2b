@@ -26,10 +26,10 @@
       ["Dziennik decyzji i wysłanych wiadomości", "wysylka", "silnik", ""],
       ["Wysyłka z własnej skrzynki", "wysylka", "silnik", "Dziś przez program pocztowy albo plik .eml. Gmail i Microsoft 365 są w planie."],
       ["Zapytania ofertowe firm jako kanał o najniższym ryzyku", "rfq", "plan", "Podstawa „zapytanie ofertowe” już jest. Do zbudowania jest zbieranie zapytań ze źródeł."],
-      ["Opis idealnego klienta ze strony firmy", "firmy", "plan", ""],
-      ["Wyszukiwanie firm: branża, region, wielkość, wiek, kondycja, przetargi", "firmy", "plan", ""],
-      ["Sekwencje z przypomnieniami i dziennymi limitami", "wysylka", "plan", ""],
-      ["Wykrywanie odpowiedzi i wypisań", "wysylka", "plan", "Wypisanie można dziś zaznaczyć ręcznie w karcie kontaktu."]
+      ["Opis idealnego klienta ze strony firmy", "firmy", "silnik", "AI czyta stronę firmy i bibliotekę. Grupa klientów zostaje tylko z cytatem. Opis można poprawić ręcznie."],
+      ["Wyszukiwanie firm: branża, region, wielkość, wiek, kondycja, przetargi", "firmy", "plan", "Firmy z wyników przetargów (branża, region, wygrane) są już w module Przetargi. Pełna baza wymaga kluczy do REGON i CEIDG."],
+      ["Sekwencje z przypomnieniami i dziennymi limitami", "wysylka", "silnik", "Panel pilnuje terminów i przygotowuje treść kolejnych kroków. Wysyłasz ze swojej skrzynki."],
+      ["Wykrywanie odpowiedzi i wypisań", "wysylka", "plan", "Wypisanie działa: odbiorca klika adres w stopce oferty. Odpowiedź zaznaczasz ręcznie, bo automat wymaga połączenia ze skrzynką."]
     ] },
     { "module": "Audyt AI", "items": [
       ["Wynik 0-100 z 24 wskaźników i jawnymi progami", "raport", "silnik", "Sprawdzony na prawdziwej stronie. 4 wskaźniki wymagają podłączenia usług (AI i renderowanie)."],
@@ -64,18 +64,18 @@
       ["Pytania do dokumentacji", "przetarg", "silnik", ""],
       ["Kalendarz terminów", "terminy", "silnik", "Plik .ics do własnego kalendarza."],
       ["Poranny e-mail z nowymi przetargami", "profil", "silnik", "W jednym przeglądzie z zapytaniami i alertami. Wymaga klucza usługi wysyłkowej."],
-      ["Wyniki przetargów: kto wygrywa i za ile", "przetargi", "plan", "Etap 4."]
+      ["Wyniki przetargów: kto wygrywa i za ile", "przetargi", "silnik", "Sprawdzone na 25 prawdziwych ogłoszeniach o wyniku. Alert, gdy zapisany przetarg zostanie rozstrzygnięty."]
     ] },
     { "module": "Oferty i wnioski", "items": [
       ["Biblioteka firmy: referencje, osoby, certyfikaty, polisy, opisy", "biblioteka", "silnik", ""],
       ["Szkic oferty z ogłoszenia, SWZ i biblioteki", "oferta", "silnik", ""],
       ["Zdania bez źródła oznaczone do sprawdzenia", "oferta", "silnik", ""],
-      ["Lista dokumentów do złożenia", "oferta", "silnik", "Lista działa. Odhaczanie gotowych dokumentów jest do dodania."],
+      ["Lista dokumentów do złożenia", "oferta", "silnik", "Z ogłoszenia i analizy SWZ. Zespół odhacza gotowe pozycje i dopisuje własne."],
       ["Eksport do .docx", "oferta", "silnik", ""],
       ["Wniosek o dotację według regulaminu naboru", "dotacje", "silnik", ""],
       ["Baza otwartych naborów", "dotacje", "plan", "Dziś nabór wpisujesz ręcznie."],
-      ["Ocena, czy firma kwalifikuje się do naboru", "dotacje", "plan", ""],
-      ["Praca kilku osób nad jedną ofertą", "oferta", "plan", "Zaproszenia do zespołu już działają. Do zbudowania jest podział sekcji między osoby."]
+      ["Ocena, czy firma kwalifikuje się do naboru", "dotacje", "silnik", "Warunki z wgranego regulaminu, każdy z cytatem. Ocena tylko z potwierdzeniem w danych firmy."],
+      ["Praca kilku osób nad jedną ofertą", "oferta", "silnik", "Sekcję przydzielasz osobie z zespołu. Zapis nie nadpisuje cudzej zmiany."]
     ] },
     { "module": "Kontrahenci", "items": [
       ["Karta firmy po NIP: wykaz VAT, rachunki, KRS, zarząd", "kontrahent", "silnik", ""],
@@ -83,8 +83,8 @@
       ["Decyzje UOKiK o zatorach płatniczych", "kontrahent", "silnik", ""],
       ["Obserwowane firmy i alerty o zmianach", "obserwowane", "silnik", ""],
       ["Należności: wezwanie do zapłaty i warunki wpisu do BIG", "naleznosci", "silnik", "Długi widzi tylko Twoja firma."],
-      ["Upadłości i restrukturyzacje z Krajowego Rejestru Zadłużonych", "kontrahent", "plan", "Etap 4."],
-      ["Szacowany czas płacenia dostawcom ze sprawozdań", "kontrahent", "plan", "Etap 4."],
+      ["Upadłości i restrukturyzacje z Krajowego Rejestru Zadłużonych", "kontrahent", "plan", "Rejestr nie udostępnia danych do pobierania przez program."],
+      ["Szacowany czas płacenia dostawcom ze sprawozdań", "kontrahent", "plan", "Rejestr nie udostępnia danych do pobierania przez program."],
       ["Wpis długu do BIG z platformy", "naleznosci", "plan", "Wymaga umowy z biurem."]
     ] }
   ],
@@ -150,7 +150,7 @@
       ["Dzień 4", "Przypomnienie", "Krótkie pytanie, czy oferta dotarła. Tylko gdy nie było odpowiedzi."],
       ["Dzień 10", "Ostatnia wiadomość", "Informacja, że nie będziesz pisać ponownie."]
     ],
-    "stops": ["Odbiorca odpisał", "Odbiorca się wypisał", "Minął termin składania ofert"],
+    "stops": ["Odbiorca odpisał", "Odbiorca się wypisał", "Zatrzymasz ją ręcznie"],
     "running": [
       ["Hurtownia Elektryczna Volt (przykład)", "Dzień 0 wysłany 18.11.2026", "Przypomnienie 22.11.2026"],
       ["Centrum Szkoleń Kurs (przykład)", "Odpowiedź odbiorcy 16.11.2026", "Zatrzymana"]

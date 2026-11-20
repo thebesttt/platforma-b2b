@@ -6,16 +6,19 @@ Stan na 20.11.2026.
 
 Na perfectdata.pl nic nie zostało zainstalowane. Kod trafi na stronę dopiero po wyraźnej zgodzie właściciela.
 
-**Co się zmieniło 20.11.2026.** Etapy 1 i 2 oraz większość etapu 3 są zbudowane w silniku i przechodzą testy. Do uruchomienia zostały kroki właściciela z etapu 0: hosting, baza, klucze usług i zgoda na kod widżetu. Lista na końcu, w części „Co jest potrzebne od właściciela”.
+**Co się zmieniło 20.11.2026.** Etapy 1 i 2 oraz większość etapu 3 są zbudowane w silniku i przechodzą testy. Tego samego dnia doszło pięć funkcji z etapu 4: wyniki przetargów, praca zespołu nad ofertą, warunki naboru dotacji, przypomnienia z adresem wypisania i opis idealnego klienta. Do uruchomienia zostały kroki właściciela z etapu 0: hosting, baza, klucze usług i zgoda na kod widżetu. Lista na końcu, w części „Co jest potrzebne od właściciela”.
 
 ## Co jest gotowe
 
-- **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`, 113 testów na SQLite i PostgreSQL. Gotowa do uruchomienia w Render.
+- **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`, 137 testów na SQLite i PostgreSQL. Gotowa do uruchomienia w Render.
 - **Panel w wyglądzie PerfectData** (zmienna `APP_THEME=perfectdata` albo ustawienie firmy) z wyborem modułów w menu i pulpitem, który pokazuje tylko włączone moduły.
 - **Zapytania ze strony:** widżet do wklejenia jedną linią kodu, kwalifikator z jawną tabelą punktów, lista i karta zapytań, czat AI z bazy wiedzy, lejek i test dwóch wersji.
 - **Audyt AI:** 24 wskaźniki i 100 punktów z jednego pliku wytycznych, raport z linijką punktów i listą „Najpierw to”, „Przed i po”, strona wytycznych, raport dla klienta pod linkiem, audyt wielu stron z mapy witryny. Sprawdzony na prawdziwej stronie perfectdata.pl.
 - **Poczta z panelu:** powiadomienie o zapytaniu, reset hasła, zaproszenia do zespołu i poranny przegląd (przetargi, zapytania, alerty).
-- **Moduły działające wcześniej:** przetargi, oferty i wnioski, kontrahenci, klienci i wiadomości z oceną ryzyka prawnego, audyt techniczny.
+- **Przetargi:** import i dopasowanie do profilu, karta przetargu, analiza SWZ oraz wyniki: kto wygrywa w branży i regionie, za ile i przy ilu ofertach. Alert, gdy zapisany przetarg zostanie rozstrzygnięty.
+- **Oferty i wnioski:** szkic z ogłoszenia i biblioteki, praca zespołu (sekcja przydzielona osobie, zapis nie nadpisuje cudzej zmiany), lista dokumentów do odhaczania, a we wniosku o dotację sprawdzenie warunków naboru z cytatami.
+- **Klienci i wiadomości:** ocena ryzyka prawnego przed wysyłką, przypomnienia po 4 i po 10 dniach z dziennym limitem, adres wypisania w stopce ofert, opis idealnego klienta ze strony firmy.
+- **Kontrahenci i audyt techniczny:** bez zmian, działają od początku.
 - **Mockup całego panelu:** `mockup/audyt-ai`, 9 modułów i 32 ekrany, z listą 60 funkcji i ich stanem. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip`.
 - **Wytyczne audytu:** `resources/audyt-ai-rules.json` (czyta je silnik) i dokument dla zespołu `mockup/audyt-ai/WYTYCZNE.md`.
 - **Plany modułów:** `PLAN-ZAPYTANIA.md` i `PLAN-AUDYT-AI.md`.
@@ -44,22 +47,26 @@ Mockup pokazuje 60 funkcji. Zakładka „Lista funkcji” na pulpicie podaje sta
 | Moduł | Działa w silniku | Do zbudowania | Czeka na zgodę Google i Meta |
 |---|---|---|---|
 | Zapytania | 5 | 0 | 0 |
-| Klienci | 6 | 5 | 0 |
+| Klienci | 8 | 3 | 0 |
 | Audyt AI | 6 | 1 | 0 |
 | SEO i strona | 3 | 2 | 0 |
 | Reklamy | 0 | 0 | 6 |
-| Przetargi | 8 | 1 | 0 |
-| Oferty i wnioski | 6 | 3 | 0 |
+| Przetargi | 9 | 0 | 0 |
+| Oferty i wnioski | 8 | 1 | 0 |
 | Kontrahenci | 5 | 3 | 0 |
-| Razem | 39 | 15 | 6 |
+| Razem | 44 | 10 | 6 |
 
 „Działa w silniku” znaczy, że kod jest w repozytorium i przechodzi testy. Silnik nie jest jeszcze uruchomiony online (etap 0).
 
-Dlaczego 15 funkcji nie jest zbudowanych:
+Dlaczego 10 funkcji nie jest zbudowanych:
 
-- **Wymagają zgody albo konta u zewnętrznej firmy:** Search Console i wizytówka Google (logowanie Google klienta), wyszukiwarka firm (klucze do REGON i CEIDG), sekwencje i wykrywanie odpowiedzi (połączenie ze skrzynką Gmail lub Microsoft 365), wpis długu do BIG (umowa z biurem), test cytowań w AI (klucze OpenAI, Perplexity i Gemini oraz decyzja o koszcie).
-- **Nie mają czystego źródła danych:** Krajowy Rejestr Zadłużonych i sprawozdania finansowe z KRS, baza otwartych naborów dotacji, zbieranie zapytań ofertowych ze źródeł.
-- **Są w kolejce jako następne:** wyniki przetargów z BZP, opis idealnego klienta, ocena warunków naboru, podział sekcji oferty między osoby.
+- **Wymagają zgody albo konta u zewnętrznej firmy:**
+  - Search Console i wizytówka Google (logowanie Google klienta),
+  - wyszukiwarka firm (klucze do REGON i CEIDG). Firmy z wyników przetargów są już w module Przetargi,
+  - automatyczne wykrywanie odpowiedzi (połączenie ze skrzynką Gmail lub Microsoft 365). Wypisanie działa już przez adres w stopce, a odpowiedź zaznacza się ręcznie,
+  - wpis długu do BIG (umowa z biurem),
+  - test cytowań w AI (klucze OpenAI, Perplexity i Gemini oraz decyzja o koszcie).
+- **Nie mają źródła danych, które wolno pobierać programem:** Krajowy Rejestr Zadłużonych, sprawozdania finansowe z KRS, baza otwartych naborów dotacji, zbieranie zapytań ofertowych ze źródeł.
 
 Reklamy Google i Meta czekają na zgody platform. Wnioski warto złożyć już teraz, bo zgody trwają tygodnie.
 
@@ -174,7 +181,7 @@ Do sprawdzenia po wdrożeniu: czy rejestr decyzji UOKiK przyjmuje połączenia z
 
 ### 4d. Rozwój produktu (kolejność według wartości)
 
-1. **Wyniki przetargów z BZP:** kto wygrywa i za ile. Daje analizę konkurencji i listę potencjalnych klientów, np. zwycięzców szukających podwykonawców.
+1. **Wyniki przetargów z BZP:** zbudowane 20.11.2026. Kto wygrywa i za ile, zestawienie zwycięzców, historia zamawiającego na karcie przetargu, wygrane na karcie firmy.
 2. **Baza Konkurencyjności** jako trzecie źródło. To zamówienia firm z dotacjami, często małe i dobre dla MŚP.
 3. **Ryzyko płatnicze:**
    - szacunek, po ilu dniach firma płaci dostawcom, ze sprawozdań finansowych w KRS,
@@ -187,12 +194,12 @@ Do sprawdzenia po wdrożeniu: czy rejestr decyzji UOKiK przyjmuje połączenia z
 7. **Serwer pośredniczący w Polsce** dla rejestru UOKiK, jeśli blokada adresów zagranicznych się potwierdzi.
 8. **Pozyskiwanie klientów:**
    - zbieranie zapytań ofertowych firm ze źródeł (strony firm, Baza Konkurencyjności, platformy zakupowe),
-   - opis idealnego klienta z treści strony firmy,
+   - opis idealnego klienta z treści strony firmy: zbudowane 20.11.2026,
    - wyszukiwarka firm: branża, region, wielkość, wiek, kondycja, udział w przetargach,
-   - sekwencje z przypomnieniami i dziennym limitem. Wymagają połączenia ze skrzynką (punkt 6).
+   - sekwencje z przypomnieniami i dziennym limitem: zbudowane 20.11.2026 w wersji, w której wysyłasz ze swojej skrzynki, a panel pilnuje terminów. Automatyczna wysyłka wymaga połączenia ze skrzynką (punkt 6).
 9. **Widoczność w Google:** dane z Search Console klienta i ocena wizytówki Google.
-10. **Dotacje:** baza otwartych naborów i ocena, czy firma spełnia warunki.
-11. **Drobne uzupełnienia:** odhaczanie gotowych dokumentów w ofercie i szacowany czas pracy przy poprawkach z audytu technicznego.
+10. **Dotacje:** ocena warunków naboru na wgranym regulaminie jest zbudowana (20.11.2026). Do zrobienia: baza otwartych naborów.
+11. **Drobne uzupełnienia:** odhaczanie gotowych dokumentów w ofercie i podział sekcji między osoby są zbudowane (20.11.2026). Do zrobienia: szacowany czas pracy przy poprawkach z audytu technicznego.
 
 ## Co jest potrzebne od właściciela
 
@@ -231,6 +238,24 @@ Potrzebne przed etapem 4:
   - opinii o module wiadomości (art. 398 Prawa komunikacji elektronicznej) i o module należności (art. 15 i 15a ustawy o udostępnianiu informacji gospodarczych).
 
 ## Co zostało sprawdzone
+
+### Funkcje z etapu 4 (20.11.2026, po południu)
+
+- **137 testów** na SQLite i PostgreSQL oraz test obrazu Docker (GitHub Actions).
+- **Wyniki przetargów na prawdziwych danych:** test kontraktu z API pobrał 25 ogłoszeń o wyniku z BZP (126 części, 94 zawarte umowy). Wykonawca, cena i liczba ofert odczytane w 94 z 94 umów. Numery części z treści zgadzają się z wyszukiwarką w 25 z 25 ogłoszeń. Testy jednostkowe używają 6 prawdziwych ogłoszeń z 16.11.2026: jedna część, dwie części, konsorcjum, część nierozstrzygnięta, zamówienie z wolnej ręki, ogłoszenie o samej części 4.
+- **Znalezione i poprawione przy okazji:**
+  - profil z kodem CPV działu kończącego się zerem (30, 50, 60, 70, 80, 90) nigdy nie dopasowywał przetargów, a wyszukiwarka po takim kodzie zwracała przypadkowe wyniki,
+  - w przeglądarce przycisk „Szkic AI” na ekranie wiadomości nie wysyłał swojej akcji (skrypt wyłączał go przed wysłaniem formularza). Testy na poziomie serwera tego nie widziały,
+  - długi adres w treści wiadomości rozpychał stronę na telefonie.
+- **Przeglądarka (Chromium), świeża baza z danymi przykładowymi:**
+  - 144 strony panelu i 17 pobrań bez błędów, 157 stron w 5 szerokościach (320-1280 px) bez poziomego przewijania,
+  - wyniki przetargów, karta przetargu z wynikiem i z historią zamawiającego, karta firmy z wygranymi,
+  - oferta: przydzielenie sekcji, odhaczenie i dopisanie dokumentu, dwie karty zapisujące tę samą sekcję (druga dostaje komunikat i nie traci tekstu),
+  - warunki naboru na przykładowym regulaminie,
+  - przypomnienia: krok na dziś, napisanie i oznaczenie wysyłki, wypisanie linkiem bez logowania. Strona wypisania nie zapisuje plików cookie.
+- **Odpowiedzi modelu AI w testach są zapisanymi przykładami.** Każdy test zawiera pozycję ze zmyślonym cytatem i sprawdza, że program ją odrzuca.
+
+Czego nie dało się sprawdzić: prawdziwej odpowiedzi modelu w ocenie warunków naboru i w opisie idealnego klienta (wymaga klucza), prawdziwego e-maila o przydzielonej sekcji, zachowania nagłówka wypisania jednym kliknięciem w programach pocztowych (link w treści działa niezależnie od niego).
 
 ### Budowa silnika 20.11.2026
 

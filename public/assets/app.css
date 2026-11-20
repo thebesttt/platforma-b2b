@@ -198,7 +198,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, .btn:focus-vi
 .todo > li.is-done .todo-label { font-weight: 400; color: var(--text-2); text-decoration: line-through; text-decoration-color: var(--muted); }
 .doc-preview p { font-size: 15px; line-height: 1.7; margin: 0 0 10px; }
 .details summary { cursor: pointer; font-weight: 600; min-height: 32px; }
-.pre { white-space: pre-wrap; font-size: 14px; line-height: 1.6; margin: 0; }
+.pre { white-space: pre-wrap; font-size: 14px; line-height: 1.6; margin: 0; overflow-wrap: anywhere; }
 .qa { border-top: 1px solid var(--line-soft); padding: 12px 0; }
 .qa:first-child { border-top: 0; }
 .list-plain { list-style: none; margin: 0; padding: 0; }

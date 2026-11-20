@@ -54,7 +54,7 @@ function renderCompany() {
       <div class="sec">${secHead('Zmiany od początku obserwacji', '', c.changes.length)}${c.changes.length ? c.changes.map(([at, what]) => `<div class="item" style="--c1:96px"><span class="lead-col num">${esc(at)}</span><div><p>${esc(what)}</p></div><span></span></div>`).join('') : '<p class="muted" style="padding-top:14px">Bez zmian w rejestrach.</p>'}</div>
       <div class="sec">${secHead('Twoje należności od tej firmy', '', mine.length)}${mine.length ? mine.map((x) => `<div class="item" style="--c1:150px"><span class="lead-col">${esc(x.invoice)}</span><div><p><b>${zl(x.amount)}</b>, ${dni(overdue(x))} po terminie</p></div><div class="end"><a href="#naleznosci">Należności</a></div></div>`).join('') : '<p class="muted" style="padding-top:14px">Brak zapisanych należności.</p>'}</div>
     </div>
-    <p class="note">W planie: upadłości i restrukturyzacje z Krajowego Rejestru Zadłużonych oraz szacowany czas płacenia dostawcom ze sprawozdań finansowych.</p>`);
+    <p class="note">Do zbudowania: upadłości i restrukturyzacje z Krajowego Rejestru Zadłużonych oraz szacowany czas płacenia dostawcom ze sprawozdań finansowych. Rejestry nie udostępniają tych danych do pobierania przez program.</p>`);
 }
 
 function renderWatch() {
