@@ -7,7 +7,7 @@ Aplikacja dla firm, które sprzedają innym firmom. Zbiera i ocenia zapytania ze
 | Moduł | Co robi | Źródła danych |
 |---|---|---|
 | Zapytania ze strony | Widżet wklejany na stronę firmy zadaje odwiedzającemu kilka pytań zamiast pustego formularza. Program liczy ocenę 0-100 z jawnej tabeli punktów, zapisuje kontakt z podstawą „zapytanie od tej firmy”, wysyła powiadomienie e-mail, sprawdza firmę po NIP i audytuje podaną stronę. Czat AI odpowiada wyłącznie z bazy wiedzy firmy. Test dwóch wersji (zwykły formularz i pytania) z testem istotności. | Odpowiedzi odwiedzającego, biała lista VAT, KRS, silnik audytu, Claude API |
-| Przetargi | Codzienny import ogłoszeń i dopasowanie do profili firmy (CPV, słowa kluczowe, województwa, wartość) z uzasadnieniem oceny. Karta przetargu pokazuje wadium, kryteria, terminy i warunki z treści ogłoszenia, każdy punkt ze wskazaniem źródła. Terminy można dodać do kalendarza (.ics). | BZP (API e-Zamówień), TED API v3 |
+| Przetargi | Codzienny import ogłoszeń i dopasowanie do profili firmy (CPV, słowa kluczowe, województwa, wartość) z uzasadnieniem oceny. Karta przetargu pokazuje wadium, kryteria, terminy i warunki z treści ogłoszenia, każdy punkt ze wskazaniem źródła. Terminy można dodać do kalendarza (.ics). Ekran „Wyniki” pokazuje, kto wygrywa w branży i regionie z profilu, za ile i przy ilu ofertach. Karta przetargu pokazuje wynik postępowania albo wcześniejszych zwycięzców u tego zamawiającego. | BZP (API e-Zamówień), TED API v3 |
 | Analiza SWZ (AI) | Wgrywasz SWZ, OPZ i wzór umowy (PDF, DOCX, TXT). AI wypisuje warunki udziału, kary, płatności i ryzyka ze wskazaniem rozdziału. Odpowiada też na pytania do dokumentacji. | Dokumenty użytkownika, Claude API |
 | Oferty i wnioski | Szkic oferty: formularz, sposób realizacji, doświadczenie, zespół i lista dokumentów, z danych ogłoszenia i biblioteki firmy. Wnioski o dotacje mają osobne sekcje i korzystają z regulaminu naboru. Zdania bez źródła są oznaczone ⟦sprawdź⟧. Eksport do .docx. | Ogłoszenie, SWZ, regulamin, biblioteka firmy |
 | Kontrahenci | Karta firmy po NIP z oceną ryzyka płatniczego 0-100 i listą sygnałów. Firmę można obserwować, a zmiany w rejestrach wywołują alerty. Przy należnościach są wezwanie do zapłaty (.docx) i lista warunków wpisu do BIG. | Biała lista VAT, KRS, rejestr decyzji UOKiK (zatory płatnicze) |
@@ -119,11 +119,12 @@ Komenda `php bin/console daily`, endpoint `/cron/run?task=daily` i workflow `.gi
 1. synchronizację decyzji UOKiK (raz w tygodniu),
 2. import ogłoszeń z BZP i TED od ostatniego importu,
 3. dopasowanie ogłoszeń do profili,
-4. odświeżenie obserwowanych kontrahentów (alerty o zmianach),
-5. audyty AI, które ktoś zaczął i nie dokończył (także strony dodane hurtowo z mapy witryny),
-6. zapytania ze strony: sprawdzenie firmy i strony dla zapytań, których nikt jeszcze nie otworzył, oraz usunięcie rozmów bez zostawionego kontaktu starszych niż 30 dni,
-7. poranny przegląd e-mailem dla każdej firmy: nowe dopasowane przetargi, zapytania ze strony i alerty o kontrahentach od poprzedniego przeglądu. Wychodzi tylko wtedy, gdy jest coś nowego, a firma może go wyłączyć w Ustawieniach,
-8. sprzątanie: sesje, wygasłe wpisy i ogłoszenia po terminie starsze niż 120 dni bez ofert.
+4. wyniki przetargów z BZP: kto wygrał każdą część, a z treści ogłoszeń ceny ofert, liczba ofert i wartość umowy. Pierwszy import obejmuje 7 dni, starsze pobiera `php bin/console results <dni>`. Firma, która zapisała przetarg, dostaje alert po jego rozstrzygnięciu,
+5. odświeżenie obserwowanych kontrahentów (alerty o zmianach),
+6. audyty AI, które ktoś zaczął i nie dokończył (także strony dodane hurtowo z mapy witryny),
+7. zapytania ze strony: sprawdzenie firmy i strony dla zapytań, których nikt jeszcze nie otworzył, oraz usunięcie rozmów bez zostawionego kontaktu starszych niż 30 dni,
+8. poranny przegląd e-mailem dla każdej firmy: nowe dopasowane przetargi, rozstrzygnięte przetargi z listy zapisanych, zapytania ze strony i alerty o kontrahentach od poprzedniego przeglądu. Wychodzi tylko wtedy, gdy jest coś nowego, a firma może go wyłączyć w Ustawieniach,
+9. sprzątanie: sesje, wygasłe wpisy, ogłoszenia po terminie starsze niż 120 dni bez ofert i wyniki przetargów starsze niż 400 dni.
 
 ### Rejestr decyzji UOKiK
 
@@ -137,7 +138,7 @@ Docelowym rozwiązaniem może być mały serwer pośredniczący w Polsce.
 ## Testy
 
 ```bash
-php tests/run.php                                           # 113 testów, SQLite, bez sieci
+php tests/run.php                                           # 126 testów, SQLite, bez sieci
 TEST_DATABASE_URL=postgres://… php tests/run.php            # te same testy na PostgreSQL
 php tests/live_contract.php                                 # prawdziwe API: BZP, TED, VAT, KRS, UOKiK
 sh tests/smoke.sh http://localhost:10000                    # test dymny działającej instancji

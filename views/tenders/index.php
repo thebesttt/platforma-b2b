@@ -10,6 +10,7 @@ $base = array_filter(['profil' => $profileId ?: null, 'q' => $q ?: null]);
   </div>
   <div class="row-flex">
     <a class="btn ghost" href="/przetargi/szukaj">Przeszukaj wszystkie ogłoszenia</a>
+    <a class="btn ghost" href="/przetargi/wyniki">Wyniki przetargów</a>
     <a class="btn ghost" href="/profile">Profile (<?= count($profiles) ?>)</a>
   </div>
 </header>

@@ -52,8 +52,8 @@ final class Matcher
         $bestCpv = 0;
         $bestCode = '';
         foreach (self::words($profile['cpv'] ?? '') as $prefix) {
-            $prefix = rtrim(preg_replace('/\D/', '', $prefix) ?? '', '0');
-            if (strlen($prefix) < 2) {
+            $prefix = self::cpvPrefix($prefix);
+            if ($prefix === '') {
                 continue;
             }
             foreach ($cpvAll as $code) {
@@ -109,6 +109,19 @@ final class Matcher
             }
         }
         return ['score' => max(0, min(100, $score)), 'reasons' => $reasons];
+    }
+
+    /**
+     * Kod CPV jako prefiks do porównań: „45233000” → „45233”, „30000000” → „30”. Dwie pierwsze cyfry to dział i zostają
+     * także wtedy, gdy druga jest zerem (działy 30, 50, 60, 70, 80, 90). Pusty tekst, gdy cyfr jest mniej niż dwie.
+     */
+    public static function cpvPrefix(string $code): string
+    {
+        $d = preg_replace('/\D/', '', $code) ?? '';
+        if (strlen($d) < 2) {
+            return '';
+        }
+        return substr($d, 0, 2) . rtrim(substr($d, 2, 6), '0');
     }
 
     /** Dopasowuje nowe przetargi do wszystkich aktywnych profili. Zwraca liczbę nowych dopasowań. */

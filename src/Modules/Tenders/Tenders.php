@@ -20,7 +20,7 @@ final class Tenders
             // Nie nadpisujemy pobranej treści ogłoszenia ani adresu dokumentów, jeśli nowy rekord ich nie ma.
             $upd = $t;
             unset($upd['source'], $upd['external_id']);
-            foreach (['documents_url', 'value_estimated', 'currency', 'buyer_nip'] as $k) {
+            foreach (self::KEEP_IF_EMPTY as $k) {
                 if (array_key_exists($k, $upd) && ($upd[$k] === null || $upd[$k] === '')) {
                     unset($upd[$k]);
                 }
@@ -33,11 +33,11 @@ final class Tenders
     }
 
     /** Kolumny rekordu z importu. */
-    private const IMPORT_COLS = ['source', 'external_id', 'notice_number', 'notice_type', 'title', 'order_type', 'buyer_name', 'buyer_nip', 'buyer_city',
+    private const IMPORT_COLS = ['source', 'external_id', 'notice_number', 'notice_type', 'ocid', 'title', 'order_type', 'buyer_name', 'buyer_nip', 'buyer_city',
         'voivodeship', 'cpv_main', 'cpv_all', 'value_estimated', 'currency', 'published_at', 'deadline_at', 'url', 'documents_url', 'raw_json'];
 
     /** Kolumny, których zapisanej wartości nie nadpisujemy pustą (np. wartość odczytana później z treści ogłoszenia). */
-    private const KEEP_IF_EMPTY = ['documents_url', 'value_estimated', 'currency', 'buyer_nip'];
+    private const KEEP_IF_EMPTY = ['documents_url', 'value_estimated', 'currency', 'buyer_nip', 'ocid'];
 
     /**
      * Zapis wielu ogłoszeń z importu: jedno zapytanie na 100 ogłoszeń zamiast dwóch na każde. Import działa często

@@ -141,7 +141,7 @@ $lead = $leads[0] ?? null;
         <?php foreach ($alerts as $a): ?>
           <li>
             <span class="chip <?= $a['level'] === 'high' ? 'high' : ($a['level'] === 'mid' ? 'mid' : 'info') ?>"><?= $a['read_at'] ? 'przeczytane' : 'nowe' ?></span>
-            <div style="font-weight:600;margin-top:6px"><?php if ($a['nip']): ?><a href="/kontrahenci/<?= e($a['nip']) ?>"><?= e($a['title']) ?></a><?php else: ?><?= e($a['title']) ?><?php endif ?></div>
+            <div style="font-weight:600;margin-top:6px"><?php if ($a['nip']): ?><a href="/kontrahenci/<?= e($a['nip']) ?>"><?= e($a['title']) ?></a><?php elseif ($a['tender_id']): ?><a href="/przetargi/<?= (int) $a['tender_id'] ?>#wynik"><?= e($a['title']) ?></a><?php else: ?><?= e($a['title']) ?><?php endif ?></div>
             <div class="small muted"><?= e($a['detail']) ?> · <?= e(local_dt($a['created_at'], 'd.m H:i')) ?></div>
           </li>
         <?php endforeach ?>

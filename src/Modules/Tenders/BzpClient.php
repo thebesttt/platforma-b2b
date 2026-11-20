@@ -15,11 +15,8 @@ final class BzpClient
 {
     public const BASE = 'https://ezamowienia.gov.pl/mo-board/api/v1/Board';
     public const NOTICE_TYPES = ['ContractNotice', 'SmallContractNotice'];
+    public const RESULT_TYPE = 'TenderResultNotice';
 
-    /**
-     * Ogłoszenia opublikowane od podanej chwili (UTC), znormalizowane.
-     * @return array<int, array> lista rekordów do zapisania w tabeli tenders
-     */
     /** Gdy pobieranie przerwał limit stron: chwila publikacji (UTC), od której trzeba kontynuować. Null = pobrano wszystko. */
     public ?string $continueFrom = null;
 
@@ -29,13 +26,39 @@ final class BzpClient
     /** Przerwa między stronami wyników w mikrosekundach (nie obciążamy serwera BZP). Testy ustawiają 0. */
     public static int $pauseUs = 150000;
 
+    /**
+     * Ogłoszenia o zamówieniu opublikowane od podanej chwili (UTC), znormalizowane.
+     * @return array<int, array> lista rekordów do zapisania w tabeli tenders
+     */
     public function since(string $fromUtc, int $maxPages = 120, ?callable $sleep = null): array
+    {
+        return array_values(array_map([self::class, 'normalize'], $this->fetch(self::NOTICE_TYPES, $fromUtc, $maxPages, $sleep)));
+    }
+
+    /**
+     * Ogłoszenia o wyniku postępowania opublikowane od podanej chwili (UTC). Jeden rekord na część zamówienia.
+     * Wyszukiwarka podaje wynik i wykonawcę. Ceny i liczba ofert są tylko w treści ogłoszenia (BzpNoticeParser::results).
+     * @return array<int, array> lista rekordów do zapisania w tabeli tender_results
+     */
+    public function resultsSince(string $fromUtc, int $maxPages = 120, ?callable $sleep = null): array
+    {
+        $out = [];
+        foreach ($this->fetch([self::RESULT_TYPE], $fromUtc, $maxPages, $sleep) as $row) {
+            foreach (self::normalizeResult($row) as $r) {
+                $out[] = $r;
+            }
+        }
+        return $out;
+    }
+
+    /** @return array<string, array> surowe wiersze wyszukiwarki, klucz to identyfikator ogłoszenia */
+    private function fetch(array $types, string $fromUtc, int $maxPages, ?callable $sleep): array
     {
         $out = [];
         $this->continueFrom = null;
         $this->failedRequests = 0;
         $from = gmdate('Y-m-d\TH:i:s\Z', strtotime($fromUtc . ' UTC'));
-        foreach (self::NOTICE_TYPES as $type) {
+        foreach ($types as $type) {
             $lastPublished = null;
             for ($page = 1; $page <= $maxPages; $page++) {
                 $url = self::BASE . '/Search?' . http_build_query([
@@ -49,7 +72,7 @@ final class BzpClient
                 $rows = Http::getJson($url);
                 if ($rows === null) {
                     // Błąd sieci lub serwera: jedna ponowna próba, potem kontynuacja od ostatniego pobranego ogłoszenia w kolejnym imporcie.
-                    usleep(1500000);
+                    usleep(self::$pauseUs * 10);
                     $rows = Http::getJson($url);
                     if ($rows === null) {
                         $this->failedRequests++;
@@ -62,9 +85,8 @@ final class BzpClient
                 }
                 foreach ($rows as $row) {
                     if (is_array($row) && !empty($row['objectId'])) {
-                        $t = self::normalize($row);
-                        $out[$row['objectId']] = $t;
-                        $lastPublished = $t['published_at'] ?? $lastPublished;
+                        $out[(string) $row['objectId']] = $row;
+                        $lastPublished = self::utc($row['publicationDate'] ?? null) ?? $lastPublished;
                     }
                 }
                 if (count($rows) < 10) {
@@ -77,7 +99,7 @@ final class BzpClient
                 $sleep ? $sleep() : usleep(self::$pauseUs);
             }
         }
-        return array_values($out);
+        return $out;
     }
 
     private function markContinue(string $utc): void
@@ -104,6 +126,7 @@ final class BzpClient
             'external_id' => (string) $row['objectId'],
             'notice_number' => $row['noticeNumber'] ?? null,
             'notice_type' => $row['noticeType'] ?? null,
+            'ocid' => !empty($row['tenderId']) ? (string) $row['tenderId'] : null,
             'title' => $title !== '' ? $title : '(bez tytułu)',
             'order_type' => match ($row['orderType'] ?? '') {
                 'Works' => 'works',
@@ -125,6 +148,57 @@ final class BzpClient
             'documents_url' => null,
             'raw_json' => json_out($row),
         ];
+    }
+
+    /**
+     * Ogłoszenie o wyniku → po jednym rekordzie na część. W polu procedureResult wyniki części są rozdzielone średnikami
+     * w kolejności numerów części, a pusta pozycja oznacza część, której to ogłoszenie nie dotyczy.
+     * @return array<int, array>
+     */
+    public static function normalizeResult(array $row): array
+    {
+        $t = self::normalize($row);
+        $results = explode(';', (string) ($row['procedureResult'] ?? ''));
+        $contractors = is_array($row['contractors'] ?? null) ? array_values($row['contractors']) : [];
+        $out = [];
+        for ($i = 0, $n = max(count($results), count($contractors)); $i < $n; $i++) {
+            $c = is_array($contractors[$i] ?? null) ? $contractors[$i] : [];
+            $name = utrim((string) ($c['contractorName'] ?? ''));
+            $result = match (trim((string) ($results[$i] ?? ''))) {
+                'zawarcieUmowy' => 'contract',
+                'uniewaznienie' => 'cancelled',
+                'nieRozstrzygnieto' => 'unresolved',
+                default => $name !== '' ? 'contract' : null,
+            };
+            if ($result === null) {
+                continue;
+            }
+            $nip = Nip::clean((string) ($c['contractorNationalId'] ?? ''));
+            $won = $result === 'contract' && $name !== '';
+            $out[] = [
+                'source' => 'bzp',
+                'external_id' => $t['external_id'],
+                'part' => $i + 1,
+                'notice_number' => $t['notice_number'],
+                'ocid' => $t['ocid'],
+                'title' => $t['title'],
+                'order_type' => $t['order_type'],
+                'buyer_name' => $t['buyer_name'],
+                'buyer_nip' => $t['buyer_nip'],
+                'buyer_city' => $t['buyer_city'],
+                'voivodeship' => $t['voivodeship'],
+                'cpv_main' => $t['cpv_main'],
+                'cpv_all' => $t['cpv_all'],
+                'result' => $result,
+                'winner_name' => $won ? $name : null,
+                'winner_nip' => $won && Nip::valid($nip) ? $nip : null,
+                'winner_city' => $won ? (utrim((string) ($c['contractorCity'] ?? '')) ?: null) : null,
+                'winner_voivodeship' => $won ? Regions::fromBzp($c['contractorProvince'] ?? null) : null,
+                'published_at' => $t['published_at'],
+                'url' => $t['url'],
+            ];
+        }
+        return $out;
     }
 
     public static function utc(?string $iso): ?string

@@ -52,7 +52,7 @@
         <ul class="list-plain">
           <?php foreach ($alerts as $a): ?>
             <li><span class="chip <?= $a['level'] === 'high' ? 'high' : 'mid' ?>"><?= $a['read_at'] ? 'przeczytany' : 'nowy' ?></span> <span class="xs muted"><?= e(local_dt($a['created_at'], 'd.m.Y H:i')) ?></span>
-              <div style="font-weight:600;margin-top:4px"><?php if ($a['nip']): ?><a href="/kontrahenci/<?= e($a['nip']) ?>"><?= e($a['title']) ?></a><?php else: ?><?= e($a['title']) ?><?php endif ?></div>
+              <div style="font-weight:600;margin-top:4px"><?php if ($a['nip']): ?><a href="/kontrahenci/<?= e($a['nip']) ?>"><?= e($a['title']) ?></a><?php elseif ($a['tender_id']): ?><a href="/przetargi/<?= (int) $a['tender_id'] ?>#wynik"><?= e($a['title']) ?></a><?php else: ?><?= e($a['title']) ?><?php endif ?></div>
               <div class="small"><?= e($a['detail']) ?></div></li>
           <?php endforeach ?>
         </ul>

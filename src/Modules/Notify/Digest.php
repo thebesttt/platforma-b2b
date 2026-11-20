@@ -87,10 +87,25 @@ final class Digest
             }
         }
 
+        if (Brand::has($org, 'przetargi')) {
+            // Zapisane przetargi, które właśnie rozstrzygnięto.
+            $done = $db->all('SELECT tender_id, title, detail FROM alerts WHERE org_id = ? AND created_at > ? AND company_id IS NULL AND tender_id IS NOT NULL ORDER BY id DESC LIMIT 6', [$id, $since]);
+            if ($done) {
+                $parts[] = count($done) . ' ' . plural(count($done), 'rozstrzygnięty przetarg', 'rozstrzygnięte przetargi', 'rozstrzygniętych przetargów');
+                $lines[] = 'ROZSTRZYGNIĘTE PRZETARGI Z TWOJEJ LISTY (' . count($done) . ')';
+                foreach ($done as $a) {
+                    $lines[] = '- ' . truncate(preg_replace('/^Rozstrzygnięto przetarg: /u', '', (string) $a['title']) ?? '', 90);
+                    $lines[] = '  ' . truncate((string) $a['detail'], 200);
+                    $lines[] = '  ' . $baseUrl . '/przetargi/' . (int) $a['tender_id'];
+                }
+                $lines[] = '';
+            }
+        }
+
         if (Brand::has($org, 'kontrahenci')) {
-            $alerts = $db->all('SELECT title, detail FROM alerts WHERE org_id = ? AND created_at > ? ORDER BY id DESC LIMIT 8', [$id, $since]);
+            $alerts = $db->all('SELECT title, detail FROM alerts WHERE org_id = ? AND created_at > ? AND (company_id IS NOT NULL OR tender_id IS NULL) ORDER BY id DESC LIMIT 8', [$id, $since]);
             if ($alerts) {
-                $n = (int) $db->val('SELECT COUNT(*) FROM alerts WHERE org_id = ? AND created_at > ?', [$id, $since]);
+                $n = (int) $db->val('SELECT COUNT(*) FROM alerts WHERE org_id = ? AND created_at > ? AND (company_id IS NOT NULL OR tender_id IS NULL)', [$id, $since]);
                 $parts[] = $n . ' ' . plural($n, 'alert o kontrahencie', 'alerty o kontrahentach', 'alertów o kontrahentach');
                 $lines[] = 'ZMIANY U OBSERWOWANYCH KONTRAHENTÓW (' . $n . ')';
                 foreach ($alerts as $a) {

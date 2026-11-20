@@ -40,6 +40,17 @@ $lvl = ['high' => ['high', 'wysokie'], 'mid' => ['mid', 'średnie'], 'low' => ['
 
 <div class="cols">
   <div class="main stack">
+    <?php if (!empty($results)): ?>
+    <section class="card flush" id="wynik" aria-labelledby="t-wynik">
+      <div class="card-head"><h2 id="t-wynik">Wynik postępowania</h2><span class="muted xs">Z ogłoszenia o wyniku w BZP, <?= e(local_date($results[0]['published_at'])) ?></span></div>
+      <?= App\Core\View::partial('partials/result_rows', ['rows' => $results, 'withBuyer' => false, 'withTitle' => false, 'showPart' => count($results) > 1]) ?>
+    </section>
+    <?php elseif (!empty($history)): ?>
+    <section class="card flush" id="wynik" aria-labelledby="t-wynik">
+      <div class="card-head"><h2 id="t-wynik">Kto wygrywał u tego zamawiającego</h2><a class="small" href="/przetargi/wyniki?<?= e(http_build_query(['profil' => 0, 'dni' => 365, 'q' => (string) $tender['buyer_name']])) ?>">Wszystkie rozstrzygnięcia</a></div>
+      <?= App\Core\View::partial('partials/result_rows', ['rows' => $history, 'withBuyer' => false]) ?>
+    </section>
+    <?php endif ?>
     <section class="card" aria-labelledby="t-sum">
       <div class="between" style="align-items:center;margin-bottom:8px">
         <h2 id="t-sum">Najważniejsze z ogłoszenia</h2>

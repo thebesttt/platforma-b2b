@@ -17,6 +17,7 @@ use App\Modules\Companies\Companies;
 use App\Modules\Tenders\Analysis;
 use App\Modules\Tenders\Matcher;
 use App\Modules\Tenders\Regions;
+use App\Modules\Tenders\Results;
 use App\Modules\Tenders\Tenders;
 
 final class TenderController extends Controller
@@ -84,9 +85,10 @@ final class TenderController extends Controller
             $where[] = 't.order_type = ?';
             $params[] = $type;
         }
-        if ($cpv !== '') {
-            $where[] = 't.cpv_all LIKE ?';
-            $params[] = '%' . rtrim($cpv, '0') . '%';
+        if (Matcher::cpvPrefix($cpv) !== '') {
+            // Kody w kolumnie są rozdzielone spacjami, więc spacja przed prefiksem dopasowuje tylko początek kodu.
+            $where[] = "(' ' || t.cpv_all) LIKE ?";
+            $params[] = '% ' . Matcher::cpvPrefix($cpv) . '%';
         }
         $sqlWhere = implode(' AND ', $where);
         $total = (int) $this->db()->val("SELECT COUNT(*) FROM tenders t WHERE $sqlWhere", $params);
@@ -96,6 +98,44 @@ final class TenderController extends Controller
         );
         $count = (int) $this->db()->val('SELECT COUNT(*) FROM tenders');
         return $this->view('tenders/search', compact('rows', 'total', 'page', 'q', 'region', 'type', 'cpv', 'count') + ['title' => 'Wyszukiwarka przetargów']);
+    }
+
+    /** Wyniki przetargów: kto wygrywa i za ile. Domyślnie w branży i regionie z pierwszego profilu firmy. */
+    public function results(Request $r): Response
+    {
+        $org = $this->orgId();
+        $profiles = Tenders::profiles($org, true);
+        // Brak parametru = pierwszy profil. „0” = bez profilu (wszystkie branże).
+        $profileId = $r->str('profil') === '' ? (int) ($profiles[0]['id'] ?? 0) : $r->int('profil');
+        $profile = null;
+        foreach ($profiles as $p) {
+            if ((int) $p['id'] === $profileId) {
+                $profile = $p;
+            }
+        }
+        $profileId = $profile ? $profileId : 0;
+        $days = array_key_exists($r->int('dni'), Results::PERIODS) ? $r->int('dni') : 90;
+        $q = $r->str('q');
+        $region = array_key_exists($r->str('woj'), Regions::ALL) ? $r->str('woj') : '';
+        $cpv = preg_replace('/\D/', '', $r->str('cpv')) ?? '';
+        $page = max(1, $r->int('strona', 1));
+        $f = ['q' => $q, 'woj' => $region, 'cpv' => $cpv, 'dni' => $days, 'profile' => $profile];
+        $list = Results::search($f, $page);
+        // Wyniki, które mają w naszej bazie ogłoszenie o zamówieniu, prowadzą do karty przetargu.
+        $cards = [];
+        $ocids = array_values(array_unique(array_filter(array_column($list['rows'], 'ocid'))));
+        if ($ocids) {
+            foreach ($this->db()->all('SELECT id, ocid FROM tenders WHERE ocid IN (' . implode(', ', array_fill(0, count($ocids), '?')) . ')', $ocids) as $t) {
+                $cards[(string) $t['ocid']] = (int) $t['id'];
+            }
+        }
+        return $this->view('tenders/results', [
+            'rows' => $list['rows'], 'total' => $list['total'], 'page' => $page, 'cards' => $cards,
+            'ranking' => $page === 1 ? Results::ranking($f, 12) : [],
+            'totals' => Results::totals($f), 'coverage' => Results::coverage(),
+            'profiles' => $profiles, 'profileId' => $profileId, 'days' => $days, 'q' => $q, 'region' => $region, 'cpv' => $cpv,
+            'title' => 'Wyniki przetargów',
+        ]);
     }
 
     public function show(Request $r): Response
@@ -116,7 +156,10 @@ final class TenderController extends Controller
         $documents = $this->db()->all('SELECT id, filename, size, created_at, LENGTH(text) AS chars FROM tender_documents WHERE org_id = ? AND tender_id = ? ORDER BY id', [$org, (int) $tender['id']]);
         $buyer = $tender['buyer_nip'] ? Companies::byNip((string) $tender['buyer_nip']) : null;
         $offers = $this->db()->all('SELECT id, title, status, updated_at FROM offers WHERE org_id = ? AND tender_id = ? ORDER BY id DESC', [$org, (int) $tender['id']]);
-        return $this->view('tenders/show', compact('tender', 'd', 'match', 'rules', 'ai', 'questions', 'documents', 'buyer', 'offers') + [
+        // Wynik tego postępowania, a gdy go jeszcze nie ma: kto wcześniej wygrywał u tego zamawiającego.
+        $results = $tender['source'] === 'bzp' ? Results::forTender($tender) : [];
+        $history = $results ? [] : Results::buyerHistory($tender['buyer_nip'] ?: null, $tender['cpv_main'] ?: null, 5, ($tender['ocid'] ?? '') ?: null);
+        return $this->view('tenders/show', compact('tender', 'd', 'match', 'rules', 'ai', 'questions', 'documents', 'buyer', 'offers', 'results', 'history') + [
             'title' => truncate((string) $tender['title'], 70),
             'aiEnabled' => Claude::enabled(),
         ]);

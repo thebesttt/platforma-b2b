@@ -17,6 +17,7 @@ use App\Modules\Inbound\Inbound;
 use App\Modules\Offers\Offers;
 use App\Modules\Tenders\Importer;
 use App\Modules\Tenders\Matcher;
+use App\Modules\Tenders\Results;
 use App\Modules\Tenders\Tenders;
 
 function demo_seed(): array
@@ -48,6 +49,39 @@ function demo_seed(): array
         ]);
     }
 
+    // Wyniki przetargów. Prawdziwe ogłoszenia z zapisanych odpowiedzi BZP plus przykłady dla zamawiających z danych demo,
+    // żeby karta przetargu pokazywała, kto u nich wygrywał. Jeden zakończony przetarg jest zapisany i ma wynik: z tego powstaje alert.
+    \App\Modules\Tenders\BzpClient::$pauseUs = 0;
+    Results::import('2026-11-15 00:00:00', 50, 60);
+    \App\Modules\Tenders\BzpClient::$pauseUs = 150000;
+    $db->run('UPDATE tender_results SET published_at = ?', [gmdate('Y-m-d H:i:s', time() - 2 * 86400)]);
+    $pastId = Tenders::save([
+        'source' => 'bzp', 'external_id' => 'demo-zakonczony', 'notice_number' => '2026/BZP 00000009/01 (przykład)', 'notice_type' => 'ContractNotice', 'ocid' => 'ocds-przyklad-zakonczony',
+        'title' => 'Przebudowa skrzyżowania drogi powiatowej z drogą gminną (przykład)', 'order_type' => 'works', 'buyer_name' => 'Powiat Przykładowy', 'buyer_nip' => '9999999999',
+        'buyer_city' => 'Przykładowo', 'voivodeship' => 'mazowieckie', 'cpv_main' => '45233000', 'cpv_all' => '45233000 45233222', 'value_estimated' => 1900000, 'currency' => 'PLN',
+        'published_at' => gmdate('Y-m-d H:i:s', time() - 55 * 86400), 'deadline_at' => gmdate('Y-m-d 09:00:00', time() - 34 * 86400), 'url' => null,
+        'details_json' => json_out(['descriptions' => ['Zakres: przebudowa skrzyżowania z budową lewoskrętu i chodnika. Szczegóły w SWZ.'], 'criteria' => [['name' => 'Cena', 'weight' => 60.0], ['name' => 'Okres gwarancji', 'weight' => 40.0]]]),
+        'details_fetched_at' => now_utc(),
+    ]);
+    $won = [
+        // identyfikator, postępowanie, tytuł, zamawiający, NIP zamawiającego, województwo, wykonawca, NIP, miasto, oferty, najniższa, najwyższa, wybrana, dni temu
+        ['demo-w0', 'ocds-przyklad-zakonczony', 'Przebudowa skrzyżowania drogi powiatowej z drogą gminną (przykład)', 'Powiat Przykładowy', '9999999999', 'mazowieckie', 'Drogi i Mosty Przykład sp. z o.o. (przykład)', null, 'Przykładowo', 4, 1780000, 2350000, 1780000, 1],
+        ['demo-w1', null, 'Remont drogi powiatowej nr 1234P na odcinku 1,8 km (przykład)', 'Powiat Przykładowy', '9999999999', 'mazowieckie', 'Drogi i Mosty Przykład sp. z o.o. (przykład)', null, 'Przykładowo', 5, 2410000, 3180000, 2410000, 46],
+        ['demo-w2', null, 'Budowa chodnika przy drodze powiatowej w miejscowości Przykładowo (przykład)', 'Powiat Przykładowy', '9999999999', 'mazowieckie', 'PRZYKŁADOWA SPÓŁKA BUDOWLANA SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ', '1234563218', 'Warszawa', 3, 640000, 910000, 655000, 71],
+        ['demo-w3', null, 'Utwardzenie placu przy szkole podstawowej (przykład)', 'Gmina Przykładowa Wola', null, 'lodzkie', 'PRZYKŁADOWA SPÓŁKA BUDOWLANA SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ', '1234563218', 'Warszawa', 6, 390000, 720000, 390000, 23],
+        ['demo-w4', null, 'Remont nawierzchni ulicy Przykładowej (przykład)', 'Gmina Przykładowo', null, 'mazowieckie', 'Zakład Robót Drogowych Przykład (przykład)', null, 'Przykładowa Wola', 2, 1210000, 1390000, 1210000, 12],
+    ];
+    foreach ($won as [$ext, $ocid, $title, $buyer, $buyerNip, $woj, $winner, $winnerNip, $city, $offers, $low, $high, $price, $daysAgo]) {
+        Results::saveMany([[
+            'source' => 'bzp', 'external_id' => $ext, 'part' => 1, 'notice_number' => '2026/BZP 0000001' . substr($ext, -1) . '/01 (przykład)', 'ocid' => $ocid, 'title' => $title,
+            'order_type' => 'works', 'buyer_name' => $buyer, 'buyer_nip' => $buyerNip, 'buyer_city' => 'Przykładowo', 'voivodeship' => $woj, 'cpv_main' => '45233000', 'cpv_all' => '45233000 45233222',
+            'result' => 'contract', 'winner_name' => $winner, 'winner_nip' => $winnerNip, 'winner_city' => $city, 'winner_voivodeship' => 'mazowieckie',
+            'published_at' => gmdate('Y-m-d H:i:s', time() - $daysAgo * 86400), 'url' => null,
+        ]]);
+        $db->update('tender_results', ['offers' => $offers, 'price_lowest' => $low, 'price_highest' => $high, 'price_winner' => $price, 'contract_value' => $price, 'currency' => 'PLN',
+            'contract_date' => gmdate('Y-m-d', time() - ($daysAgo + 6) * 86400), 'details_json' => json_out(['period' => '90 dni']), 'details_fetched_at' => now_utc()], 'external_id = ?', [$ext]);
+    }
+
     $reg = Auth::register('Twoja Firma Drogowa sp. z o.o.', '3333333333', 'Anna Demo', 'demo@example.com', 'demo-haslo-123');
     $uid = (int) $reg['user_id'];
     $org = (int) $db->val('SELECT org_id FROM users WHERE id = ?', [$uid]);
@@ -58,6 +92,8 @@ function demo_seed(): array
         'min_value' => 500000, 'max_value' => 5000000, 'sources' => 'bzp ted', 'active' => 1, 'created_at' => now_utc(),
     ]);
     Matcher::run($org, $profileId, gmdate('Y-m-d H:i:s', time() - 30 * 86400));
+    $db->insert('tender_matches', ['org_id' => $org, 'profile_id' => $profileId, 'tender_id' => $pastId, 'score' => 86, 'reasons_json' => json_out(['Województwo: mazowieckie', 'Kod CPV 45233000 (główny)']), 'status' => 'saved', 'created_at' => gmdate('Y-m-d H:i:s', time() - 50 * 86400)]);
+    Results::alertSaved();
 
     $lib = [
         ['reference', 'Przebudowa ulicy Przykładowej w Gminie Przykładowo', 'Przebudowa drogi gminnej z chodnikiem i odwodnieniem, długość 1,2 km.', ['client' => 'Gmina Przykładowo', 'value' => 1800000, 'finished' => '09.2025']],

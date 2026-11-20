@@ -59,6 +59,52 @@ $check('BZP: treść ogłoszenia i parser', function () use (&$bzpRows, $need) {
     $need($d['deadline'] !== null, 'brak terminu składania ofert (pkt 8.1)');
     return 'termin ' . $d['deadline'] . ', kryteriów: ' . count($d['criteria']);
 });
+$check('BZP: ogłoszenia o wyniku (kto wygrał i za ile)', function () use ($need) {
+    // Dwie strony wyszukiwarki z ostatnich dni roboczych i treść 25 ogłoszeń: wynik, wykonawca, ceny, liczba ofert.
+    $rows = [];
+    foreach ([1, 2, 3] as $page) {
+        $url = BzpClient::BASE . '/Search?' . http_build_query(['NoticeType' => BzpClient::RESULT_TYPE, 'publicationDateFrom' => gmdate('Y-m-d\T00:00:00\Z', time() - 5 * 86400), 'SortingColumnName' => 'PublicationDate', 'SortingDirection' => 'ASC', 'PageNumber' => $page, 'PageSize' => 10]);
+        $rows = array_merge($rows, Http::getJson($url) ?? []);
+        usleep(200000);
+    }
+    $need(count($rows) >= 10, 'za mało ogłoszeń o wyniku z ostatnich 5 dni: ' . count($rows));
+    foreach (['objectId', 'procedureResult', 'contractors', 'tenderId', 'orderObject', 'organizationName'] as $k) {
+        $need(array_key_exists($k, $rows[0]), "brak pola $k");
+    }
+    $stats = ['ogłoszeń' => 0, 'części' => 0, 'umów' => 0, 'z_wykonawcą' => 0, 'z_ceną' => 0, 'z_ofertami' => 0, 'zgodnych_części' => 0, 'zgodnych_wykonawców' => 0];
+    $client = new BzpClient();
+    foreach (array_slice($rows, 0, 25) as $row) {
+        $fromSearch = BzpClient::normalizeResult($row);
+        $html = $client->noticeHtml((string) $row['objectId']);
+        $need($html !== null, 'brak treści ogłoszenia ' . $row['objectId']);
+        $parsed = BzpNoticeParser::results($html);
+        $need((bool) $parsed['parts'], 'parser nie rozpoznał ogłoszenia ' . $row['objectId'] . ' (' . ($row['noticeNumber'] ?? '') . ')');
+        $need($parsed['ocid'] === ($row['tenderId'] ?? null), 'inny identyfikator postępowania w treści niż w wyszukiwarce: ' . $row['objectId']);
+        $stats['ogłoszeń']++;
+        $byPart = [];
+        foreach ($fromSearch as $r) {
+            $byPart[$r['part']] = $r;
+        }
+        $stats['zgodnych_części'] += (int) (array_column($parsed['parts'], 'part') === array_keys($byPart));
+        foreach ($parsed['parts'] as $p) {
+            $stats['części']++;
+            if ($p['result'] !== 'contract') {
+                continue;
+            }
+            $stats['umów']++;
+            $stats['z_wykonawcą'] += (int) !empty($p['winners'][0]['name']);
+            $stats['z_ceną'] += (int) (($p['contract_value'] ?? $p['price_winner'] ?? null) !== null);
+            $stats['z_ofertami'] += (int) (($p['offers'] ?? null) !== null);
+            $stats['zgodnych_wykonawców'] += (int) (($byPart[$p['part']]['winner_name'] ?? null) === ($p['winners'][0]['name'] ?? ''));
+        }
+        usleep(200000);
+    }
+    $need($stats['umów'] > 0, 'żadne z ogłoszeń nie kończy się umową');
+    $need($stats['z_wykonawcą'] >= 0.95 * $stats['umów'], 'wykonawca odczytany w ' . $stats['z_wykonawcą'] . ' z ' . $stats['umów'] . ' umów');
+    $need($stats['z_ceną'] >= 0.9 * $stats['umów'], 'cena odczytana w ' . $stats['z_ceną'] . ' z ' . $stats['umów'] . ' umów');
+    $need($stats['zgodnych_części'] >= 0.9 * $stats['ogłoszeń'], 'numery części z treści zgadzają się z wyszukiwarką w ' . $stats['zgodnych_części'] . ' z ' . $stats['ogłoszeń'] . ' ogłoszeń');
+    return json_encode($stats, JSON_UNESCAPED_UNICODE);
+});
 $check('TED: wyszukiwarka API v3', function () use ($need) {
     $rows = (new TedClient())->since(gmdate('Y-m-d', time() - 4 * 86400), 1);
     $need(count($rows) > 0, 'brak ogłoszeń z Polski');

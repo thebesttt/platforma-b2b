@@ -121,6 +121,20 @@ $hasUokik = !empty($signals['uokik']);
         </form>
       </details>
     </section>
+
+    <?php if (!empty($wins['count'])): ?>
+    <section class="card flush" id="wygrane" aria-labelledby="t-wins">
+      <div class="card-head"><h2 id="t-wins">Wygrane przetargi</h2><span class="muted xs"><?= (int) $wins['count'] ?> <?= plural((int) $wins['count'], 'umowa', 'umowy', 'umów') ?><?= $wins['total'] > 0 ? ' na ' . e(short_money($wins['total'])) : '' ?> od <?= e(local_date($wins['first_at'])) ?></span></div>
+      <?= App\Core\View::partial('partials/result_rows', ['rows' => $wins['rows']]) ?>
+      <?php if ((int) $wins['count'] > count($wins['rows'])): ?><p class="small" style="padding:0 20px 16px;margin:0"><a href="/przetargi/wyniki?<?= e(http_build_query(['profil' => 0, 'dni' => 365, 'q' => (string) $c['name']])) ?>">Wszystkie wygrane</a></p><?php endif ?>
+    </section>
+    <?php endif ?>
+    <?php if (!empty($awards)): ?>
+    <section class="card flush" aria-labelledby="t-awards">
+      <div class="card-head"><h2 id="t-awards">Kto wygrywa u tej firmy</h2><span class="muted xs">Ostatnie rozstrzygnięcia, gdy była zamawiającym</span></div>
+      <?= App\Core\View::partial('partials/result_rows', ['rows' => $awards, 'withBuyer' => false]) ?>
+    </section>
+    <?php endif ?>
   </div>
 
   <div class="side stack">

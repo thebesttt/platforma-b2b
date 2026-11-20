@@ -10,8 +10,8 @@ namespace App\Modules\Tenders;
  */
 final class BzpNoticeParser
 {
-    /** @return array<int, array{code: string, label: string, value: string}> */
-    public static function fields(string $html): array
+    /** Treść ogłoszenia jako wiersze tekstu: bez znaczników, skryptów i pustych wierszy. */
+    private static function lines(string $html): array
     {
         // Błędny bajt w treści sprawiłby, że wyrażenia regularne w trybie UTF-8 zwrócą pusty wynik.
         $html = mb_scrub($html, 'UTF-8');
@@ -20,10 +20,35 @@ final class BzpNoticeParser
         $html = preg_replace('#</?(h[1-6]|p|div|li|tr|table|ul|ol)\b[^>]*>|<br\s*/?>#i', "\n", $html) ?? '';
         $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $text = str_replace("\u{00A0}", ' ', $text);
-        $lines = array_values(array_filter(array_map(
+        return array_values(array_filter(array_map(
             static fn ($l) => trim(preg_replace('/[ \t]+/u', ' ', $l) ?? ''),
             explode("\n", $text)
         ), static fn ($l) => $l !== ''));
+    }
+
+    /** Wiersz „8.1.) Termin składania ofert: …” rozbity na numer punktu, etykietę i wartość. Null, gdy to nie punkt. */
+    private static function point(string $line): ?array
+    {
+        if (!preg_match('/^(\d{1,2}(?:\.\d{1,2}){1,3})\.?\)\s*(.*)$/u', $line, $m)) {
+            return null;
+        }
+        $rest = $m[2];
+        $label = $rest;
+        $value = '';
+        $p = mb_strpos($rest, ': ');
+        if ($p !== false) {
+            $label = mb_substr($rest, 0, $p);
+            $value = trim(mb_substr($rest, $p + 2));
+        } elseif (str_ends_with($rest, ':')) {
+            $label = rtrim($rest, ':');
+        }
+        return ['code' => $m[1], 'label' => trim($label), 'value' => $value];
+    }
+
+    /** @return array<int, array{code: string, label: string, value: string}> */
+    public static function fields(string $html): array
+    {
+        $lines = self::lines($html);
 
         $fields = [];
         $cur = null;
@@ -38,21 +63,11 @@ final class BzpNoticeParser
                 $cur = null;
                 continue;
             }
-            if (preg_match('/^(\d{1,2}(?:\.\d{1,2}){1,3})\.?\)\s*(.*)$/u', $line, $m)) {
+            if ($pt = self::point($line)) {
                 if ($cur) {
                     $fields[] = $cur;
                 }
-                $rest = $m[2];
-                $label = $rest;
-                $value = '';
-                $p = mb_strpos($rest, ': ');
-                if ($p !== false) {
-                    $label = mb_substr($rest, 0, $p);
-                    $value = trim(mb_substr($rest, $p + 2));
-                } elseif (str_ends_with($rest, ':')) {
-                    $label = rtrim($rest, ':');
-                }
-                $cur = ['code' => $m[1], 'label' => trim($label), 'value' => $value];
+                $cur = $pt;
                 continue;
             }
             if ($cur) {
@@ -63,6 +78,167 @@ final class BzpNoticeParser
             $fields[] = $cur;
         }
         return $fields;
+    }
+
+    /**
+     * Ogłoszenie o wyniku postępowania: dla każdej części wynik, liczba i ceny ofert, wykonawca i umowa.
+     * Numer części bierzemy z nagłówków „Część 2” i „SEKCJA V … (dla części 2)”. Ogłoszenie bez części ma jedną, o numerze 1.
+     *
+     * @return array{ocid: ?string, notice: ?string, base_notice: ?string, est_value: ?float, parts: array<int, array>}
+     */
+    public static function results(string $html): array
+    {
+        $out = ['ocid' => null, 'notice' => null, 'base_notice' => null, 'est_value' => null, 'parts' => []];
+        $part = 1;
+        $est = [];
+        $cur = null;
+        $points = [];
+        $flush = static function () use (&$cur, &$points): void {
+            if ($cur) {
+                $points[] = $cur;
+            }
+            $cur = null;
+        };
+        foreach (self::lines($html) as $line) {
+            if (preg_match('/^SEKCJA [IVX]+/u', $line)) {
+                $flush();
+                if (preg_match('/\(dla części (\d+)\)/u', $line, $m)) {
+                    $part = (int) $m[1];
+                }
+                continue;
+            }
+            if (preg_match('/^Część (\d+)$/u', $line, $m)) {
+                $flush();
+                $part = (int) $m[1];
+                continue;
+            }
+            if ($line === 'Wykonawca') {
+                $flush();
+                continue;
+            }
+            if ($pt = self::point($line)) {
+                $flush();
+                $cur = $pt + ['part' => $part];
+                continue;
+            }
+            if ($cur) {
+                $cur['value'] = trim($cur['value'] === '' ? $line : $cur['value'] . "\n" . $line);
+            }
+        }
+        $flush();
+
+        $parts = [];
+        foreach ($points as $f) {
+            $code = $f['code'];
+            $v = $f['value'];
+            $no = (int) $f['part'];
+            if ($code === '2.4') {
+                $out['ocid'] = self::oneLine($v) ?: null;
+            } elseif ($code === '2.5') {
+                $out['notice'] = self::oneLine($v) ?: null;
+            } elseif ($code === '2.14') {
+                // Numer ogłoszenia o zamówieniu bywa z wersją („/01”) albo bez niej.
+                $out['base_notice'] = preg_match('~(\d{4}/BZP \d+)~u', $v, $m) ? $m[1] : null;
+            } elseif ($code === '4.3.1' || ($code === '4.3' && $out['est_value'] === null)) {
+                $out['est_value'] = self::money($v)[0] ?? $out['est_value'];
+            } elseif ($code === '4.5.5') {
+                $est[$no] = self::money($v)[0];
+            }
+            if (!preg_match('/^[5-8]\./', $code)) {
+                continue;
+            }
+            if ($code === '5.1') {
+                // W ogłoszeniu o zamówieniu punkt 5.1 dotyczy podstaw wykluczenia. Wynik rozpoznajemy po etykiecie.
+                if (!str_starts_with(mb_strtolower($f['label']), 'postępowanie zakończyło')) {
+                    continue;
+                }
+                $low = mb_strtolower($v);
+                $parts[$no] = [
+                    'part' => $no,
+                    'result' => str_contains($low, 'zawarciem umowy') ? 'contract' : (str_contains($low, 'unieważnieniem') ? 'cancelled' : 'unresolved'),
+                    'winners' => [],
+                ];
+                continue;
+            }
+            if (!isset($parts[$no])) {
+                continue;
+            }
+            $p = &$parts[$no];
+            $win = count($p['winners']) - 1;
+            switch ($code) {
+                case '5.2': $p['cancel_basis'] = self::oneLine($v); break;
+                case '5.2.1': $p['cancel_reason'] = self::clip($v); break;
+                case '6.1': $p['offers'] = self::count($v); break;
+                case '6.1.3': $p['offers_sme'] = self::count($v); break;
+                case '6.1.6': $p['offers_rejected'] = self::count($v); break;
+                case '6.2': [$p['price_lowest'], $p['currency']] = self::money($v) + [null, $p['currency'] ?? null]; break;
+                case '6.3': $p['price_highest'] = self::money($v)[0] ?? null; break;
+                case '6.4': $p['price_winner'] = self::money($v)[0] ?? null; break;
+                case '7.1': $p['consortium'] = self::yes($v) === true; break;
+                case '7.2':
+                    $p['winners'][] = ['size' => self::oneLine($v)];
+                    break;
+                case '7.3.1':
+                    // Przy konsorcjum pierwszy wiersz to lider, dalej lista pozostałych wykonawców.
+                    $rows = explode("\n", $v);
+                    if ($win < 0 || isset($p['winners'][$win]['name'])) {
+                        $p['winners'][] = [];
+                        $win = count($p['winners']) - 1;
+                    }
+                    $p['winners'][$win]['name'] = self::oneLine($rows[0]);
+                    $others = trim(implode(' ', array_slice($rows, 1)));
+                    if ($others !== '') {
+                        $p['partners'] = self::clip(preg_replace('/^Nazwy \(firmy\) pozostałych wykonawców[^:]*:\s*/u', '', $others) ?? $others);
+                    }
+                    break;
+                case '7.3.2': if ($win >= 0) { $p['winners'][$win]['nip'] = preg_replace('/\D/', '', $v) ?: null; } break;
+                case '7.3.4': if ($win >= 0) { $p['winners'][$win]['city'] = self::oneLine($v); } break;
+                case '7.3.6': if ($win >= 0) { $p['winners'][$win]['voivodeship'] = Regions::fromName(self::oneLine($v)); } break;
+                case '7.3.7': if ($win >= 0) { $p['winners'][$win]['country'] = self::oneLine($v); } break;
+                case '8.1': $p['contract_date'] = preg_match('/\d{4}-\d{2}-\d{2}/', $v, $m) ? $m[0] : null; break;
+                case '8.2':
+                    $mv = self::money($v);
+                    $p['contract_value'] = $mv[0] ?? null;
+                    $p['currency'] = $mv[1] ?? ($p['currency'] ?? null);
+                    break;
+                case '8.3': $p['period'] = self::oneLine($v); break;
+            }
+            unset($p);
+        }
+        foreach ($parts as $no => &$p) {
+            $p['est_value'] = $est[$no] ?? (count($parts) === 1 && !$est ? $out['est_value'] : null);
+            $p['winners'] = array_values(array_filter($p['winners'], static fn (array $w) => !empty($w['name'])));
+        }
+        unset($p);
+        ksort($parts);
+        $out['parts'] = array_values($parts);
+        return $out;
+    }
+
+    /** „453023,83 PLN”, „1 392 360 PLN”, „763787.2 PLN” → [kwota, waluta]. Pusta tablica, gdy nie ma kwoty. */
+    public static function money(string $v): array
+    {
+        if (!preg_match('/(\d[\d\s.,]*)\s*([A-Z]{3}|zł)?/u', str_replace("\u{00A0}", ' ', $v), $m)) {
+            return [];
+        }
+        $n = preg_replace('/\s+/u', '', $m[1]) ?? '';
+        $n = rtrim($n, '.,');
+        if (str_contains($n, ',')) {
+            $n = str_replace(',', '.', str_replace('.', '', $n));
+        } elseif (substr_count($n, '.') > 1 || preg_match('/\.\d{3}$/', $n)) {
+            // Kropki jako separator tysięcy („1.392.360”).
+            $n = str_replace('.', '', $n);
+        }
+        if (!is_numeric($n)) {
+            return [];
+        }
+        $cur = (string) ($m[2] ?? '');
+        return [round((float) $n, 2), $cur === '' || mb_strtolower($cur) === 'zł' ? 'PLN' : strtoupper($cur)];
+    }
+
+    private static function count(string $v): ?int
+    {
+        return preg_match('/^\s*(\d+)/', $v, $m) ? (int) $m[1] : null;
     }
 
     /** Najważniejsze dane ogłoszenia w prostej strukturze. */

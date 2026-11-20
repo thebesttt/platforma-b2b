@@ -87,7 +87,10 @@ final class CompanyController extends Controller
         $receivables = Receivables::forCompany($org, (int) $c['id']);
         $alerts = $this->db()->all('SELECT * FROM alerts WHERE org_id = ? AND company_id = ? ORDER BY id DESC LIMIT 10', [$org, (int) $c['id']]);
         $tenders = $this->db()->all('SELECT id, title, deadline_at, value_estimated FROM tenders WHERE buyer_nip = ? ORDER BY published_at DESC LIMIT 5', [$nip]);
-        return $this->view('companies/show', compact('c', 'signals', 'wl', 'krs', 'watched', 'receivables', 'alerts', 'tenders') + ['title' => (string) ($c['name'] ?: 'NIP ' . $nip)]);
+        // Udział w przetargach: wygrane tej firmy jako wykonawcy i to, kto wygrywa, gdy zamawia.
+        $wins = \App\Modules\Tenders\Results::wins($nip);
+        $awards = \App\Modules\Tenders\Results::buyerHistory($nip, null, 5);
+        return $this->view('companies/show', compact('c', 'signals', 'wl', 'krs', 'watched', 'receivables', 'alerts', 'tenders', 'wins', 'awards') + ['title' => (string) ($c['name'] ?: 'NIP ' . $nip)]);
     }
 
     public function refresh(Request $r): Response

@@ -65,6 +65,7 @@ return static function (Router $r): void {
     // Przetargi
     $r->get('/przetargi', [TenderController::class, 'index'], $a);
     $r->get('/przetargi/szukaj', [TenderController::class, 'search'], $a);
+    $r->get('/przetargi/wyniki', [TenderController::class, 'results'], $a);
     $r->get('/przetargi/{id}', [TenderController::class, 'show'], $a);
     $r->post('/przetargi/{id}/status', [TenderController::class, 'status'], $a);
     $r->post('/przetargi/{id}/dokumenty', [TenderController::class, 'upload'], $a);

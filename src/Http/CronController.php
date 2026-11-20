@@ -15,6 +15,7 @@ use App\Modules\Content\ContentAudit;
 use App\Modules\Inbound\Inbound;
 use App\Modules\Notify\Digest;
 use App\Modules\Tenders\Importer;
+use App\Modules\Tenders\Results;
 
 /**
  * Zadania cykliczne uruchamiane z zewnątrz (GitHub Actions co rano, cron hostingu):
@@ -84,6 +85,14 @@ final class CronController
             }
         }
         $out['import'] = Importer::run();
+        // Wyniki przetargów: kto wygrał i za ile. Błąd tego kroku nie zatrzymuje reszty.
+        try {
+            // Z wiersza poleceń (GitHub Actions z dostępem do bazy) nie ma limitu czasu hostingu, więc doczytujemy więcej ogłoszeń.
+            $cli = PHP_SAPI === 'cli';
+            $out['results'] = Results::import(null, $cli ? 1500 : 400, $cli ? 900 : 240);
+        } catch (\Throwable $e) {
+            $out['results'] = ['error' => $e->getMessage()];
+        }
         try {
             $out['watchlist'] = Companies::refreshWatched();
         } catch (\Throwable $e) {
@@ -121,6 +130,8 @@ final class CronController
                 AND id NOT IN (SELECT tender_id FROM tender_matches WHERE status = 'saved')",
             [gmdate('Y-m-d H:i:s', time() - 120 * 86400)]
         );
+        // Wyniki przetargów trzymamy 400 dni: tyle wystarcza na zestawienie zwycięzców z 12 miesięcy.
+        $db->run('DELETE FROM tender_results WHERE published_at < ?', [gmdate('Y-m-d H:i:s', time() - Results::KEEP_DAYS * 86400)]);
         return $out;
     }
 }

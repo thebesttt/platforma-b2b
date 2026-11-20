@@ -12,7 +12,7 @@ $query = array_filter(['q' => $q ?: null, 'woj' => $region ?: null, 'rodzaj' => 
     <div class="field" style="grid-column:1/-1"><label for="s-q">Szukane słowa</label><input id="s-q" type="search" name="q" value="<?= e($q) ?>" placeholder="np. remont drogi, dostawa komputerów"></div>
     <div class="field"><label for="s-woj">Województwo</label><select id="s-woj" name="woj"><option value="">Cała Polska</option><?php foreach (Regions::ALL as $slug => $r): ?><option value="<?= e($slug) ?>"<?= $region === $slug ? ' selected' : '' ?>><?= e($r[0]) ?></option><?php endforeach ?></select></div>
     <div class="field"><label for="s-rodzaj">Rodzaj zamówienia</label><select id="s-rodzaj" name="rodzaj"><option value="">Wszystkie</option><option value="works"<?= $type === 'works' ? ' selected' : '' ?>>Roboty budowlane</option><option value="services"<?= $type === 'services' ? ' selected' : '' ?>>Usługi</option><option value="supplies"<?= $type === 'supplies' ? ' selected' : '' ?>>Dostawy</option></select></div>
-    <div class="field"><label for="s-cpv">Kod CPV</label><input id="s-cpv" name="cpv" inputmode="numeric" value="<?= e($cpv) ?>" placeholder="np. 45233"></div>
+    <div class="field"><label for="s-cpv">Kod CPV</label><input id="s-cpv" type="text" name="cpv" inputmode="numeric" value="<?= e($cpv) ?>" placeholder="np. 45233"></div>
     <div class="field" style="justify-content:flex-end"><button class="btn" type="submit">Szukaj</button></div>
   </form>
 </section>

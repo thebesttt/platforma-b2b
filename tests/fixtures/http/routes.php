@@ -61,8 +61,17 @@ return [
 
     // BZP - pierwsza strona ogłoszeń o zamówieniu; reszta pusta.
     '#^GET https://ezamowienia\.gov\.pl/mo-board/api/v1/Board/Search\?NoticeType=ContractNotice&.*&PageNumber=1&#' => 'bzp_search_p1.json',
+    // Ogłoszenia o wyniku: prawdziwe ogłoszenia z 16.11.2026 (jedna część, dwie części, konsorcjum, część nierozstrzygnięta,
+    // zamówienie z wolnej ręki, ogłoszenie tylko o unieważnionej części 4). Treść każdego pobiera się osobno.
+    '#^GET https://ezamowienia\.gov\.pl/mo-board/api/v1/Board/Search\?NoticeType=TenderResultNotice&.*&PageNumber=1&#' => 'bzp_results_p1.json',
     '#^GET https://ezamowienia\.gov\.pl/mo-board/api/v1/Board/Search\?#' => $json([]),
     // Ogłoszenie poniżej progu ustawy; wariant „bez-opisu”: zamawiający pominął opis (pkt 3.3) i termin (pkt 3.6).
+    '#^GET https://ezamowienia\.gov\.pl/mo-board/api/v1/Board/GetNoticeHtmlBodyById\?noticeId=08df43d2-7d1d-f757#' => 'bzp_result_jedna.html',
+    '#^GET https://ezamowienia\.gov\.pl/mo-board/api/v1/Board/GetNoticeHtmlBodyById\?noticeId=08df43d4-41e2-3c9f#' => 'bzp_result_dwie.html',
+    '#^GET https://ezamowienia\.gov\.pl/mo-board/api/v1/Board/GetNoticeHtmlBodyById\?noticeId=08df43d4-c7eb-fd8e#' => 'bzp_result_konsorcjum.html',
+    '#^GET https://ezamowienia\.gov\.pl/mo-board/api/v1/Board/GetNoticeHtmlBodyById\?noticeId=08df43d5-1bbf-0759#' => 'bzp_result_trzy.html',
+    '#^GET https://ezamowienia\.gov\.pl/mo-board/api/v1/Board/GetNoticeHtmlBodyById\?noticeId=08df43d4-4409-fa94#' => 'bzp_result_wolna_reka.html',
+    '#^GET https://ezamowienia\.gov\.pl/mo-board/api/v1/Board/GetNoticeHtmlBodyById\?noticeId=08df43d7-b031-2d40#' => 'bzp_result_czesc4.html',
     '#^GET https://ezamowienia\.gov\.pl/mo-board/api/v1/Board/GetNoticeHtmlBodyById\?noticeId=male-bez-opisu#' => [
         'status' => 200,
         'body' => preg_replace(
