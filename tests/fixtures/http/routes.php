@@ -105,6 +105,20 @@ return [
     // Anthropic - odpowiedź zależna od rodzaju zadania (rozpoznawana po treści promptu systemowego).
     '#^POST https://api\.anthropic\.com/v1/messages\n.*Analizujesz dokumentację przetargu#s' => 'claude_analysis.json',
     '#^POST https://api\.anthropic\.com/v1/messages\n.*Odpowiadasz na pytania wykonawcy#s' => 'claude_qa.json',
+    // Warunki naboru: jedna pozycja z prawdziwym cytatem i potwierdzeniem w danych firmy, jedna z prawdziwym cytatem, ale ze zmyślonym
+    // potwierdzeniem, jedna sprzeczna z danymi firmy, jedna bez danych i jedna ze zmyślonym cytatem z regulaminu.
+    '#^POST https://api\.anthropic\.com/v1/messages\n.*Sprawdzasz, czy firma spełnia warunki naboru#s' => $claude(['conditions' => [
+        ['condition' => 'Siedziba w województwie mazowieckim', 'quote' => 'Wnioskodawca prowadzi działalność na terenie województwa mazowieckiego.', 'doc' => 'regulamin.txt',
+            'status' => 'met', 'evidence' => 'ul. Testowa 1, 00-001 Warszawa', 'note' => 'Adres firmy jest w Warszawie.'],
+        ['condition' => 'Status MŚP', 'quote' => 'O dofinansowanie mogą ubiegać się wyłącznie mikro, mali i średni przedsiębiorcy.', 'doc' => 'regulamin.txt',
+            'status' => 'met', 'evidence' => 'Firma zatrudnia 12 osób', 'note' => 'Firma jest małym przedsiębiorcą.'],
+        ['condition' => 'Okres działalności', 'quote' => 'Wnioskodawca prowadzi działalność od co najmniej 24 miesięcy – licząc do dnia złożenia wniosku.', 'doc' => 'nieznany.pdf',
+            'status' => 'not_met', 'evidence' => 'Firma działa od marca 2026 r.', 'note' => 'Od marca 2026 r. nie minęły 24 miesiące.'],
+        ['condition' => 'Wkład własny', 'quote' => 'Minimalny wkład własny wynosi 15% kosztów kwalifikowalnych.', 'doc' => 'regulamin.txt',
+            'status' => 'unknown', 'evidence' => null, 'note' => 'Sprawdź, czy firma ma środki na 15% kosztów projektu.'],
+        ['condition' => 'Certyfikat ISO 9001', 'quote' => 'Wnioskodawca posiada certyfikat ISO 9001 wydany przed dniem ogłoszenia naboru.', 'doc' => 'regulamin.txt',
+            'status' => 'not_met', 'evidence' => null, 'note' => 'Brak certyfikatu.'],
+    ]]),
     '#^POST https://api\.anthropic\.com/v1/messages\n.*Piszesz fragment#s' => 'claude_section.json',
     '#^POST https://api\.anthropic\.com/v1/messages\n.*Piszesz e-mail#s' => 'claude_email.json',
     // Czat w widżecie zapytań: odpowiedź z bazy wiedzy firmy.

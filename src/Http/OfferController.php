@@ -13,6 +13,7 @@ use App\Core\Response;
 use App\Core\Session;
 use App\Modules\Ai\Claude;
 use App\Modules\Offers\Docx;
+use App\Modules\Offers\Eligibility;
 use App\Modules\Offers\Offers;
 use App\Modules\Tenders\Tenders;
 
@@ -73,6 +74,9 @@ final class OfferController extends Controller
     /** Klucz pseudo-sekcji z listą dokumentów do złożenia. */
     public const DOCS_KEY = '_dokumenty';
 
+    /** Klucz pseudo-sekcji z warunkami naboru (tylko wnioski o dotację). */
+    public const TERMS_KEY = '_warunki';
+
     public function show(Request $r): Response
     {
         $offer = Offers::find($this->orgId(), (int) $r->param('id'));
@@ -91,8 +95,9 @@ final class OfferController extends Controller
         $org = $this->orgId();
         $sections = Offers::sections((int) $offer['id']);
         $showDocs = $key === self::DOCS_KEY;
+        $showTerms = $key === self::TERMS_KEY && $offer['kind'] === 'grant';
         $current = null;
-        if (!$showDocs) {
+        if (!$showDocs && !$showTerms) {
             foreach ($sections as $s) {
                 if ($s['key'] === $key) {
                     $current = $s;
@@ -106,7 +111,8 @@ final class OfferController extends Controller
             : ($tender ? $this->db()->all('SELECT id, filename, created_at FROM tender_documents WHERE org_id = ? AND tender_id = ? ORDER BY id', [$org, (int) $tender['id']]) : []);
         $unsourced = Offers::unsourced($sections);
         $libraryCount = (int) $this->db()->val('SELECT COUNT(*) FROM library_items WHERE org_id = ?', [$org]);
-        $resp = $this->view('offers/show', compact('offer', 'sections', 'current', 'tender', 'documents', 'unsourced', 'libraryCount', 'showDocs', 'draft', 'conflict') + [
+        $resp = $this->view('offers/show', compact('offer', 'sections', 'current', 'tender', 'documents', 'unsourced', 'libraryCount', 'showDocs', 'showTerms', 'draft', 'conflict') + [
+            'eligibility' => $offer['kind'] === 'grant' ? Eligibility::latest($org, (int) $offer['id']) : null,
             'title' => (string) $offer['title'],
             'aiEnabled' => Claude::enabled(),
             'mode' => $mode,
@@ -172,6 +178,25 @@ final class OfferController extends Controller
         return $this->redirect($to, $userId
             ? 'Sekcję „' . $section['title'] . '” prowadzi teraz ' . $name . '.' . (!empty($res['mailed']) ? ' Wysłaliśmy powiadomienie e-mailem.' : '')
             : 'Sekcja „' . $section['title'] . '” nie ma już przydzielonej osoby.');
+    }
+
+    /** Dotacje: sprawdzenie warunków naboru na podstawie wgranych dokumentów i danych firmy. */
+    public function eligibility(Request $r): Response
+    {
+        $offer = Offers::find($this->orgId(), (int) $r->param('id'));
+        if (!$offer || $offer['kind'] !== 'grant') {
+            return $this->notFound();
+        }
+        $to = '/oferty/' . $offer['id'] . '?sekcja=' . self::TERMS_KEY;
+        if ($err = TenderController::aiGuard()) {
+            return $this->redirect($to, $err, 'error');
+        }
+        $res = Eligibility::check($this->orgId(), $offer, Auth::id());
+        if (!$res['ok']) {
+            return $this->redirect($to, $res['error'], 'error');
+        }
+        AuditLog::add('offer.eligibility', 'offer', (int) $offer['id'], [], $r->ip());
+        return $this->redirect($to, 'Sprawdziliśmy warunki naboru. Stan „Brak danych” oznacza, że trzeba to sprawdzić samodzielnie.');
     }
 
     /** Lista dokumentów do złożenia: dopisanie pozycji albo uzupełnienie z ogłoszenia i analizy. */

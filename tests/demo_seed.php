@@ -126,6 +126,18 @@ function demo_seed(): array
         }
     }
 
+    // Wniosek o dotację (przykład): regulamin naboru i sprawdzone warunki. Odpowiedź modelu pochodzi z zapisanego przykładu.
+    $db->update('organizations', ['address' => 'ul. Testowa 1, 00-001 Warszawa'], 'id = ?', [$org]);
+    $db->insert('library_items', ['org_id' => $org, 'kind' => 'text', 'title' => 'O firmie (przykład)', 'body' => 'Firma działa od marca 2026 r. i wykonuje roboty drogowe.', 'created_at' => now_utc(), 'updated_at' => now_utc()]);
+    $grantId = Offers::create($org, $uid, null, 'grant', ['call_name' => 'Wsparcie inwestycji MŚP na Mazowszu (przykład)', 'call_url' => null, 'deadline_at' => gmdate('Y-m-d 22:59:00', time() + 30 * 86400)]);
+    $db->insert('offer_documents', ['org_id' => $org, 'offer_id' => $grantId, 'filename' => 'regulamin.txt', 'mime' => 'text/plain', 'size' => 520, 'uploaded_by' => $uid, 'created_at' => now_utc(),
+        'text' => "Regulamin naboru (przykład)\n§ 4. Kto może złożyć wniosek\n1. O dofinansowanie mogą ubiegać się wyłącznie mikro, mali i średni przedsiębiorcy.\n"
+            . "2. Wnioskodawca prowadzi działalność na terenie województwa mazowieckiego.\n3. Wnioskodawca prowadzi działalność od co najmniej 24 miesięcy - licząc do dnia złożenia wniosku.\n"
+            . "§ 5. Finansowanie\n1. Minimalny wkład własny wynosi 15% kosztów kwalifikowalnych.\n"]);
+    if (\App\Modules\Ai\Claude::enabled()) {
+        \App\Modules\Offers\Eligibility::check($org, (array) Offers::find($org, $grantId), $uid);
+    }
+
     // Kontrahenci: obserwowany płatnik z decyzją UOKiK i należność po terminie.
     $c = Companies::lookup('1234563218')['company'] ?? null;
     Companies::lookup('7181968222');

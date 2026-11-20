@@ -5,7 +5,7 @@ $st = OfferController::STATUSES[$offer['status']] ?? OfferController::STATUSES['
 $isGrant = $offer['kind'] === 'grant';
 $base = '/oferty/' . (int) $offer['id'];
 $deadline = $tender['deadline_at'] ?? $offer['deadline_at'];
-/** @var array $team @var int $me @var array $checklist @var bool $showDocs @var ?array $draft @var ?array $conflict */
+/** @var array $team @var int $me @var array $checklist @var bool $showDocs @var bool $showTerms @var ?array $eligibility @var ?array $draft @var ?array $conflict */
 $short = static function (?int $id) use ($team, $me): string {
     if (!$id || !isset($team[$id])) {
         return '';
@@ -53,6 +53,12 @@ $docsKey = OfferController::DOCS_KEY;
           <?php if ($s['status'] === 'done'): ?><span class="chip low">gotowe</span><?php elseif ($n): ?><span class="chip high"><?= $n ?> bez źródła</span><?php endif ?>
         </a>
       <?php endforeach ?>
+      <?php if ($isGrant): ?>
+      <a href="<?= $base ?>?sekcja=<?= e(OfferController::TERMS_KEY) ?>"<?= $showTerms ? ' class="on" aria-current="true"' : '' ?>>
+        <span>Warunki naboru</span>
+        <?php if ($eligibility): ?><span class="chip <?= $eligibility['counts']['not_met'] ? 'high' : ($eligibility['counts']['unknown'] ? 'mid' : 'low') ?>"><?= $eligibility['counts']['not_met'] ? $eligibility['counts']['not_met'] . ' nie spełnia' : ($eligibility['counts']['unknown'] ? $eligibility['counts']['unknown'] . ' do sprawdzenia' : 'spełnione') ?></span><?php endif ?>
+      </a>
+      <?php endif ?>
       <a href="<?= $base ?>?sekcja=<?= e($docsKey) ?>"<?= $showDocs ? ' class="on" aria-current="true"' : '' ?>>
         <span>Dokumenty do złożenia</span>
         <?php if ($checklist): ?><span class="chip <?= $docsDone === count($checklist) ? 'low' : 'neutral' ?>"><?= $docsDone ?> z <?= count($checklist) ?></span><?php endif ?>
@@ -80,7 +86,44 @@ $docsKey = OfferController::DOCS_KEY;
   </aside>
 
   <section class="card main" aria-labelledby="t-sec">
-    <?php if ($showDocs): ?>
+    <?php if ($showTerms): ?>
+      <div class="between" style="align-items:center;margin-bottom:4px">
+        <h2 id="t-sec">Warunki naboru</h2>
+        <form class="inline no-print" method="post" action="<?= $base ?>/warunki"<?= $eligibility ? ' data-confirm="Sprawdzić warunki jeszcze raz? Poprzedni wynik zostanie zastąpiony nowym."' : '' ?>>
+          <?= csrf_field() ?>
+          <button class="btn sm" type="submit" data-busy="AI czyta dokumenty…"<?= $aiEnabled && $documents ? '' : ' disabled' ?>><?= $eligibility ? 'Sprawdź ponownie' : 'Sprawdź warunki naboru' ?></button>
+        </form>
+      </div>
+      <p class="muted small" style="margin:0 0 12px">AI wypisuje warunki z wgranych dokumentów naboru i porównuje je z danymi firmy i biblioteką. Każdy warunek ma cytat z dokumentu. Ocena „Spełnia” albo „Nie spełnia” pojawia się tylko wtedy, gdy potwierdza ją zapis w danych firmy.</p>
+      <?php if (!$documents): ?>
+        <div class="notice info">Wgraj regulamin naboru albo kryteria wyboru projektów (pole „Dokumenty naboru” po lewej). Warunki bierzemy tylko z tych dokumentów.</div>
+      <?php elseif (!$aiEnabled): ?>
+        <div class="notice info">Funkcje AI są wyłączone, więc warunków nie da się sprawdzić automatycznie.</div>
+      <?php endif ?>
+      <?php if ($eligibility): $ec = $eligibility['counts']; ?>
+        <p class="row-flex" style="gap:8px;margin:0 0 4px">
+          <?php foreach (\App\Modules\Offers\Eligibility::STATES as $st => [$label, $chip]): if ($ec[$st]): ?><span class="chip <?= $chip ?>"><?= e($label) ?>: <?= (int) $ec[$st] ?></span><?php endif; endforeach ?>
+        </p>
+        <ul class="terms">
+          <?php foreach ($eligibility['conditions'] as $c): [$label, $chip] = \App\Modules\Offers\Eligibility::STATES[$c['status']] ?? \App\Modules\Offers\Eligibility::STATES['unknown']; ?>
+            <li>
+              <div class="between" style="align-items:flex-start;gap:12px">
+                <h3><?= e($c['condition']) ?></h3>
+                <span class="chip <?= $chip ?>"><?= e($label) ?></span>
+              </div>
+              <blockquote><?= e($c['quote']) ?><?php if ($c['doc']): ?><cite><?= e($c['doc']) ?></cite><?php endif ?></blockquote>
+              <?php if ($c['evidence']): ?><p class="small" style="margin:8px 0 0"><span class="muted">W danych firmy:</span> „<?= e($c['evidence']) ?>”</p><?php endif ?>
+              <?php if ($c['note']): ?><p class="small" style="margin:6px 0 0"><?= e($c['note']) ?></p><?php endif ?>
+            </li>
+          <?php endforeach ?>
+        </ul>
+        <p class="xs muted" style="margin:12px 0 0">
+          Sprawdzono <?= e(local_dt($eligibility['created_at'], 'd.m.Y H:i')) ?> na podstawie: <?= e(implode(', ', $eligibility['docs'] ?? [])) ?>.
+          <?php if (!empty($eligibility['dropped'])): ?>Pominęliśmy <?= (int) $eligibility['dropped'] ?> <?= plural((int) $eligibility['dropped'], 'pozycję', 'pozycje', 'pozycji') ?> bez dosłownego cytatu z dokumentów.<?php endif ?>
+          To pomoc w czytaniu regulaminu. O przyznaniu wsparcia decyduje instytucja prowadząca nabór.
+        </p>
+      <?php endif ?>
+    <?php elseif ($showDocs): ?>
       <div class="between" style="align-items:center;margin-bottom:4px">
         <h2 id="t-sec">Dokumenty do złożenia</h2>
         <?php if ($checklist): ?><span class="chip <?= $docsDone === count($checklist) ? 'low' : 'neutral' ?>"><?= $docsDone ?> z <?= count($checklist) ?> gotowe</span><?php endif ?>
