@@ -17,7 +17,7 @@ jobs:
           extensions: curl, mbstring, intl, pdo_sqlite
           coverage: none
       - name: Test kontraktu
-        run: php tests/live_contract.php
+        run: php tests/live_probe.php
       - name: Diagnostyka połączenia z rejestrem UOKiK
         if: failure()
         run: |
