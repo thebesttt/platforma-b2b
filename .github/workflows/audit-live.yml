@@ -1,0 +1,44 @@
+name: Audyt AI prawdziwej strony
+
+# Na żądanie: audyt treści jednej publicznej strony na prawdziwych danych. Tylko odczyt: pobieramy stronę, jej robots.txt
+# i stronę kontaktową, wysyłamy 5 zapytań z nagłówkiem User-Agent botów i pytamy PageSpeed Insights. Wynik jest w logu zadania.
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Adres strony'
+        required: true
+        default: 'perfectdata.pl'
+      phrase:
+        description: 'Fraza, na którą strona ma odpowiadać'
+        required: true
+        default: 'agencja marketingowa seo i google ads'
+      type:
+        description: 'Rodzaj strony: article, product, home albo other'
+        required: true
+        default: 'home'
+
+jobs:
+  audyt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: curl, mbstring, intl, dom, iconv, pdo_sqlite
+          coverage: none
+      - name: Audyt
+        env:
+          APP_ENV: dev
+          AUDIT_URL: ${{ inputs.url }}
+          AUDIT_PHRASE: ${{ inputs.phrase }}
+          AUDIT_TYPE: ${{ inputs.type }}
+          PSI_KEY: ${{ secrets.PSI_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_BROWSER_TOKEN: ${{ secrets.CF_BROWSER_TOKEN }}
+        run: |
+          php bin/console migrate
+          php bin/console content:audit "$AUDIT_URL" "$AUDIT_PHRASE" "$AUDIT_TYPE"
