@@ -147,6 +147,15 @@ function demo_seed(): array
         $db->insert('receivables', ['org_id' => $org, 'company_id' => (int) $c['id'], 'invoice_no' => 'FV/2026/09/14', 'amount' => 18450.00, 'currency' => 'PLN',
             'issued_at' => date('Y-m-d', strtotime('-80 days')), 'due_at' => date('Y-m-d', strtotime('-50 days')), 'demand_sent_at' => date('Y-m-d', strtotime('-35 days')),
             'demand_bureau' => 'Krajowy Rejestr Długów Biuro Informacji Gospodarczej S.A., ul. Danuty Siedzikówny 12, 51-214 Wrocław', 'created_at' => now_utc()]);
+        // Dane wpisane ręcznie z rejestrów, których program nie pobierze: KRZ i sprawozdania finansowe.
+        \App\Modules\Companies\ManualChecks::saveKrz($org, (int) $c['id'], $uid, ['result' => 'none', 'checked_on' => gmdate('Y-m-d', time() - 12 * 86400)]);
+        \App\Modules\Companies\ManualChecks::saveFinance($org, (int) $c['id'], $uid, ['year' => '2024', 'payables' => '1 480 000', 'purchases' => '9 100 000', 'revenue' => '11 900 000', 'receivables' => '1 310 000', 'net_result' => '212 000', 'equity' => '2 050 000']);
+        \App\Modules\Companies\ManualChecks::saveFinance($org, (int) $c['id'], $uid, ['year' => '2025', 'payables' => '2 640 000', 'purchases' => '9 800 000', 'revenue' => '12 400 000', 'receivables' => '1 520 000', 'net_result' => '-184 000', 'equity' => '1 866 000']);
+    }
+    // Druga obserwowana firma bez sprawdzenia w KRZ: lista kontrahentów przypomina, żeby je zrobić.
+    $c2 = Companies::byNip('7181968222');
+    if ($c2) {
+        $db->insert('watchlist', ['org_id' => $org, 'company_id' => (int) $c2['id'], 'note' => 'dostawca kruszywa', 'created_at' => now_utc()]);
     }
 
     $db->insert('contacts', ['org_id' => $org, 'company_name' => 'Przykładowa Firma Instalacyjna sp. z o.o.', 'person' => 'Piotr Przykładowy', 'email' => 'zamowienia@example.com',

@@ -12,6 +12,7 @@ use App\Core\Nip;
 use App\Core\Request;
 use App\Core\Response;
 use App\Modules\Companies\Companies;
+use App\Modules\Companies\ManualChecks;
 use App\Modules\Companies\Receivables;
 use App\Modules\Offers\Docx;
 
@@ -39,7 +40,8 @@ final class CompanyController extends Controller
         if ($q !== '' && !Nip::valid($q)) {
             $found = $this->db()->all('SELECT nip, name, risk_score, address FROM companies WHERE search LIKE ? ORDER BY name LIMIT 20', ['%' . search_text($q) . '%']);
         }
-        return $this->view('companies/index', compact('watch', 'alerts', 'receivables', 'q', 'found') + ['title' => 'Kontrahenci']);
+        $noKrz = ManualChecks::watchedWithoutKrz($org);
+        return $this->view('companies/index', compact('watch', 'alerts', 'receivables', 'q', 'found', 'noKrz') + ['title' => 'Kontrahenci']);
     }
 
     /** Formularz wyszukiwania: NIP → karta firmy; nazwa → wyniki z bazy. */
@@ -90,7 +92,41 @@ final class CompanyController extends Controller
         // Udział w przetargach: wygrane tej firmy jako wykonawcy i to, kto wygrywa, gdy zamawia.
         $wins = \App\Modules\Tenders\Results::wins($nip);
         $awards = \App\Modules\Tenders\Results::buyerHistory($nip, null, 5);
-        return $this->view('companies/show', compact('c', 'signals', 'wl', 'krs', 'watched', 'receivables', 'alerts', 'tenders', 'wins', 'awards') + ['title' => (string) ($c['name'] ?: 'NIP ' . $nip)]);
+        // Sprawdzenia wpisywane ręcznie: KRZ i liczby ze sprawozdania finansowego. Widzi je tylko ta firma.
+        $checks = ManualChecks::forCompany($org, (int) $c['id']);
+        return $this->view('companies/show', compact('c', 'signals', 'wl', 'krs', 'watched', 'receivables', 'alerts', 'tenders', 'wins', 'awards', 'checks') + ['title' => (string) ($c['name'] ?: 'NIP ' . $nip)]);
+    }
+
+    /** Wpis ze źródła, którego nie pobieramy automatycznie: wynik sprawdzenia w KRZ albo liczby ze sprawozdania finansowego. */
+    public function saveCheck(Request $r): Response
+    {
+        $nip = Nip::clean($r->param('nip'));
+        $c = Companies::byNip($nip);
+        if (!$c) {
+            return $this->notFound();
+        }
+        $kind = $r->str('kind');
+        $res = match ($kind) {
+            'krz' => ManualChecks::saveKrz($this->orgId(), (int) $c['id'], Auth::id(), $r->post),
+            'finance' => ManualChecks::saveFinance($this->orgId(), (int) $c['id'], Auth::id(), $r->post),
+            default => ['ok' => false, 'error' => 'Nieznany rodzaj sprawdzenia.'],
+        };
+        $to = '/kontrahenci/' . $nip . '#sprawdzenia';
+        if (!$res['ok']) {
+            return $this->redirect($to, $res['error'], 'error');
+        }
+        AuditLog::add('company.check', 'company', (int) $c['id'], ['kind' => $kind], $r->ip());
+        return $this->redirect($to, $kind === 'krz' ? 'Zapisano wynik sprawdzenia w KRZ.' : 'Zapisano liczby ze sprawozdania. Szacunek jest poniżej.');
+    }
+
+    public function deleteCheck(Request $r): Response
+    {
+        $nip = Nip::clean($r->param('nip'));
+        $c = Companies::byNip($nip);
+        if (!$c || !ManualChecks::delete($this->orgId(), (int) $c['id'], (int) $r->param('id'))) {
+            return $this->notFound();
+        }
+        return $this->redirect('/kontrahenci/' . $nip . '#sprawdzenia', 'Usunięto wpis.');
     }
 
     public function refresh(Request $r): Response

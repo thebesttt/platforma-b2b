@@ -20,6 +20,12 @@
   <?php endif ?>
 </section>
 
+<?php if (!empty($noKrz)): ?>
+  <div class="notice info">
+    <?= count($noKrz) ?> <?= plural(count($noKrz), 'obserwowana firma nie ma', 'obserwowane firmy nie mają', 'obserwowanych firm nie ma') ?> aktualnego sprawdzenia w Krajowym Rejestrze Zadłużonych (rejestr sprawdza się ręcznie, co <?= App\Modules\Companies\ManualChecks::KRZ_FRESH_DAYS ?> dni):
+    <?php foreach (array_slice($noKrz, 0, 6) as $i => $x): ?><?= $i ? ', ' : ' ' ?><a href="/kontrahenci/<?= e($x['nip']) ?>#sprawdzenia"><?= e(truncate((string) ($x['name'] ?: 'NIP ' . $x['nip']), 40)) ?></a><?php endforeach ?><?= count($noKrz) > 6 ? ' i ' . (count($noKrz) - 6) . ' kolejnych' : '' ?>.
+  </div>
+<?php endif ?>
 <div class="cols">
   <section class="card flush main" aria-labelledby="t-watch">
     <div class="card-head"><h2 id="t-watch">Obserwowane firmy</h2><span class="muted xs">Sprawdzamy zmiany codziennie</span></div>

@@ -1,5 +1,6 @@
 <?php
 use App\Core\Nip;
+use App\Modules\Companies\ManualChecks;
 use App\Modules\Companies\Receivables;
 
 $risk = $signals['risk'] ?? ['score' => $c['risk_score'], 'label' => '', 'level' => 'low', 'signals' => []];
@@ -21,6 +22,7 @@ $hasUokik = !empty($signals['uokik']);
       <?php if ($krs): ?><span class="chip low">W KRS: <?= e($krs['krs'] ?? $c['krs']) ?></span><?php endif ?>
       <span class="chip <?= $isActiveVat ? 'low' : 'mid' ?>"><?= e($c['vat_status'] ? 'VAT: ' . mb_strtolower($c['vat_status']) : 'Brak w wykazie VAT') ?></span>
       <?php if ($hasUokik): ?><span class="chip high">Decyzja UOKiK: nadmierne opóźnianie płatności</span><?php endif ?>
+      <?php if (($checks['krz']['data']['result'] ?? '') === 'found'): ?><a class="chip high" href="#sprawdzenia">KRZ: <?= e(mb_strtolower(ManualChecks::KRZ_TYPES[$checks['krz']['data']['type']] ?? 'wpis')) ?></a><?php endif ?>
     </div>
     <h1><?= e($c['name'] ?: 'NIP ' . $c['nip']) ?></h1>
     <p class="muted small" style="margin:0">NIP <?= e(Nip::format($c['nip'])) ?><?= $c['regon'] ? ' · REGON ' . e($c['regon']) : '' ?><?= $c['address'] ? ' · ' . e($c['address']) : '' ?></p>
@@ -49,6 +51,107 @@ $hasUokik = !empty($signals['uokik']);
         <div class="sig"><span class="chip <?= $l[0] ?>"><?= $l[1] ?></span><div><p style="font-weight:600"><?= e($s['title']) ?></p><p class="small"><?= e($s['detail']) ?></p><span class="src" style="margin-top:4px"><?= e($s['source']) ?></span></div></div>
       <?php endforeach ?>
       <p class="muted xs" style="margin:12px 0 0">Ocena opiera się wyłącznie na danych publicznych. Nie zawiera informacji o długach zgłoszonych przez innych użytkowników platformy - takie dane trafiają tylko do biur informacji gospodarczej. Pełny raport z BIG (np. KRD, BIG InfoMonitor) zamówisz u biura.</p>
+    </section>
+
+    <section class="card" id="sprawdzenia" aria-labelledby="t-checks">
+      <div class="between" style="align-items:center;margin-bottom:4px">
+        <h2 id="t-checks">Zadłużenie i płatności: sprawdź w rejestrach</h2>
+        <span class="muted xs">Widoczne tylko dla Twojej firmy</span>
+      </div>
+      <p class="muted small" style="margin:0 0 12px">Te dwa rejestry nie udostępniają danych programom, więc panel nie pobierze ich sam. Poniżej jest adres, czego tam szukać i miejsce na wynik. Wpisy nie zmieniają oceny ryzyka powyżej.</p>
+
+      <?php $kz = $checks['krz']; $kd = $kz['data'] ?? []; ?>
+      <div class="src-step">
+        <div class="between" style="align-items:flex-start;gap:12px">
+          <h3>Krajowy Rejestr Zadłużonych</h3>
+          <?php if (!$kz): ?><span class="chip neutral">nie sprawdzono</span>
+          <?php elseif (($kd['result'] ?? '') === 'found'): ?><span class="chip high">jest wpis</span>
+          <?php elseif ($checks['krz_stale']): ?><span class="chip mid">sprawdź ponownie</span>
+          <?php else: ?><span class="chip low">brak wpisów</span><?php endif ?>
+        </div>
+        <?php if ($kz): ?>
+          <p class="small" style="margin:6px 0 0">
+            <?php if (($kd['result'] ?? '') === 'found'): ?>
+              <strong><?= e(ManualChecks::KRZ_TYPES[$kd['type']] ?? 'Wpis') ?></strong><?= !empty($kd['signature']) ? ', sygn. ' . e($kd['signature']) : '' ?><?= !empty($kd['entry_date']) ? ', z ' . e(date('d.m.Y', strtotime($kd['entry_date']))) : '' ?>.
+              <?php if (!empty($kd['note'])): ?><?= e($kd['note']) ?><?php endif ?>
+            <?php else: ?>W rejestrze nie było wpisów o tej firmie.<?php endif ?>
+            <span class="muted">Sprawdził(a) <?= e($kz['by']) ?>, <?= e(date('d.m.Y', strtotime($kz['checked_at']))) ?><?= $checks['krz_stale'] ? ' (' . (int) $checks['krz_age'] . ' dni temu)' : '' ?>.</span>
+          </p>
+        <?php endif ?>
+        <details class="details no-print" style="margin-top:8px"<?= $kz ? '' : ' open' ?>>
+          <summary class="small"><?= $kz ? 'Sprawdź ponownie i wpisz wynik' : 'Gdzie to sprawdzić i jak wpisać wynik' ?></summary>
+          <ol class="src-how">
+            <li>Otwórz <a href="<?= e(ManualChecks::KRZ_URL) ?>" target="_blank" rel="noopener">krz.ms.gov.pl</a> (bezpłatnie, bez konta) i przejdź do wyszukiwania podmiotów.</li>
+            <li>Wpisz NIP <code class="copy"><?= e($c['nip']) ?></code><?php if (!empty($c['krs'])): ?> albo numer KRS <code class="copy"><?= e($c['krs']) ?></code><?php endif ?>.</li>
+            <li>Sprawdź, czy są postępowania upadłościowe albo restrukturyzacyjne, umorzone egzekucje i zakazy prowadzenia działalności. Wynik wpisz poniżej.</li>
+          </ol>
+          <form method="post" action="/kontrahenci/<?= e($c['nip']) ?>/sprawdzenia" class="form-grid" style="margin-top:12px">
+            <?= csrf_field() ?><input type="hidden" name="kind" value="krz">
+            <fieldset class="field" style="grid-column:1/-1;border:0;padding:0;margin:0">
+              <legend class="small" style="font-weight:600;margin-bottom:6px">Co pokazał rejestr</legend>
+              <label class="check"><input type="radio" name="result" value="none" required> <span class="small">Brak wpisów o tej firmie</span></label>
+              <label class="check"><input type="radio" name="result" value="found"> <span class="small">Jest wpis (uzupełnij pola poniżej)</span></label>
+            </fieldset>
+            <div class="field"><label for="krz-type">Rodzaj wpisu</label><select id="krz-type" name="type"><option value="">-</option><?php foreach (ManualChecks::KRZ_TYPES as $k => $label): ?><option value="<?= e($k) ?>"><?= e($label) ?></option><?php endforeach ?></select></div>
+            <div class="field"><label for="krz-sig">Sygnatura sprawy</label><input id="krz-sig" name="signature" type="text" maxlength="80" placeholder="np. WA1M/GR/12/2026"></div>
+            <div class="field"><label for="krz-date">Data wpisu albo obwieszczenia</label><input id="krz-date" name="entry_date" type="date"></div>
+            <div class="field"><label for="krz-on">Kiedy sprawdzasz</label><input id="krz-on" name="checked_on" type="date" value="<?= e(date('Y-m-d')) ?>" max="<?= e(date('Y-m-d')) ?>"></div>
+            <div class="field" style="grid-column:1/-1"><label for="krz-note">Notatka</label><input id="krz-note" name="note" type="text" maxlength="500" placeholder="np. otwarto postępowanie sanacyjne, nadzorca: …"></div>
+            <div class="field"><button class="btn ghost" type="submit">Zapisz wynik z KRZ</button></div>
+          </form>
+        </details>
+      </div>
+
+      <div class="src-step">
+        <?php $fin = $checks['finance']; $last = $fin[0] ?? null; ?>
+        <div class="between" style="align-items:flex-start;gap:12px">
+          <h3>Po ilu dniach firma płaci dostawcom</h3>
+          <?php if ($last && $last['calc']['dpo'] !== null): ?><span class="chip <?= e($last['calc']['level']) ?>">ok. <?= (int) $last['calc']['dpo'] ?> dni, <?= e($last['calc']['label']) ?></span>
+          <?php else: ?><span class="chip neutral">brak danych</span><?php endif ?>
+        </div>
+        <?php if ($fin): ?>
+          <div class="table-wrap" style="margin-top:8px"><table>
+            <thead><tr><th scope="col">Rok</th><th scope="col" class="n">Płaci po</th><th scope="col" class="n">Dostaje zapłatę po</th><th scope="col" class="n">Zobowiązania wobec dostawców</th><th scope="col" class="n">Zakupy w roku</th><th scope="col"></th></tr></thead>
+            <tbody>
+            <?php foreach ($fin as $f): $d = $f['data']; ?>
+              <tr>
+                <td><strong><?= (int) $d['year'] ?></strong></td>
+                <td class="n" style="white-space:nowrap"><strong><?= $f['calc']['dpo'] !== null ? 'ok. ' . (int) $f['calc']['dpo'] . ' dni' : '-' ?></strong></td>
+                <td class="n" style="white-space:nowrap"><?= $f['calc']['dso'] !== null ? 'ok. ' . (int) $f['calc']['dso'] . ' dni' : '<span class="muted">-</span>' ?></td>
+                <td class="n" style="white-space:nowrap"><?= e(money_pl($d['payables'])) ?></td>
+                <td class="n" style="white-space:nowrap"><?= e(money_pl($d['purchases'])) ?><div class="t-sub">wpisał(a) <?= e($f['by']) ?></div></td>
+                <td class="n no-print"><form class="inline" method="post" action="/kontrahenci/<?= e($c['nip']) ?>/sprawdzenia/<?= (int) $f['id'] ?>/usun" data-confirm="Usunąć liczby za <?= (int) $d['year'] ?> rok?"><?= csrf_field() ?><button class="link-btn xs" type="submit">Usuń</button></form></td>
+              </tr>
+              <?php foreach ($f['calc']['notes'] as $note): ?><tr><td colspan="6" class="small" style="color:var(--mid)"><?= (int) $d['year'] ?>: <?= e($note) ?></td></tr><?php endforeach ?>
+            <?php endforeach ?>
+            </tbody>
+          </table></div>
+          <p class="muted xs" style="margin:8px 0 0">Szacunek: zobowiązania wobec dostawców na koniec roku podzielone przez roczne zakupy, razy 365. Stan z jednego dnia nie pokazuje sezonowości. Skala umowna: do 60 dni typowo, 61-90 długo, ponad 90 bardzo długo.</p>
+        <?php endif ?>
+        <?php if (empty($c['krs'])): ?>
+          <p class="small muted" style="margin:8px 0 0">Ta firma nie ma numeru KRS, więc nie składa sprawozdań do repozytorium sądowego. Poproś ją o sprawozdanie albo oprzyj się na pozostałych sygnałach.</p>
+        <?php endif ?>
+        <details class="details no-print" style="margin-top:8px"<?= $fin || empty($c['krs']) ? '' : ' open' ?>>
+          <summary class="small"><?= $fin ? 'Dopisz kolejny rok' : 'Gdzie znaleźć sprawozdanie i które liczby wpisać' ?></summary>
+          <ol class="src-how">
+            <li>Otwórz <a href="<?= e(ManualChecks::RDF_URL) ?>" target="_blank" rel="noopener">ekrs.ms.gov.pl</a> i wybierz „Przeglądarka dokumentów finansowych” (bezpłatnie, bez konta). <a href="<?= e(ManualChecks::RDF_HELP_URL) ?>" target="_blank" rel="noopener">Instrukcja</a></li>
+            <li>Wpisz numer KRS<?php if (!empty($c['krs'])): ?> <code class="copy"><?= e($c['krs']) ?></code><?php endif ?> i otwórz ostatnie roczne sprawozdanie finansowe.</li>
+            <li>Z bilansu (pasywa, zobowiązania krótkoterminowe) przepisz „z tytułu dostaw i usług”.</li>
+            <li>Z rachunku zysków i strat przepisz zakupy od dostawców. Wariant porównawczy: suma pozycji „zużycie materiałów i energii”, „usługi obce” i „wartość sprzedanych towarów i materiałów”. Wariant kalkulacyjny: „koszt sprzedanych produktów, towarów i materiałów”.</li>
+          </ol>
+          <form method="post" action="/kontrahenci/<?= e($c['nip']) ?>/sprawdzenia" class="form-grid" style="margin-top:12px">
+            <?= csrf_field() ?><input type="hidden" name="kind" value="finance">
+            <div class="field"><label for="fin-year">Rok obrotowy</label><input id="fin-year" name="year" type="number" min="2000" max="<?= e(date('Y')) ?>" value="<?= (int) date('Y') - 1 ?>" required></div>
+            <div class="field"><label for="fin-pay">Zobowiązania z tytułu dostaw i usług (zł)</label><input id="fin-pay" name="payables" type="text" inputmode="decimal" required placeholder="np. 1 234 567,89"></div>
+            <div class="field"><label for="fin-pur">Zakupy od dostawców w roku (zł)</label><input id="fin-pur" name="purchases" type="text" inputmode="decimal" required></div>
+            <div class="field"><label for="fin-rev">Przychody netto ze sprzedaży (zł), opcjonalnie</label><input id="fin-rev" name="revenue" type="text" inputmode="decimal"></div>
+            <div class="field"><label for="fin-rec">Należności z tytułu dostaw i usług (zł), opcjonalnie</label><input id="fin-rec" name="receivables" type="text" inputmode="decimal"></div>
+            <div class="field"><label for="fin-net">Zysk albo strata netto (zł), opcjonalnie</label><input id="fin-net" name="net_result" type="text" inputmode="decimal" placeholder="strata z minusem"></div>
+            <div class="field"><label for="fin-eq">Kapitał własny (zł), opcjonalnie</label><input id="fin-eq" name="equity" type="text" inputmode="decimal"></div>
+            <div class="field" style="justify-content:flex-end"><button class="btn ghost" type="submit">Policz i zapisz</button></div>
+          </form>
+        </details>
+      </div>
     </section>
 
     <section class="card" id="naleznosci" aria-labelledby="t-rec">

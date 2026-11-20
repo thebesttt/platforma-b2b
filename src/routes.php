@@ -112,6 +112,8 @@ return static function (Router $r): void {
     $r->post('/kontrahenci/{nip}/odswiez', [CompanyController::class, 'refresh'], $a);
     $r->post('/kontrahenci/{nip}/obserwuj', [CompanyController::class, 'watch'], $a);
     $r->post('/kontrahenci/{nip}/naleznosci', [CompanyController::class, 'addReceivable'], $a);
+    $r->post('/kontrahenci/{nip}/sprawdzenia', [CompanyController::class, 'saveCheck'], $a);
+    $r->post('/kontrahenci/{nip}/sprawdzenia/{id}/usun', [CompanyController::class, 'deleteCheck'], $a);
     $r->post('/naleznosci/{id}', [CompanyController::class, 'updateReceivable'], $a);
     $r->get('/naleznosci/{id}/wezwanie', [CompanyController::class, 'demand'], $a);
 
