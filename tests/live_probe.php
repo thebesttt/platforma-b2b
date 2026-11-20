@@ -9,38 +9,40 @@ use App\Core\Http;
 use App\Modules\Tenders\BzpClient;
 use App\Modules\Tenders\BzpNoticeParser;
 
+$c = new BzpClient();
+$dump = static function (string $id, string $why) use ($c): void {
+    $html = (string) $c->noticeHtml($id);
+    echo "\n##### HTML $id ($why) " . strlen($html) . " B\n";
+    echo "<<<B64\n" . chunk_split(base64_encode(gzencode($html, 9)), 160, "\n") . "B64>>>\n";
+};
+$dump('08df43d4-41e2-3c9f-c1c5-d50001942f7e', 'dwie czesci');
+$dump('08df43d7-b031-2d40-c1c5-d50001943049', 'puste wyniki czesci');
+$dump('08df43d5-1bbf-0759-c1c5-d50001942fb4', 'nierozstrzygnieta czesc');
+$dump('08df43d2-7d1d-f757-c1c5-d50001942f2a', 'jedna czesc');
+
+// Szukamy konsorcjum (7.1 = Tak) i wyniku bez wcześniejszego ogłoszenia (2.13 = Nie)
 $from = gmdate('Y-m-d\TH:i:s\Z', time() - 4 * 86400);
-$seen = [];
-foreach ([1, 2, 3, 4, 5, 6] as $page) {
+$found = ['konsorcjum' => 0, 'bez_ogloszenia' => 0];
+for ($page = 1; $page <= 12 && ($found['konsorcjum'] < 2 || $found['bez_ogloszenia'] < 1); $page++) {
     $rows = Http::getJson(BzpClient::BASE . '/Search?' . http_build_query([
         'NoticeType' => 'TenderResultNotice', 'publicationDateFrom' => $from,
         'SortingColumnName' => 'PublicationDate', 'SortingDirection' => 'ASC', 'PageNumber' => $page, 'PageSize' => 10,
     ]));
-    echo "== strona $page: " . (is_array($rows) ? count($rows) : 'null') . "\n";
     foreach ((array) $rows as $r) {
-        $res = (string) ($r['procedureResult'] ?? '');
-        $n = is_array($r['contractors'] ?? null) ? count($r['contractors']) : -1;
-        echo "ROW " . $r['objectId'] . ' | ' . $r['noticeNumber'] . ' | ' . $res . ' | wykonawcy=' . $n . ' | html=' . (isset($r['htmlBody']) ? strlen((string) $r['htmlBody']) : 'null') . ' | ' . ($r['tenderId'] ?? '') . "\n";
-        $key = $res . '|' . min($n, 2);
-        if (!isset($seen[$key]) && count($seen) < 6) {
-            $seen[$key] = true;
+        $html = (string) $c->noticeHtml((string) $r['objectId']);
+        $f = BzpNoticeParser::fields($html);
+        $by = [];
+        foreach ($f as $x) { $by[$x['code']][] = $x['value']; }
+        $kons = false;
+        foreach ($by['7.1'] ?? [] as $v) { if (str_starts_with($v, 'Tak')) { $kons = true; } }
+        $bez = str_starts_with((string) ($by['2.13'][0] ?? ''), 'Nie');
+        if (($kons && $found['konsorcjum'] < 2) || ($bez && $found['bez_ogloszenia'] < 1)) {
+            $kons ? $found['konsorcjum']++ : $found['bez_ogloszenia']++;
             $copy = $r; unset($copy['htmlBody']);
-            echo json_encode($copy, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n";
-            $html = (new BzpClient())->noticeHtml((string) $r['objectId']);
-            echo "--- pola ogłoszenia (" . strlen((string) $html) . " B)\n";
-            foreach (BzpNoticeParser::fields((string) $html) as $f) {
-                echo $f['code'] . ' | ' . $f['label'] . ' | ' . truncate(str_replace("\n", ' ⏎ ', $f['value']), 300) . "\n";
-            }
-            if (count($seen) === 1) {
-                echo "--- surowy HTML (początek i środek)\n" . substr((string) $html, 0, 3000) . "\n.....\n" . substr((string) $html, (int) (strlen((string) $html) * 0.6), 6000) . "\n";
-            }
-            usleep(300000);
+            echo "\n##### WIERSZ " . ($kons ? 'konsorcjum' : 'bez ogloszenia') . "\n" . json_encode($copy, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n";
+            echo "<<<B64\n" . chunk_split(base64_encode(gzencode($html, 9)), 160, "\n") . "B64>>>\n";
         }
+        usleep(200000);
     }
-    usleep(300000);
 }
-// Ogłoszenie o zamówieniu z tego samego postępowania: czy tenderId się zgadza
-echo "== ContractNotice (1 wiersz)\n";
-$rows = Http::getJson(BzpClient::BASE . '/Search?' . http_build_query(['NoticeType' => 'ContractNotice', 'publicationDateFrom' => $from, 'PageNumber' => 1, 'PageSize' => 1]));
-$c = $rows[0] ?? []; unset($c['htmlBody']);
-echo json_encode($c, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n";
+echo "\nznalezione: " . json_encode($found) . "\n";
