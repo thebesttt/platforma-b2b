@@ -245,7 +245,7 @@ Potrzebne przed etapem 4:
 - **Przeglądarka (Chromium):**
   - widżet w panelu i na osobnej stronie z własnymi stylami: style strony nie zmieniają widżetu, widżet nie zapisuje plików cookie ani pamięci przeglądarki, niedopuszczona strona dostaje odmowę,
   - audyt uruchomiony z interfejsu kończy się sam i pokazuje wynik, raport dla klienta otwiera się bez logowania i ma nagłówek noindex,
-  - 108 stron panelu w 5 szerokościach (320-1280 px) i wcześniej 109 stron w 10 szerokościach bez poziomego przewijania, 96 stron i 10 pobrań bez błędów.
+  - na świeżo założonej bazie z danymi przykładowymi: 108 stron panelu i 12 pobrań bez błędów, te same 108 stron w 5 szerokościach (320-1280 px) bez poziomego przewijania.
 - **Prawdziwe dane:** audyt AI strony perfectdata.pl wykonany dwa razy z serwera GitHuba (tylko odczyt publicznych stron). Pierwszy przebieg pokazał dwa błędy silnika, oba poprawione i potwierdzone drugim przebiegiem: sklejone słowa w nagłówku z podziałem wiersza oraz niezaliczanie sekcji „Kontakt” na stronie jednoekranowej.
 - **Wytyczne:** silnik, strona „Wytyczne” i dokument dla zespołu czytają jeden plik. Test sprawdza, że każdy próg na stronie wytycznych jest progiem w silniku.
 
