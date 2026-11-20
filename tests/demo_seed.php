@@ -153,6 +153,9 @@ function demo_seed(): array
         'basis' => 'rfq', 'basis_detail' => 'zapytanie ofertowe „Utwardzenie placu manewrowego” na stronie firmy', 'basis_at' => date('Y-m-d', strtotime('-4 days')), 'created_at' => now_utc()]);
     $db->insert('contacts', ['org_id' => $org, 'company_name' => 'Przykładowy Deweloper sp. z o.o.', 'email' => 'biuro@example.org', 'basis' => 'none', 'website' => 'https://example.org', 'created_at' => now_utc()]);
     $db->insert('contacts', ['org_id' => $org, 'company_name' => 'Spółdzielnia Mieszkaniowa (przykład)', 'person' => 'Ewa Przykładowa', 'email' => 'zarzad@example.net', 'basis' => 'client', 'basis_detail' => 'remont parkingu w 2025 r., prośba o kolejne oferty', 'created_at' => now_utc()]);
+    // Idealny klient: opis wpisany ręcznie (w panelu można go też przygotować ze strony firmy).
+    \App\Modules\Outreach\Icp::saveText($org, $db->one('SELECT * FROM organizations WHERE id = ?', [$org]),
+        'Zarządcy dróg powiatowych i gminnych oraz firmy z własnym placem albo parkingiem na Mazowszu i w Łódzkiem, którzy potrzebują remontu nawierzchni o wartości do 5 mln zł i cenią krótki termin.');
     // Przypomnienia: jedna firma z krokiem na dziś, jedna czeka na termin, jedna odpisała.
     $seqDemo = static function (string $company, string $email, int $sentDaysAgo, ?string $stop = null) use ($db, $org, $uid): void {
         $cid = $db->insert('contacts', ['org_id' => $org, 'company_name' => $company, 'person' => null, 'email' => $email, 'basis' => 'rfq',

@@ -118,6 +118,8 @@ return static function (Router $r): void {
     // Klienci i wiadomości
     $r->get('/klienci', [OutreachController::class, 'index'], $a);
     $r->get('/klienci/nowy', [OutreachController::class, 'contactForm'], $a);
+    $r->get('/klienci/idealny-klient', [OutreachController::class, 'icp'], $a);
+    $r->post('/klienci/idealny-klient', [OutreachController::class, 'icpSave'], $a);
     $r->get('/klienci/przypomnienia', [OutreachController::class, 'sequences'], $a);
     $r->post('/klienci/przypomnienia/limit', [OutreachController::class, 'saveLimit'], $a);
     $r->post('/klienci/przypomnienia/{id}/zatrzymaj', [OutreachController::class, 'stopSequence'], $a);

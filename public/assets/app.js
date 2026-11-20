@@ -2,17 +2,30 @@
 (function () {
   'use strict';
 
-  // Potwierdzenie przed operacjami nieodwracalnymi: <form data-confirm="…">.
+  // Potwierdzenie przed operacjami nieodwracalnymi: <form data-confirm="…"> albo przycisk z data-confirm.
   document.addEventListener('submit', function (e) {
     var form = e.target;
-    var msg = form.getAttribute('data-confirm');
+    var sub = e.submitter || null;
+    var msg = (sub && sub.getAttribute('data-confirm')) || form.getAttribute('data-confirm');
     if (msg && !window.confirm(msg)) {
       e.preventDefault();
       return;
     }
-    // Blokada podwójnego wysłania i informacja o dłuższej operacji (AI, rejestry).
-    var btn = form.querySelector('button[type=submit][data-busy]');
+    // Blokada podwójnego wysłania i informacja o dłuższej operacji (AI, rejestry). Dotyczy tylko klikniętego przycisku.
+    var btn = sub && sub.hasAttribute('data-busy') ? sub : null;
+    if (!btn && !sub) {
+      var all = form.querySelectorAll('button[type=submit]');
+      if (all.length === 1 && all[0].hasAttribute('data-busy')) btn = all[0];
+    }
     if (btn) {
+      // Przeglądarka nie wysyła nazwy i wartości wyłączonego przycisku, więc przenosimy je do ukrytego pola.
+      if (btn.name) {
+        var keep = document.createElement('input');
+        keep.type = 'hidden';
+        keep.name = btn.name;
+        keep.value = btn.value;
+        form.appendChild(keep);
+      }
       btn.disabled = true;
       btn.textContent = btn.getAttribute('data-busy');
     }

@@ -14,6 +14,7 @@ use App\Core\Session;
 use App\Core\View;
 use App\Modules\Ai\Claude;
 use App\Modules\Companies\Companies;
+use App\Modules\Outreach\Icp;
 use App\Modules\Outreach\Outreach;
 use App\Modules\Outreach\RiskPolicy;
 use App\Modules\Outreach\Sequences;
@@ -139,6 +140,36 @@ final class OutreachController extends Controller
         AuditLog::add($on ? 'contact.replied' : 'contact.replied_undo', 'contact', (int) $c['id'], [], $r->ip());
         $back = $r->str('back') === 'sekwencje' ? '/klienci/przypomnienia' : '/klienci/' . $c['id'];
         return $this->redirect($back, $on ? 'Zapisano odpowiedź' . ($stopped ? '. Przypomnienia dla tej firmy są zatrzymane.' : '.') : 'Usunięto oznaczenie odpowiedzi.');
+    }
+
+    /** Idealny klient: opis ze strony firmy (AI z cytatami) albo wpisany ręcznie. */
+    public function icp(Request $r): Response
+    {
+        $org = Auth::org();
+        return $this->view('outreach/icp', [
+            'icp' => Icp::get($org), 'website' => (string) ($org['website'] ?? ''), 'aiEnabled' => Claude::enabled(), 'title' => 'Idealny klient',
+        ]);
+    }
+
+    public function icpSave(Request $r): Response
+    {
+        if ($r->str('action') === 'ai') {
+            if ($err = TenderController::aiGuard()) {
+                return $this->redirect('/klienci/idealny-klient', $err, 'error');
+            }
+            $res = Icp::generate($this->orgId());
+            if (!$res['ok']) {
+                return $this->redirect('/klienci/idealny-klient', $res['error'], 'error');
+            }
+            AuditLog::add('icp.generate', 'organization', $this->orgId(), [], $r->ip());
+            return $this->redirect('/klienci/idealny-klient', 'Opis gotowy. Przeczytaj go i popraw, jeśli trzeba.');
+        }
+        $text = trim($r->str('summary'));
+        if ($text === '') {
+            return $this->redirect('/klienci/idealny-klient', 'Wpisz opis idealnego klienta albo przygotuj go ze strony firmy.', 'error');
+        }
+        Icp::saveText($this->orgId(), Auth::org(), $text);
+        return $this->redirect('/klienci/idealny-klient', 'Zapisano opis idealnego klienta.');
     }
 
     /** Przypomnienia: co wysłać dziś, co czeka na termin, co się zakończyło. */

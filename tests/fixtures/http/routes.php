@@ -105,6 +105,24 @@ return [
     // Anthropic - odpowiedź zależna od rodzaju zadania (rozpoznawana po treści promptu systemowego).
     '#^POST https://api\.anthropic\.com/v1/messages\n.*Analizujesz dokumentację przetargu#s' => 'claude_analysis.json',
     '#^POST https://api\.anthropic\.com/v1/messages\n.*Odpowiadasz na pytania wykonawcy#s' => 'claude_qa.json',
+    // Strona firmy do opisu idealnego klienta: strona główna z linkami do oferty, kontaktu i bloga oraz podstrona oferty.
+    '#^GET https://firma-uslugowa\.example/\n#' => $page('<!doctype html><html lang="pl"><head><title>Biuro rachunkowe dla sklepów internetowych</title>'
+        . '<meta name="description" content="Księgowość dla sklepów internetowych i firm usługowych."></head><body><nav><a href="/oferta">Oferta</a> <a href="/kontakt">Kontakt</a> <a href="/blog">Blog</a>'
+        . ' <a href="https://inna-firma.example/oferta">Partner</a></nav><main><h1>Księgowość dla sklepów internetowych</h1>'
+        . '<p>Prowadzimy księgi sklepów internetowych, które sprzedają na Allegro i we własnym sklepie. Rozliczamy sprzedaż wysyłkową do krajów Unii Europejskiej.</p>'
+        . '<p>Nie obsługujemy spółek giełdowych ani firm zatrudniających ponad 50 osób.</p></main></body></html>'),
+    '#^GET https://firma-uslugowa\.example/oferta\n#' => $page('<!doctype html><html lang="pl"><head><title>Oferta</title></head><body><main><h1>Oferta</h1>'
+        . '<p>Pakiet dla firm usługowych na ryczałcie obejmuje ewidencję przychodów i rozliczenie roczne. Abonament zaczyna się od 300 zł miesięcznie.</p></main></body></html>'),
+    '#^POST https://api\.anthropic\.com/v1/messages\n.*Opisujesz idealnego klienta firmy#s' => $claude([
+        'summary' => 'Sklepy internetowe i małe firmy usługowe, które sprzedają także za granicę i nie chcą same pilnować rozliczeń VAT.',
+        'segments' => [
+            ['name' => 'Sklepy internetowe', 'why' => 'Strona wprost mówi o sprzedaży na Allegro i we własnym sklepie.', 'quote' => 'Prowadzimy księgi sklepów internetowych, które sprzedają na Allegro i we własnym sklepie.'],
+            ['name' => 'Firmy usługowe na ryczałcie', 'why' => 'Jest dla nich osobny pakiet.', 'quote' => 'Pakiet dla firm usługowych na ryczałcie obejmuje ewidencję przychodów i rozliczenie roczne.'],
+            ['name' => 'Kancelarie prawne', 'why' => 'Często szukają księgowości.', 'quote' => 'Obsługujemy kancelarie prawne w całej Polsce.'],
+        ],
+        'signals' => ['Sprzedaje przez internet', 'Wysyła towar do krajów Unii Europejskiej'],
+        'not_for' => ['Spółki giełdowe', 'Firmy zatrudniające ponad 50 osób'],
+    ]),
     // Warunki naboru: jedna pozycja z prawdziwym cytatem i potwierdzeniem w danych firmy, jedna z prawdziwym cytatem, ale ze zmyślonym
     // potwierdzeniem, jedna sprzeczna z danymi firmy, jedna bez danych i jedna ze zmyślonym cytatem z regulaminu.
     '#^POST https://api\.anthropic\.com/v1/messages\n.*Sprawdzasz, czy firma spełnia warunki naboru#s' => $claude(['conditions' => [
