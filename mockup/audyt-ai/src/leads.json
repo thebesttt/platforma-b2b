@@ -247,8 +247,8 @@
   },
   "limits": {
     "messages": 12,
-    "daily": 300,
-    "budget": 150
+    "daily": 500,
+    "ai_month": 2000
   },
   "funnel": [
     [

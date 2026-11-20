@@ -37,7 +37,7 @@ function renderFunctions() {
   const all = PLAT.functions.flatMap((g) => g.items), count = (k) => all.filter((f) => f[2] === k).length;
   put('funkcje', `<div class="counts"><div><b>${all.length}</b><span>funkcji w mockupie</span></div><div><b id="fnEngine">${count('silnik')}</b><span>działa w silniku</span></div>
       <div><b>${count('plan')}</b><span>do zbudowania</span></div><div><b>${count('zgoda')}</b><span>czeka na zgodę Google i Meta</span></div></div>
-    <p class="note">Mockup pokazuje każdą funkcję na przykładowych danych. „Działa w silniku” znaczy, że kod jest w repozytorium i przechodzi testy. Silnik nie jest jeszcze uruchomiony online.</p>` +
+    <p class="note">Mockup pokazuje każdą funkcję na przykładowych danych. „Działa w silniku” znaczy, że kod jest w repozytorium i przechodzi testy. Silnik nie jest jeszcze uruchomiony online: do tego potrzeba konta na hostingu i kluczy, które zakłada właściciel.</p>` +
     PLAT.functions.map((g) => `<div class="sec">${secHead(esc(g.module), '', g.items.length)}` +
       g.items.map(([name, view, key, note]) => `<div class="item fn" style="--c1:minmax(0,1.25fr)"><a href="#${view}">${esc(name)}</a><span class="small muted">${esc(note)}</span><div class="end">${st(PLAT.states[key][0], PLAT.states[key][1])}</div></div>`).join('') + `</div>`).join(''));
 }

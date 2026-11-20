@@ -1,6 +1,8 @@
 # Zapytania ze strony: plan integracji
 
-Stan na 19.11.2026. Moduł „Zapytania” w panelu PerfectData. Mockup w wyglądzie perfectdata.pl jest w `mockup/audyt-ai` (pozycja „Zapytania” w nagłówku), zasady kwalifikacji w `mockup/audyt-ai/src/leads.json`. Kolejność prac w całym projekcie jest w `PLAN.md` (zapytania to etap 1).
+Stan na 20.11.2026. Moduł „Zapytania” w panelu PerfectData. Mockup w wyglądzie perfectdata.pl jest w `mockup/audyt-ai` (pozycja „Zapytania” w nagłówku). Startowe pytania i punkty są w silniku (`src/Modules/Inbound/Rules.php`) i w mockupie (`mockup/audyt-ai/src/leads.json`), a firma zmienia je w ustawieniach widżetu. Kolejność prac w całym projekcie jest w `PLAN.md` (zapytania to etap 1).
+
+**Co jest zbudowane (20.11.2026).** Etapy 1, 2 i 3: widżet, kwalifikator, lista i karta zapytań, powiadomienia e-mail, czat AI z bazy wiedzy, lejek i test dwóch wersji. Do zbudowania zostało demo z adresu (etap 4). Na perfectdata.pl nic nie zostało zainstalowane: kod widżetu trafi na stronę dopiero po wyraźnej zgodzie właściciela.
 
 Cel: więcej zapytań ze strony i szybsza ocena, które z nich są warte telefonu jeszcze dziś. Pierwszym użytkownikiem jest PerfectData (perfectdata.pl), potem moduł trafia do klientów platformy.
 
@@ -38,21 +40,23 @@ Czego LeadTok nie ma, a my mamy od razu:
 
 Pytania kwalifikujące nie używają AI. Działają szybko, nic nie kosztują i dają zawsze tę samą ocenę za te same odpowiedzi. AI pracuje tylko w czacie i przy streszczeniu zapytania.
 
-## 3. Baza danych (migracja 005)
+## 3. Baza danych (migracja 004)
 
 | Tabela | Co trzyma | Najważniejsze pola |
 |---|---|---|
-| `inbound_widgets` | Ustawienia widżetu | `org_id`, `public_id` (w adresie kodu), `name`, `origins` (dozwolone adresy stron), `rules_json` (pytania, punkty, progi), `rules_version`, `texts_json` (powitanie, podziękowanie, klauzula), `limits_json`, `active` |
-| `inbound_conversations` | Jedna rozmowa odwiedzającego | `widget_id`, `variant` (A lub B), `page_url`, `answers_json`, `messages` (licznik), `status`, `started_at`, `ip_hash` |
+| `inbound_widgets` | Ustawienia widżetu | `org_id`, `public_id` (w adresie kodu), `name`, `origins` (dozwolone adresy stron), `rules_json` (pytania, punkty, progi), `rules_version`, `texts_json` (powitanie, podziękowanie, klauzula), `limits_json`, `ab_test`, `chat`, `active` |
+| `inbound_conversations` | Jedna rozmowa odwiedzającego | `widget_id`, `token` (zna go tylko przeglądarka odwiedzającego), `variant` (A lub B), `page_url`, `answers_json`, `messages` (licznik), `status`, `preview` (rozmowa z podglądu w panelu, poza wynikami), `started_at`, `ip_hash` |
 | `inbound_messages` | Pytania do czatu i odpowiedzi AI | `conversation_id`, `role`, `text`, `created_at` |
-| `inbound_leads` | Zapytanie z kontaktem | `conversation_id`, `contact_id` (wiersz w `contacts`), `score`, `level`, `points_json`, `shop_url`, `site_audit_id`, `marketing_consent`, `consent_text`, `summary`, `status` |
-| `inbound_stats` | Liczniki dzienne do lejka i testu | `widget_id`, `day`, `variant`, `views`, `started`, `completed`, `leads` |
+| `inbound_leads` | Zapytanie z kontaktem | `conversation_id`, `contact_id` (wiersz w `contacts`), `score`, `level`, `points_json`, `rules_version`, `name`, `email`, `phone`, `nip`, `company_id`, `site_url`, `site_audit_id`, `marketing_consent`, `consent_text`, `summary`, `status` |
+| `inbound_stats` | Liczniki dzienne do lejka i testu | `widget_id`, `day`, `variant`, `views`, `started`, `completed`, `leads`, `hot` |
+| `inbound_knowledge` | Baza wiedzy czatu | strony firmy pobrane i zapisane jako tekst |
+| `outbox` | Poczta wysłana przez platformę | odbiorca, temat, treść, rodzaj, status (wysłana, zapisana, błąd), błąd |
 
 Powiązania z tym, co już jest:
 
 - Zapytanie tworzy albo uzupełnia wiersz w `contacts`: `basis = 'rfq'`, `basis_detail` z odpowiedzi, `basis_url` ze strony, `basis_at` z daty, `website` z adresu sklepu.
 - NIP trafia do modułu kontrahentów (`companies`), wynik jest przy zapytaniu.
-- Adres sklepu trafia do audytu (`site_audits`), a po wdrożeniu audytu treści także tam.
+- Adres strony trafia do audytu technicznego (`site_audits`), a wynik jest na karcie zapytania. Audyt AI wymaga frazy, więc handlowiec uruchamia go sam.
 - Zgoda na oferty jest zapisana z treścią, datą i adresem strony. Bez niej platforma pozwala na odpowiedź na zapytanie, a kolejne oferty oznacza jako ryzykowne (tak jak dziś w module wiadomości).
 
 Czego nie zapisujemy: adresu IP w postaci jawnej (tylko skrót do limitów), plików cookie, historii przeglądania.
@@ -81,11 +85,11 @@ Cloudflare może tu pomóc: plik `/w/{id}.js` nadaje się do serwowania z ich si
 
 - Odpowiada tylko na podstawie bazy wiedzy firmy. Gdy odpowiedzi tam nie ma, mówi to wprost i proponuje kontakt z człowiekiem.
 - Nie podaje cen ani terminów, których nie ma w bazie. Niczego nie obiecuje w imieniu firmy.
-- Limit wiadomości na rozmowę (domyślnie 12) i miesięczny budżet na widżet. Po przekroczeniu działają same pytania kwalifikujące.
+- Limit pytań na rozmowę (domyślnie 12) i limit odpowiedzi AI na miesiąc (domyślnie 2000 na widżet). Po przekroczeniu działają same pytania kwalifikujące. Osobny limit dzienny (domyślnie 500 rozpoczętych rozmów) chroni przed zalaniem przez automaty.
 - Baza wiedzy trafia do modelu jako blok z pamięcią podręczną, tak jak dziś materiały do ofert. To obniża koszt kolejnych pytań.
 - Każda rozmowa jest zapisana, żeby firma mogła sprawdzić, co asystent odpowiedział.
 
-Kosztu jednej rozmowy nie znamy przed testem. Zmierzymy go w pilotażu na perfectdata.pl i dopiero wtedy ustawimy domyślny budżet.
+Kosztu jednej rozmowy nie znamy przed testem. Zmierzymy go w pilotażu na perfectdata.pl i wtedy poprawimy domyślny limit miesięczny. Czat nie był jeszcze sprawdzony na prawdziwym modelu, tylko na zapisanych odpowiedziach.
 
 ## 6. Wymogi prawne
 
@@ -106,14 +110,14 @@ To podsumowanie do pracy, nie opinia prawna. Treść klauzul powinien zatwierdzi
 
 ## 8. Etapy
 
-1. **Kwalifikator bez AI.** Widżet, ustawienia pytań i punktów, lista zapytań z oceną, zapis do kontaktów z podstawą, sprawdzenie NIP, audyt sklepu, powiadomienie e-mail. Zależność: wysyłka e-maili z platformy.
-2. **Czat AI i baza wiedzy.** Odpowiedzi z bazy, limity, streszczenie zapytania.
-3. **Wyniki.** Lejek i test A/B.
-4. **Demo z adresu.** Wpisujesz adres strony, platforma buduje bazę wiedzy i pokazuje gotowy kwalifikator. To też sposób na sprzedaż samej platformy.
+1. **Kwalifikator bez AI: zbudowane.** Widżet, ustawienia pytań i punktów, lista zapytań z oceną, zapis do kontaktów z podstawą, sprawdzenie NIP, audyt podanej strony, powiadomienie e-mail.
+2. **Czat AI i baza wiedzy: zbudowane.** Odpowiedzi z bazy, limity, streszczenie zapytania. Wymaga klucza `ANTHROPIC_API_KEY`.
+3. **Wyniki: zbudowane.** Lejek i test A/B.
+4. **Demo z adresu: do zbudowania.** Wpisujesz adres strony, platforma buduje bazę wiedzy i pokazuje gotowy kwalifikator. To też sposób na sprzedaż samej platformy.
 
-Pilotaż na perfectdata.pl jest możliwy po etapie 1. Kod widżetu trafi na stronę dopiero po wyraźnej zgodzie właściciela.
+Pilotaż na perfectdata.pl jest możliwy po uruchomieniu panelu (etap 0 w `PLAN.md`). Kod widżetu trafi na stronę dopiero po wyraźnej zgodzie właściciela.
 
-Przed kwalifikatorem powstają dwie rzeczy wspólne dla całego panelu: wygląd PerfectData w platformie i wysyłka e-maili (powiadomienie o nowym zapytaniu).
+Kod do wklejenia to jedna linia z ustawień widżetu: `<script async src="https://<adres panelu>/w/<identyfikator>.js"></script>`. Formularz w treści strony zamiast przycisku w rogu: element z atrybutem `data-pd-widget`.
 
 ## 9. Jak to wpiąć w perfectdata.pl
 

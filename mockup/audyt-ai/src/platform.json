@@ -12,11 +12,11 @@
   },
   "functions": [
     { "module": "Zapytania", "items": [
-      ["Kwalifikator zamiast formularza: pytania, punkty, progi", "kwalifikator", "plan", "Etap 1 planu."],
-      ["Lista zapytań z oceną, sprawdzeniem firmy i podstawą kontaktu", "zapytania", "plan", "Etap 1. Sprawdzenie firmy i podstawy kontaktu już działają w silniku."],
-      ["Widżet na stronę z informacją o AI i klauzulą RODO", "widzet", "plan", "Etap 1. Kod trafi na stronę dopiero po Twojej zgodzie."],
-      ["Czat AI z bazy wiedzy firmy, z limitami", "kwalifikator", "plan", "Etap 3."],
-      ["Lejek i test: formularz czy kwalifikator", "wyniki", "plan", "Etap 3."]
+      ["Kwalifikator zamiast formularza: pytania, punkty, progi", "kwalifikator", "silnik", "Pytania i punkty edytujesz jako tekst. Zmiana zasad tworzy nową wersję."],
+      ["Lista zapytań z oceną, sprawdzeniem firmy i podstawą kontaktu", "zapytania", "silnik", "Powiadomienie e-mail o każdym zapytaniu."],
+      ["Widżet na stronę z informacją o AI i klauzulą RODO", "widzet", "silnik", "Kod jest gotowy w ustawieniach widżetu. Na stronę trafi dopiero po Twojej zgodzie."],
+      ["Czat AI z bazy wiedzy firmy, z limitami", "kwalifikator", "silnik", "Wymaga klucza API. Bez niego działają same pytania."],
+      ["Lejek i test: formularz czy kwalifikator", "wyniki", "silnik", "Wynik testu z informacją, czy różnica jest już pewna."]
     ] },
     { "module": "Klienci", "items": [
       ["Kontakty z zapisaną podstawą kontaktu", "kontakty", "silnik", ""],
@@ -32,13 +32,13 @@
       ["Wykrywanie odpowiedzi i wypisań", "wysylka", "plan", "Wypisanie można dziś zaznaczyć ręcznie w karcie kontaktu."]
     ] },
     { "module": "Audyt AI", "items": [
-      ["Wynik 0-100 z 24 wskaźników i jawnymi progami", "raport", "plan", "Etap 2. Wytyczne są gotowe."],
-      ["Lista zadań z punktami i warunkiem zaliczenia", "raport", "plan", "Etap 2."],
-      ["Wytyczne wskaźników ze źródłami", "wytyczne", "plan", "Treść gotowa, ekran w etapie 2."],
-      ["Porównanie przed i po", "postep", "plan", "Etap 2."],
-      ["Cytowania w wyszukiwarkach AI", "cytowania", "plan", "Etap 3."],
-      ["Audyt wielu stron z mapy witryny", "strony", "plan", "Etap 3."],
-      ["Raport dla klienta pod publicznym linkiem", "raport", "plan", "Etap 2. Przycisk „Podgląd dla klienta”."]
+      ["Wynik 0-100 z 24 wskaźników i jawnymi progami", "raport", "silnik", "Sprawdzony na prawdziwej stronie. 4 wskaźniki wymagają podłączenia usług (AI i renderowanie)."],
+      ["Lista zadań z punktami i warunkiem zaliczenia", "raport", "silnik", ""],
+      ["Wytyczne wskaźników ze źródłami", "wytyczne", "silnik", "Ten sam plik wytycznych czyta silnik i ta strona."],
+      ["Porównanie przed i po", "postep", "silnik", ""],
+      ["Cytowania w wyszukiwarkach AI", "cytowania", "plan", "Wymaga kluczy do OpenAI, Perplexity i Gemini oraz decyzji, jak często pytać."],
+      ["Audyt wielu stron z mapy witryny", "strony", "silnik", "Do 20 stron naraz, każda z własną frazą."],
+      ["Raport dla klienta pod publicznym linkiem", "raport", "silnik", "Link wygasa po 90 dniach i można go wyłączyć."]
     ] },
     { "module": "SEO i strona", "items": [
       ["Audyt techniczny: bezpieczeństwo, platforma, szybkość, SEO, analityka i RODO", "technika", "silnik", "Ten sam silnik co w PrestaCheck."],
@@ -63,7 +63,7 @@
       ["Analiza SWZ przez AI: warunki, kary, płatności, ryzyka", "przetarg", "silnik", "Wymaga klucza API."],
       ["Pytania do dokumentacji", "przetarg", "silnik", ""],
       ["Kalendarz terminów", "terminy", "silnik", "Plik .ics do własnego kalendarza."],
-      ["Poranny e-mail z nowymi przetargami", "profil", "plan", "Wymaga wysyłki e-maili z platformy."],
+      ["Poranny e-mail z nowymi przetargami", "profil", "silnik", "W jednym przeglądzie z zapytaniami i alertami. Wymaga klucza usługi wysyłkowej."],
       ["Wyniki przetargów: kto wygrywa i za ile", "przetargi", "plan", "Etap 4."]
     ] },
     { "module": "Oferty i wnioski", "items": [
@@ -75,7 +75,7 @@
       ["Wniosek o dotację według regulaminu naboru", "dotacje", "silnik", ""],
       ["Baza otwartych naborów", "dotacje", "plan", "Dziś nabór wpisujesz ręcznie."],
       ["Ocena, czy firma kwalifikuje się do naboru", "dotacje", "plan", ""],
-      ["Praca kilku osób nad jedną ofertą", "oferta", "plan", "Wymaga zaproszeń do zespołu."]
+      ["Praca kilku osób nad jedną ofertą", "oferta", "plan", "Zaproszenia do zespołu już działają. Do zbudowania jest podział sekcji między osoby."]
     ] },
     { "module": "Kontrahenci", "items": [
       ["Karta firmy po NIP: wykaz VAT, rachunki, KRS, zarząd", "kontrahent", "silnik", ""],

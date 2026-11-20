@@ -1,6 +1,8 @@
 # Audyt treści pod wyszukiwarki i AI: plan integracji
 
-Stan na 19.11.2026. Moduł „Audyt AI” w panelu PerfectData. Mockup w wyglądzie perfectdata.pl jest w `mockup/audyt-ai`, wytyczne w `mockup/audyt-ai/WYTYCZNE.md`. Kolejność prac w całym projekcie jest w `PLAN.md` (audyt to etap 2).
+Stan na 20.11.2026. Moduł „Audyt AI” w panelu PerfectData. Mockup w wyglądzie perfectdata.pl jest w `mockup/audyt-ai`, wytyczne w `resources/audyt-ai-rules.json` (plik, który czyta silnik) i w dokumencie dla zespołu `mockup/audyt-ai/WYTYCZNE.md`. Kolejność prac w całym projekcie jest w `PLAN.md` (audyt to etap 2).
+
+**Co jest zbudowane (20.11.2026).** Etapy 1 i 2 oraz lista stron z mapy witryny z etapu 3: wszystkie 24 wskaźniki, raport, „Przed i po”, strona wytycznych, link dla klienta, audyt wielu stron dokańczany zadaniem cyklicznym. Do zbudowania został test cytowań (krok 7) i dane z kont klienta (etap 4). Pierwszy audyt prawdziwej strony (perfectdata.pl) jest opisany w `PLAN.md`.
 
 ## 1. Co bierzemy z CitationOne, a czego nie
 
@@ -34,7 +36,7 @@ Punkty są tylko za to, co ma podstawę w dokumentacji Google, Microsoftu, dosta
 
 Trzy zabezpieczenia:
 
-- **Jedno źródło prawdy.** Plik `rules.json` zawiera progi, punkty i podstawę. Z niego powstaje strona „Wytyczne”, dokument dla zespołu i punktacja w silniku. Nie da się zmienić progu w jednym miejscu i zapomnieć o drugim.
+- **Jedno źródło prawdy.** Plik `resources/audyt-ai-rules.json` zawiera progi, punkty i podstawę. Z niego powstaje strona „Wytyczne”, dokument dla zespołu i punktacja w silniku. Nie da się zmienić progu w jednym miejscu i zapomnieć o drugim.
 - **Wersje.** Każdy audyt zapisuje wersję wytycznych. Zmiana progu to nowa wersja, a stare audyty zostają przy swojej. Porównanie „przed i po” zawsze używa jednej wersji.
 - **Powtarzalność.** Wskaźniki liczy program. Dwa wskaźniki ocenia model AI (D1, D2): zawsze z cytatem, który program sprawdza w treści strony, i z zamrożoną listą pytań. Jeśli treść i lista pytań się nie zmieniły, bierzemy poprzednią ocenę AI zamiast pytać drugi raz.
 
@@ -46,26 +48,26 @@ Czego wynik nie obiecuje: pozycji w Google ani cytowań w AI. Google pisze, że 
 
 Powody:
 
-1. Platforma ma już konta, firmy, listę klientów, audyt techniczny, bezpieczne pobieranie stron, klienta AI z limitem i 68 testów. Nowy audyt korzysta z tego wprost.
+1. Platforma ma już konta, firmy, listę klientów, audyt techniczny, bezpieczne pobieranie stron, klienta AI z limitem i 113 testów. Nowy audyt korzysta z tego wprost.
 2. Jedna baza. Raporty, klienci i użytkownicy są w jednym miejscu, bez synchronizacji.
 3. Jeden sposób wdrażania i jedno miejsce na kopie zapasowe.
 
 Rola Cloudflare:
 
-- **Teraz:** mockup jako strona statyczna (bez bazy).
-- **Docelowo:** usługa Browser Run (dawniej Browser Rendering) do wskaźników A6 i E2. Platforma wysyła adres, Cloudflare zwraca stronę po uruchomieniu skryptów. Plan darmowy daje 10 minut pracy przeglądarki dziennie, płatny 10 godzin miesięcznie.
+- **Mockup:** strona statyczna (bez bazy).
+- **W silniku:** usługa Browser Run (dawniej Browser Rendering) do wskaźników A6 i E2. Platforma wysyła adres, Cloudflare zwraca stronę po uruchomieniu skryptów. Plan darmowy daje 10 minut pracy przeglądarki dziennie, płatny 10 godzin miesięcznie.
 - **Opcjonalnie później:** własna domena narzędzia przez Cloudflare przed platformą.
 
 Wariant „wszystko na Cloudflare” (Workers i D1) jest możliwy, ale oznacza przepisanie silnika i kont na JavaScript. Darmowy plan Workers ma limit 10 ms procesora i 50 zapytań zewnętrznych na wywołanie, więc audyt wymaga planu płatnego (od 5 USD miesięcznie). Ma sens tylko wtedy, gdy audyt ma być osobnym produktem bez reszty platformy.
 
-## 4. Baza danych (migracja 004)
+## 4. Baza danych (migracja 005)
 
 | Tabela | Co trzyma | Najważniejsze pola |
 |---|---|---|
 | `content_targets` | Cel audytu: strona i fraza | `org_id`, `contact_id` (klient z listy „Klienci”, opcjonalnie), `url`, `host`, `phrase`, `page_type`, `questions_json` (10 pytań), `questions_locked_at` |
-| `content_audits` | Jedno wykonanie audytu | `target_id`, `status` (w kolejce, w toku, gotowy, błąd), `step`, `steps_json`, `ruleset` (wersja wytycznych), `score`, `blocked`, `text_hash` (skrót treści), `raw_json` (nagłówki, robots.txt, metadane) |
-| `content_audit_checks` | Wynik jednego wskaźnika | `audit_id`, `code` (A1...E3), `status` (dobrze, do poprawy, źle, brak pomiaru), `points`, `max_points`, `value`, `evidence_json` |
-| `content_audit_citations` | Jedna próba zapytania do wyszukiwarki AI | `audit_id`, `engine`, `query`, `run_no`, `cited`, `position`, `sources_json` |
+| `content_audits` | Jedno wykonanie audytu | `target_id`, `status` (w kolejce, w toku, gotowy, błąd), `steps_json`, `ruleset` (wersja wytycznych), `label`, `score`, `points`, `max_points`, `blocked`, `text_hash` (skrót treści), `state_json` (dane robocze kroków, po zakończeniu tylko to, czego potrzebuje porównanie) |
+| `content_audit_checks` | Wynik jednego wskaźnika | `audit_id`, `code` (A1...E3), `status` (dobrze, do poprawy, źle, brak pomiaru, nie dotyczy), `points`, `max_points`, `value`, `evidence_json` |
+| `content_audit_citations` (powstanie razem z testem cytowań) | Jedna próba zapytania do wyszukiwarki AI | `audit_id`, `engine`, `query`, `run_no`, `cited`, `position`, `sources_json` |
 | `content_audit_shares` | Publiczny link dla klienta | `target_id`, `token_hash`, `expires_at`, `revoked_at` |
 
 Zasady:
@@ -85,10 +87,10 @@ Audyt to lista kroków zapisana w bazie. Przeglądarka użytkownika prosi o kole
 | 2. Boty | 5 zapytań z nagłówkami botów | A5 | brak |
 | 3. Treść | Analiza HTML: tytuł, nagłówki, akapity, dane strukturalne, autor, daty, źródła | B1-B7, C1-C5, D3 | brak |
 | 4. Render | Strona po uruchomieniu skryptów | A6, E2 | Cloudflare Browser Run |
-| 5. Szybkość | Dane użytkowników Chrome | E1 | PageSpeed Insights (klucz już jest) |
-| 6. Ocena AI | Odpowiedź na początku i pytania poboczne, z cytatami | D1, D2 | Claude (klucz już jest) |
-| 7. Cytowania | 4 pytania po 3 próby w każdej wyszukiwarce | bez punktów | OpenAI, Perplexity, Gemini (opcjonalnie) |
-| 8. Wynik | Punkty według `rules.json`, zapis | wszystkie | brak |
+| 5. Szybkość | Dane użytkowników Chrome | E1 | PageSpeed Insights (`PSI_KEY`) |
+| 6. Ocena AI | Odpowiedź na początku i pytania poboczne, z cytatami | D1, D2 | Claude (`ANTHROPIC_API_KEY`) |
+| 7. Cytowania (do zbudowania) | 4 pytania po 3 próby w każdej wyszukiwarce | bez punktów | OpenAI, Perplexity, Gemini (opcjonalnie) |
+| 8. Wynik | Punkty według `audyt-ai-rules.json`, zapis | wszystkie | brak |
 
 Gdy kroku nie da się wykonać (brak klucza, usługa nie odpowiada), wskaźnik dostaje stan „brak pomiaru”, a wynik liczymy proporcjonalnie z pozostałych punktów. Raport to pokazuje.
 
@@ -106,8 +108,9 @@ Bezpieczeństwo:
 | `/audyt/tresc` | Lista stron i fraz z ostatnim wynikiem („Strony witryny”) |
 | `/audyt/tresc/{id}` | Raport z przełącznikiem audytów |
 | `/audyt/tresc/{id}/porownanie` | „Przed i po” |
-| `/audyt/tresc/{id}/cytowania` | „Cytowania w AI” |
-| `/audyt/wytyczne` | „Wytyczne wskaźników” (z `rules.json`) |
+| `/audyt/tresc/mapa` | Dodawanie wielu stron z mapy witryny |
+| `/audyt/tresc/{id}/cytowania` | „Cytowania w AI” (do zbudowania) |
+| `/audyt/wytyczne` | „Wytyczne wskaźników” (z `audyt-ai-rules.json`) |
 | `/r/{token}` | Raport dla klienta, bez logowania |
 
 W panelu PerfectData moduł ma w nagłówku pozycję „Audyt AI”, obok „Zapytania”. Zakładki modułu: Raport, Wytyczne wskaźników, Przed i po, Cytowania w AI, Strony witryny. Stronę można przypisać do klienta z listy „Klienci”, wtedy raporty są też w jego karcie. W platformie dla innych firm audyt treści jest zakładką modułu „Audyt i reklamy”, obok audytu technicznego sklepu.
@@ -126,28 +129,28 @@ Raport ma wygląd perfectdata.pl (kolory, czcionka i przyciski ze strony, opis w
 
 | Usługa | Do czego | Stan |
 |---|---|---|
-| PageSpeed Insights | Core Web Vitals | Klucz `PSI_KEY` jest w platformie. |
-| Claude (Anthropic) | D1, D2, propozycja 10 pytań | Klucz jest. 2-3 zapytania na audyt, mniej przy niezmienionej treści. |
-| Cloudflare Browser Run | A6, E2 | Wymaga tokenu API z konta Cloudflare. Limity: 10 minut dziennie na planie darmowym. |
-| OpenAI, Perplexity, Gemini | Test cytowań | Opcjonalne. Jeden audyt to 12 zapytań na wyszukiwarkę. Ceny trzeba sprawdzić przed włączeniem. |
-| Google Search Console, Bing Webmaster Tools | Dane o cytowaniach od wyszukiwarek | Na start link do raportu na koncie klienta. Import przez API po sprawdzeniu, czy raporty AI są w API. |
+| PageSpeed Insights | Core Web Vitals | Zbudowane. Wymaga klucza `PSI_KEY`: bez niego Google odrzuca większość zapytań (tak było w audycie perfectdata.pl). |
+| Claude (Anthropic) | D1, D2, propozycja 10 pytań | Zbudowane. Wymaga `ANTHROPIC_API_KEY`. 2-3 zapytania na audyt, przy niezmienionej treści ocena jest brana z poprzedniego audytu. Sprawdzone na zapisanych odpowiedziach, bez prawdziwego klucza. |
+| Cloudflare Browser Run | A6, E2 | Zbudowane według dokumentacji. Wymaga `CF_ACCOUNT_ID` i `CF_BROWSER_TOKEN`. Limity: 10 minut dziennie na planie darmowym. Sprawdzone na zapisanej odpowiedzi, bez prawdziwego tokenu. |
+| OpenAI, Perplexity, Gemini | Test cytowań | Do zbudowania. Opcjonalne. Jeden audyt to 12 zapytań na wyszukiwarkę. Ceny trzeba sprawdzić przed włączeniem. |
+| Google Search Console, Bing Webmaster Tools | Dane o cytowaniach od wyszukiwarek | Do zbudowania. Na start link do raportu na koncie klienta. Import przez API po sprawdzeniu, czy raporty AI są w API. |
 
 ## 8. Etapy
 
-1. **Pomiar bez AI.** Kroki 1, 2, 3, 5 i 8. Raport, „Wytyczne”, „Przed i po”, link dla klienta. To 20 z 24 wskaźników i 82 ze 100 punktów.
-2. **Render i ocena AI.** Kroki 4 i 6: wskaźniki A6, E2, D1, D2. Zatwierdzanie listy pytań przez opiekuna klienta.
-3. **Wiele stron i cytowania.** Lista stron z mapy witryny, zadanie cykliczne, krok 7.
-4. **Dane z kont klienta.** Search Console i Bing Webmaster Tools.
+1. **Pomiar bez AI: zbudowane.** Kroki 1, 2, 3, 5 i 8. Raport, „Wytyczne”, „Przed i po”, link dla klienta. To 20 z 24 wskaźników i 82 ze 100 punktów (z kluczem `PSI_KEY`; bez niego 19 wskaźników i 76 punktów).
+2. **Render i ocena AI: zbudowane.** Kroki 4 i 6: wskaźniki A6, E2, D1, D2. Zatwierdzanie listy pytań przez opiekuna klienta. Działa po podaniu tokenu Cloudflare i klucza Claude.
+3. **Wiele stron i cytowania.** Lista stron z mapy witryny i zadanie cykliczne: zbudowane. Krok 7 (test cytowań): do zbudowania, wymaga kluczy do trzech wyszukiwarek AI.
+4. **Dane z kont klienta: do zbudowania.** Search Console i Bing Webmaster Tools. Wymagają logowania Google i Microsoft.
 
-Po etapie 1 narzędzie nadaje się do pracy z klientem. Kolejne etapy dodają wskaźniki, nie zmieniają już istniejących.
+Kolejne etapy dodają wskaźniki, nie zmieniają już istniejących.
 
-Etap 1 zaczyna się po uruchomieniu panelu PerfectData i kwalifikatora zapytań (etap 1 w `PLAN.md`), bo korzysta z tego samego wyglądu i tej samej listy klientów.
+Audyt bez panelu: `php bin/console content:audit <adres> "<fraza>" [rodzaj]` albo workflow „Audyt AI prawdziwej strony” w GitHubie. Oba tylko czytają publiczną stronę.
 
 ## 9. Testy, które pilnują zgodności z wytycznymi
 
 - Dla każdego progu test graniczny, np. LCP 2,5 s to „Dobrze”, 2,6 s to „Do poprawy”.
 - Strona wzorcowa, która spełnia wszystko, ma 100 pkt. Strona, która nie spełnia niczego, ma 0 pkt.
-- Suma punktów w `rules.json` to 100, każdy wskaźnik ma trzy progi i podstawę (to już sprawdza `build.py`).
+- Suma punktów w `audyt-ai-rules.json` to 100, każdy wskaźnik ma trzy progi i podstawę (to już sprawdza `build.py`).
 - Strona „Wytyczne” zawiera każdy wskaźnik, który liczy silnik.
 - Ten sam audyt niezmienionej strony daje ten sam wynik.
 - Cytat z oceny AI musi być w treści strony.

@@ -60,7 +60,7 @@ function renderCompany() {
 function renderWatch() {
   const watched = PLAT.companies.filter((c) => c.watched);
   const changes = watched.flatMap((c) => c.changes.map(([at, what]) => ({ at, what, c }))).sort((a, b) => b.at.split('.').reverse().join('').localeCompare(a.at.split('.').reverse().join('')));
-  put('obserwowane', stan('silnik', 'Platforma codziennie porównuje rejestry z poprzednim stanem. Powiadomienie e-mail jest w planie.') +
+  put('obserwowane', stan('silnik', 'Platforma codziennie porównuje rejestry z poprzednim stanem. Zmiany trafiają do porannego przeglądu e-mailem.') +
     `<div class="sec">${secHead('Alerty', 'Zmiany w rejestrach u obserwowanych firm, od najnowszej.', changes.length)}` +
       changes.map((x) => `<div class="item" style="--c1:96px"><span class="lead-col num">${esc(x.at)}</span><div><p><b>${esc(x.what)}</b></p><p>${esc(x.c.name)}</p></div><div class="end"><a href="#kontrahent" data-act="co-open" data-id="${x.c.id}">Karta firmy</a></div></div>`).join('') + `</div>
     <div class="sec">${secHead('Obserwowane firmy', '', watched.length)}` +

@@ -609,7 +609,7 @@ function renderQualifier() {
       <div class="stack"><h2>Limity i koszt AI</h2><ul class="list">
         <li>Do <b>${LEADS.limits.messages}</b> wiadomości w jednej rozmowie.</li>
         <li>Do <b>${LEADS.limits.daily}</b> rozmów dziennie na widżet.</li>
-        <li>Budżet AI: <b>${LEADS.limits.budget} zł</b> miesięcznie. Po przekroczeniu działają same pytania, bez czatu.</li>
+        <li>Do <b>${num(LEADS.limits.ai_month)}</b> odpowiedzi czatu w miesiącu. To górna granica kosztu AI. Po jej przekroczeniu działają same pytania, bez czatu.</li>
         <li>Pytania kwalifikujące nie zużywają AI.</li></ul></div>
     </div>
     <div class="sec"><div class="sec-h"><h2>Wymogi</h2></div><ul class="qa" style="padding-top:16px;--qa:124px">

@@ -79,7 +79,7 @@ function renderTender() {
 
 function renderProfile() {
   const p = PLAT.profile, row = (k, v) => `<dt>${k}</dt><dd>${esc(v)}</dd>`;
-  put('profil', stan('silnik', 'Profil i dopasowanie działają. Poranny e-mail jest w planie, bo platforma nie wysyła jeszcze e-maili.') +
+  put('profil', stan('silnik', 'Profil, dopasowanie i poranny przegląd e-mailem. Przegląd wychodzi tylko wtedy, gdy jest coś nowego.') +
     `<div class="two">
       <div class="sec">${secHead('Profil: ' + esc(p.name), 'Firma może mieć kilka profili, np. osobno dla stron WWW i dla kampanii.')}
         <dl class="kv" style="padding-top:16px;grid-template-columns:150px minmax(0,1fr)">${row('Kody CPV', p.cpv.join(', '))}${row('Słowa kluczowe', p.keywords.join(', '))}${row('Słowa wykluczające', p.exclude.join(', '))}
