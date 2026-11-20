@@ -90,6 +90,21 @@ final class DashboardController extends Controller
             unset($pg);
         }
 
-        return $this->view('dashboard', compact('matches', 'stats', 'alerts', 'resolved', 'mySections', 'profiles', 'receivables', 'import', 'messages', 'mods', 'leads', 'pages') + ['title' => 'Pulpit']);
+        // Terminy z list prowadzonych ręcznie: zapytania ofertowe z rynku i obserwowane nabory dotacji.
+        $deadlines = [];
+        if (in_array('klienci', $mods, true)) {
+            foreach (\App\Modules\Outreach\Rfqs::dueSoon($org) as $q) {
+                $deadlines[] = ['date' => substr((string) $q['deadline_at'], 0, 10), 'label' => (string) $q['subject'], 'sub' => 'zapytanie ofertowe · ' . $q['company_name'], 'url' => '/klienci/zapytania#z' . (int) $q['id']];
+            }
+        }
+        if (in_array('oferty', $mods, true)) {
+            foreach (\App\Modules\Offers\GrantCalls::closingWithin($org, \App\Modules\Offers\GrantCalls::BOARD_DAYS) as $g) {
+                $deadlines[] = ['date' => substr((string) $g['closes_at'], 0, 10), 'label' => (string) $g['name'], 'sub' => 'nabór dotacji · ' . ($g['offer_title'] === null ? 'wniosek nierozpoczęty' : 'wniosek w toku'), 'url' => '/oferty/nabory#n' . (int) $g['id']];
+            }
+        }
+        usort($deadlines, static fn ($a, $b) => $a['date'] <=> $b['date']);
+        $deadlines = array_slice($deadlines, 0, 6);
+
+        return $this->view('dashboard', compact('matches', 'stats', 'alerts', 'resolved', 'mySections', 'profiles', 'receivables', 'import', 'messages', 'mods', 'leads', 'pages', 'deadlines') + ['title' => 'Pulpit']);
     }
 }

@@ -181,6 +181,26 @@ function demo_seed(): array
     $seqDemo('Zakład Usług Komunalnych (przykład)', 'zamowienia@zuk.example', 2);
     $seqDemo('Centrum Logistyczne (przykład)', 'kontakt@centrum.example', 6, 'replied');
 
+    // Zapytania ofertowe z rynku wpisane ręcznie: jedno z e-mailem i bliskim terminem, jedno z Bazy Konkurencyjności, jedno pominięte.
+    $plus = static fn (int $d): string => date('Y-m-d', strtotime(today_pl() . ' ' . ($d >= 0 ? '+' : '') . $d . ' days'));
+    \App\Modules\Outreach\Rfqs::save($org, $uid, ['company_name' => 'Przedsiębiorstwo Komunalne (przykład)', 'nip' => '7181968222', 'subject' => 'Remont nawierzchni placu manewrowego, ok. 1200 m2',
+        'url' => 'https://example.com/zapytania/remont-placu', 'source' => 'www', 'deadline_at' => $plus(2), 'published_at' => $plus(-5), 'email' => 'zakupy@komunalne.example', 'person' => 'Jan Przykładowy',
+        'notes' => 'Wymagane dwie referencje z ostatnich 3 lat. Wizja lokalna po umówieniu.']);
+    \App\Modules\Outreach\Rfqs::save($org, $uid, ['company_name' => 'Fabryka Mebli (przykład)', 'subject' => 'Budowa parkingu dla pracowników w ramach projektu unijnego',
+        'url' => 'https://bazakonkurencyjnosci.funduszeeuropejskie.gov.pl/', 'source' => 'bk', 'deadline_at' => $plus(9), 'published_at' => $plus(-3), 'notes' => 'Oferta przez Bazę Konkurencyjności.']);
+    $skipped = \App\Modules\Outreach\Rfqs::save($org, $uid, ['company_name' => 'Zakład Produkcyjny (przykład)', 'subject' => 'Dostawa kostki brukowej 8 cm, 3000 m2',
+        'url' => 'https://platformazakupowa.pl/all', 'source' => 'pz', 'deadline_at' => $plus(-4)]);
+    \App\Modules\Outreach\Rfqs::setStatus($org, (int) $skipped['id'], 'skipped');
+
+    // Nabory dotacji wpisane ręcznie: jeden powiązany z przykładowym wnioskiem, jeden bliski końca bez wniosku, jeden przed startem.
+    $callId = (int) \App\Modules\Offers\GrantCalls::save($org, $uid, ['name' => 'Wsparcie inwestycji MŚP na Mazowszu (przykład)', 'institution' => 'Instytucja przykładowa',
+        'url' => 'https://example.com/nabory/wsparcie-inwestycji', 'opens_at' => $plus(-20), 'closes_at' => $plus(30), 'amount_note' => 'do 800 000 zł, dofinansowanie do 50%',
+        'audience_note' => 'mikro, małe i średnie firmy z województwa mazowieckiego'])['id'];
+    $db->update('grant_calls', ['offer_id' => $grantId, 'status' => 'apply'], 'id = ?', [$callId]);
+    \App\Modules\Offers\GrantCalls::save($org, $uid, ['name' => 'Bon na cyfryzację firmy (przykład)', 'institution' => 'Instytucja przykładowa', 'url' => 'https://example.com/nabory/bon-cyfryzacja',
+        'opens_at' => $plus(-30), 'closes_at' => $plus(6), 'amount_note' => 'do 150 000 zł', 'audience_note' => 'małe i średnie firmy', 'notes' => 'Wkład własny 15%. Sprawdzić, czy zakup oprogramowania się kwalifikuje.']);
+    \App\Modules\Offers\GrantCalls::save($org, $uid, ['name' => 'Zielona transformacja przedsiębiorstw (przykład)', 'url' => 'https://example.com/nabory/zielona', 'opens_at' => $plus(21), 'closes_at' => $plus(80)]);
+
     // Zapytania ze strony: widżet dopuszczony na example.com i przykładowe zapytania przeprowadzone tą samą ścieżką co prawdziwe
     // (start rozmowy, odpowiedzi, formularz), więc ocena pochodzi z tabeli punktów, a nie z ręki.
     $w = Inbound::widget($org);

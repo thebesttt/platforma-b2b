@@ -133,6 +133,20 @@ $lead = $leads[0] ?? null;
   </div>
 
   <div class="side stack">
+    <?php if (!empty($deadlines)): ?>
+    <section class="card" aria-labelledby="t-deadlines">
+      <h2 id="t-deadlines" style="margin-bottom:8px">Zbliżające się terminy</h2>
+      <ul class="list-plain">
+        <?php foreach ($deadlines as $x): $n = (int) days_to_date($x['date']); ?>
+          <li>
+            <span class="chip <?= $n <= 1 ? 'high' : ($n <= 7 ? 'mid' : 'neutral') ?>"><?= $n === 0 ? 'dziś' : ($n === 1 ? 'jutro' : 'za ' . $n . ' dni') ?></span>
+            <div style="font-weight:600;margin-top:6px"><a href="<?= e($x['url']) ?>"><?= e(truncate($x['label'], 80)) ?></a></div>
+            <div class="small muted"><?= e(truncate($x['sub'], 90)) ?></div>
+          </li>
+        <?php endforeach ?>
+      </ul>
+    </section>
+    <?php endif ?>
     <?php if ($has('oferty') && $mySections): ?>
     <section class="card" aria-labelledby="t-mysec">
       <h2 id="t-mysec" style="margin-bottom:8px">Twoje sekcje do napisania</h2>

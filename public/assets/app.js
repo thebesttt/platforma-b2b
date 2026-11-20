@@ -132,4 +132,15 @@
     };
     stepQueue();
   }
+
+  // Numery i słowa do przeklejenia w zewnętrznych rejestrach: kliknięcie kopiuje. Bez schowka zostaje zaznaczenie tekstu.
+  document.addEventListener('click', function (e) {
+    var el = e.target && e.target.closest ? e.target.closest('code.copy') : null;
+    if (!el || !navigator.clipboard || !navigator.clipboard.writeText) return;
+    navigator.clipboard.writeText(el.textContent.trim()).then(function () {
+      el.classList.add('copied');
+      el.setAttribute('title', 'Skopiowano');
+      window.setTimeout(function () { el.classList.remove('copied'); }, 1200);
+    }).catch(function () {});
+  });
 })();

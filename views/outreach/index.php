@@ -6,11 +6,18 @@
     <p class="muted small">Przy każdej wiadomości widzisz ryzyko prawne. Decyzję o wysłaniu podejmujesz Ty, a wiadomość wychodzi z Twojej skrzynki.</p>
   </div>
   <div class="row-flex">
+    <a class="btn ghost" href="/klienci/zapytania">Zapytania z rynku<?= $rfqOpen ? ' (' . (int) $rfqOpen . ')' : '' ?></a>
     <a class="btn ghost" href="/klienci/idealny-klient">Idealny klient</a>
     <a class="btn ghost" href="/klienci/przypomnienia">Przypomnienia<?= $due ? ' (' . (int) $due . ' na dziś)' : '' ?></a>
     <a class="btn" href="/klienci/nowy">Dodaj kontakt</a>
   </div>
 </header>
+<?php if (!empty($rfqSoon)): ?>
+  <div class="notice mid" style="margin-bottom:16px">
+    <?= count($rfqSoon) === 1 ? 'Kończy się termin zapytania ofertowego' : 'Kończą się terminy ' . count($rfqSoon) . ' zapytań ofertowych' ?>:
+    <?php foreach (array_slice($rfqSoon, 0, 4) as $i => $x): $n = (int) days_to_date($x['deadline_at']); ?><?= $i ? ', ' : ' ' ?><a href="/klienci/zapytania#z<?= (int) $x['id'] ?>"><?= e(truncate((string) $x['subject'], 60)) ?></a> (<?= $n === 0 ? 'dziś' : ($n === 1 ? 'jutro' : 'za ' . $n . ' dni') ?>)<?php endforeach ?><?= count($rfqSoon) > 4 ? ' i kolejne' : '' ?>.
+  </div>
+<?php endif ?>
 <div class="cols">
   <section class="card flush main" aria-labelledby="t-c">
     <div class="card-head">

@@ -38,7 +38,9 @@ final class OfferController extends Controller
         $libraryCount = (int) $this->db()->val('SELECT COUNT(*) FROM library_items WHERE org_id = ?', [$org]);
         $progress = Offers::progress($org);
         $mine = Offers::mySections($org, Auth::id());
-        return $this->view('offers/index', compact('offers', 'libraryCount', 'progress', 'mine') + ['title' => 'Oferty i wnioski']);
+        $calls = \App\Modules\Offers\GrantCalls::currentCount($org);
+        $callsSoon = \App\Modules\Offers\GrantCalls::closingWithin($org, \App\Modules\Offers\GrantCalls::BOARD_DAYS);
+        return $this->view('offers/index', compact('offers', 'libraryCount', 'progress', 'mine', 'calls', 'callsSoon') + ['title' => 'Oferty i wnioski']);
     }
 
     public function create(Request $r): Response

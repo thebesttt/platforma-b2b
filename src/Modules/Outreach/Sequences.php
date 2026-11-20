@@ -19,7 +19,8 @@ final class Sequences
     /** Rodzaje wiadomości, po których wolno planować przypomnienia. Prośba o zgodę obiecuje, że nie napiszemy ponownie. */
     public const KINDS = ['rfq_reply', 'consented', 'cold_offer'];
 
-    public const STOPS = ['replied' => 'odbiorca odpisał', 'unsubscribed' => 'odbiorca się wypisał', 'manual' => 'zatrzymana ręcznie', 'finished' => 'wysłano wszystkie kroki'];
+    public const STOPS = ['replied' => 'odbiorca odpisał', 'unsubscribed' => 'odbiorca się wypisał', 'manual' => 'zatrzymana ręcznie', 'finished' => 'wysłano wszystkie kroki',
+        'deadline' => 'minął termin składania ofert'];
     public const DEFAULT_LIMIT = 30;
 
     /** Dzienny limit wiadomości z jednej skrzynki, ustawiany przez firmę. */
@@ -116,6 +117,22 @@ final class Sequences
         return Db::get()->update('sequences', ['status' => 'stopped', 'stop_reason' => $reason, 'next_at' => null, 'updated_at' => now_utc()], "org_id = ? AND contact_id = ? AND status = 'active'", [$orgId, $contactId]);
     }
 
+    /**
+     * Przypomnienie po odpowiedzi na zapytanie ofertowe ma sens do terminu składania ofert. Gdy termin zapisany w rejestrze
+     * zapytań minął (i kontakt nie ma innego, otwartego zapytania), sekwencja się zatrzymuje.
+     */
+    public static function stopExpired(int $orgId): int
+    {
+        $today = today_pl();
+        return Db::get()->run(
+            "UPDATE sequences SET status = 'stopped', stop_reason = 'deadline', next_at = NULL, updated_at = ?
+              WHERE org_id = ? AND status = 'active' AND kind = 'rfq_reply'
+                AND EXISTS (SELECT 1 FROM rfqs r WHERE r.org_id = sequences.org_id AND r.contact_id = sequences.contact_id AND r.deadline_at IS NOT NULL AND r.deadline_at < ?)
+                AND NOT EXISTS (SELECT 1 FROM rfqs r WHERE r.org_id = sequences.org_id AND r.contact_id = sequences.contact_id AND r.status <> 'skipped' AND (r.deadline_at IS NULL OR r.deadline_at >= ?))",
+            [now_utc(), $orgId, $today, $today]
+        )->rowCount();
+    }
+
     private const LIST_SQL = "SELECT s.*, c.company_name, c.person, c.email, c.unsubscribed_at, c.replied_at,
             (SELECT MAX(m.sent_at) FROM messages m WHERE m.sequence_id = s.id AND m.status = 'sent') AS last_sent_at,
             (SELECT COUNT(*) FROM messages m WHERE m.sequence_id = s.id AND m.status = 'draft' AND m.step > s.step) AS drafts
@@ -124,6 +141,7 @@ final class Sequences
     /** Przypomnienia, na które przyszedł termin. Najstarsze najpierw. */
     public static function due(int $orgId, ?int $limit = null): array
     {
+        self::stopExpired($orgId);
         return Db::get()->all(
             self::LIST_SQL . " WHERE s.org_id = ? AND s.status = 'active' AND s.next_at IS NOT NULL AND s.next_at <= ? AND c.unsubscribed_at IS NULL AND c.replied_at IS NULL ORDER BY s.next_at, s.id"
                 . ($limit !== null ? ' LIMIT ' . max(0, $limit) : ''),
@@ -133,6 +151,7 @@ final class Sequences
 
     public static function dueCount(int $orgId): int
     {
+        self::stopExpired($orgId);
         return (int) Db::get()->val(
             "SELECT COUNT(*) FROM sequences s JOIN contacts c ON c.id = s.contact_id
               WHERE s.org_id = ? AND s.status = 'active' AND s.next_at IS NOT NULL AND s.next_at <= ? AND c.unsubscribed_at IS NULL AND c.replied_at IS NULL",
@@ -143,6 +162,7 @@ final class Sequences
     /** Sekwencje czekające na termin. */
     public static function waiting(int $orgId): array
     {
+        self::stopExpired($orgId);
         return Db::get()->all(self::LIST_SQL . " WHERE s.org_id = ? AND s.status = 'active' AND (s.next_at IS NULL OR s.next_at > ?) ORDER BY s.next_at, s.id LIMIT 100", [$orgId, now_utc()]);
     }
 

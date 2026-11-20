@@ -5,8 +5,17 @@
     <h1>Oferty przetargowe i wnioski o dotacje</h1>
     <p class="muted small">Szkice powstają z ogłoszenia lub regulaminu naboru oraz z Twojej biblioteki. Zdania bez źródła oznaczamy do sprawdzenia.</p>
   </div>
-  <a class="btn ghost" href="/biblioteka">Biblioteka firmy (<?= $libraryCount ?>)</a>
+  <div class="row-flex">
+    <a class="btn ghost" href="/oferty/nabory">Nabory dotacji<?= $calls ? ' (' . (int) $calls . ')' : '' ?></a>
+    <a class="btn ghost" href="/biblioteka">Biblioteka firmy (<?= $libraryCount ?>)</a>
+  </div>
 </header>
+<?php if (!empty($callsSoon)): ?>
+  <div class="notice mid" style="margin-bottom:16px">
+    <?= count($callsSoon) === 1 ? 'Kończy się obserwowany nabór' : 'Kończą się obserwowane nabory (' . count($callsSoon) . ')' ?>:
+    <?php foreach (array_slice($callsSoon, 0, 4) as $i => $x): $n = (int) days_to_date($x['closes_at']); ?><?= $i ? ', ' : ' ' ?><a href="/oferty/nabory#n<?= (int) $x['id'] ?>"><?= e(truncate((string) $x['name'], 60)) ?></a> (<?= $n === 0 ? 'dziś' : ($n === 1 ? 'jutro' : 'za ' . $n . ' dni') ?><?= $x['offer_title'] === null ? ', bez wniosku' : '' ?>)<?php endforeach ?><?= count($callsSoon) > 4 ? ' i kolejne' : '' ?>.
+  </div>
+<?php endif ?>
 
 <?php if ($libraryCount === 0): ?>
   <div class="notice info">Zacznij od <a href="/biblioteka">biblioteki firmy</a>: dodaj 2-3 referencje, osoby z uprawnieniami i krótki opis firmy. Z nich powstają sekcje „Doświadczenie” i „Zespół”.</div>
@@ -57,7 +66,7 @@
         <div class="field"><label for="deadline">Termin składania wniosków</label><input id="deadline" name="deadline" type="date"></div>
         <button class="btn" type="submit">Rozpocznij wniosek</button>
       </form>
-      <p class="muted xs" style="margin:8px 0 0">Aktualne nabory znajdziesz na funduszeeuropejskie.gov.pl. Po utworzeniu wgraj regulamin i kryteria oceny.</p>
+      <p class="muted xs" style="margin:8px 0 0">Nie masz jeszcze naboru? <a href="/oferty/nabory">Zobacz, gdzie ich szukać</a>, i dodaj nabór do obserwowanych. Po utworzeniu wniosku wgraj regulamin i kryteria oceny.</p>
     </section>
     <section class="card" aria-labelledby="t-blank">
       <h2 id="t-blank" style="margin-bottom:8px">Oferta poza przetargiem</h2>

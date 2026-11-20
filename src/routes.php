@@ -10,10 +10,12 @@ use App\Http\CompanyController;
 use App\Http\ContentController;
 use App\Http\CronController;
 use App\Http\DashboardController;
+use App\Http\GrantCallController;
 use App\Http\InboundController;
 use App\Http\LibraryController;
 use App\Http\OfferController;
 use App\Http\OutreachController;
+use App\Http\RfqController;
 use App\Http\SettingsController;
 use App\Http\TenderController;
 use App\Http\WidgetController;
@@ -87,6 +89,10 @@ return static function (Router $r): void {
     // Oferty, wnioski i biblioteka firmy
     $r->get('/oferty', [OfferController::class, 'index'], $a);
     $r->post('/oferty', [OfferController::class, 'create'], $a);
+    $r->get('/oferty/nabory', [GrantCallController::class, 'index'], $a);
+    $r->post('/oferty/nabory', [GrantCallController::class, 'save'], $a);
+    $r->post('/oferty/nabory/{id}', [GrantCallController::class, 'save'], $a);
+    $r->post('/oferty/nabory/{id}/stan', [GrantCallController::class, 'state'], $a);
     $r->get('/oferty/{id}', [OfferController::class, 'show'], $a);
     $r->post('/oferty/{id}', [OfferController::class, 'update'], $a);
     $r->post('/oferty/{id}/sekcje/{key}', [OfferController::class, 'saveSection'], $a);
@@ -122,6 +128,10 @@ return static function (Router $r): void {
     $r->get('/klienci/nowy', [OutreachController::class, 'contactForm'], $a);
     $r->get('/klienci/idealny-klient', [OutreachController::class, 'icp'], $a);
     $r->post('/klienci/idealny-klient', [OutreachController::class, 'icpSave'], $a);
+    $r->get('/klienci/zapytania', [RfqController::class, 'index'], $a);
+    $r->post('/klienci/zapytania', [RfqController::class, 'save'], $a);
+    $r->post('/klienci/zapytania/{id}', [RfqController::class, 'save'], $a);
+    $r->post('/klienci/zapytania/{id}/stan', [RfqController::class, 'state'], $a);
     $r->get('/klienci/przypomnienia', [OutreachController::class, 'sequences'], $a);
     $r->post('/klienci/przypomnienia/limit', [OutreachController::class, 'saveLimit'], $a);
     $r->post('/klienci/przypomnienia/{id}/zatrzymaj', [OutreachController::class, 'stopSequence'], $a);

@@ -225,3 +225,26 @@ function utrim(string $s): string
     $s = mb_scrub($s, 'UTF-8');
     return preg_replace('/^[\s\x{00A0}„”“"«»\x{2018}\x{2019}\x{201A}]+|[\s\x{00A0}„”“"«»\x{2018}\x{2019}\x{201A}]+$/u', '', $s) ?? trim($s);
 }
+
+/** Dzisiejsza data w czasie polskim (RRRR-MM-DD). */
+function today_pl(): string
+{
+    return (new DateTimeImmutable('now', new DateTimeZone('Europe/Warsaw')))->format('Y-m-d');
+}
+
+/** Ile dni zostało do daty kalendarzowej (0 = dziś, ujemna = po terminie). Null, gdy daty nie ma. */
+function days_to_date(?string $ymd): ?int
+{
+    $ymd = substr((string) $ymd, 0, 10);
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $ymd)) {
+        return null;
+    }
+    return (int) round((strtotime($ymd . ' 00:00:00 UTC') - strtotime(today_pl() . ' 00:00:00 UTC')) / 86400);
+}
+
+/** Data z pola formularza (RRRR-MM-DD) albo null. */
+function form_date(string $s): ?string
+{
+    $s = trim($s);
+    return preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $s, $m) && checkdate((int) $m[2], (int) $m[3], (int) $m[1]) ? $s : null;
+}

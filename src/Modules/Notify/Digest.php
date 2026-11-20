@@ -44,6 +44,12 @@ final class Digest
         return ['orgs' => $orgs, 'sent' => $sent];
     }
 
+    /** „dziś”, „jutro”, „za 3 dni”. */
+    public static function daysLabel(int $n): string
+    {
+        return $n <= 0 ? 'dziś' : ($n === 1 ? 'jutro' : 'za ' . $n . ' dni');
+    }
+
     /** @return ?array{subject: string, body: string} null, gdy nie ma nic nowego */
     public static function compose(array $org, string $since, string $baseUrl): ?array
     {
@@ -113,6 +119,37 @@ final class Digest
                     $lines[] = '- ' . truncate((string) $d['company_name'], 80) . ': ' . mb_strtolower(\App\Modules\Outreach\Sequences::STEPS[(int) $d['step'] + 1][1] ?? 'kolejna wiadomość');
                 }
                 $lines[] = '  ' . $baseUrl . '/klienci/przypomnienia';
+                $lines[] = '';
+            }
+        }
+
+        if (Brand::has($org, 'klienci')) {
+            // Zapytania ofertowe wpisane do rejestru, których termin mija w najbliższych dniach.
+            $soon = \App\Modules\Outreach\Rfqs::dueSoon($id);
+            if ($soon) {
+                $n = count($soon);
+                $parts[] = $n . ' ' . plural($n, 'zapytanie ofertowe z bliskim terminem', 'zapytania ofertowe z bliskim terminem', 'zapytań ofertowych z bliskim terminem');
+                $lines[] = 'ZAPYTANIA OFERTOWE: KOŃCZY SIĘ TERMIN (' . $n . ')';
+                foreach (array_slice($soon, 0, 8) as $q) {
+                    $lines[] = '- ' . self::daysLabel((int) days_to_date($q['deadline_at'])) . ': ' . truncate((string) $q['subject'], 100) . ' (' . truncate((string) $q['company_name'], 60) . ')';
+                }
+                $lines[] = '  ' . $baseUrl . '/klienci/zapytania';
+                $lines[] = '';
+            }
+        }
+
+        if (Brand::has($org, 'oferty')) {
+            // Obserwowane nabory dotacji: 14 i 7 dni przed końcem, a potem codziennie od 3 dni.
+            $calls = \App\Modules\Offers\GrantCalls::toRemind($id);
+            if ($calls) {
+                $n = count($calls);
+                $parts[] = $n . ' ' . plural($n, 'nabór dotacji przed końcem', 'nabory dotacji przed końcem', 'naborów dotacji przed końcem');
+                $lines[] = 'NABORY DOTACJI: ZBLIŻA SIĘ KONIEC (' . $n . ')';
+                foreach (array_slice($calls, 0, 8) as $g) {
+                    $lines[] = '- ' . self::daysLabel((int) days_to_date($g['closes_at'])) . ': ' . truncate((string) $g['name'], 110)
+                        . ($g['offer_title'] === null ? ' (wniosek nierozpoczęty)' : ' (wniosek: ' . mb_strtolower(\App\Http\OfferController::STATUSES[$g['offer_status']]['label'] ?? 'szkic') . ')');
+                }
+                $lines[] = '  ' . $baseUrl . '/oferty/nabory';
                 $lines[] = '';
             }
         }

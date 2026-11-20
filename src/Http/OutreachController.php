@@ -16,6 +16,7 @@ use App\Modules\Ai\Claude;
 use App\Modules\Companies\Companies;
 use App\Modules\Outreach\Icp;
 use App\Modules\Outreach\Outreach;
+use App\Modules\Outreach\Rfqs;
 use App\Modules\Outreach\RiskPolicy;
 use App\Modules\Outreach\Sequences;
 
@@ -36,7 +37,9 @@ final class OutreachController extends Controller
             [$org]
         );
         $due = Sequences::dueCount($org);
-        return $this->view('outreach/index', compact('contacts', 'messages', 'q', 'due') + ['title' => 'Klienci i wiadomości']);
+        $rfqOpen = Rfqs::openCount($org);
+        $rfqSoon = Rfqs::dueSoon($org);
+        return $this->view('outreach/index', compact('contacts', 'messages', 'q', 'due', 'rfqOpen', 'rfqSoon') + ['title' => 'Klienci i wiadomości']);
     }
 
     public function contactForm(Request $r): Response
@@ -376,12 +379,15 @@ final class OutreachController extends Controller
         $this->db()->update('messages', ['status' => 'sent', 'sent_at' => now_utc()], 'id = ? AND org_id = ?', [(int) $m['id'], $this->orgId()]);
         AuditLog::add('message.sent', 'message', (int) $m['id'], [], $r->ip());
         $note = '';
+        if ($m['kind'] === 'rfq_reply' && Rfqs::markReplied($this->orgId(), (int) $m['contact_id'])) {
+            $note = ' Zapytanie w rejestrze ma stan „oferta złożona”.';
+        }
         if ($m['sequence_id']) {
             Sequences::advance($m);
             $seq = Sequences::find($this->orgId(), (int) $m['sequence_id']);
-            $note = $seq && $seq['next_at'] ? ' Kolejny krok przypomnimy ' . local_dt($seq['next_at'], 'd.m.Y') . '.' : ' To był ostatni krok przypomnień.';
+            $note .= $seq && $seq['next_at'] ? ' Kolejny krok przypomnimy ' . local_dt($seq['next_at'], 'd.m.Y') . '.' : ' To był ostatni krok przypomnień.';
         } elseif ($r->input('sequence') === '1' && ($sid = Sequences::start($m, Auth::id()))) {
-            $note = ' Przypomnimy o kolejnej wiadomości ' . local_dt((string) Sequences::find($this->orgId(), $sid)['next_at'], 'd.m.Y') . '.';
+            $note .= ' Przypomnimy o kolejnej wiadomości ' . local_dt((string) Sequences::find($this->orgId(), $sid)['next_at'], 'd.m.Y') . '.';
         }
         return $this->redirect('/wiadomosci/' . $m['id'], 'Oznaczono jako wysłaną.' . $note);
     }
