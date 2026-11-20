@@ -80,3 +80,4 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, .btn:focus-vi
 .org-box, .empty h3 { color: var(--text); }
 .pub-top { background: rgba(10, 14, 26, .9); }
 @media print { body { background: #fff; color: #000; } }
+.todo-box[aria-pressed=true] > span::after { border-color: var(--on-gold); }

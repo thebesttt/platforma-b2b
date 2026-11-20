@@ -5,6 +5,20 @@ $st = OfferController::STATUSES[$offer['status']] ?? OfferController::STATUSES['
 $isGrant = $offer['kind'] === 'grant';
 $base = '/oferty/' . (int) $offer['id'];
 $deadline = $tender['deadline_at'] ?? $offer['deadline_at'];
+/** @var array $team @var int $me @var array $checklist @var bool $showDocs @var ?array $draft @var ?array $conflict */
+$short = static function (?int $id) use ($team, $me): string {
+    if (!$id || !isset($team[$id])) {
+        return '';
+    }
+    if ($id === $me) {
+        return 'Ty';
+    }
+    // „Anna Demo” → „Anna D.”, adres e-mail → część przed małpą.
+    $parts = preg_split('/\s+/', $team[$id]['name']) ?: [];
+    return count($parts) > 1 ? $parts[0] . ' ' . mb_substr((string) end($parts), 0, 1) . '.' : explode('@', $team[$id]['name'])[0];
+};
+$docsDone = count(array_filter($checklist, static fn ($c) => (int) $c['done'] === 1));
+$docsKey = OfferController::DOCS_KEY;
 ?>
 <header class="between page-head">
   <div class="stack-sm">
@@ -35,10 +49,14 @@ $deadline = $tender['deadline_at'] ?? $offer['deadline_at'];
     <nav class="sec-nav">
       <?php foreach ($sections as $s): $n = substr_count((string) $s['body'], '⟦sprawdź⟧'); ?>
         <a href="<?= $base ?>?sekcja=<?= e(rawurlencode($s['key'])) ?>"<?= $current && $current['key'] === $s['key'] ? ' class="on" aria-current="true"' : '' ?>>
-          <span><?= e($s['title']) ?></span>
+          <span><?= e($s['title']) ?><?php if ($who = $short((int) ($s['assignee_id'] ?? 0))): ?><span class="sec-who"><?= e($who) ?></span><?php endif ?></span>
           <?php if ($s['status'] === 'done'): ?><span class="chip low">gotowe</span><?php elseif ($n): ?><span class="chip high"><?= $n ?> bez źródła</span><?php endif ?>
         </a>
       <?php endforeach ?>
+      <a href="<?= $base ?>?sekcja=<?= e($docsKey) ?>"<?= $showDocs ? ' class="on" aria-current="true"' : '' ?>>
+        <span>Dokumenty do złożenia</span>
+        <?php if ($checklist): ?><span class="chip <?= $docsDone === count($checklist) ? 'low' : 'neutral' ?>"><?= $docsDone ?> z <?= count($checklist) ?></span><?php endif ?>
+      </a>
     </nav>
     <div style="border-top:1px solid var(--line-soft);margin-top:12px;padding-top:12px" class="stack-sm">
       <p class="small" style="font-weight:600;margin:0">Źródła</p>
@@ -62,29 +80,91 @@ $deadline = $tender['deadline_at'] ?? $offer['deadline_at'];
   </aside>
 
   <section class="card main" aria-labelledby="t-sec">
-    <?php if ($current): ?>
+    <?php if ($showDocs): ?>
+      <div class="between" style="align-items:center;margin-bottom:4px">
+        <h2 id="t-sec">Dokumenty do złożenia</h2>
+        <?php if ($checklist): ?><span class="chip <?= $docsDone === count($checklist) ? 'low' : 'neutral' ?>"><?= $docsDone ?> z <?= count($checklist) ?> gotowe</span><?php endif ?>
+      </div>
+      <p class="muted small" style="margin:0 0 12px"><?= $isGrant ? 'Załączniki wymagane w naborze. Dopisz je z regulaminu i odhaczaj w miarę kompletowania.' : 'Pozycje startowe pochodzą z ogłoszenia. Po analizie SWZ możesz dopisać brakujące jednym kliknięciem.' ?></p>
+      <?php if ($checklist): ?>
+        <ul class="todo">
+          <?php foreach ($checklist as $c): $done = (int) $c['done'] === 1; ?>
+            <li class="<?= $done ? 'is-done' : '' ?>">
+              <form method="post" action="<?= $base ?>/lista/<?= (int) $c['id'] ?>" class="todo-main">
+                <?= csrf_field() ?>
+                <button class="todo-box" type="submit" aria-pressed="<?= $done ? 'true' : 'false' ?>" aria-label="<?= $done ? 'Cofnij odhaczenie: ' : 'Odhacz: ' ?><?= e($c['label']) ?>"><span aria-hidden="true"></span></button>
+                <div>
+                  <p class="todo-label"><?= e($c['label']) ?></p>
+                  <p class="xs muted" style="margin:2px 0 0"><?= $c['source'] ? e($c['source']) : 'dopisane przez zespół' ?><?php if ($done): ?> · gotowe<?= $c['done_by'] && isset($team[(int) $c['done_by']]) ? ', ' . e($short((int) $c['done_by'])) : '' ?>, <?= e(local_dt($c['done_at'], 'd.m H:i')) ?><?php endif ?></p>
+                </div>
+              </form>
+              <form method="post" action="<?= $base ?>/lista/<?= (int) $c['id'] ?>" class="no-print" data-confirm="Usunąć tę pozycję z listy?">
+                <?= csrf_field() ?><input type="hidden" name="delete" value="1">
+                <button class="link-btn xs" type="submit" aria-label="Usuń z listy: <?= e($c['label']) ?>">Usuń</button>
+              </form>
+            </li>
+          <?php endforeach ?>
+        </ul>
+      <?php else: ?>
+        <p class="muted small">Lista jest pusta. Dopisz pierwszy dokument poniżej.</p>
+      <?php endif ?>
+      <div class="row-flex no-print" style="margin-top:16px;align-items:flex-end">
+        <form method="post" action="<?= $base ?>/lista" class="row-flex" style="flex:1 1 320px;align-items:flex-end">
+          <?= csrf_field() ?>
+          <div class="field" style="flex:1 1 220px"><label for="doc-new">Dopisz dokument</label><input id="doc-new" name="label" type="text" maxlength="300" required placeholder="np. polisa OC, wykaz osób"></div>
+          <button class="btn ghost" type="submit">Dopisz</button>
+        </form>
+        <?php if ($tender): ?>
+          <form method="post" action="<?= $base ?>/lista"><?= csrf_field() ?><input type="hidden" name="sync" value="1"><button class="btn ghost" type="submit">Uzupełnij z ogłoszenia i analizy</button></form>
+        <?php endif ?>
+      </div>
+    <?php elseif ($current): ?>
+      <?php $edit = $mode === 'edit'; $secUrl = $base . '/sekcje/' . rawurlencode($current['key']); ?>
       <div class="between" style="align-items:center;margin-bottom:12px">
         <h2 id="t-sec"><?= e($current['title']) ?></h2>
         <div class="row-flex no-print">
-          <a class="btn ghost sm" href="<?= $base ?>?sekcja=<?= e(rawurlencode($current['key'])) ?><?= $mode === 'edit' ? '' : '&tryb=edycja' ?>"><?= $mode === 'edit' ? 'Podgląd ze źródłami' : 'Edytuj tekst' ?></a>
-          <form class="inline" method="post" action="<?= $base ?>/sekcje/<?= e(rawurlencode($current['key'])) ?>/ai" data-confirm="AI zastąpi obecną treść sekcji nową wersją. Kontynuować?">
+          <form class="inline" method="post" action="<?= e($secUrl) ?>/osoba">
+            <?= csrf_field() ?>
+            <label class="sr-only" for="sec-who">Osoba odpowiedzialna za sekcję</label>
+            <select id="sec-who" name="user_id" data-autosubmit style="min-width:150px">
+              <option value="0">Bez osoby</option>
+              <?php foreach ($team as $u): ?><option value="<?= (int) $u['id'] ?>"<?= (int) ($current['assignee_id'] ?? 0) === (int) $u['id'] ? ' selected' : '' ?>><?= e($u['name']) ?><?= (int) $u['id'] === $me ? ' (Ty)' : '' ?></option><?php endforeach ?>
+            </select>
+            <noscript><button class="btn ghost sm" type="submit">Przydziel</button></noscript>
+          </form>
+          <a class="btn ghost sm" href="<?= $base ?>?sekcja=<?= e(rawurlencode($current['key'])) ?><?= $edit ? '' : '&tryb=edycja' ?>"><?= $edit ? 'Podgląd ze źródłami' : 'Edytuj tekst' ?></a>
+          <form class="inline" method="post" action="<?= e($secUrl) ?>/ai" data-confirm="AI zastąpi obecną treść sekcji nową wersją. Kontynuować?">
             <?= csrf_field() ?>
             <button class="btn sm" type="submit" data-busy="AI pisze…"<?= $aiEnabled ? '' : ' disabled title="Funkcje AI są wyłączone"' ?>><?= trim((string) $current['body']) === '' ? 'Napisz z AI' : 'Przepisz z AI' ?></button>
           </form>
         </div>
       </div>
-      <?php if ($mode === 'edit'): ?>
-        <form method="post" action="<?= $base ?>/sekcje/<?= e(rawurlencode($current['key'])) ?>" class="stack-sm">
+      <?php if (!empty($current['updated_by']) && isset($team[(int) $current['updated_by']])): ?>
+        <p class="xs muted" style="margin:-6px 0 12px">Ostatnia zmiana: <?= e($short((int) $current['updated_by'])) ?>, <?= e(local_dt($current['updated_at'], 'd.m.Y H:i')) ?></p>
+      <?php endif ?>
+      <?php if ($conflict): ?>
+        <div class="flash error" role="alert">
+          Nie zapisaliśmy Twojej wersji, bo w trakcie edycji tę sekcję <?= isset($team[(int) ($conflict['updated_by'] ?? 0)]) ? 'zapisał(a) ' . e($team[(int) $conflict['updated_by']]['name']) : 'zapisał ktoś inny' ?> (<?= e(local_dt($conflict['updated_at'], 'd.m H:i')) ?>).
+          Twój tekst jest w polu poniżej. Porównaj go z aktualną wersją pod formularzem i zapisz ponownie.
+        </div>
+      <?php endif ?>
+      <?php if ($edit): ?>
+        <form method="post" action="<?= e($secUrl) ?>" class="stack-sm">
           <?= csrf_field() ?>
-          <div class="field"><label for="sec-title">Tytuł sekcji</label><input id="sec-title" name="title" type="text" value="<?= e($current['title']) ?>"></div>
+          <input type="hidden" name="version" value="<?= (int) ($conflict['version'] ?? $current['version'] ?? 1) ?>">
+          <div class="field"><label for="sec-title">Tytuł sekcji</label><input id="sec-title" name="title" type="text" value="<?= e($draft['title'] ?? $current['title']) ?>"></div>
           <div class="field">
             <label for="sec-body">Treść</label>
-            <textarea id="sec-body" class="doc" name="body" data-markers="marker-count"><?= e($current['body']) ?></textarea>
+            <textarea id="sec-body" class="doc" name="body" data-markers="marker-count"><?= e($draft['body'] ?? $current['body']) ?></textarea>
             <span class="hint">Znacznik ⟦źródło: …⟧ wskazuje pochodzenie zdania i znika w eksporcie. ⟦sprawdź⟧ oznacza zdanie bez źródła - w pliku Word pojawi się jako [SPRAWDŹ]. <span id="marker-count" class="chip neutral" aria-live="polite"></span></span>
           </div>
-          <label class="check"><input type="checkbox" name="done" value="1"<?= $current['status'] === 'done' ? ' checked' : '' ?>> Sekcja sprawdzona i gotowa</label>
-          <div class="row-flex"><button class="btn" type="submit">Zapisz sekcję</button><a class="btn ghost" href="<?= $base ?>?sekcja=<?= e(rawurlencode($current['key'])) ?>">Anuluj</a></div>
+          <label class="check"><input type="checkbox" name="done" value="1"<?= ($draft['done'] ?? ($current['status'] === 'done')) ? ' checked' : '' ?>> Sekcja sprawdzona i gotowa</label>
+          <div class="row-flex"><button class="btn" type="submit"><?= $conflict ? 'Zapisz moją wersję' : 'Zapisz sekcję' ?></button><a class="btn ghost" href="<?= $base ?>?sekcja=<?= e(rawurlencode($current['key'])) ?>">Anuluj</a></div>
         </form>
+        <?php if ($conflict): ?>
+          <h3 style="margin:24px 0 8px">Aktualna wersja w bazie</h3>
+          <div class="doc-preview"><?= marked_html((string) $conflict['body']) ?: '<p class="muted">Sekcja jest pusta.</p>' ?></div>
+        <?php endif ?>
       <?php else: ?>
         <div class="doc-preview"><?= marked_html((string) $current['body']) ?: '<p class="muted">Sekcja jest pusta.</p>' ?></div>
       <?php endif ?>

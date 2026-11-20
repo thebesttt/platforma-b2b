@@ -49,12 +49,19 @@ final class DashboardController extends Controller
             ),
             'offers' => (int) $db->val("SELECT COUNT(*) FROM offers WHERE org_id = ? AND status IN ('draft', 'review')", [$org]),
             'offers_review' => (int) $db->val("SELECT COUNT(*) FROM offers WHERE org_id = ? AND status = 'review'", [$org]),
-            'alerts' => (int) $db->val('SELECT COUNT(*) FROM alerts WHERE org_id = ? AND read_at IS NULL', [$org]),
+            'alerts' => (int) $db->val('SELECT COUNT(*) FROM alerts WHERE org_id = ? AND read_at IS NULL AND (company_id IS NOT NULL OR tender_id IS NULL)', [$org]),
         ];
         $alerts = $db->all(
-            'SELECT a.*, c.nip FROM alerts a LEFT JOIN companies c ON c.id = a.company_id WHERE a.org_id = ? ORDER BY a.read_at IS NOT NULL, a.id DESC LIMIT 5',
+            'SELECT a.*, c.nip FROM alerts a LEFT JOIN companies c ON c.id = a.company_id WHERE a.org_id = ? AND (a.company_id IS NOT NULL OR a.tender_id IS NULL) ORDER BY a.read_at IS NOT NULL, a.id DESC LIMIT 5',
             [$org]
         );
+        // Zapisane przetargi, które rozstrzygnięto: nieprzeczytane i z ostatnich 14 dni.
+        $resolved = $db->all(
+            'SELECT * FROM alerts WHERE org_id = ? AND company_id IS NULL AND tender_id IS NOT NULL AND (read_at IS NULL OR created_at > ?) ORDER BY read_at IS NOT NULL, id DESC LIMIT 4',
+            [$org, gmdate('Y-m-d H:i:s', time() - 14 * 86400)]
+        );
+        // Sekcje ofert przydzielone zalogowanej osobie.
+        $mySections = \App\Modules\Offers\Offers::mySections($org, Auth::id(), 5);
         $profiles = Tenders::profiles($org, true);
         $receivables = Receivables::summary($org);
         $import = Kv::get('import:last');
@@ -83,6 +90,6 @@ final class DashboardController extends Controller
             unset($pg);
         }
 
-        return $this->view('dashboard', compact('matches', 'stats', 'alerts', 'profiles', 'receivables', 'import', 'messages', 'mods', 'leads', 'pages') + ['title' => 'Pulpit']);
+        return $this->view('dashboard', compact('matches', 'stats', 'alerts', 'resolved', 'mySections', 'profiles', 'receivables', 'import', 'messages', 'mods', 'leads', 'pages') + ['title' => 'Pulpit']);
     }
 }

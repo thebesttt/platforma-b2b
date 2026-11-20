@@ -21,7 +21,8 @@
         <tbody>
         <?php foreach ($offers as $o): $st = OfferController::STATUSES[$o['status']] ?? OfferController::STATUSES['draft']; $dl = $o['tender_deadline'] ?: $o['deadline_at']; ?>
           <tr>
-            <td><a class="t-title" href="/oferty/<?= (int) $o['id'] ?>"><?= e(truncate((string) $o['title'], 110)) ?></a><div class="t-sub"><?= e($o['kind'] === 'grant' ? ($o['call_name'] ?? '') : ($o['buyer_name'] ?? 'bez przetargu')) ?></div></td>
+            <td><a class="t-title" href="/oferty/<?= (int) $o['id'] ?>"><?= e(truncate((string) $o['title'], 110)) ?></a><div class="t-sub"><?= e($o['kind'] === 'grant' ? ($o['call_name'] ?? '') : ($o['buyer_name'] ?? 'bez przetargu')) ?></div>
+              <?php $pr = $progress[(int) $o['id']] ?? null; if ($pr): ?><div class="t-sub">Sekcje gotowe: <?= (int) $pr['done'] ?> z <?= (int) $pr['sections'] ?><?= $pr['docs'] ? ' · dokumenty: ' . (int) $pr['docs_done'] . ' z ' . (int) $pr['docs'] : '' ?></div><?php endif ?></td>
             <td><span class="chip <?= $o['kind'] === 'grant' ? 'info' : 'neutral' ?>"><?= $o['kind'] === 'grant' ? 'wniosek o dotację' : 'oferta' ?></span></td>
             <td class="nowrap small"><?= $dl ? e(local_dt($dl, 'd.m.Y H:i')) : '<span class="muted">-</span>' ?></td>
             <td><span class="chip <?= $st['chip'] ?>"><?= e($st['label']) ?></span></td>
@@ -36,6 +37,17 @@
   </section>
 
   <div class="side stack">
+    <?php if ($mine): ?>
+    <section class="card" aria-labelledby="t-mine">
+      <h2 id="t-mine" style="margin-bottom:8px">Twoje sekcje do napisania</h2>
+      <ul class="list-plain">
+        <?php foreach ($mine as $m): ?>
+          <li><a href="/oferty/<?= (int) $m['offer_id'] ?>?sekcja=<?= e(rawurlencode((string) $m['key'])) ?>&amp;tryb=edycja"><?= e($m['section_title']) ?></a>
+            <div class="xs muted"><?= e(truncate((string) $m['offer_title'], 70)) ?><?= $m['deadline_at'] ? ' · termin ' . e(local_dt($m['deadline_at'], 'd.m.Y')) : '' ?></div></li>
+        <?php endforeach ?>
+      </ul>
+    </section>
+    <?php endif ?>
     <section class="card" aria-labelledby="t-grant">
       <h2 id="t-grant" style="margin-bottom:8px">Nowy wniosek o dotację</h2>
       <form method="post" action="/oferty" class="stack-sm">

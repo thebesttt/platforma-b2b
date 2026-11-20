@@ -158,6 +158,10 @@ final class TenderController extends Controller
         $offers = $this->db()->all('SELECT id, title, status, updated_at FROM offers WHERE org_id = ? AND tender_id = ? ORDER BY id DESC', [$org, (int) $tender['id']]);
         // Wynik tego postępowania, a gdy go jeszcze nie ma: kto wcześniej wygrywał u tego zamawiającego.
         $results = $tender['source'] === 'bzp' ? Results::forTender($tender) : [];
+        if ($results) {
+            // Otwarcie karty to przeczytanie alertu o rozstrzygnięciu.
+            $this->db()->run('UPDATE alerts SET read_at = ? WHERE org_id = ? AND tender_id = ? AND company_id IS NULL AND read_at IS NULL', [now_utc(), $org, (int) $tender['id']]);
+        }
         $history = $results ? [] : Results::buyerHistory($tender['buyer_nip'] ?: null, $tender['cpv_main'] ?: null, 5, ($tender['ocid'] ?? '') ?: null);
         return $this->view('tenders/show', compact('tender', 'd', 'match', 'rules', 'ai', 'questions', 'documents', 'buyer', 'offers', 'results', 'history') + [
             'title' => truncate((string) $tender['title'], 70),

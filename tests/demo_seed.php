@@ -110,6 +110,20 @@ function demo_seed(): array
     if ($best) {
         $offerId = Offers::create($org, $uid, $best);
         $db->update('offers', ['status' => 'review'], 'id = ?', [$offerId]);
+        // Zespół: druga osoba z przydzielonymi sekcjami, jedna sekcja dla właściciela i dwa odhaczone dokumenty.
+        $mate = $db->insert('users', ['org_id' => $org, 'email' => 'marek@example.com', 'name' => 'Marek Przykładowy', 'password_hash' => Auth::hash('demo-haslo-456'), 'role' => 'member', 'created_at' => now_utc()]);
+        $secs = Offers::sections($offerId);
+        foreach ([[1, $mate], [2, $mate], [3, $uid]] as [$i, $who]) {
+            if (isset($secs[$i])) {
+                $db->update('offer_sections', ['assignee_id' => $who], 'id = ?', [(int) $secs[$i]['id']]);
+            }
+        }
+        if (isset($secs[0])) {
+            $db->update('offer_sections', ['status' => 'done', 'updated_by' => $uid], 'id = ?', [(int) $secs[0]['id']]);
+        }
+        foreach (array_slice(Offers::checklist($org, $offerId), 0, 2) as $c) {
+            $db->update('offer_checklist', ['done' => 1, 'done_by' => $uid, 'done_at' => gmdate('Y-m-d H:i:s', time() - 5 * 3600)], 'id = ?', [(int) $c['id']]);
+        }
     }
 
     // Kontrahenci: obserwowany płatnik z decyzją UOKiK i należność po terminie.

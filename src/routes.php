@@ -87,6 +87,9 @@ return static function (Router $r): void {
     $r->post('/oferty/{id}', [OfferController::class, 'update'], $a);
     $r->post('/oferty/{id}/sekcje/{key}', [OfferController::class, 'saveSection'], $a);
     $r->post('/oferty/{id}/sekcje/{key}/ai', [OfferController::class, 'aiSection'], $a);
+    $r->post('/oferty/{id}/sekcje/{key}/osoba', [OfferController::class, 'assign'], $a);
+    $r->post('/oferty/{id}/lista', [OfferController::class, 'checkAdd'], $a);
+    $r->post('/oferty/{id}/lista/{item}', [OfferController::class, 'checkUpdate'], $a);
     $r->post('/oferty/{id}/dokumenty', [OfferController::class, 'upload'], $a);
     $r->get('/oferty/{id}/docx', [OfferController::class, 'docx'], $a);
     $r->post('/oferty/{id}/usun', [OfferController::class, 'delete'], $a);

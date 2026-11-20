@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Offers;
 
 use App\Core\Db;
+use App\Core\Mailer;
 use App\Core\Nip;
 use App\Modules\Ai\Claude;
 use App\Modules\Tenders\Analysis;
@@ -84,6 +85,17 @@ final class Offers
                     'position' => $pos++,
                     'updated_at' => now_utc(),
                 ]);
+            }
+            // Dokumenty do złożenia: pozycje startowe z ogłoszenia. Zespół je odhacza i dopisuje własne.
+            $n = 0;
+            foreach ($analysis['documents'] ?? [] as $doc) {
+                $label = trim((string) ($doc['name'] ?? ''));
+                if ($label !== '') {
+                    $db->insert('offer_checklist', [
+                        'org_id' => $orgId, 'offer_id' => $offerId, 'label' => mb_substr($label, 0, 300),
+                        'source' => mb_substr((string) ($doc['source'] ?? ''), 0, 200) ?: null, 'position' => $n++, 'created_at' => now_utc(),
+                    ]);
+                }
             }
             return $offerId;
         });
@@ -258,6 +270,144 @@ final class Offers
     public static function sections(int $offerId): array
     {
         return Db::get()->all('SELECT * FROM offer_sections WHERE offer_id = ? ORDER BY position', [$offerId]);
+    }
+
+    /** Osoby z firmy, którym można przydzielić sekcję. @return array<int, array{id: int, name: string, email: string}> */
+    public static function team(int $orgId): array
+    {
+        $out = [];
+        foreach (Db::get()->all('SELECT id, name, email FROM users WHERE org_id = ? ORDER BY id', [$orgId]) as $u) {
+            $out[(int) $u['id']] = ['id' => (int) $u['id'], 'name' => trim((string) $u['name']) ?: (string) $u['email'], 'email' => (string) $u['email']];
+        }
+        return $out;
+    }
+
+    /**
+     * Przydziela sekcję osobie z tej samej firmy (null = nikt). Osoba inna niż przydzielający dostaje e-mail, jeśli poczta działa.
+     * @return array{ok: bool, error?: string, mailed?: bool}
+     */
+    public static function assign(int $orgId, array $offer, array $section, ?int $userId, int $byUserId, string $baseUrl = ''): array
+    {
+        $team = self::team($orgId);
+        if ($userId !== null && !isset($team[$userId])) {
+            return ['ok' => false, 'error' => 'Tej osoby nie ma w zespole firmy.'];
+        }
+        Db::get()->update('offer_sections', ['assignee_id' => $userId], 'id = ? AND offer_id = ?', [(int) $section['id'], (int) $offer['id']]);
+        $mailed = false;
+        if ($userId !== null && $userId !== $byUserId && $userId !== (int) ($section['assignee_id'] ?? 0) && Mailer::enabled()) {
+            $by = $team[$byUserId]['name'] ?? 'Ktoś z zespołu';
+            $deadline = $offer['deadline_at'] ?? null;
+            $mailed = Mailer::send(
+                $team[$userId]['email'],
+                'Sekcja do napisania: ' . truncate((string) $section['title'], 80),
+                $by . ' przydziela Ci sekcję „' . $section['title'] . '” w dokumencie „' . $offer['title'] . '”.'
+                    . ($deadline ? "\nTermin: " . local_dt($deadline, 'd.m.Y H:i') . '.' : '')
+                    . ($baseUrl !== '' ? "\n\n" . rtrim($baseUrl, '/') . '/oferty/' . (int) $offer['id'] . '?sekcja=' . rawurlencode((string) $section['key']) : ''),
+                $orgId,
+                'offer_assign'
+            )['ok'];
+        }
+        return ['ok' => true, 'mailed' => $mailed];
+    }
+
+    /**
+     * Zapis treści sekcji z kontrolą wersji: jeśli ktoś zapisał sekcję po otwarciu formularza, nie nadpisujemy jego pracy.
+     * @return array{ok: bool, conflict?: array} conflict = aktualny wiersz sekcji
+     */
+    public static function saveSection(array $section, string $body, string $title, bool $done, int $userId, ?int $baseVersion): array
+    {
+        $db = Db::get();
+        $version = (int) ($section['version'] ?? 1);
+        $data = [
+            'body' => mb_substr($body, 0, 60000),
+            'title' => mb_substr($title !== '' ? $title : (string) $section['title'], 0, 200),
+            'status' => $done ? 'done' : 'draft',
+            'updated_by' => $userId,
+            'version' => $version + 1,
+            'updated_at' => now_utc(),
+        ];
+        // Warunek na wersję jest w samym zapytaniu, więc dwa zapisy w tej samej chwili też się nie nadpiszą.
+        $expected = $baseVersion ?? $version;
+        $changed = $db->update('offer_sections', $data, 'id = ? AND version = ?', [(int) $section['id'], $expected]);
+        if ($changed === 0) {
+            return ['ok' => false, 'conflict' => $db->one('SELECT * FROM offer_sections WHERE id = ?', [(int) $section['id']]) ?? $section];
+        }
+        $db->update('offers', ['updated_at' => now_utc()], 'id = ?', [(int) $section['offer_id']]);
+        return ['ok' => true];
+    }
+
+    /** Dokumenty do złożenia z ofertą. */
+    public static function checklist(int $orgId, int $offerId): array
+    {
+        return Db::get()->all('SELECT * FROM offer_checklist WHERE org_id = ? AND offer_id = ? ORDER BY position, id', [$orgId, $offerId]);
+    }
+
+    public static function addCheck(int $orgId, int $offerId, string $label, ?string $source = null): bool
+    {
+        $label = mb_substr(utrim($label), 0, 300);
+        $db = Db::get();
+        if ($label === '' || (int) $db->val('SELECT COUNT(*) FROM offer_checklist WHERE org_id = ? AND offer_id = ?', [$orgId, $offerId]) >= 60) {
+            return false;
+        }
+        $db->insert('offer_checklist', [
+            'org_id' => $orgId, 'offer_id' => $offerId, 'label' => $label, 'source' => $source !== null && $source !== '' ? mb_substr($source, 0, 200) : null,
+            'position' => 1 + (int) $db->val('SELECT COALESCE(MAX(position), -1) FROM offer_checklist WHERE org_id = ? AND offer_id = ?', [$orgId, $offerId]),
+            'created_at' => now_utc(),
+        ]);
+        return true;
+    }
+
+    /**
+     * Dopisuje pozycje z analizy dokumentów przetargu (AI), których jeszcze nie ma na liście. Niczego nie usuwa i nie odznacza.
+     * @return int liczba dopisanych pozycji
+     */
+    public static function syncChecklist(int $orgId, array $offer): int
+    {
+        if (empty($offer['tender_id'])) {
+            return 0;
+        }
+        $tender = Tenders::find((int) $offer['tender_id']);
+        if (!$tender) {
+            return 0;
+        }
+        $docs = Analysis::latest($orgId, (int) $tender['id'])['documents'] ?? Analysis::rules($tender, Tenders::details($tender, false))['documents'];
+        $have = array_map(static fn (array $c) => search_text((string) $c['label']), self::checklist($orgId, (int) $offer['id']));
+        $added = 0;
+        foreach ($docs as $doc) {
+            $label = trim((string) ($doc['name'] ?? ''));
+            if ($label !== '' && !in_array(search_text($label), $have, true) && self::addCheck($orgId, (int) $offer['id'], $label, (string) ($doc['source'] ?? ''))) {
+                $have[] = search_text($label);
+                $added++;
+            }
+        }
+        return $added;
+    }
+
+    /** Postęp ofert firmy: sekcje gotowe i dokumenty odhaczone. @return array<int, array{sections: int, done: int, docs: int, docs_done: int}> */
+    public static function progress(int $orgId): array
+    {
+        $db = Db::get();
+        $out = [];
+        foreach ($db->all("SELECT s.offer_id, COUNT(*) AS n, SUM(CASE WHEN s.status = 'done' THEN 1 ELSE 0 END) AS d
+                             FROM offer_sections s JOIN offers o ON o.id = s.offer_id WHERE o.org_id = ? GROUP BY s.offer_id", [$orgId]) as $r) {
+            $out[(int) $r['offer_id']] = ['sections' => (int) $r['n'], 'done' => (int) $r['d'], 'docs' => 0, 'docs_done' => 0];
+        }
+        foreach ($db->all('SELECT offer_id, COUNT(*) AS n, SUM(done) AS d FROM offer_checklist WHERE org_id = ? GROUP BY offer_id', [$orgId]) as $r) {
+            $out[(int) $r['offer_id']] = ['docs' => (int) $r['n'], 'docs_done' => (int) $r['d']] + ($out[(int) $r['offer_id']] ?? ['sections' => 0, 'done' => 0]);
+        }
+        return $out;
+    }
+
+    /** Sekcje przydzielone tej osobie, które nie są jeszcze gotowe. Najpierw oferty z najbliższym terminem. */
+    public static function mySections(int $orgId, int $userId, int $limit = 8): array
+    {
+        return Db::get()->all(
+            "SELECT s.key, s.title AS section_title, s.updated_at, o.id AS offer_id, o.title AS offer_title, COALESCE(o.deadline_at, t.deadline_at) AS deadline_at
+               FROM offer_sections s JOIN offers o ON o.id = s.offer_id LEFT JOIN tenders t ON t.id = o.tender_id
+              WHERE o.org_id = ? AND s.assignee_id = ? AND s.status <> 'done' AND o.status <> 'submitted'
+              ORDER BY COALESCE(o.deadline_at, t.deadline_at, '9999') , o.id, s.position LIMIT " . max(1, $limit),
+            [$orgId, $userId]
+        );
     }
 
     /** Liczba zdań bez źródła w ofercie. */

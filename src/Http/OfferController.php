@@ -35,7 +35,9 @@ final class OfferController extends Controller
             [$org]
         );
         $libraryCount = (int) $this->db()->val('SELECT COUNT(*) FROM library_items WHERE org_id = ?', [$org]);
-        return $this->view('offers/index', compact('offers', 'libraryCount') + ['title' => 'Oferty i wnioski']);
+        $progress = Offers::progress($org);
+        $mine = Offers::mySections($org, Auth::id());
+        return $this->view('offers/index', compact('offers', 'libraryCount', 'progress', 'mine') + ['title' => 'Oferty i wnioski']);
     }
 
     public function create(Request $r): Response
@@ -68,32 +70,52 @@ final class OfferController extends Controller
             : 'Utworzono szkic oferty z danych ogłoszenia i Twojej biblioteki. Sprawdź oznaczone zdania.');
     }
 
+    /** Klucz pseudo-sekcji z listą dokumentów do złożenia. */
+    public const DOCS_KEY = '_dokumenty';
+
     public function show(Request $r): Response
     {
         $offer = Offers::find($this->orgId(), (int) $r->param('id'));
         if (!$offer) {
             return $this->notFound('Nie ma takiej oferty');
         }
+        return $this->render($offer, $r->str('sekcja'), $r->str('tryb') === 'edycja' ? 'edit' : 'preview');
+    }
+
+    /**
+     * Ekran oferty. $draft i $conflict służą do pokazania formularza po odrzuconym zapisie: tekst użytkownika zostaje w polu,
+     * a obok widać wersję, którą w międzyczasie zapisał ktoś inny.
+     */
+    private function render(array $offer, string $key, string $mode, ?array $draft = null, ?array $conflict = null, int $status = 200): Response
+    {
+        $org = $this->orgId();
         $sections = Offers::sections((int) $offer['id']);
-        $key = $r->str('sekcja') ?: ($sections[0]['key'] ?? '');
+        $showDocs = $key === self::DOCS_KEY;
         $current = null;
-        foreach ($sections as $s) {
-            if ($s['key'] === $key) {
-                $current = $s;
+        if (!$showDocs) {
+            foreach ($sections as $s) {
+                if ($s['key'] === $key) {
+                    $current = $s;
+                }
             }
+            $current ??= $sections[0] ?? null;
         }
-        $current ??= $sections[0] ?? null;
         $tender = $offer['tender_id'] ? Tenders::find((int) $offer['tender_id']) : null;
         $documents = $offer['kind'] === 'grant'
-            ? $this->db()->all('SELECT id, filename, created_at FROM offer_documents WHERE org_id = ? AND offer_id = ? ORDER BY id', [$this->orgId(), (int) $offer['id']])
-            : ($tender ? $this->db()->all('SELECT id, filename, created_at FROM tender_documents WHERE org_id = ? AND tender_id = ? ORDER BY id', [$this->orgId(), (int) $tender['id']]) : []);
+            ? $this->db()->all('SELECT id, filename, created_at FROM offer_documents WHERE org_id = ? AND offer_id = ? ORDER BY id', [$org, (int) $offer['id']])
+            : ($tender ? $this->db()->all('SELECT id, filename, created_at FROM tender_documents WHERE org_id = ? AND tender_id = ? ORDER BY id', [$org, (int) $tender['id']]) : []);
         $unsourced = Offers::unsourced($sections);
-        $libraryCount = (int) $this->db()->val('SELECT COUNT(*) FROM library_items WHERE org_id = ?', [$this->orgId()]);
-        return $this->view('offers/show', compact('offer', 'sections', 'current', 'tender', 'documents', 'unsourced', 'libraryCount') + [
+        $libraryCount = (int) $this->db()->val('SELECT COUNT(*) FROM library_items WHERE org_id = ?', [$org]);
+        $resp = $this->view('offers/show', compact('offer', 'sections', 'current', 'tender', 'documents', 'unsourced', 'libraryCount', 'showDocs', 'draft', 'conflict') + [
             'title' => (string) $offer['title'],
             'aiEnabled' => Claude::enabled(),
-            'mode' => $r->str('tryb') === 'edycja' ? 'edit' : 'preview',
+            'mode' => $mode,
+            'team' => Offers::team($org),
+            'me' => Auth::id(),
+            'checklist' => Offers::checklist($org, (int) $offer['id']),
         ]);
+        $resp->status = $status;
+        return $resp;
     }
 
     public function update(Request $r): Response
@@ -120,14 +142,74 @@ final class OfferController extends Controller
             return $this->notFound();
         }
         $body = str_replace("\r\n", "\n", (string) ($r->post['body'] ?? ''));
-        $this->db()->update('offer_sections', [
-            'body' => mb_substr($body, 0, 60000),
-            'title' => mb_substr($r->str('title') ?: $section['title'], 0, 200),
-            'status' => $r->input('done') === '1' ? 'done' : 'draft',
-            'updated_at' => now_utc(),
-        ], 'id = ?', [(int) $section['id']]);
-        $this->db()->update('offers', ['updated_at' => now_utc()], 'id = ?', [(int) $offer['id']]);
+        $title = $r->str('title');
+        $done = $r->input('done') === '1';
+        $base = $r->str('version') !== '' ? $r->int('version') : null;
+        $res = Offers::saveSection($section, $body, $title, $done, Auth::id(), $base);
+        if (!$res['ok']) {
+            // Ktoś zapisał tę sekcję po otwarciu formularza. Nie nadpisujemy jego pracy i nie gubimy tekstu tej osoby.
+            $draft = ['body' => mb_substr($body, 0, 60000), 'title' => $title !== '' ? $title : (string) $section['title'], 'done' => $done];
+            return $this->render($offer, (string) $section['key'], 'edit', $draft, $res['conflict'], 409);
+        }
         return $this->redirect('/oferty/' . $offer['id'] . '?sekcja=' . rawurlencode($section['key']), 'Zapisano sekcję „' . $section['title'] . '”.');
+    }
+
+    /** Przydzielenie sekcji osobie z zespołu. */
+    public function assign(Request $r): Response
+    {
+        [$offer, $section] = $this->loadSection($r);
+        if (!$section) {
+            return $this->notFound();
+        }
+        $to = '/oferty/' . $offer['id'] . '?sekcja=' . rawurlencode($section['key']);
+        $userId = $r->int('user_id') ?: null;
+        $res = Offers::assign($this->orgId(), $offer, $section, $userId, Auth::id(), $r->baseUrl());
+        if (!$res['ok']) {
+            return $this->redirect($to, $res['error'], 'error');
+        }
+        AuditLog::add('offer.assign', 'offer', (int) $offer['id'], ['section' => $section['key'], 'user_id' => $userId], $r->ip());
+        $name = $userId ? (Offers::team($this->orgId())[$userId]['name'] ?? '') : '';
+        return $this->redirect($to, $userId
+            ? 'Sekcję „' . $section['title'] . '” prowadzi teraz ' . $name . '.' . (!empty($res['mailed']) ? ' Wysłaliśmy powiadomienie e-mailem.' : '')
+            : 'Sekcja „' . $section['title'] . '” nie ma już przydzielonej osoby.');
+    }
+
+    /** Lista dokumentów do złożenia: dopisanie pozycji albo uzupełnienie z ogłoszenia i analizy. */
+    public function checkAdd(Request $r): Response
+    {
+        $offer = Offers::find($this->orgId(), (int) $r->param('id'));
+        if (!$offer) {
+            return $this->notFound();
+        }
+        $to = '/oferty/' . $offer['id'] . '?sekcja=' . self::DOCS_KEY;
+        if ($r->str('sync') === '1') {
+            $n = Offers::syncChecklist($this->orgId(), $offer);
+            return $this->redirect($to, $n ? 'Dopisano ' . $n . ' ' . plural($n, 'pozycję', 'pozycje', 'pozycji') . ' z ogłoszenia i analizy dokumentów.' : 'Lista zawiera już wszystkie pozycje z ogłoszenia i analizy dokumentów.', $n ? 'success' : 'info');
+        }
+        if (!Offers::addCheck($this->orgId(), (int) $offer['id'], $r->str('label'))) {
+            return $this->redirect($to, 'Wpisz nazwę dokumentu (lista mieści 60 pozycji).', 'error');
+        }
+        return $this->redirect($to, 'Dopisano dokument do listy.');
+    }
+
+    /** Odhaczenie albo cofnięcie odhaczenia pozycji, albo jej usunięcie. */
+    public function checkUpdate(Request $r): Response
+    {
+        $org = $this->orgId();
+        $offer = Offers::find($org, (int) $r->param('id'));
+        $item = $offer ? $this->db()->one('SELECT * FROM offer_checklist WHERE id = ? AND org_id = ? AND offer_id = ?', [(int) $r->param('item'), $org, (int) $offer['id']]) : null;
+        if (!$item) {
+            return $this->notFound();
+        }
+        $to = '/oferty/' . $offer['id'] . '?sekcja=' . self::DOCS_KEY;
+        if ($r->str('delete') === '1') {
+            $this->db()->run('DELETE FROM offer_checklist WHERE id = ? AND org_id = ?', [(int) $item['id'], $org]);
+            return $this->redirect($to, 'Usunięto pozycję z listy.');
+        }
+        $done = !(bool) (int) $item['done'];
+        $this->db()->update('offer_checklist', ['done' => $done ? 1 : 0, 'done_by' => $done ? Auth::id() : null, 'done_at' => $done ? now_utc() : null], 'id = ?', [(int) $item['id']]);
+        $this->db()->update('offers', ['updated_at' => now_utc()], 'id = ?', [(int) $offer['id']]);
+        return $this->redirect($to);
     }
 
     public function aiSection(Request $r): Response
@@ -144,7 +226,7 @@ final class OfferController extends Controller
         if (!$res['ok']) {
             return $this->redirect($to, $res['error'], 'error');
         }
-        $this->db()->update('offer_sections', ['body' => $res['body'], 'status' => 'draft', 'updated_at' => now_utc()], 'id = ?', [(int) $section['id']]);
+        $this->db()->update('offer_sections', ['body' => $res['body'], 'status' => 'draft', 'updated_by' => Auth::id(), 'version' => (int) ($section['version'] ?? 1) + 1, 'updated_at' => now_utc()], 'id = ?', [(int) $section['id']]);
         $this->db()->update('offers', ['updated_at' => now_utc()], 'id = ?', [(int) $offer['id']]);
         AuditLog::add('offer.ai_section', 'offer', (int) $offer['id'], ['section' => $section['key']], $r->ip());
         $n = substr_count($res['body'], '⟦sprawdź⟧');

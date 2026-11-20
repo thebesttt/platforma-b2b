@@ -30,7 +30,7 @@ final class CompanyController extends Controller
             [$org]
         );
         $alerts = $this->db()->all(
-            'SELECT a.*, c.nip FROM alerts a LEFT JOIN companies c ON c.id = a.company_id WHERE a.org_id = ? ORDER BY a.id DESC LIMIT 30',
+            'SELECT a.*, c.nip FROM alerts a LEFT JOIN companies c ON c.id = a.company_id WHERE a.org_id = ? AND (a.company_id IS NOT NULL OR a.tender_id IS NULL) ORDER BY a.id DESC LIMIT 30',
             [$org]
         );
         $receivables = Receivables::summary($org);
@@ -125,7 +125,7 @@ final class CompanyController extends Controller
 
     public function readAlerts(Request $r): Response
     {
-        $this->db()->run('UPDATE alerts SET read_at = ? WHERE org_id = ? AND read_at IS NULL', [now_utc(), $this->orgId()]);
+        $this->db()->run('UPDATE alerts SET read_at = ? WHERE org_id = ? AND read_at IS NULL AND (company_id IS NOT NULL OR tender_id IS NULL)', [now_utc(), $this->orgId()]);
         return $this->back($r, '/kontrahenci', 'Oznaczono alerty jako przeczytane.');
     }
 

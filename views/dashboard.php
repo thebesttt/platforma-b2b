@@ -133,6 +133,32 @@ $lead = $leads[0] ?? null;
   </div>
 
   <div class="side stack">
+    <?php if ($has('oferty') && $mySections): ?>
+    <section class="card" aria-labelledby="t-mysec">
+      <h2 id="t-mysec" style="margin-bottom:8px">Twoje sekcje do napisania</h2>
+      <ul class="list-plain">
+        <?php foreach ($mySections as $m): ?>
+          <li><a href="/oferty/<?= (int) $m['offer_id'] ?>?sekcja=<?= e(rawurlencode((string) $m['key'])) ?>&amp;tryb=edycja" style="font-weight:600"><?= e($m['section_title']) ?></a>
+            <div class="small muted"><?= e(truncate((string) $m['offer_title'], 70)) ?><?= $m['deadline_at'] ? ' · termin ' . e(local_dt($m['deadline_at'], 'd.m.Y')) : '' ?></div></li>
+        <?php endforeach ?>
+      </ul>
+    </section>
+    <?php endif ?>
+    <?php if ($has('przetargi') && $resolved): ?>
+    <section class="card" aria-labelledby="t-resolved">
+      <h2 id="t-resolved" style="margin-bottom:8px">Rozstrzygnięte przetargi</h2>
+      <ul class="list-plain">
+        <?php foreach ($resolved as $a): ?>
+          <li>
+            <?php if (!$a['read_at']): ?><span class="chip info">nowe</span><?php endif ?>
+            <div style="font-weight:600;margin-top:6px"><a href="/przetargi/<?= (int) $a['tender_id'] ?>#wynik"><?= e(preg_replace('/^Rozstrzygnięto przetarg: /u', '', (string) $a['title'])) ?></a></div>
+            <div class="small muted"><?= e($a['detail']) ?></div>
+          </li>
+        <?php endforeach ?>
+      </ul>
+      <p class="small" style="margin:12px 0 0"><a href="/przetargi/wyniki">Kto wygrywa w Twojej branży</a></p>
+    </section>
+    <?php endif ?>
     <?php if ($has('kontrahenci')): ?>
     <section class="card" aria-labelledby="t-alerts">
       <h2 id="t-alerts" style="margin-bottom:8px">Kontrahenci</h2>
@@ -141,7 +167,7 @@ $lead = $leads[0] ?? null;
         <?php foreach ($alerts as $a): ?>
           <li>
             <span class="chip <?= $a['level'] === 'high' ? 'high' : ($a['level'] === 'mid' ? 'mid' : 'info') ?>"><?= $a['read_at'] ? 'przeczytane' : 'nowe' ?></span>
-            <div style="font-weight:600;margin-top:6px"><?php if ($a['nip']): ?><a href="/kontrahenci/<?= e($a['nip']) ?>"><?= e($a['title']) ?></a><?php elseif ($a['tender_id']): ?><a href="/przetargi/<?= (int) $a['tender_id'] ?>#wynik"><?= e($a['title']) ?></a><?php else: ?><?= e($a['title']) ?><?php endif ?></div>
+            <div style="font-weight:600;margin-top:6px"><?php if ($a['nip']): ?><a href="/kontrahenci/<?= e($a['nip']) ?>"><?= e($a['title']) ?></a><?php else: ?><?= e($a['title']) ?><?php endif ?></div>
             <div class="small muted"><?= e($a['detail']) ?> · <?= e(local_dt($a['created_at'], 'd.m H:i')) ?></div>
           </li>
         <?php endforeach ?>
