@@ -57,7 +57,7 @@ final class PageFacts
         // Nagłówki H1 liczymy na całej stronie, bo bywają w nagłówku strony poza treścią główną.
         $f['h1'] = [];
         foreach ($x->query('//h1') ?: [] as $n) {
-            $f['h1'][] = Text::normalize($n->textContent);
+            $f['h1'][] = self::inner($n);
         }
 
         $f['jsonld'] = self::jsonld($x);
@@ -74,11 +74,13 @@ final class PageFacts
         $f['contact_link'] = null;
         $f['about_link'] = null;
         foreach ($x->query('//a[@href]') ?: [] as $a) {
-            $href = Fetcher::absolute($url, trim((string) $a->getAttribute('href')));
+            $raw = trim((string) $a->getAttribute('href'));
+            // Na stronie jednoekranowej „Kontakt” i „O nas” to sekcje tej samej strony (#kontakt): też je zaliczamy.
+            $href = str_starts_with($raw, '#') && strlen($raw) > 1 ? preg_replace('/#.*$/', '', $url) . $raw : Fetcher::absolute($url, $raw);
             if ($href === null || !Fetcher::sameSite($host, Fetcher::host($href))) {
                 continue;
             }
-            $label = mb_strtolower(Text::normalize($a->textContent)) . ' ' . strtolower((string) parse_url($href, PHP_URL_PATH));
+            $label = mb_strtolower(Text::normalize($a->textContent)) . ' ' . strtolower((string) parse_url($href, PHP_URL_PATH) . ' ' . (string) parse_url($href, PHP_URL_FRAGMENT));
             if ($f['contact_link'] === null && preg_match('/\bkontakt|contact/u', $label)) {
                 $f['contact_link'] = $href;
             }
@@ -222,6 +224,25 @@ final class PageFacts
             }
         }
         return mb_check_encoding($html, 'UTF-8') ? $html : mb_scrub($html, 'UTF-8');
+    }
+
+    /** Tekst elementu ze spacją w miejscu <br> i na granicy bloków, żeby słowa z dwóch wierszy się nie sklejały. */
+    private static function inner(\DOMNode $node): string
+    {
+        $out = '';
+        foreach ($node->childNodes as $c) {
+            if ($c instanceof \DOMText) {
+                $out .= $c->nodeValue;
+            } elseif ($c instanceof \DOMElement) {
+                $name = strtolower($c->nodeName);
+                if (in_array($name, self::SKIP, true)) {
+                    continue;
+                }
+                $block = $name === 'br' || in_array($name, self::BLOCK, true);
+                $out .= ($block ? ' ' : '') . self::inner($c) . ($block ? ' ' : '');
+            }
+        }
+        return Text::normalize($out);
     }
 
     private static function skipped(\DOMNode $n): bool

@@ -365,6 +365,11 @@ return [
         ok(!str_contains($f['text'], 'bez akapituDrugi'), 'sąsiednie bloki nie sklejają słów');
         eq(['Logo firmy'], $f['h1']);
         eq(['1234563218'], $f['footer_ids']['nips']);
+        $one = PageFacts::extract('<html><body><nav><a href="#o-firmie">O firmie</a> <a href="#kontakt">Kontakt</a></nav><main><h1>Marketing dla firm.<br>Wyniki, które widać.</h1>
+            <h2><span>Pierwsza</span><span>druga</span></h2></main></body></html>', 'https://example.com/');
+        eq(['Marketing dla firm. Wyniki, które widać.'], $one['h1'], 'znacznik <br> w nagłówku nie skleja słów');
+        eq('https://example.com/#kontakt', $one['contact_link'], 'sekcja „Kontakt” na stronie jednoekranowej');
+        eq('https://example.com/#o-firmie', $one['about_link']);
         $cp = PageFacts::extract(iconv('UTF-8', 'CP1250', '<html><head><meta charset="windows-1250"><title>Żółta łódź</title></head><body><p>Zażółć gęślą jaźń</p></body></html>'), 'https://example.com/');
         eq('Żółta łódź', $cp['title']);
         eq('https://example.com/b/c?x=1', Fetcher::absolute('https://example.com/a/b/', '../../b/c?x=1'));

@@ -30,6 +30,9 @@ final class Services
         }
         $r = Http::get($api, ['Accept' => 'application/json'], 60);
         $j = json_decode((string) $r['body'], true);
+        if ($r['status'] === 429) {
+            return ['error' => 'Google odrzucił zapytanie o szybkość: dzienny limit zapytań ' . ($key === '' ? 'bez klucza jest wyczerpany. Ustaw klucz PSI_KEY, wtedy limit jest osobny dla tego panelu.' : 'dla klucza PSI_KEY jest wyczerpany.')];
+        }
         if ($r['status'] !== 200 || !is_array($j)) {
             $msg = is_array($j) ? (string) ($j['error']['message'] ?? '') : '';
             return ['error' => 'PageSpeed Insights nie odpowiedział (kod ' . $r['status'] . ')' . ($msg !== '' ? ': ' . truncate($msg, 160) : '.')
