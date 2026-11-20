@@ -102,6 +102,21 @@ final class Digest
             }
         }
 
+        if (Brand::has($org, 'klienci')) {
+            // Przypomnienia, na które dziś przypada termin. Wysyłkę i tak wykonuje człowiek ze swojej skrzynki.
+            $due = \App\Modules\Outreach\Sequences::due($id, 6);
+            if ($due) {
+                $n = \App\Modules\Outreach\Sequences::dueCount($id);
+                $parts[] = $n . ' ' . plural($n, 'przypomnienie do wysłania', 'przypomnienia do wysłania', 'przypomnień do wysłania');
+                $lines[] = 'PRZYPOMNIENIA DO WYSŁANIA DZIŚ (' . $n . ')';
+                foreach ($due as $d) {
+                    $lines[] = '- ' . truncate((string) $d['company_name'], 80) . ': ' . mb_strtolower(\App\Modules\Outreach\Sequences::STEPS[(int) $d['step'] + 1][1] ?? 'kolejna wiadomość');
+                }
+                $lines[] = '  ' . $baseUrl . '/klienci/przypomnienia';
+                $lines[] = '';
+            }
+        }
+
         if (Brand::has($org, 'kontrahenci')) {
             $alerts = $db->all('SELECT title, detail FROM alerts WHERE org_id = ? AND created_at > ? AND (company_id IS NOT NULL OR tender_id IS NULL) ORDER BY id DESC LIMIT 8', [$id, $since]);
             if ($alerts) {

@@ -16,6 +16,7 @@ use App\Modules\Ai\Claude;
 use App\Modules\Companies\Companies;
 use App\Modules\Outreach\Outreach;
 use App\Modules\Outreach\RiskPolicy;
+use App\Modules\Outreach\Sequences;
 
 /**
  * Klienci i wiadomości. Zasada: platforma pokazuje ryzyko prawne każdego rodzaju wiadomości,
@@ -33,7 +34,8 @@ final class OutreachController extends Controller
                FROM messages m JOIN contacts c ON c.id = m.contact_id WHERE m.org_id = ? ORDER BY m.id DESC LIMIT 20',
             [$org]
         );
-        return $this->view('outreach/index', compact('contacts', 'messages', 'q') + ['title' => 'Klienci i wiadomości']);
+        $due = Sequences::dueCount($org);
+        return $this->view('outreach/index', compact('contacts', 'messages', 'q', 'due') + ['title' => 'Klienci i wiadomości']);
     }
 
     public function contactForm(Request $r): Response
@@ -50,7 +52,8 @@ final class OutreachController extends Controller
         $c ??= $prefill + ['id' => 0, 'company_name' => '', 'nip' => '', 'person' => '', 'email' => '', 'phone' => '', 'website' => '', 'basis' => 'none', 'basis_detail' => '', 'basis_url' => '', 'basis_at' => null, 'notes' => '', 'unsubscribed_at' => null, 'company_id' => null];
         $messages = $id ? $this->db()->all('SELECT * FROM messages WHERE org_id = ? AND contact_id = ? ORDER BY id DESC', [$this->orgId(), $id]) : [];
         $company = !empty($c['nip']) ? Companies::byNip((string) $c['nip']) : null;
-        return $this->view('outreach/contact', compact('c', 'messages', 'company') + ['title' => $id ? (string) $c['company_name'] : 'Nowy kontakt']);
+        $sequence = $id ? Sequences::activeFor($this->orgId(), $id) : null;
+        return $this->view('outreach/contact', compact('c', 'messages', 'company', 'sequence') + ['title' => $id ? (string) $c['company_name'] : 'Nowy kontakt']);
     }
 
     public function contactSave(Request $r): Response
@@ -111,9 +114,93 @@ final class OutreachController extends Controller
         if (!$c) {
             return $this->notFound();
         }
-        $this->db()->update('contacts', ['unsubscribed_at' => $c['unsubscribed_at'] ? null : now_utc()], 'id = ?', [(int) $c['id']]);
-        AuditLog::add($c['unsubscribed_at'] ? 'contact.resubscribe' : 'contact.unsubscribe', 'contact', (int) $c['id'], [], $r->ip());
+        if ($c['unsubscribed_at']) {
+            $this->db()->update('contacts', ['unsubscribed_at' => null], 'id = ?', [(int) $c['id']]);
+        } else {
+            Outreach::unsubscribe($c);
+        }
+        AuditLog::add($c['unsubscribed_at'] ? 'contact.resubscribe' : 'contact.unsubscribe', 'contact', (int) $c['id'], ['via' => 'panel'], $r->ip());
         return $this->redirect('/klienci/' . $c['id'], $c['unsubscribed_at'] ? 'Usunięto oznaczenie sprzeciwu.' : 'Zapisano sprzeciw. Nie przygotujemy już dla tego kontaktu ofert ani próśb o zgodę.');
+    }
+
+    /** Sekwencja, której kolejny krok właśnie przygotowujemy (null przy zwykłej wiadomości). */
+    private ?array $seq = null;
+
+    /** Odbiorca odpisał: przypomnienia się zatrzymują. Drugie kliknięcie cofa oznaczenie. */
+    public function replied(Request $r): Response
+    {
+        $c = Outreach::contact($this->orgId(), (int) $r->param('id'));
+        if (!$c) {
+            return $this->notFound();
+        }
+        $on = empty($c['replied_at']);
+        $this->db()->update('contacts', ['replied_at' => $on ? now_utc() : null], 'id = ?', [(int) $c['id']]);
+        $stopped = $on ? Sequences::stopForContact($this->orgId(), (int) $c['id'], 'replied') : 0;
+        AuditLog::add($on ? 'contact.replied' : 'contact.replied_undo', 'contact', (int) $c['id'], [], $r->ip());
+        $back = $r->str('back') === 'sekwencje' ? '/klienci/przypomnienia' : '/klienci/' . $c['id'];
+        return $this->redirect($back, $on ? 'Zapisano odpowiedź' . ($stopped ? '. Przypomnienia dla tej firmy są zatrzymane.' : '.') : 'Usunięto oznaczenie odpowiedzi.');
+    }
+
+    /** Przypomnienia: co wysłać dziś, co czeka na termin, co się zakończyło. */
+    public function sequences(Request $r): Response
+    {
+        $org = $this->orgId();
+        $limit = Sequences::limit(Auth::org());
+        $sent = Sequences::sentToday($org);
+        $due = Sequences::due($org);
+        return $this->view('outreach/sequences', [
+            'due' => $due, 'room' => max(0, $limit - $sent), 'limit' => $limit, 'sent' => $sent,
+            'waiting' => Sequences::waiting($org), 'closed' => Sequences::closed($org), 'title' => 'Przypomnienia',
+        ]);
+    }
+
+    public function stopSequence(Request $r): Response
+    {
+        $ok = Sequences::stop($this->orgId(), (int) $r->param('id'), 'manual');
+        if ($ok) {
+            AuditLog::add('sequence.stop', 'sequence', (int) $r->param('id'), [], $r->ip());
+        }
+        return $ok ? $this->redirect('/klienci/przypomnienia', 'Zatrzymano przypomnienia dla tej firmy.') : $this->notFound();
+    }
+
+    /** Dzienny limit wiadomości z jednej skrzynki. */
+    public function saveLimit(Request $r): Response
+    {
+        if (!Auth::isOwner()) {
+            return $this->redirect('/klienci/przypomnienia', 'Limit ustawia właściciel konta.', 'error');
+        }
+        $n = $r->int('limit');
+        if ($n < 1 || $n > 200) {
+            return $this->redirect('/klienci/przypomnienia', 'Podaj limit od 1 do 200 wiadomości dziennie.', 'error');
+        }
+        \App\Core\Brand::save($this->orgId(), ['outreach_limit' => $n]);
+        return $this->redirect('/klienci/przypomnienia', 'Zapisano limit: ' . $n . ' ' . plural($n, 'wiadomość', 'wiadomości', 'wiadomości') . ' dziennie.');
+    }
+
+    /** Strona wypisania z linku w wiadomości. Bez logowania. Samo otwarcie niczego nie zmienia: wypisuje dopiero przycisk. */
+    public function unsubForm(Request $r): Response
+    {
+        $headers = ['X-Robots-Tag' => 'noindex, nofollow', 'Cache-Control' => 'private, no-store', 'Content-Type' => 'text/html; charset=utf-8'];
+        if (\App\Core\Kv::hit('unsub:' . hash('sha256', $r->ip()) . ':' . gmdate('YmdH'), 3600) > 60) {
+            return new Response(View::render('errors/message', ['title' => 'Za dużo prób', 'message' => 'Spróbuj ponownie za godzinę.', 'bare' => true, 'footNote' => ''], 'public'), 429, $headers);
+        }
+        $c = Outreach::byUnsubToken((string) $r->param('token'));
+        if (!$c) {
+            return new Response(View::render('errors/message', ['title' => 'Link nie działa', 'message' => 'Ten link wypisania jest nieprawidłowy. Możesz też odpisać nadawcy „rezygnuję”.', 'bare' => true, 'footNote' => ''], 'public'), 404, $headers);
+        }
+        $done = false;
+        if ($r->method === 'POST') {
+            if (Outreach::unsubscribe($c)) {
+                // Wpis w dzienniku firmy, do której należy kontakt (odbiorca nie jest zalogowany).
+                $this->db()->insert('audit_log', ['org_id' => (int) $c['org_id'], 'user_id' => null, 'action' => 'contact.unsubscribe', 'entity' => 'contact',
+                    'entity_id' => (string) $c['id'], 'data_json' => json_out(['via' => 'link']), 'ip' => $r->ip() ?: null, 'created_at' => now_utc()]);
+            }
+            $done = true;
+        }
+        return new Response(View::render('outreach/unsubscribe', [
+            'c' => $c, 'done' => $done || !empty($c['unsubscribed_at']), 'token' => (string) $r->param('token'),
+            'title' => 'Rezygnacja z wiadomości', 'bare' => true, 'footNote' => '',
+        ], 'public'), 200, $headers);
     }
 
     public function compose(Request $r): Response
@@ -122,9 +209,22 @@ final class OutreachController extends Controller
         if (!$c) {
             return $this->notFound();
         }
+        $unsub = Outreach::unsubUrl($c, $r->baseUrl());
+        $this->seq = $this->sequenceFor($r->int('sekwencja'), $c);
+        if ($this->seq) {
+            $draft = Sequences::followUp($this->seq, $c, Auth::org() ?? [], Auth::user(), $unsub);
+            return $this->renderCompose($c, (string) $this->seq['kind'], $draft['subject'], $draft['body']);
+        }
         $kind = $this->kindFor($r, $c);
-        $draft = Outreach::draft($kind, $c, Auth::org() ?? [], Auth::user());
+        $draft = Outreach::draft($kind, $c, Auth::org() ?? [], Auth::user(), $unsub);
         return $this->renderCompose($c, $kind, $draft['subject'], $draft['body']);
+    }
+
+    /** Aktywna sekwencja tego kontaktu o podanym numerze albo null. */
+    private function sequenceFor(int $id, array $contact): ?array
+    {
+        $seq = $id ? Sequences::find($this->orgId(), $id) : null;
+        return $seq && (int) $seq['contact_id'] === (int) $contact['id'] && $seq['status'] === 'active' ? $seq : null;
     }
 
     public function saveMessage(Request $r): Response
@@ -133,6 +233,8 @@ final class OutreachController extends Controller
         if (!$c) {
             return $this->notFound();
         }
+        $this->seq = $this->sequenceFor($r->int('sequence_id'), $c);
+        $unsub = Outreach::unsubUrl($c, $r->baseUrl());
         $kind = $this->kindFor($r, $c);
         $subject = mb_substr($r->str('subject'), 0, 250);
         $body = mb_substr(str_replace("\r\n", "\n", (string) ($r->post['body'] ?? '')), 0, 20000);
@@ -144,7 +246,7 @@ final class OutreachController extends Controller
             return $this->renderCompose($c, $kind, $subject, $body);
         }
         if ($r->str('action') === 'switch') {
-            $draft = Outreach::draft($kind, $c, Auth::org() ?? [], Auth::user());
+            $draft = Outreach::draft($kind, $c, Auth::org() ?? [], Auth::user(), $unsub);
             return $this->renderCompose($c, $kind, $draft['subject'], $draft['body']);
         }
         if ($r->str('action') === 'ai') {
@@ -156,6 +258,10 @@ final class OutreachController extends Controller
             if (!$res['ok']) {
                 Session::flash('error', $res['error']);
                 return $this->renderCompose($c, $kind, $subject, $body);
+            }
+            // Ofertę zawsze kończy możliwość wypisania, także gdy model jej nie dopisał.
+            if (in_array($kind, ['consented', 'cold_offer'], true) && $unsub !== '' && !str_contains($res['body'], $unsub)) {
+                $res['body'] = rtrim($res['body']) . "\n\nRezygnacja z wiadomości: " . $unsub;
             }
             Session::flash('info', 'Szkic AI gotowy. Przeczytaj go przed zapisaniem.');
             return $this->renderCompose($c, $kind, $res['subject'] ?: $subject, $res['body']);
@@ -185,6 +291,9 @@ final class OutreachController extends Controller
             'created_by' => Auth::id(),
             'created_at' => now_utc(),
         ];
+        if ($this->seq) {
+            $data += ['sequence_id' => (int) $this->seq['id'], 'step' => (int) $this->seq['step'] + 1];
+        }
         if ($risk['needs_ack']) {
             $data += ['ack_text' => RiskPolicy::ACK_TEXT, 'ack_by' => Auth::id(), 'ack_at' => now_utc()];
         }
@@ -205,7 +314,12 @@ final class OutreachController extends Controller
             return $this->notFound();
         }
         $ackUser = $m['ack_by'] ? $this->db()->one('SELECT name, email FROM users WHERE id = ?', [(int) $m['ack_by']]) : null;
-        return $this->view('outreach/message', ['m' => $m, 'ackUser' => $ackUser, 'mailto' => Outreach::mailto($m), 'title' => (string) $m['subject']]);
+        $limit = Sequences::limit(Auth::org());
+        return $this->view('outreach/message', [
+            'm' => $m, 'ackUser' => $ackUser, 'mailto' => Outreach::mailto($m), 'title' => (string) $m['subject'],
+            'canSequence' => Sequences::canStart($m), 'sequence' => $m['sequence_id'] ? Sequences::find($this->orgId(), (int) $m['sequence_id']) : null,
+            'limit' => $limit, 'sentToday' => Sequences::sentToday($this->orgId()),
+        ]);
     }
 
     public function eml(Request $r): Response
@@ -225,9 +339,20 @@ final class OutreachController extends Controller
         if (!$m) {
             return $this->notFound();
         }
+        if ($m['status'] === 'sent') {
+            return $this->redirect('/wiadomosci/' . $m['id']);
+        }
         $this->db()->update('messages', ['status' => 'sent', 'sent_at' => now_utc()], 'id = ? AND org_id = ?', [(int) $m['id'], $this->orgId()]);
         AuditLog::add('message.sent', 'message', (int) $m['id'], [], $r->ip());
-        return $this->redirect('/wiadomosci/' . $m['id'], 'Oznaczono jako wysłaną.');
+        $note = '';
+        if ($m['sequence_id']) {
+            Sequences::advance($m);
+            $seq = Sequences::find($this->orgId(), (int) $m['sequence_id']);
+            $note = $seq && $seq['next_at'] ? ' Kolejny krok przypomnimy ' . local_dt($seq['next_at'], 'd.m.Y') . '.' : ' To był ostatni krok przypomnień.';
+        } elseif ($r->input('sequence') === '1' && ($sid = Sequences::start($m, Auth::id()))) {
+            $note = ' Przypomnimy o kolejnej wiadomości ' . local_dt((string) Sequences::find($this->orgId(), $sid)['next_at'], 'd.m.Y') . '.';
+        }
+        return $this->redirect('/wiadomosci/' . $m['id'], 'Oznaczono jako wysłaną.' . $note);
     }
 
     private function kindFor(Request $r, array $c): string
@@ -251,7 +376,7 @@ final class OutreachController extends Controller
         }
         return $this->view('outreach/compose', [
             'c' => $c, 'kind' => $kind, 'subject' => $subject, 'body' => $body, 'risks' => $risks, 'risk' => $risks[$kind],
-            'aiEnabled' => Claude::enabled(), 'title' => 'Nowa wiadomość',
+            'aiEnabled' => Claude::enabled(), 'title' => 'Nowa wiadomość', 'seq' => $this->seq,
         ]);
     }
 }

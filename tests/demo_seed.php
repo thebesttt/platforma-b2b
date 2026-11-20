@@ -153,6 +153,21 @@ function demo_seed(): array
         'basis' => 'rfq', 'basis_detail' => 'zapytanie ofertowe „Utwardzenie placu manewrowego” na stronie firmy', 'basis_at' => date('Y-m-d', strtotime('-4 days')), 'created_at' => now_utc()]);
     $db->insert('contacts', ['org_id' => $org, 'company_name' => 'Przykładowy Deweloper sp. z o.o.', 'email' => 'biuro@example.org', 'basis' => 'none', 'website' => 'https://example.org', 'created_at' => now_utc()]);
     $db->insert('contacts', ['org_id' => $org, 'company_name' => 'Spółdzielnia Mieszkaniowa (przykład)', 'person' => 'Ewa Przykładowa', 'email' => 'zarzad@example.net', 'basis' => 'client', 'basis_detail' => 'remont parkingu w 2025 r., prośba o kolejne oferty', 'created_at' => now_utc()]);
+    // Przypomnienia: jedna firma z krokiem na dziś, jedna czeka na termin, jedna odpisała.
+    $seqDemo = static function (string $company, string $email, int $sentDaysAgo, ?string $stop = null) use ($db, $org, $uid): void {
+        $cid = $db->insert('contacts', ['org_id' => $org, 'company_name' => $company, 'person' => null, 'email' => $email, 'basis' => 'rfq',
+            'basis_detail' => 'zapytanie o remont nawierzchni placu', 'basis_at' => gmdate('Y-m-d', time() - ($sentDaysAgo + 1) * 86400), 'created_at' => gmdate('Y-m-d H:i:s', time() - ($sentDaysAgo + 1) * 86400),
+            'replied_at' => $stop === 'replied' ? gmdate('Y-m-d H:i:s', time() - 86400) : null]);
+        $sent = gmdate('Y-m-d H:i:s', time() - $sentDaysAgo * 86400);
+        $sid = $db->insert('sequences', ['org_id' => $org, 'contact_id' => $cid, 'kind' => 'rfq_reply', 'status' => $stop ? 'stopped' : 'active', 'stop_reason' => $stop, 'step' => 0,
+            'next_at' => $stop ? null : gmdate('Y-m-d H:i:s', strtotime($sent . ' UTC') + 4 * 86400), 'started_at' => $sent, 'updated_at' => $stop ? gmdate('Y-m-d H:i:s', time() - 86400) : $sent, 'created_by' => $uid]);
+        $db->insert('messages', ['org_id' => $org, 'contact_id' => $cid, 'kind' => 'rfq_reply', 'risk' => 'low', 'subject' => 'Odpowiedź na zapytanie ofertowe: remont nawierzchni placu',
+            'body' => "Dzień dobry,\n\ndziękujemy za zapytanie. W załączeniu przesyłamy ofertę.\n\nZ poważaniem\nAnna Demo", 'status' => 'sent', 'sent_at' => $sent, 'created_by' => $uid, 'created_at' => $sent,
+            'sequence_id' => $sid, 'step' => 0]);
+    };
+    $seqDemo('Hurtownia Budowlana (przykład)', 'biuro@hurtownia.example', 5);
+    $seqDemo('Zakład Usług Komunalnych (przykład)', 'zamowienia@zuk.example', 2);
+    $seqDemo('Centrum Logistyczne (przykład)', 'kontakt@centrum.example', 6, 'replied');
 
     // Zapytania ze strony: widżet dopuszczony na example.com i przykładowe zapytania przeprowadzone tą samą ścieżką co prawdziwe
     // (start rozmowy, odpowiedzi, formularz), więc ocena pochodzi z tabeli punktów, a nie z ręki.

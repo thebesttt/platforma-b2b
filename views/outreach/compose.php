@@ -9,8 +9,12 @@ $action = '/klienci/' . (int) $c['id'] . '/wiadomosc';
   <p class="muted small"><?= e($c['email']) ?> · podstawa kontaktu: <?= e(RiskPolicy::basisLine($c)) ?><?= $c['unsubscribed_at'] ? ' · <strong>odbiorca wypisany</strong>' : '' ?></p>
 </header>
 
+<?php if (!empty($seq)): $stepNo = (int) $seq['step'] + 1; ?>
+  <div class="notice info">Krok <?= $stepNo + 1 ?> z 3: <?= e(mb_strtolower(\App\Modules\Outreach\Sequences::STEPS[$stepNo][1] ?? 'kolejna wiadomość')) ?>. Treść nawiązuje do pierwszej wiadomości. Jeśli firma już odpisała, zamiast pisać kliknij „Odpisał(a)” na liście przypomnień.</div>
+<?php endif ?>
 <form method="post" action="<?= e($action) ?>" class="cols">
   <?= csrf_field() ?>
+  <?php if (!empty($seq)): ?><input type="hidden" name="sequence_id" value="<?= (int) $seq['id'] ?>"><?php endif ?>
   <?php /* Pierwszy przycisk formularza jest domyślny dla klawisza Enter: tylko odświeża stronę z wpisaną treścią. */ ?>
   <button type="submit" name="action" value="keep" class="sr-only" tabindex="-1" aria-hidden="true">Odśwież</button>
   <div class="main stack">

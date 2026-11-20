@@ -85,6 +85,8 @@ function http(string $method, string $path, array $post = [], array $query = [],
     if ($method === 'POST' && !array_key_exists('_csrf', $post)) {
         $post['_csrf'] = App\Core\Csrf::token();
     }
+    // Na serwerze każde zapytanie to osobny proces, więc dane użytkownika i firmy czytamy od nowa.
+    App\Core\Auth::forget();
     $r = new App\Core\Request($method, $path, $query, $post, $files, ['REMOTE_ADDR' => '127.0.0.1', 'HTTP_HOST' => 'localhost']);
     return App\Core\App::handle($r);
 }

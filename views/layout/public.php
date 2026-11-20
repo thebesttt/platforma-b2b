@@ -38,7 +38,7 @@ $appName = (string) config('APP_NAME');
     <?= $content ?>
   </div>
 </main>
-<footer class="pub-foot">© <?= date('Y') ?> <?= e($appName) ?><?= empty($bare) ? ' · Dane z BZP, TED, KRS, wykazu podatników VAT i rejestru decyzji UOKiK' : ' · Raport tylko do odczytu' ?></footer>
+<footer class="pub-foot">© <?= date('Y') ?> <?= e($appName) ?><?= empty($bare) ? ' · Dane z BZP, TED, KRS, wykazu podatników VAT i rejestru decyzji UOKiK' : (isset($footNote) ? ($footNote !== '' ? ' · ' . e($footNote) : '') : ' · Raport tylko do odczytu') ?></footer>
 <script src="<?= e(asset('/assets/app.js')) ?>" defer></script>
 </body>
 </html>

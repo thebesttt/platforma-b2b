@@ -5,7 +5,10 @@
     <h1>Klienci i wiadomości</h1>
     <p class="muted small">Przy każdej wiadomości widzisz ryzyko prawne. Decyzję o wysłaniu podejmujesz Ty, a wiadomość wychodzi z Twojej skrzynki.</p>
   </div>
-  <a class="btn" href="/klienci/nowy">Dodaj kontakt</a>
+  <div class="row-flex">
+    <a class="btn ghost" href="/klienci/przypomnienia">Przypomnienia<?= $due ? ' (' . (int) $due . ' na dziś)' : '' ?></a>
+    <a class="btn" href="/klienci/nowy">Dodaj kontakt</a>
+  </div>
 </header>
 <div class="cols">
   <section class="card flush main" aria-labelledby="t-c">

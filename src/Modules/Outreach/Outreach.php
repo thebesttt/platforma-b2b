@@ -31,13 +31,58 @@ final class Outreach
     public static function message(int $orgId, int $id): ?array
     {
         return Db::get()->one(
-            'SELECT m.*, c.company_name, c.email, c.person FROM messages m JOIN contacts c ON c.id = m.contact_id WHERE m.org_id = ? AND m.id = ?',
+            'SELECT m.*, c.company_name, c.email, c.person, c.unsubscribed_at, c.replied_at FROM messages m JOIN contacts c ON c.id = m.contact_id WHERE m.org_id = ? AND m.id = ?',
             [$orgId, $id]
         );
     }
 
+    /** Stopka z możliwością wypisania: link (jeśli znamy adres panelu) i odpowiedź „rezygnuję”. */
+    public static function optOut(string $unsubUrl = ''): string
+    {
+        return $unsubUrl !== ''
+            ? "\n\nJeśli nie chcą Państwo otrzymywać od nas wiadomości, wystarczy otworzyć ten adres: " . $unsubUrl . "\nalbo odpisać „rezygnuję”."
+            : "\n\nJeśli nie chcą Państwo otrzymywać od nas wiadomości, wystarczy odpisać „rezygnuję”.";
+    }
+
+    /** Adres wypisania dla kontaktu. Token powstaje przy pierwszym użyciu i zostaje ten sam we wszystkich wiadomościach. */
+    public static function unsubUrl(array $contact, string $baseUrl): string
+    {
+        if ($baseUrl === '' || empty($contact['id'])) {
+            return '';
+        }
+        $token = (string) ($contact['unsub_token'] ?? '');
+        if ($token === '') {
+            $token = bin2hex(random_bytes(20));
+            Db::get()->update('contacts', ['unsub_token' => $token], 'id = ?', [(int) $contact['id']]);
+        }
+        return rtrim($baseUrl, '/') . '/wypisz/' . $token;
+    }
+
+    /** Kontakt po tokenie z linku wypisania. */
+    public static function byUnsubToken(string $token): ?array
+    {
+        if (!preg_match('/^[a-f0-9]{40}$/', $token)) {
+            return null;
+        }
+        return Db::get()->one('SELECT c.*, o.name AS org_name FROM contacts c JOIN organizations o ON o.id = c.org_id WHERE c.unsub_token = ?', [$token]);
+    }
+
+    /**
+     * Wypisanie: zapis sprzeciwu i zatrzymanie przypomnień. Wywoływane z linku w wiadomości albo ręcznie w panelu.
+     * @return bool fałsz, gdy kontakt był już wypisany
+     */
+    public static function unsubscribe(array $contact): bool
+    {
+        Sequences::stopForContact((int) $contact['org_id'], (int) $contact['id'], 'unsubscribed');
+        if (!empty($contact['unsubscribed_at'])) {
+            return false;
+        }
+        Db::get()->update('contacts', ['unsubscribed_at' => now_utc()], 'id = ?', [(int) $contact['id']]);
+        return true;
+    }
+
     /** Szkic regułowy (bez AI) dla wybranego rodzaju wiadomości. @return array{subject: string, body: string} */
-    public static function draft(string $kind, array $contact, array $org, ?array $user): array
+    public static function draft(string $kind, array $contact, array $org, ?array $user, string $unsubUrl = ''): array
     {
         $greet = !empty($contact['person']) ? 'Dzień dobry, ' . trim((string) $contact['person']) . ',' : 'Dzień dobry,';
         $sig = trim(($user['name'] ?? '') . "\n" . ($org['name'] ?? '') . (!empty($org['phone']) ? "\ntel. " . $org['phone'] : '') . (!empty($org['website']) ? "\n" . $org['website'] : ''));
@@ -49,7 +94,7 @@ final class Outreach
             }
         }
         $topic = trim((string) ($contact['basis_detail'] ?? ''));
-        $optOut = "\n\nJeśli nie chcą Państwo otrzymywać od nas wiadomości, wystarczy odpisać „rezygnuję”.";
+        $optOut = self::optOut($unsubUrl);
 
         return match ($kind) {
             'rfq_reply' => [

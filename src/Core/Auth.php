@@ -62,6 +62,13 @@ final class Auth
     }
 
     /** Tylko testy i CLI. */
+    /** Czyści dane użytkownika i firmy zapamiętane na czas jednego zapytania. Testy wołają to przed każdym zapytaniem. */
+    public static function forget(): void
+    {
+        self::$user = null;
+        self::$org = null;
+    }
+
     public static function actAs(int $userId): void
     {
         self::$user = null;

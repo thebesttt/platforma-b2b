@@ -36,6 +36,10 @@ return static function (Router $r): void {
     // Raport audytu treści dla klienta: link z losowym tokenem, bez logowania
     $r->get('/r/{token}', [ContentController::class, 'publicReport']);
 
+    // Wypisanie z wiadomości: link w stopce e-maila. Bez logowania, bez sesji, bez tokenu CSRF (odbiorca nie ma konta).
+    $r->get('/wypisz/{token}', [OutreachController::class, 'unsubForm']);
+    $r->post('/wypisz/{token}', [OutreachController::class, 'unsubForm'], ['csrf' => false]);
+
     // Zadania cykliczne (wywołuje GitHub Actions lub cron hostingu z tokenem)
     $r->get('/cron/run', [CronController::class, 'run']);
     $r->post('/cron/run', [CronController::class, 'run'], ['csrf' => false]);
@@ -114,10 +118,14 @@ return static function (Router $r): void {
     // Klienci i wiadomości
     $r->get('/klienci', [OutreachController::class, 'index'], $a);
     $r->get('/klienci/nowy', [OutreachController::class, 'contactForm'], $a);
+    $r->get('/klienci/przypomnienia', [OutreachController::class, 'sequences'], $a);
+    $r->post('/klienci/przypomnienia/limit', [OutreachController::class, 'saveLimit'], $a);
+    $r->post('/klienci/przypomnienia/{id}/zatrzymaj', [OutreachController::class, 'stopSequence'], $a);
     $r->post('/klienci', [OutreachController::class, 'contactSave'], $a);
     $r->get('/klienci/{id}', [OutreachController::class, 'contactForm'], $a);
     $r->post('/klienci/{id}', [OutreachController::class, 'contactSave'], $a);
     $r->post('/klienci/{id}/wypisz', [OutreachController::class, 'unsubscribe'], $a);
+    $r->post('/klienci/{id}/odpowiedz', [OutreachController::class, 'replied'], $a);
     $r->get('/klienci/{id}/wiadomosc', [OutreachController::class, 'compose'], $a);
     $r->post('/klienci/{id}/wiadomosc', [OutreachController::class, 'saveMessage'], $a);
     $r->get('/wiadomosci/{id}', [OutreachController::class, 'message'], $a);

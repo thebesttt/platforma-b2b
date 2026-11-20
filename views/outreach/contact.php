@@ -48,6 +48,16 @@
         <ul class="list-plain"><?php foreach ($messages as $m): ?><li class="small"><a href="/wiadomosci/<?= (int) $m['id'] ?>"><?= e(truncate((string) $m['subject'], 60)) ?></a><br><span class="xs muted"><?= e(RiskPolicy::KINDS[$m['kind']]['title'] ?? $m['kind']) ?> · <?= e(local_dt($m['created_at'], 'd.m.Y')) ?></span></li><?php endforeach ?></ul>
       <?php else: ?><p class="small muted" style="margin:0">Brak wiadomości.</p><?php endif ?>
     </section>
+    <form method="post" action="/klienci/<?= (int) $c['id'] ?>/odpowiedz" class="card stack-sm">
+      <?= csrf_field() ?>
+      <h2>Odpowiedź i przypomnienia</h2>
+      <p class="small" style="margin:0">
+        <?php if (!empty($c['replied_at'])): ?>Firma odpisała <?= e(local_dt($c['replied_at'], 'd.m.Y')) ?>. Przypomnień nie planujemy.
+        <?php elseif (!empty($sequence)): ?>Przypomnienia w toku: kolejny krok <?= e(local_dt($sequence['next_at'], 'd.m.Y')) ?>. <a href="/klienci/przypomnienia">Zobacz listę</a>
+        <?php else: ?>Gdy firma odpisze, zaznacz to tutaj. Zatrzyma to zaplanowane przypomnienia.<?php endif ?>
+      </p>
+      <button class="btn ghost sm" type="submit"><?= empty($c['replied_at']) ? 'Firma odpisała' : 'Usuń oznaczenie odpowiedzi' ?></button>
+    </form>
     <form method="post" action="/klienci/<?= (int) $c['id'] ?>/wypisz" class="card stack-sm" <?= empty($c['unsubscribed_at']) ? 'data-confirm="Zapisać sprzeciw tej firmy wobec dalszych wiadomości?"' : '' ?>>
       <?= csrf_field() ?>
       <p class="small" style="margin:0"><?= empty($c['unsubscribed_at']) ? 'Firma poprosiła o niewysyłanie wiadomości? Zapisz sprzeciw - zablokujemy oferty i prośby o zgodę.' : 'Sprzeciw zapisany. Usuń go tylko wtedy, gdy firma ponownie wyraziła zgodę.' ?></p>
