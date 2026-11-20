@@ -7,6 +7,7 @@ use App\Core\Router;
 use App\Http\AuditController;
 use App\Http\AuthController;
 use App\Http\CompanyController;
+use App\Http\ContentController;
 use App\Http\CronController;
 use App\Http\DashboardController;
 use App\Http\InboundController;
@@ -31,6 +32,9 @@ return static function (Router $r): void {
     $r->post('/haslo', [AuthController::class, 'forgot']);
     $r->get('/haslo/{token}', [AuthController::class, 'resetForm']);
     $r->post('/haslo/{token}', [AuthController::class, 'reset']);
+
+    // Raport audytu treści dla klienta: link z losowym tokenem, bez logowania
+    $r->get('/r/{token}', [ContentController::class, 'publicReport']);
 
     // Zadania cykliczne (wywołuje GitHub Actions lub cron hostingu z tokenem)
     $r->get('/cron/run', [CronController::class, 'run']);
@@ -119,6 +123,18 @@ return static function (Router $r): void {
     $r->get('/audyt', [AuditController::class, 'index'], $a);
     $r->post('/audyt', [AuditController::class, 'run'], $a);
     $r->get('/audyt/porownanie', [AuditController::class, 'compare'], $a);
+    // Audyt treści pod wyszukiwarki i AI (trasy muszą być przed /audyt/{id})
+    $r->get('/audyt/tresc', [ContentController::class, 'index'], $a);
+    $r->post('/audyt/tresc', [ContentController::class, 'add'], $a);
+    $r->get('/audyt/wytyczne', [ContentController::class, 'guidelines'], $a);
+    $r->post('/audyt/tresc/audyt/{id}/krok', [ContentController::class, 'step'], $a);
+    $r->post('/audyt/tresc/audyt/{id}/dokoncz', [ContentController::class, 'finish'], $a);
+    $r->get('/audyt/tresc/{id}', [ContentController::class, 'show'], $a);
+    $r->post('/audyt/tresc/{id}/audyt', [ContentController::class, 'run'], $a);
+    $r->get('/audyt/tresc/{id}/porownanie', [ContentController::class, 'compare'], $a);
+    $r->post('/audyt/tresc/{id}/pytania', [ContentController::class, 'questions'], $a);
+    $r->post('/audyt/tresc/{id}/link', [ContentController::class, 'share'], $a);
+    $r->post('/audyt/tresc/{id}/usun', [ContentController::class, 'delete'], $a);
     $r->get('/audyt/{id}', [AuditController::class, 'show'], $a);
     $r->get('/reklamy', [AuditController::class, 'ads'], $a);
 

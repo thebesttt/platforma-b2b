@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Buduje mockup z jednego źródła prawdy: src/rules.json (wytyczne), src/sample.json i src/leads.json (audyt i zapytania),
+"""Buduje mockup z jednego źródła prawdy: resources/audyt-ai-rules.json w katalogu głównym (wytyczne, te same czyta silnik), src/sample.json i src/leads.json (audyt i zapytania),
 src/platform.json (pozostałe moduły) oraz src/page.html i src/js/*.js (wygląd i zachowanie).
 
 Wynik:
@@ -15,7 +15,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).parent
-rules = json.loads((ROOT / 'src/rules.json').read_text(encoding='utf-8'))
+RULES_FILE = ROOT.parent.parent / 'resources/audyt-ai-rules.json'
+rules = json.loads(RULES_FILE.read_text(encoding='utf-8'))
 sample = json.loads((ROOT / 'src/sample.json').read_text(encoding='utf-8'))
 leads = json.loads((ROOT / 'src/leads.json').read_text(encoding='utf-8'))
 plat = json.loads((ROOT / 'src/platform.json').read_text(encoding='utf-8'))
@@ -149,7 +150,7 @@ lv = rules['levels']
 md = [
     '# Wytyczne wskaźników audytu treści pod wyszukiwarki i AI',
     '',
-    f"Wersja {rules['version']}. Plik powstaje z `src/rules.json` poleceniem `python3 build.py`. Nie edytuj go ręcznie.",
+    f"Wersja {rules['version']}. Plik powstaje z `resources/audyt-ai-rules.json` poleceniem `python3 mockup/audyt-ai/build.py`. Nie edytuj go ręcznie.",
     '',
     '## Zasady',
     '',

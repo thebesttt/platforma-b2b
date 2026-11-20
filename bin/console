@@ -9,6 +9,7 @@
  *   php bin/console watchlist          - odświeżenie obserwowanych kontrahentów (alerty o zmianach)
  *   php bin/console daily              - wszystko powyżej (zadanie codzienne)
  *   php bin/console user:create e-mail hasło "Nazwa firmy" [NIP]
+ *   php bin/console content:audit adres "fraza" [rodzaj] - audyt treści jednej strony, wynik w konsoli, bez zapisu do bazy
  *   php bin/console demo:seed          - konto demonstracyjne z przykładowymi danymi (tylko środowisko dev/test)
  */
 
@@ -65,6 +66,24 @@ try {
             $res = Auth::register($company, $argv[5] ?? '', '', $email, $password);
             $out($res['ok'] ? 'Utworzono konto ' . $email : 'Błąd: ' . $res['error']);
             exit($res['ok'] ? 0 : 1);
+        case 'content:audit':
+            // Audyt treści jednej strony bez zapisu do bazy: php bin/console content:audit <adres> "<fraza>" [article|product|home|other]
+            if (($argv[2] ?? '') === '' || ($argv[3] ?? '') === '') {
+                $out('Użycie: php bin/console content:audit <adres> "<fraza>" [article|product|home|other]');
+                exit(1);
+            }
+            $s = App\Modules\Content\Measure::run($argv[2], $argv[3], $argv[4] ?? 'other');
+            $t = $s['totals'];
+            $out('Strona: ' . ($s['final_url'] ?? $argv[2]) . ' (kod ' . ($s['status'] ?? 0) . ', słów treści: ' . (int) ($s['facts']['words'] ?? 0) . ')');
+            $out('Wynik: ' . ($t['score'] ?? '-') . ' / 100 (' . $t['points'] . ' z ' . $t['max'] . ' pkt zmierzonych)' . ($t['blocked'] ? ', niespełnione warunki konieczne: ' . implode(', ', $t['blocked']) : ''));
+            foreach ($s['results'] as $code => $r) {
+                $rule = App\Modules\Content\Ruleset::rule($code);
+                $out(sprintf('%s %-12s %d/%d  %s: %s', $code, App\Modules\Content\Ruleset::STATES[$r['status']]['label'], $r['points'], $r['max'], $rule['name'], $r['value']));
+                if ($r['evidence'] !== '') {
+                    $out('     ' . $r['evidence']);
+                }
+            }
+            break;
         case 'demo:seed':
             if (!Config::isDev()) {
                 $out('demo:seed działa tylko przy APP_ENV=dev lub test.');
@@ -75,7 +94,7 @@ try {
             break;
         default:
             $lines = file(__FILE__);
-            echo implode('', array_slice($lines, 2, 11));
+            echo implode('', array_slice($lines, 2, 12));
     }
 } catch (Throwable $e) {
     fwrite(STDERR, get_class($e) . ': ' . $e->getMessage() . ' (' . basename($e->getFile()) . ':' . $e->getLine() . ")\n");

@@ -1220,7 +1220,7 @@ class PrestaCheck_Scanner {
 				CURLOPT_PROTOCOLS      => CURLPROTO_HTTP | CURLPROTO_HTTPS,
 				CURLOPT_TIMEOUT        => isset( $o['timeout'] ) ? $o['timeout'] : $this->opts['timeout'],
 				CURLOPT_CONNECTTIMEOUT => 6,
-				CURLOPT_USERAGENT      => self::USER_AGENT,
+				CURLOPT_USERAGENT      => isset( $o['user_agent'] ) ? (string) $o['user_agent'] : self::USER_AGENT, // audyt treści sprawdza odpowiedź dla botów
 				CURLOPT_ENCODING       => '',
 				CURLOPT_SSL_VERIFYPEER => ! $insecure,
 				CURLOPT_SSL_VERIFYHOST => $insecure ? 0 : 2,

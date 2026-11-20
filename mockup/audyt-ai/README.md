@@ -33,7 +33,7 @@ Po zmianie reguły w silniku trzeba poprawić też mockup.
 
 ## Co tu jest
 
-- `src/rules.json` - wytyczne audytu AI: 24 wskaźniki, 100 pkt, progi, punkty, podstawa. Jedno źródło prawdy.
+- `../../resources/audyt-ai-rules.json` - wytyczne audytu AI: 24 wskaźniki, 100 pkt, progi, punkty, podstawa. Jedno źródło prawdy: ten sam plik czyta silnik.
 - `src/sample.json` - dane audytu AI: dwa audyty tej samej strony (przed i po pracach).
 - `src/leads.json` - zasady kwalifikacji zapytań (pytania, punkty, progi) i przykładowe zapytania.
 - `src/platform.json` - dane pozostałych modułów i lista funkcji ze stanem.

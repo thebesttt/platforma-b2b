@@ -12,6 +12,7 @@ use App\Core\Db;
 use App\Modules\Audit\Audit;
 use App\Modules\Companies\Companies;
 use App\Modules\Companies\Uokik;
+use App\Modules\Content\ContentAudit;
 use App\Modules\Inbound\Inbound;
 use App\Modules\Offers\Offers;
 use App\Modules\Tenders\Importer;
@@ -113,6 +114,27 @@ function demo_seed(): array
         if (!empty($res['lead_id'])) {
             $db->update('inbound_leads', ['created_at' => gmdate('Y-m-d H:i:s', time() - $hoursAgo * 3600), 'status' => ['new', 'new', 'contact', 'offer'][$i]], 'id = ?', [(int) $res['lead_id']]);
         }
+    }
+
+    // Audyt treści: fikcyjna strona poradnika sprawdzona dwa razy, przed pracami i po nich. Odpowiedzi strony i usług
+    // pomiarowych pochodzą z plików testowych, więc na czas przykładu udajemy podłączoną usługę renderowania.
+    require_once APP_ROOT . '/tests/fixtures/http/site.php';
+    $saved = ['FIXTURE_SITE' => \App\Core\Config::get('FIXTURE_SITE'), 'CF_ACCOUNT_ID' => \App\Core\Config::get('CF_ACCOUNT_ID'), 'CF_BROWSER_TOKEN' => \App\Core\Config::get('CF_BROWSER_TOKEN')];
+    \App\Core\Config::set('CF_ACCOUNT_ID', 'przyklad');
+    \App\Core\Config::set('CF_BROWSER_TOKEN', 'przyklad');
+    $target = ContentAudit::addTarget($org, $uid, SITE_URL, 'jaki ekspres ciśnieniowy do domu', 'article');
+    if ($target['ok']) {
+        ContentAudit::saveQuestions(ContentAudit::target($org, (int) $target['id']), site_questions(), true);
+        foreach ([['przed', 'przed pracami', 37], ['po', 'po pracach', 2]] as [$variant, $label, $daysAgo]) {
+            \App\Core\Config::set('FIXTURE_SITE', $variant);
+            $aid = ContentAudit::start(ContentAudit::target($org, (int) $target['id']), $uid, $label);
+            ContentAudit::runAll($org, $aid);
+            $when = gmdate('Y-m-d H:i:s', time() - $daysAgo * 86400);
+            $db->update('content_audits', ['created_at' => $when, 'finished_at' => $when], 'id = ?', [$aid]);
+        }
+    }
+    foreach ($saved as $k => $v) {
+        \App\Core\Config::set($k, $v);
     }
 
     return ['ok' => true, 'org_id' => $org, 'login' => 'demo@example.com / demo-haslo-123'];

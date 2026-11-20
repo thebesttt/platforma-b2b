@@ -8,23 +8,6 @@ use App\Core\Http;
 use App\Core\Mailer;
 use App\Http\Nav;
 
-/** Ustawia zmienne na czas jednego testu i zawsze je przywraca. */
-function with_config(array $set, callable $fn): void
-{
-    $old = [];
-    foreach ($set as $k => $v) {
-        $old[$k] = Config::get($k);
-        Config::set($k, $v);
-    }
-    try {
-        $fn();
-    } finally {
-        foreach ($old as $k => $v) {
-            Config::set($k, $v);
-        }
-    }
-}
-
 return [
     'Poczta: tryb lokalny zapisuje wiadomość i niczego nie wysyła' => function () {
         eq('log', Mailer::driver());

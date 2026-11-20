@@ -49,4 +49,45 @@
     ta.addEventListener('input', count);
     count();
   });
+
+  // Audyt treści: wykonuje kolejne kroki, aż audyt się skończy, i pokazuje postęp. Bez JavaScript działa przycisk „Dokończ audyt teraz”.
+  var run = document.querySelector('[data-audit-run]');
+  if (run && window.fetch) {
+    var fallback = run.querySelector('[data-audit-fallback]');
+    var errorBox = run.querySelector('[data-audit-error]');
+    var words = { pending: 'czeka', done: 'gotowe', failed: 'bez pomiaru', running: 'w toku' };
+    var paint = function (steps) {
+      var marked = false;
+      steps.forEach(function (s) {
+        var li = run.querySelector('[data-step="' + s.key + '"]');
+        if (!li) return;
+        var state = s.state;
+        if (state === 'pending' && !marked) { state = 'running'; marked = true; }
+        li.className = state;
+        li.querySelector('.ca-step-state').textContent = words[state] || state;
+      });
+    };
+    var current = [].map.call(run.querySelectorAll('[data-step]'), function (li) { return { key: li.getAttribute('data-step'), state: li.className }; });
+    paint(current);
+    if (fallback) fallback.hidden = true;
+    var tries = 0;
+    var next = function () {
+      fetch(run.getAttribute('data-audit-run'), {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': run.getAttribute('data-csrf') },
+        body: '_csrf=' + encodeURIComponent(run.getAttribute('data-csrf'))
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        tries = 0;
+        if (j.steps) paint(j.steps);
+        if (j.done) { window.location.reload(); return; }
+        next();
+      }).catch(function () {
+        if (++tries <= 2) { window.setTimeout(next, 2000); return; }
+        if (errorBox) { errorBox.hidden = false; errorBox.textContent = 'Połączenie z serwerem zostało przerwane. Audyt nie przepadł: kliknij przycisk, żeby go dokończyć.'; }
+        if (fallback) fallback.hidden = false;
+      });
+    };
+    next();
+  }
 })();

@@ -89,6 +89,30 @@ function http(string $method, string $path, array $post = [], array $query = [],
     return App\Core\App::handle($r);
 }
 
+/** Zalogowanie użytkownika w testach HTTP. */
+function login_as(int $userId): void
+{
+    $_SESSION = [];
+    App\Core\Auth::actAs($userId);
+}
+
+/** Ustawia zmienne konfiguracji na czas jednego wywołania i zawsze je przywraca. */
+function with_config(array $set, callable $fn): void
+{
+    $old = [];
+    foreach ($set as $k => $v) {
+        $old[$k] = App\Core\Config::get($k);
+        App\Core\Config::set($k, $v);
+    }
+    try {
+        $fn();
+    } finally {
+        foreach ($old as $k => $v) {
+            App\Core\Config::set($k, $v);
+        }
+    }
+}
+
 $filter = $argv[1] ?? '';
 $files = glob(__DIR__ . '/unit/*Test.php') ?: [];
 sort($files);

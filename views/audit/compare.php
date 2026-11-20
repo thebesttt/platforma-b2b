@@ -7,6 +7,7 @@ foreach ($sites as $s) { foreach ($s['view']['categories'] ?? [] as $k => $c) { 
   <h1>Twoja strona na tle konkurencji</h1>
   <p class="muted small">Najnowszy audyt każdej domeny. Dodaj strony konkurentów w zakładce Audyt z etykietą „Konkurent”.</p>
 </header>
+<?= App\Core\View::partial('partials/audit_nav', ['on' => 'porownanie']) ?>
 <section class="card flush">
   <?php if ($sites): ?>
   <div class="table-wrap"><table>

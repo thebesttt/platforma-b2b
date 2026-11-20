@@ -11,6 +11,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Modules\Companies\Companies;
 use App\Modules\Companies\Uokik;
+use App\Modules\Content\ContentAudit;
 use App\Modules\Inbound\Inbound;
 use App\Modules\Tenders\Importer;
 
@@ -93,6 +94,12 @@ final class CronController
             $out['inbound'] = ['enriched' => Inbound::enrichPending(), 'removed_conversations' => Inbound::cleanup()];
         } catch (\Throwable $e) {
             $out['inbound'] = ['error' => $e->getMessage()];
+        }
+        // Audyty treści, które ktoś zaczął i nie dokończył (zamknięta karta przeglądarki).
+        try {
+            $out['content_audits'] = ['finished' => ContentAudit::runPending()];
+        } catch (\Throwable $e) {
+            $out['content_audits'] = ['error' => $e->getMessage()];
         }
         $db = Db::get();
         $db->run('DELETE FROM sessions WHERE expires_at < ?', [time()]);

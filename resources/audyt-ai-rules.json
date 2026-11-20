@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-19",
+  "version": "2026-11-20",
   "levels": {
     "good": 85,
     "mid": 60
@@ -418,11 +418,14 @@
       "mid": "Data jest widoczna, ale brakuje jej w danych strukturalnych albo różni się o ponad 1 dzień.",
       "bad": "Brak daty. Także wtedy, gdy data zmieniła się między audytami, a treść nie.",
       "fix": "Pokaż datę aktualizacji i zmieniaj ją tylko razem z treścią.",
-      "note": "Google ostrzega przed zmianą daty bez zmiany treści.",
+      "note": "Google ostrzega przed zmianą daty bez zmiany treści. Wskaźnik dotyczy artykułów i poradników. Na stronie głównej, stronie produktu i stronie oferty data nie jest oczekiwana, więc raport pokazuje „nie dotyczy” i nie liczy tych punktów.",
       "basis": [
         "g_article",
         "g_helpful",
         "bing_perf"
+      ],
+      "applies": [
+        "article"
       ]
     },
     {
@@ -437,12 +440,15 @@
       "mid": "1 źródło.",
       "bad": "Brak źródeł.",
       "fix": "Podlinkuj dane, normy i badania, na które się powołujesz.",
-      "note": "W badaniu GEO dodanie źródeł podniosło widoczność w odpowiedzi AI o 28%. Test był na symulowanym silniku, nie na ChatGPT ani Google.",
+      "note": "W badaniu GEO dodanie źródeł podniosło widoczność w odpowiedzi AI o 28%. Test był na symulowanym silniku, nie na ChatGPT ani Google. Wskaźnik dotyczy artykułów i poradników. Na pozostałych rodzajach stron raport pokazuje „nie dotyczy” i nie liczy tych punktów.",
       "convention": "Próg 2 źródeł na 1000 słów jest umowny.",
       "basis": [
         "geo",
         "g_helpful",
         "bing_perf"
+      ],
+      "applies": [
+        "article"
       ]
     },
     {
@@ -657,5 +663,11 @@
         "bing_perf"
       ]
     }
-  ]
+  ],
+  "page_types": {
+    "article": "Artykuł lub poradnik",
+    "product": "Strona produktu",
+    "home": "Strona główna",
+    "other": "Oferta, usługa lub inna strona"
+  }
 }

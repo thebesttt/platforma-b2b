@@ -46,4 +46,5 @@ services:
       - key: SIGNUP_CODE           # kod zaproszenia: konto zakłada się pod adresem /rejestracja?kod=<ta wartość>
         generateValue: true
 # Zmienne opcjonalne dodasz później w zakładce Environment: PSI_KEY (klucz Google PageSpeed do audytu szybkości),
+# CF_ACCOUNT_ID i CF_BROWSER_TOKEN (Cloudflare Browser Run: wskaźniki A6 i E2 audytu AI),
 # TERMS_URL i PRIVACY_URL (adresy regulaminu i polityki prywatności), APP_URL (własna domena).

@@ -12,7 +12,8 @@ Aplikacja dla firm, które sprzedają innym firmom. Zbiera i ocenia zapytania ze
 | Oferty i wnioski | Szkic oferty: formularz, sposób realizacji, doświadczenie, zespół i lista dokumentów, z danych ogłoszenia i biblioteki firmy. Wnioski o dotacje mają osobne sekcje i korzystają z regulaminu naboru. Zdania bez źródła są oznaczone ⟦sprawdź⟧. Eksport do .docx. | Ogłoszenie, SWZ, regulamin, biblioteka firmy |
 | Kontrahenci | Karta firmy po NIP z oceną ryzyka płatniczego 0-100 i listą sygnałów. Firmę można obserwować, a zmiany w rejestrach wywołują alerty. Przy należnościach są wezwanie do zapłaty (.docx) i lista warunków wpisu do BIG. | Biała lista VAT, KRS, rejestr decyzji UOKiK (zatory płatnicze) |
 | Klienci i wiadomości | Kontakty z zapisaną podstawą kontaktu, szkice wiadomości (regułowe lub AI z treści strony odbiorcy) oraz ocena ryzyka prawnego przy każdym rodzaju wiadomości. Przy ryzyku wysokim użytkownik musi świadomie je potwierdzić, a potwierdzenie trafia do historii. Wysyłka idzie z własnej skrzynki użytkownika (mailto lub .eml). | Dane użytkownika |
-| Audyt strony | Bezpieczeństwo, szybkość serwera, SEO techniczne, analityka i RODO. Możesz zestawić swoją stronę z konkurentami. To ten sam silnik co w PrestaCheck (`lib/prestacheck`). | Publiczne strony, opcjonalnie Google PageSpeed |
+| Audyt AI (treść) | Jedna strona i jedna fraza: 24 wskaźniki, 100 punktów, pięć grup (dostęp botów, struktura, wiarygodność, odpowiedzi, szybkość). Raport z linijką punktów, listą „Najpierw to”, dowodem i trzema progami przy każdym wskaźniku. Porównanie „przed i po”, strona „Wytyczne wskaźników” i raport dla klienta pod linkiem bez logowania. 22 wskaźniki liczy program, 2 ocenia model AI z cytatem, który program sprawdza w treści strony. | Publiczna strona i jej robots.txt, PageSpeed Insights, Claude API, opcjonalnie Cloudflare Browser Run |
+| Audyt techniczny | Bezpieczeństwo, szybkość serwera, SEO techniczne, analityka i RODO. Możesz zestawić swoją stronę z konkurentami. To ten sam silnik co w PrestaCheck (`lib/prestacheck`). | Publiczne strony, opcjonalnie Google PageSpeed |
 | Reklamy | Ekran informacyjny. Integracja z Google Ads i Meta czeka na zatwierdzenie dostępu do API. | - |
 
 ### Zasady wbudowane w produkt
@@ -28,6 +29,11 @@ Aplikacja dla firm, które sprzedają innym firmom. Zbiera i ocenia zapytania ze
   - Widżet odpowiada tylko stronom wpisanym w ustawieniach (nagłówek `Origin`). Nie zapisuje plików cookie ani niczego w pamięci przeglądarki. Zamiast adresu IP zapisujemy jego skrót z solą zmienianą co dobę.
   - Zgoda na oferty e-mailem to osobne, niezaznaczone pole. Odpowiedź na zapytanie jej nie wymaga, kolejne oferty tak. Treść i datę zgody zapisujemy przy kontakcie.
   - Czat ma limit pytań na rozmowę i limit odpowiedzi na miesiąc. Treść od odwiedzającego trafia do modelu jako dane, nie jako polecenie.
+- **Audyt AI.** Wytyczne są w jednym pliku `resources/audyt-ai-rules.json`. Z niego powstaje punktacja w silniku, strona „Wytyczne” i dokument `mockup/audyt-ai/WYTYCZNE.md`, więc próg w dokumentacji jest zawsze progiem w raporcie.
+  - Każdy audyt zapisuje wersję wytycznych. Zmiana progu to nowa wersja, a stare audyty zostają przy swojej.
+  - Gdy wskaźnika nie da się zmierzyć (usługa nie jest podłączona albo nie odpowiada) albo nie dotyczy danego rodzaju strony, dostaje stan „brak pomiaru” lub „nie dotyczy” i nie odbiera punktów: wynik liczymy proporcjonalnie z pozostałych.
+  - Ocena AI (D1, D2) wymaga cytatu ze strony. Cytat, którego nie ma w treści, odrzucamy. Lista 10 pytań pobocznych jest zatwierdzana raz i potem się nie zmienia. Gdy treść i pytania się nie zmieniły, bierzemy poprzednią ocenę.
+  - Po audycie nie przechowujemy treści strony, tylko jej skrót, wyniki i dowody.
 - **AI.** Model pisze wyłącznie z podanych materiałów. Każdy punkt analizy ma źródło, a zdania bez źródła są oznaczone do sprawdzenia. Bez klucza `ANTHROPIC_API_KEY` działa analiza regułowa, a przyciski AI są nieaktywne.
 
 ## Technologia
@@ -99,7 +105,8 @@ Darmowa baza PostgreSQL na Render wygasa po 30 dniach. Przed pierwszymi klientam
 | `APP_NAME`, `APP_URL` | Nazwa produktu i adres publiczny. `APP_URL` jest opcjonalny: na Render aplikacja bierze adres z `RENDER_EXTERNAL_URL`. Ustaw go przy własnej domenie. |
 | `ANTHROPIC_API_KEY`, `AI_MODEL` | Claude API, domyślnie `claude-sonnet-5-5`. `AI_MAX_INPUT_CHARS` ogranicza długość dokumentacji wysyłanej do modelu (domyślnie 300 000 znaków). Dokumentacja idzie jako blok z pamięcią podręczną, więc kolejne pytania o ten sam przetarg są tańsze. Zużycie tokenów trafia do `audit_log` (`ai.call`). |
 | `CRON_TOKEN` | Token do `/cron/run`, przekazywany w nagłówku `X-Cron-Token`. |
-| `PSI_KEY` | Klucz Google PageSpeed Insights (audyt szybkości). |
+| `PSI_KEY` | Klucz Google PageSpeed Insights (szybkość w audycie technicznym i wskaźnik E1 audytu AI). Bez klucza Google mocno ogranicza liczbę zapytań. |
+| `CF_ACCOUNT_ID`, `CF_BROWSER_TOKEN` | Cloudflare Browser Run: strona po uruchomieniu skryptów przy ekranie 360 px (wskaźniki A6 i E2 audytu AI). Token API z uprawnieniem „Browser Rendering - Edit”. Bez nich te dwa wskaźniki mają stan „brak pomiaru”. |
 | `SIGNUP_OPEN`, `SIGNUP_CODE` | `SIGNUP_OPEN=0` (domyślnie): konto tylko z linku `/rejestracja?kod=<SIGNUP_CODE>`. `SIGNUP_OPEN=1`: rejestracja otwarta. |
 | `TERMS_URL`, `PRIVACY_URL` | Adresy regulaminu i polityki prywatności, linkowane przy rejestracji. |
 | `UPLOAD_MAX_MB` | Limit rozmiaru dokumentu, domyślnie 15. |
@@ -113,8 +120,9 @@ Komenda `php bin/console daily`, endpoint `/cron/run?task=daily` i workflow `.gi
 2. import ogłoszeń z BZP i TED od ostatniego importu,
 3. dopasowanie ogłoszeń do profili,
 4. odświeżenie obserwowanych kontrahentów (alerty o zmianach),
-5. zapytania ze strony: sprawdzenie firmy i strony dla zapytań, których nikt jeszcze nie otworzył, oraz usunięcie rozmów bez zostawionego kontaktu starszych niż 30 dni,
-6. sprzątanie: sesje, wygasłe wpisy i ogłoszenia po terminie starsze niż 120 dni bez ofert.
+5. audyty AI, które ktoś zaczął i nie dokończył,
+6. zapytania ze strony: sprawdzenie firmy i strony dla zapytań, których nikt jeszcze nie otworzył, oraz usunięcie rozmów bez zostawionego kontaktu starszych niż 30 dni,
+7. sprzątanie: sesje, wygasłe wpisy i ogłoszenia po terminie starsze niż 120 dni bez ofert.
 
 ### Rejestr decyzji UOKiK
 
@@ -128,10 +136,11 @@ Docelowym rozwiązaniem może być mały serwer pośredniczący w Polsce.
 ## Testy
 
 ```bash
-php tests/run.php                                           # 61 testów, SQLite, bez sieci
+php tests/run.php                                           # 110 testów, SQLite, bez sieci
 TEST_DATABASE_URL=postgres://… php tests/run.php            # te same testy na PostgreSQL
 php tests/live_contract.php                                 # prawdziwe API: BZP, TED, VAT, KRS, UOKiK
 sh tests/smoke.sh http://localhost:10000                    # test dymny działającej instancji
+php bin/console content:audit twojafirma.pl "fraza" home    # audyt AI jednej strony w konsoli, bez zapisu do bazy
 ```
 
 Testy obejmują m.in. próbę wstrzyknięcia HTML w każdym polu na każdej stronie, wszystkie akcje zapisu i izolację danych między firmami.
@@ -149,6 +158,7 @@ Workflowy w GitHub Actions:
 - **Firmy spoza wykazu VAT** (zwolnione z VAT, część jednostek publicznych) nie mają karty, bo nie mamy skąd pobrać danych. Rozwiązaniem będzie integracja z CEIDG.
 - **Wysyłka e-maili** wymaga klucza Resend i zweryfikowanej domeny nadawcy. Bez nich nie ma powiadomień o zapytaniach ani linków do ustawienia hasła, a właściciel konta podaje nowym osobom hasło startowe. Oferty do klientów nadal wychodzą ze skrzynki użytkownika, nie z platformy.
 - **Widżet zapytań** wymaga wklejenia jednej linii kodu na stronę firmy i wpisania jej domeny w ustawieniach widżetu. Jeśli strona ma nagłówek `Content-Security-Policy`, trzeba dopisać adres panelu do `script-src` i `connect-src`.
+- **Audyt AI** mierzy to, co widać z zewnątrz. Test odpowiedzi dla botów wychodzi z serwera panelu z nagłówkiem User-Agent bota, więc zapora, która sprawdza adresy IP botów, może potraktować prawdziwego bota inaczej. Test cytowań w ChatGPT, Perplexity i Gemini oraz dane z Search Console nie są jeszcze zbudowane.
 - **Funkcje AI** są przetestowane na zapisanych odpowiedziach w formacie API. Pierwsze prawdziwe zapytanie warto wykonać przyciskiem „Sprawdź połączenie z AI” w Ustawieniach (dla `ADMIN_EMAILS`).
 
 ## Plan rozwoju

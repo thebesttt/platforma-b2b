@@ -4,13 +4,6 @@ use App\Core\Auth;
 use App\Core\Db;
 use App\Modules\Tenders\Importer;
 
-/** Zalogowanie użytkownika w testach HTTP. */
-function login_as(int $userId): void
-{
-    $_SESSION = [];
-    Auth::actAs($userId);
-}
-
 return [
     'Rejestracja przez formularz, potem pulpit' => function () {
         $r = http('POST', '/rejestracja', ['company' => 'Nowa Firma', 'nip' => '', 'name' => 'Ola', 'email' => 'ola@example.com', 'password' => 'bardzo-dlugie-haslo', 'terms' => '1']);

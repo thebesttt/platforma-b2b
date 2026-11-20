@@ -1,11 +1,9 @@
-<header class="between page-head">
-  <div>
-    <p class="crumbs">Audyt i reklamy</p>
-    <h1>Audyt strony i konkurencji</h1>
-    <p class="muted small">Bezpieczeństwo, szybkość serwera, SEO techniczne oraz analityka i zgody RODO. Sprawdzamy tylko to, co strona pokazuje publicznie.</p>
-  </div>
-  <div class="row-flex"><a class="btn ghost" href="/audyt/porownanie">Porównanie z konkurencją</a><a class="btn ghost" href="/reklamy">Reklamy Google i Meta</a></div>
+<header class="page-head">
+  <p class="crumbs">Audyt i reklamy</p>
+  <h1>Audyt techniczny strony</h1>
+  <p class="muted small">Bezpieczeństwo, szybkość serwera, SEO techniczne oraz analityka i zgody RODO. Sprawdzamy tylko to, co strona pokazuje publicznie. Treść pod wyszukiwarki i AI ocenia <a href="/audyt/tresc">Audyt AI</a>.</p>
 </header>
+<?= App\Core\View::partial('partials/audit_nav', ['on' => 'tech']) ?>
 <section class="card">
   <form method="post" action="/audyt" class="form-grid">
     <?= csrf_field() ?>
