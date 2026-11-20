@@ -16,6 +16,7 @@ use App\Modules\Content\ContentAudit;
 use App\Modules\Content\Measure;
 use App\Modules\Content\Ruleset;
 use App\Modules\Content\Services;
+use App\Modules\Content\Sitemap;
 use App\Modules\Outreach\Outreach;
 
 /**
@@ -36,6 +37,68 @@ final class ContentController extends Controller
             'contacts' => $this->db()->all('SELECT id, company_name FROM contacts WHERE org_id = ? ORDER BY company_name LIMIT 300', [$org]),
             'contactId' => $contactId, 'services' => self::services(), 'title' => 'Audyt AI',
         ]);
+    }
+
+    /** Podstrony z mapy witryny: wpisujesz frazę przy tych, które chcesz sprawdzić. */
+    public function sitemap(Request $r): Response
+    {
+        $org = $this->orgId();
+        $site = mb_substr($r->str('url'), 0, 300);
+        $res = null;
+        $known = [];
+        if ($site !== '') {
+            if (Kv::hit('content-sitemap:' . $org . ':' . gmdate('YmdH'), 3600) > 20) {
+                $res = ['ok' => false, 'error' => 'Za dużo prób w tej godzinie. Spróbuj później.'];
+            } else {
+                $res = Sitemap::urls($site);
+            }
+            foreach ($this->db()->all('SELECT url FROM content_targets WHERE org_id = ?', [$org]) as $t) {
+                $known[\App\Modules\Content\Fetcher::canonicalForm((string) $t['url'])] = true;
+            }
+        }
+        return $this->view('content/sitemap', ['site' => $site, 'res' => $res, 'known' => $known, 'title' => 'Strony z mapy witryny']);
+    }
+
+    /** Dodaje do audytu podstrony z wpisaną frazą. Audyty trafiają do kolejki i wykonują się po kolei na liście stron. */
+    public function sitemapAdd(Request $r): Response
+    {
+        $org = $this->orgId();
+        $urls = (array) ($r->post['u'] ?? []);
+        $phrases = (array) ($r->post['p'] ?? []);
+        $types = (array) ($r->post['t'] ?? []);
+        $added = 0;
+        $errors = [];
+        $limited = false;
+        foreach ($urls as $i => $url) {
+            $phrase = is_string($phrases[$i] ?? null) ? trim($phrases[$i]) : '';
+            if (!is_string($url) || $phrase === '') {
+                continue;
+            }
+            if ($added >= 20) {
+                $limited = true;
+                break;
+            }
+            $res = ContentAudit::addTarget($org, Auth::id(), $url, $phrase, is_string($types[$i] ?? null) ? $types[$i] : 'other');
+            if (!$res['ok']) {
+                $errors[] = truncate($url, 60) . ': ' . $res['error'];
+                continue;
+            }
+            if (!empty($res['existing'])) {
+                continue;
+            }
+            if ($this->limit($org)) {
+                $limited = true;
+                break;
+            }
+            ContentAudit::start(ContentAudit::target($org, (int) $res['id']), Auth::id());
+            $added++;
+        }
+        if ($added === 0 && !$errors) {
+            return $this->back($r, '/audyt/tresc/mapa', 'Wpisz frazę przy co najmniej jednej stronie. Strony bez frazy pomijamy.', 'error');
+        }
+        $msg = 'Dodano ' . $added . ' ' . plural($added, 'stronę', 'strony', 'stron') . '. Audyty wykonują się po kolei, zostaw tę kartę otwartą.'
+            . ($limited ? ' Resztę dodaj za godzinę: jednorazowo 20 stron i ' . self::HOURLY . ' audytów na godzinę.' : '') . ($errors ? ' Pominięte: ' . implode('; ', array_slice($errors, 0, 3)) . '.' : '');
+        return $this->redirect('/audyt/tresc', $msg, $added ? 'success' : 'error');
     }
 
     /** Które usługi pomiarowe są podłączone: od tego zależy, ile wskaźników da się zmierzyć. */

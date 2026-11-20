@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\Http;
 
+use App\Core\Auth;
+use App\Core\Brand;
 use App\Core\Controller;
 use App\Core\Kv;
 use App\Core\Request;
 use App\Core\Response;
 use App\Modules\Companies\Receivables;
+use App\Modules\Content\ContentAudit;
+use App\Modules\Content\Measure;
 use App\Modules\Tenders\Tenders;
 
 final class DashboardController extends Controller
@@ -59,6 +63,26 @@ final class DashboardController extends Controller
             [$org]
         );
 
-        return $this->view('dashboard', compact('matches', 'stats', 'alerts', 'profiles', 'receivables', 'import', 'messages') + ['title' => 'Pulpit']);
+        // Zapytania ze strony i audyt AI: pulpit pokazuje tylko moduły włączone dla tej firmy.
+        $mods = Brand::modules(Auth::org());
+        $leads = in_array('zapytania', $mods, true)
+            ? $db->all("SELECT id, name, email, score, level, summary, status, created_at FROM inbound_leads WHERE org_id = ? AND status IN ('new', 'contact') ORDER BY CASE WHEN status = 'new' THEN 0 ELSE 1 END, score DESC, id DESC LIMIT 6", [$org])
+            : [];
+        $stats['leads_new'] = (int) $db->val("SELECT COUNT(*) FROM inbound_leads WHERE org_id = ? AND status = 'new'", [$org]);
+        $stats['leads_hot'] = (int) $db->val("SELECT COUNT(*) FROM inbound_leads WHERE org_id = ? AND status = 'new' AND level = 'hot'", [$org]);
+        $pages = [];
+        if (in_array('audyt', $mods, true)) {
+            $pages = array_values(array_filter(ContentAudit::targets($org), static fn ($t) => $t['score'] !== null));
+            usort($pages, static fn ($a, $b) => [(int) $b['blocked'], (int) $a['score']] <=> [(int) $a['blocked'], (int) $b['score']]);
+            $stats['pages'] = count($pages);
+            $pages = array_slice($pages, 0, 5);
+            foreach ($pages as &$pg) {
+                $task = Measure::tasks(ContentAudit::checks($org, (int) $pg['audit_id']), 1)[0] ?? null;
+                $pg['task'] = $task ? $task['code'] . ' ' . $task['name'] . ' (+' . $task['gain'] . ' pkt)' : null;
+            }
+            unset($pg);
+        }
+
+        return $this->view('dashboard', compact('matches', 'stats', 'alerts', 'profiles', 'receivables', 'import', 'messages', 'mods', 'leads', 'pages') + ['title' => 'Pulpit']);
     }
 }

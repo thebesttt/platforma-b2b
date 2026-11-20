@@ -27,8 +27,15 @@ $missing = array_keys(array_filter(['D1 i D2 (klucz ANTHROPIC_API_KEY)' => !$ser
     <div class="field"><label for="label">Etykieta audytu (opcjonalnie)</label><input id="label" name="label" type="text" maxlength="60" placeholder="np. przed pracami"></div>
     <div class="field" style="justify-content:flex-end"><button class="btn" type="submit">Dodaj i sprawdź</button></div>
   </form>
+  <p class="small" style="margin:12px 0 0">Masz wiele podstron? <a href="/audyt/tresc/mapa">Dodaj strony z mapy witryny</a>.</p>
   <?php if ($missing): ?><p class="small muted" style="margin:12px 0 0">Na tym serwerze nie zmierzymy: <?= e(implode('; ', $missing)) ?>. Te wskaźniki dostaną stan „brak pomiaru” i nie odbiorą punktów.</p><?php endif ?>
 </section>
+
+<?php $queue = array_values(array_map('intval', array_filter(array_column($targets, 'open_audit')))); if ($queue): ?>
+  <div class="notice info" role="status" data-audit-queue="<?= e(json_encode($queue)) ?>" data-csrf="<?= e(App\Core\Csrf::token()) ?>">
+    <b>W kolejce: <?= count($queue) ?> <?= plural(count($queue), 'audyt', 'audyty', 'audytów') ?>.</b> <span data-audit-queue-state>Audyty wykonują się po kolei, gdy ta karta jest otwarta. Niedokończone dokończy nocne zadanie.</span>
+  </div>
+<?php endif ?>
 
 <section class="card flush" aria-labelledby="ca-list">
   <div class="card-head"><h2 id="ca-list">Strony witryny</h2><?php if ($contactId): ?><a class="small" href="/audyt/tresc">Pokaż strony wszystkich klientów</a><?php endif ?></div>

@@ -78,6 +78,13 @@
       <?php if ($outbox): ?>
         <ul class="list-plain"><?php foreach ($outbox as $m): ?><li class="xs"><span class="chip <?= in_array($m['status'], ['sent', 'logged'], true) ? 'low' : 'high' ?>"><?= e(['sent' => 'wysłano', 'logged' => 'zapisano', 'failed' => 'błąd', 'skipped' => 'pominięto'][$m['status']] ?? $m['status']) ?></span> <?= e(truncate((string) $m['subject'], 60)) ?><br><span class="muted"><?= e($m['recipient']) ?>, <?= e(local_dt($m['created_at'])) ?><?= $m['error'] ? ': ' . e($m['error']) : '' ?></span></li><?php endforeach ?></ul>
       <?php endif ?>
+      <?php if (App\Core\Auth::isOwner()): ?>
+        <form method="post" action="/ustawienia/przeglad" class="stack-sm">
+          <?= csrf_field() ?>
+          <label class="check" style="min-height:0;padding:0"><input type="checkbox" name="digest" value="1"<?= $digest ? ' checked' : '' ?>> <span class="small">Poranny przegląd: nowe przetargi, zapytania ze strony i alerty o kontrahentach. Wychodzi tylko wtedy, gdy jest coś nowego.</span></label>
+          <div><button class="btn ghost sm" type="submit">Zapisz</button></div>
+        </form>
+      <?php endif ?>
       <?php if (App\Core\Auth::isAdmin()): ?><form method="post" action="/ustawienia/test-poczty"><?= csrf_field() ?><button class="btn ghost sm" type="submit" data-busy="Wysyłam…">Wyślij wiadomość kontrolną</button></form><?php endif ?>
     </section>
     <section class="card">

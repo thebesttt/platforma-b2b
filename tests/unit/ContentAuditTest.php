@@ -562,4 +562,74 @@ return [
         contains('Wersja ' . Ruleset::version(), $g->body);
         contains('Audyt AI', http('GET', '/audyt')->body, 'zakładka w audycie technicznym');
     },
+    'Mapa witryny: lista podstron, dodanie kilku naraz i kolejka audytów' => function () {
+        [$org, $uid] = make_org();
+        login_as($uid);
+        ContentAudit::addTarget($org, $uid, SITE_URL, CA_PHRASE, 'article');
+        eq(200, http('GET', '/audyt/tresc/mapa')->status);
+        $list = http('GET', '/audyt/tresc/mapa', [], ['url' => 'sklep-przykladowy.example']);
+        eq(200, $list->status);
+        contains('4 strony z mapy witryny', $list->body, 'bez obrazka i bez adresu z obcej witryny');
+        contains('już na liście', $list->body);
+        contains('kolor=czarny&amp;moc=1450', $list->body);
+        ok(!str_contains($list->body, 'obca-witryna') && !str_contains($list->body, 'ekspres.jpg'));
+        contains('<option value="product" selected>', $list->body, 'rodzaj strony odgadnięty z adresu');
+        eq(['home', 'article', 'product', 'other'], array_map([App\Modules\Content\Sitemap::class, 'guessType'], ['https://a.pl/', 'https://a.pl/blog/wpis', 'https://a.pl/produkt/x', 'https://a.pl/oferta']));
+        contains('Nie znaleźliśmy mapy witryny', http('GET', '/audyt/tresc/mapa', [], ['url' => 'zly-przyklad.example'])->body);
+        contains('Podaj adres witryny', http('GET', '/audyt/tresc/mapa', [], ['url' => 'to nie adres'])->body);
+
+        $none = http('POST', '/audyt/tresc/mapa', ['u' => ['https://sklep-przykladowy.example/'], 'p' => [''], 't' => ['home']]);
+        eq(1, (int) Db::get()->val('SELECT COUNT(*) FROM content_targets'), 'strona bez frazy nie jest dodawana');
+        $add = http('POST', '/audyt/tresc/mapa', [
+            'u' => ['https://sklep-przykladowy.example/', SITE_URL, 'https://sklep-przykladowy.example/ekspresy-kolbowe', 'javascript:alert(1)'],
+            'p' => ['sklep z ekspresami do kawy', CA_PHRASE, '', 'x y z'], 't' => ['home', 'article', 'other', 'other'],
+        ]);
+        eq('/audyt/tresc', $add->headers['Location']);
+        eq(2, (int) Db::get()->val('SELECT COUNT(*) FROM content_targets'), 'nowa strona główna; poradnik już był, strona bez frazy i zły adres pominięte');
+        eq(1, (int) Db::get()->val("SELECT COUNT(*) FROM content_audits WHERE status = 'queued'"));
+        $page = http('GET', '/audyt/tresc');
+        $aid = (int) Db::get()->val('SELECT id FROM content_audits');
+        contains('data-audit-queue="[' . $aid . ']"', $page->body);
+        contains('W kolejce: 1 audyt', $page->body);
+        ContentAudit::runAll($org, $aid);
+        $checks = ContentAudit::checks($org, $aid);
+        eq('bad', $checks['A2']['status'], 'strona główna z adresem kanonicznym do poradnika');
+        ok(!str_contains(http('GET', '/audyt/tresc')->body, 'data-audit-queue'), 'po zakończeniu kolejka znika');
+    },
+    'Poranny przegląd: nowe przetargi, zapytania i alerty, tylko gdy jest coś nowego' => function () {
+        [$org, $uid] = make_org();
+        $db = Db::get();
+        eq(['orgs' => 0, 'sent' => 0], App\Modules\Notify\Digest::run('https://panel.example'), 'nic nowego, nic nie wychodzi');
+        $profile = $db->insert('tender_profiles', ['org_id' => $org, 'name' => 'Drogi', 'cpv' => '45233', 'active' => 1, 'created_at' => now_utc()]);
+        $tid = App\Modules\Tenders\Tenders::save(['source' => 'bzp', 'external_id' => 'przeglad-1', 'notice_number' => '2026/BZP 1', 'notice_type' => 'ContractNotice', 'title' => 'Przebudowa drogi gminnej',
+            'buyer_name' => 'Gmina Przykładowo', 'cpv_main' => '45233000', 'cpv_all' => '45233000', 'published_at' => now_utc(), 'deadline_at' => gmdate('Y-m-d H:i:s', time() + 9 * 86400)]);
+        $old = App\Modules\Tenders\Tenders::save(['source' => 'bzp', 'external_id' => 'przeglad-2', 'notice_number' => '2026/BZP 2', 'notice_type' => 'ContractNotice', 'title' => 'Przetarg po terminie',
+            'buyer_name' => 'Gmina', 'cpv_main' => '45233000', 'cpv_all' => '45233000', 'published_at' => now_utc(), 'deadline_at' => gmdate('Y-m-d H:i:s', time() - 86400)]);
+        foreach ([$tid => 88, $old => 95] as $t => $score) {
+            $db->insert('tender_matches', ['org_id' => $org, 'profile_id' => $profile, 'tender_id' => $t, 'score' => $score, 'status' => 'new', 'created_at' => now_utc()]);
+        }
+        $db->insert('inbound_leads', ['org_id' => $org, 'score' => 85, 'level' => 'hot', 'email' => 'anna@firma.pl', 'name' => 'Anna Kowalska', 'summary' => 'Potrzeba: Google Ads.', 'created_at' => now_utc()]);
+        $db->insert('alerts', ['org_id' => $org, 'level' => 'high', 'title' => 'Dłużnik sp. z o.o.', 'detail' => 'Nowa decyzja UOKiK', 'created_at' => now_utc()]);
+        $db->run('DELETE FROM kv WHERE k LIKE ?', ['digest:last:%']);
+        $res = App\Modules\Notify\Digest::run('https://panel.example');
+        eq(['orgs' => 1, 'sent' => 1], $res);
+        $mail = $db->one("SELECT * FROM outbox WHERE kind = 'digest'");
+        eq('Poranny przegląd: 1 nowy przetarg, 1 zapytanie, 1 alert o kontrahencie', $mail['subject']);
+        contains('88 pkt: Przebudowa drogi gminnej (Gmina Przykładowo)', $mail['body']);
+        contains('https://panel.example/przetargi/' . $tid, $mail['body']);
+        ok(!str_contains($mail['body'], 'Przetarg po terminie'), 'przetargi po terminie pomijamy');
+        contains('85/100 (Pilne): Anna Kowalska. Potrzeba: Google Ads.', $mail['body']);
+        contains('Dłużnik sp. z o.o.: Nowa decyzja UOKiK', $mail['body']);
+        eq(0, App\Modules\Notify\Digest::run('https://panel.example')['sent'], 'drugi przegląd bez nowości nie wychodzi');
+
+        // Wyłączony moduł nie trafia do przeglądu, a wyłączony przegląd nie wychodzi wcale.
+        $db->run('DELETE FROM kv WHERE k LIKE ?', ['digest:last:%']);
+        App\Core\Brand::save($org, ['modules' => ['zapytania']]);
+        $only = App\Modules\Notify\Digest::compose($db->one('SELECT * FROM organizations WHERE id = ?', [$org]), '2000-01-01 00:00:00', '');
+        eq('Poranny przegląd: 1 zapytanie', $only['subject']);
+        login_as($uid);
+        eq(303, http('POST', '/ustawienia/przeglad', ['digest' => ''])->status);
+        eq(0, App\Modules\Notify\Digest::run('https://panel.example')['orgs']);
+        contains('Poranny przegląd', http('GET', '/ustawienia')->body);
+    },
 ];

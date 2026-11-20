@@ -124,4 +124,36 @@ return [
         http('POST', '/ustawienia/wyglad', ['theme' => 'perfectdata', 'modules' => []]);
         eq([], Brand::settings(Db::get()->one('SELECT settings_json FROM organizations WHERE id = ?', [$org])));
     },
+    'Pulpit: pokazuje zapytania i audyt AI, a wyłączone moduły znikają' => function () {
+        [$org, $uid] = make_org();
+        login_as($uid);
+        $db = Db::get();
+        $db->insert('inbound_leads', ['org_id' => $org, 'score' => 90, 'level' => 'hot', 'email' => 'anna@firma.pl', 'name' => 'Anna <b>Kowalska</b>', 'summary' => 'Potrzeba: Google Ads.', 'status' => 'new', 'created_at' => now_utc()]);
+        $db->insert('inbound_leads', ['org_id' => $org, 'score' => 30, 'level' => 'low', 'email' => 'jan@firma.pl', 'summary' => 'Potrzeba: diagnoza.', 'status' => 'lost', 'created_at' => now_utc()]);
+        $id = App\Modules\Content\ContentAudit::addTarget($org, $uid, 'https://sklep-przykladowy.example/poradnik/ekspres-cisnieniowy-do-domu', 'jaki ekspres ciśnieniowy do domu', 'article')['id'];
+        with_config(['FIXTURE_SITE' => 'przed'], function () use ($org, $uid, $id) {
+            App\Modules\Content\ContentAudit::runAll($org, App\Modules\Content\ContentAudit::start(App\Modules\Content\ContentAudit::target($org, $id), $uid));
+        });
+        Nav::reset();
+        $page = http('GET', '/pulpit')->body;
+        contains('1 nowe zapytanie ze strony czeka na odpowiedź', $page);
+        contains('W tym pilnych: 1', $page);
+        contains('Anna &lt;b&gt;Kowalska&lt;/b&gt;', $page);
+        ok(!str_contains($page, 'jan@firma.pl'), 'zamknięte zapytania nie zajmują pulpitu');
+        contains('Audyt AI: strony z najniższym wynikiem', $page);
+        contains('A4 robots.txt dla botów wyszukiwania (+4 pkt)', $page, 'pierwsze zadanie z audytu: dostęp botów przed resztą');
+        contains('Dopasowane przetargi', $page);
+
+        Brand::save($org, ['modules' => ['zapytania', 'klienci']]);
+        Auth::logout();
+        login_as($uid);
+        Nav::reset();
+        $only = http('GET', '/pulpit')->body;
+        contains('Zapytania ze strony', $only);
+        foreach (['Dopasowane przetargi', 'Audyt AI: strony', 'Alerty kontrahentów', 'Oferty w przygotowaniu', 'Należności po terminie', 'profil przetargowy'] as $gone) {
+            ok(!str_contains($only, $gone), 'wyłączony moduł na pulpicie: ' . $gone);
+        }
+        $db->run("UPDATE inbound_leads SET status = 'won'");
+        contains('Nie ma nowych zapytań ze strony', http('GET', '/pulpit')->body);
+    },
 ];

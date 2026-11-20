@@ -13,6 +13,7 @@ use App\Modules\Companies\Companies;
 use App\Modules\Companies\Uokik;
 use App\Modules\Content\ContentAudit;
 use App\Modules\Inbound\Inbound;
+use App\Modules\Notify\Digest;
 use App\Modules\Tenders\Importer;
 
 /**
@@ -63,7 +64,7 @@ final class CronController
         return str_starts_with($auth, 'Bearer ') ? trim(substr($auth, 7)) : $r->str('token');
     }
 
-    /** Codzienny zestaw: decyzje UOKiK (raz w tygodniu), import przetargów, odświeżenie obserwowanych firm, zapytania ze strony, sprzątanie. */
+    /** Codzienny zestaw: decyzje UOKiK (raz w tygodniu), import przetargów, odświeżenie obserwowanych firm, zapytania ze strony, audyty treści, poranny przegląd e-mailem, sprzątanie. */
     public static function daily(): array
     {
         $out = [];
@@ -100,6 +101,12 @@ final class CronController
             $out['content_audits'] = ['finished' => ContentAudit::runPending()];
         } catch (\Throwable $e) {
             $out['content_audits'] = ['error' => $e->getMessage()];
+        }
+        // Poranny przegląd e-mailem: po imporcie, dopasowaniu i odświeżeniu kontrahentów, żeby obejmował dzisiejsze nowości.
+        try {
+            $out['digest'] = Digest::run();
+        } catch (\Throwable $e) {
+            $out['digest'] = ['error' => $e->getMessage()];
         }
         $db = Db::get();
         $db->run('DELETE FROM sessions WHERE expires_at < ?', [time()]);

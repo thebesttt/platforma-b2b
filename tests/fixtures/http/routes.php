@@ -27,6 +27,11 @@ return [
         : $page(site_page($site)),
     '#^GET https://' . $article . '\n#' => $page(site_page($site)),
     '#^GET https://sklep-przykladowy\.example/kontakt#' => $page(site_contact()),
+    '#^GET https://sklep-przykladowy\.example/sitemap\.xml\n#' => $page('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        . '<url><loc>https://sklep-przykladowy.example/</loc></url><url><loc>' . SITE_URL . '</loc></url><url><loc>https://sklep-przykladowy.example/ekspresy-kolbowe</loc></url>'
+        . '<url><loc>https://sklep-przykladowy.example/produkt/ekspres-model-x?kolor=czarny&amp;moc=1450</loc></url><url><loc>https://sklep-przykladowy.example/img/ekspres.jpg</loc></url>'
+        . '<url><loc>https://obca-witryna.example/strona</loc></url></urlset>'),
+    '#^GET https://sklep-przykladowy\.example/\n#' => $page(site_page($site)),
     '#^GET https://sklep-przykladowy\.example/przekierowania/1\n#' => $page('', 301, ['location' => ['/przekierowania/2']]),
     '#^GET https://sklep-przykladowy\.example/przekierowania/2\n#' => $page('', 302, ['location' => [SITE_URL]]),
     '#^GET https://sklep-przykladowy\.example/petla\n#' => $page('', 302, ['location' => ['/petla']]),

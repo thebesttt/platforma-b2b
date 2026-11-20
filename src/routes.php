@@ -127,6 +127,8 @@ return static function (Router $r): void {
     $r->get('/audyt/tresc', [ContentController::class, 'index'], $a);
     $r->post('/audyt/tresc', [ContentController::class, 'add'], $a);
     $r->get('/audyt/wytyczne', [ContentController::class, 'guidelines'], $a);
+    $r->get('/audyt/tresc/mapa', [ContentController::class, 'sitemap'], $a);
+    $r->post('/audyt/tresc/mapa', [ContentController::class, 'sitemapAdd'], $a);
     $r->post('/audyt/tresc/audyt/{id}/krok', [ContentController::class, 'step'], $a);
     $r->post('/audyt/tresc/audyt/{id}/dokoncz', [ContentController::class, 'finish'], $a);
     $r->get('/audyt/tresc/{id}', [ContentController::class, 'show'], $a);
@@ -146,6 +148,7 @@ return static function (Router $r): void {
     $r->post('/ustawienia/test-ai', [SettingsController::class, 'testAi'], $a);
     $r->post('/ustawienia/wyglad', [SettingsController::class, 'appearance'], $a);
     $r->post('/ustawienia/test-poczty', [SettingsController::class, 'testMail'], $a);
+    $r->post('/ustawienia/przeglad', [SettingsController::class, 'digest'], $a);
     $r->get('/ustawienia/uokik', [SettingsController::class, 'uokik'], $a);
     $r->post('/ustawienia/uokik', [SettingsController::class, 'uokikUpload'], $a);
 };

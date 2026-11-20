@@ -22,7 +22,7 @@ final class SettingsController extends Controller
         $org = Auth::org();
         return $this->view('settings/index', [
             'org' => $org, 'user' => Auth::user(), 'team' => $team, 'aiEnabled' => Claude::enabled(), 'title' => 'Ustawienia',
-            'theme' => Brand::theme($org), 'modules' => Brand::modules($org), 'mail' => Mailer::driver(),
+            'theme' => Brand::theme($org), 'modules' => Brand::modules($org), 'mail' => Mailer::driver(), 'digest' => (Brand::settings($org)['digest'] ?? true) !== false,
             'outbox' => $this->db()->all('SELECT recipient, subject, status, error, created_at FROM outbox WHERE org_id = ? ORDER BY id DESC LIMIT 6', [$this->orgId()]),
         ]);
     }
@@ -129,6 +129,17 @@ final class SettingsController extends Controller
         ]);
         AuditLog::add('settings.appearance', 'organization', $this->orgId(), ['theme' => $theme, 'modules' => $picked], $r->ip());
         return $this->redirect('/ustawienia#wyglad', 'Zapisano wygląd i moduły.');
+    }
+
+    /** Włącza albo wyłącza poranny przegląd e-mailem dla całej firmy. */
+    public function digest(Request $r): Response
+    {
+        if (!Auth::isOwner()) {
+            return $this->redirect('/ustawienia#poczta', 'Poranny przegląd ustawia właściciel konta.', 'error');
+        }
+        $on = $r->str('digest') === '1';
+        Brand::save($this->orgId(), ['digest' => $on]);
+        return $this->redirect('/ustawienia#poczta', $on ? 'Poranny przegląd włączony. Wychodzi po codziennym imporcie, gdy jest coś nowego.' : 'Poranny przegląd wyłączony.');
     }
 
     /** Wiadomość kontrolna na adres zalogowanej osoby: sprawdza klucz usługi wysyłkowej i adres nadawcy. */

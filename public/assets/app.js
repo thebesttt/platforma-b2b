@@ -90,4 +90,33 @@
     };
     next();
   }
+
+  // Audyt treści wielu stron: kolejka audytów z listy wykonuje się po kolei, krok po kroku.
+  var queueBox = document.querySelector('[data-audit-queue]');
+  if (queueBox && window.fetch) {
+    var ids = [];
+    try { ids = JSON.parse(queueBox.getAttribute('data-audit-queue')) || []; } catch (e) { ids = []; }
+    var note = queueBox.querySelector('[data-audit-queue-state]');
+    var token = queueBox.getAttribute('data-csrf');
+    var at = 0;
+    var fails = 0;
+    var stepQueue = function () {
+      if (at >= ids.length) { window.location.reload(); return; }
+      if (note) note.textContent = 'Sprawdzam stronę ' + (at + 1) + ' z ' + ids.length + '. Zostaw tę kartę otwartą.';
+      fetch('/audyt/tresc/audyt/' + ids[at] + '/krok', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': token },
+        body: '_csrf=' + encodeURIComponent(token)
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        fails = 0;
+        if (j.done) at++;
+        stepQueue();
+      }).catch(function () {
+        if (++fails <= 2) { window.setTimeout(stepQueue, 2000); return; }
+        if (note) note.textContent = 'Połączenie z serwerem zostało przerwane. Odśwież stronę, żeby wznowić kolejkę.';
+      });
+    };
+    stepQueue();
+  }
 })();

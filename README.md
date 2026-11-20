@@ -120,9 +120,10 @@ Komenda `php bin/console daily`, endpoint `/cron/run?task=daily` i workflow `.gi
 2. import ogłoszeń z BZP i TED od ostatniego importu,
 3. dopasowanie ogłoszeń do profili,
 4. odświeżenie obserwowanych kontrahentów (alerty o zmianach),
-5. audyty AI, które ktoś zaczął i nie dokończył,
+5. audyty AI, które ktoś zaczął i nie dokończył (także strony dodane hurtowo z mapy witryny),
 6. zapytania ze strony: sprawdzenie firmy i strony dla zapytań, których nikt jeszcze nie otworzył, oraz usunięcie rozmów bez zostawionego kontaktu starszych niż 30 dni,
-7. sprzątanie: sesje, wygasłe wpisy i ogłoszenia po terminie starsze niż 120 dni bez ofert.
+7. poranny przegląd e-mailem dla każdej firmy: nowe dopasowane przetargi, zapytania ze strony i alerty o kontrahentach od poprzedniego przeglądu. Wychodzi tylko wtedy, gdy jest coś nowego, a firma może go wyłączyć w Ustawieniach,
+8. sprzątanie: sesje, wygasłe wpisy i ogłoszenia po terminie starsze niż 120 dni bez ofert.
 
 ### Rejestr decyzji UOKiK
 
@@ -136,7 +137,7 @@ Docelowym rozwiązaniem może być mały serwer pośredniczący w Polsce.
 ## Testy
 
 ```bash
-php tests/run.php                                           # 110 testów, SQLite, bez sieci
+php tests/run.php                                           # 113 testów, SQLite, bez sieci
 TEST_DATABASE_URL=postgres://… php tests/run.php            # te same testy na PostgreSQL
 php tests/live_contract.php                                 # prawdziwe API: BZP, TED, VAT, KRS, UOKiK
 sh tests/smoke.sh http://localhost:10000                    # test dymny działającej instancji
