@@ -166,6 +166,18 @@ $total = array_sum($counts);
     </div>
   </section>
 
+  <section class="card" id="strona-zgody" aria-labelledby="t-topics">
+    <h2 id="t-topics">Pytanie na stronie zgody</h2>
+    <p class="small muted" style="margin:4px 0 12px">Firma, która zostawia zgodę, może zaznaczyć, co ją interesuje, i dopisać wiadomość. Zobaczysz to na jej karcie, a szkic oferty nawiąże do zaznaczonych tematów. Tematy są te same na stronach zgody z listów i na stronie z kodu QR.</p>
+    <form method="post" action="/klienci/potencjalni/kryteria" class="stack-sm">
+      <?= csrf_field() ?>
+      <div class="field" style="max-width:520px"><label for="pt-topics">Tematy do zaznaczenia, po jednym w wierszu</label>
+        <textarea id="pt-topics" name="topics" rows="4" placeholder="np.&#10;Nowa strona internetowa&#10;Reklamy w Google&#10;Pozycjonowanie"><?= e(implode("\n", $criteria['topics'])) ?></textarea>
+        <span class="hint">Najwyżej <?= Prospects::TOPICS_LIMIT ?> tematów. Zostaw puste, żeby strona pytała tylko o wiadomość.</span></div>
+      <div><button class="btn ghost sm" type="submit">Zapisz tematy</button></div>
+    </form>
+  </section>
+
   <section class="card" id="lejek" aria-labelledby="t-funnel">
     <div class="between" style="align-items:flex-start">
       <div>

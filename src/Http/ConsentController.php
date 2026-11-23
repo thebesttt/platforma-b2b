@@ -79,6 +79,7 @@ final class ConsentController extends Controller
             'wording' => Consents::wording((string) $p['org_name'], (string) ($report['host'] ?? '')), 'code' => (string) $r->param('code'),
             // Raport pokazujemy dopiero firmie, która o niego poprosiła. Wcześniej strona tylko go obiecuje.
             'report' => $report, 'reportOpen' => $asked !== null && $state !== 'refused', 'title' => $report ? 'Raport z audytu strony' : 'Zgoda na ofertę e-mailem',
+            'topics' => Consents::topics($p),
         ], $error !== null ? 422 : 200);
     }
 
@@ -107,6 +108,7 @@ final class ConsentController extends Controller
         return $render('outreach/consent_open', [
             'org' => $org, 'state' => $state, 'error' => $error, 'email' => $email, 'in' => $r->method === 'POST' ? $r->post : [],
             'wording' => Consents::wording((string) $org['name']), 'code' => (string) $r->param('code'), 'title' => 'Zgoda na ofertę e-mailem',
+            'topics' => Consents::topics($org),
         ], $error !== null ? 422 : 200);
     }
 

@@ -58,28 +58,50 @@ final class Prospects
             'min_years' => max(0, min(30, (int) ($c['min_years'] ?? 2))),
             // Koszt jednego listu (druk, koperta, znaczek) do policzenia, ile kosztuje jedna zgoda. Zero: nie liczymy.
             'letter_cost' => max(0.0, min(1000.0, round((float) ($c['letter_cost'] ?? 0), 2))),
+            // Tematy, które firma może zaznaczyć na stronie zgody. Pusta lista: strona o nic nie pyta.
+            'topics' => array_values(array_slice(array_filter(array_map(static fn ($t) => mb_substr(utrim((string) $t), 0, self::TOPIC_LEN), (array) ($c['topics'] ?? [])),
+                static fn ($t) => $t !== ''), 0, self::TOPICS_LIMIT)),
         ];
     }
 
-    /** Zapis kosztu listu bez ruszania pozostałych kryteriów. */
+    public const TOPICS_LIMIT = 6;
+    public const TOPIC_LEN = 60;
+
+    /** Zapis jednego ustawienia listy bez ruszania pozostałych. */
+    private static function saveSetting(int $orgId, array $changes): void
+    {
+        $c = self::criteria(Db::get()->one('SELECT * FROM organizations WHERE id = ?', [$orgId]));
+        Brand::save($orgId, ['prospecting' => $changes + $c]);
+    }
+
+    /** Koszt jednego listu do policzenia kosztu zgody. */
     public static function saveLetterCost(int $orgId, string $value): void
     {
-        $org = Db::get()->one('SELECT * FROM organizations WHERE id = ?', [$orgId]);
-        $c = self::criteria($org);
-        $c['letter_cost'] = max(0.0, min(1000.0, round((float) str_replace([' ', ','], ['', '.'], $value), 2)));
-        Brand::save($orgId, ['prospecting' => $c]);
+        self::saveSetting($orgId, ['letter_cost' => max(0.0, min(1000.0, round((float) str_replace([' ', ','], ['', '.'], $value), 2)))]);
+    }
+
+    /** Tematy do zaznaczenia na stronie zgody: po jednym w wierszu, bez powtórzeń. */
+    public static function saveTopics(int $orgId, string $text): void
+    {
+        $topics = [];
+        foreach (preg_split('/\r?\n/', $text) ?: [] as $line) {
+            $t = mb_substr(utrim($line), 0, self::TOPIC_LEN);
+            if ($t !== '' && !in_array(mb_strtolower($t), array_map('mb_strtolower', $topics), true)) {
+                $topics[] = $t;
+            }
+        }
+        self::saveSetting($orgId, ['topics' => array_slice($topics, 0, self::TOPICS_LIMIT)]);
     }
 
     /** Zapis kryteriów i przeliczenie punktów na całej liście firmy. */
     public static function saveCriteria(int $orgId, array $in): void
     {
         $words = array_slice(array_filter(array_map('utrim', preg_split('/[\r\n,;]+/u', (string) ($in['keywords'] ?? '')) ?: []), static fn ($w) => mb_strlen($w) >= 3), 0, 20);
-        Brand::save($orgId, ['prospecting' => [
+        self::saveSetting($orgId, [
             'keywords' => implode("\n", array_map(static fn ($w) => mb_substr($w, 0, 60), $words)),
             'regions' => array_values(array_intersect(array_map('strval', (array) ($in['regions'] ?? [])), array_keys(Regions::ALL))),
             'min_years' => max(0, min(30, (int) ($in['min_years'] ?? 2))),
-            'letter_cost' => self::criteria(Db::get()->one('SELECT * FROM organizations WHERE id = ?', [$orgId]))['letter_cost'],
-        ]]);
+        ]);
         self::rescoreAll($orgId);
     }
 
@@ -951,11 +973,15 @@ final class Prospects
     public static function emailDraft(array $p, ?array $company, array $org, ?array $user, array $contact, string $unsubUrl = '', string $base = ''): array
     {
         $report = ProspectAudit::report($p, $base);
+        $interest = self::facts($p)['interest'] ?? [];
+        $topics = array_values(array_filter(array_map('strval', (array) ($interest['topics'] ?? []))));
         $greet = !empty($contact['person']) ? 'Dzień dobry, ' . trim((string) $contact['person']) . ',' : 'Dzień dobry,';
         $sig = trim(($user['name'] ?? '') . "\n" . ($org['name'] ?? '') . (!empty($org['phone']) ? "\ntel. " . $org['phone'] : '') . (!empty($org['website']) ? "\n" . $org['website'] : ''));
         return [
             'subject' => 'Propozycja współpracy - ' . ($org['name'] ?? ''),
-            'body' => $greet . "\n\n" . self::afterGreeting(self::pitch($p, $company, $org)['text'])
+            'body' => $greet . "\n\n"
+                . ($topics ? 'dziękujemy za zgodę na kontakt. Zaznaczyli Państwo, że interesuje Państwa: ' . implode(', ', $topics) . ".\n\n" . self::pitch($p, $company, $org)['text']
+                    : self::afterGreeting(self::pitch($p, $company, $org)['text']))
                 . ($report !== null && $report['url'] !== '' ? "\n\nPełny raport z audytu strony " . $report['host'] . ': ' . $report['url'] : '')
                 . "\n\nCzy możemy umówić krótką rozmowę w przyszłym tygodniu?\n\nZ poważaniem\n" . $sig . Outreach::optOut($unsubUrl),
         ];

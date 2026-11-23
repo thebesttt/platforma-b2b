@@ -59,6 +59,7 @@ $checked = static fn (string $k): string => ($in[$k] ?? '') === '1' ? ' checked'
       <?php else: ?>
         <label class="check"><input type="checkbox" name="agree" value="1" required<?= $checked('agree') ?>> <span><?= e($wording['email']) ?></span></label>
       <?php endif ?>
+      <?= App\Core\View::partial('partials/consent_interest', ['topics' => $topics, 'in' => $in]) ?>
       <div class="field"><label for="zg-phone">Telefon, opcjonalnie</label><input id="zg-phone" name="phone" type="tel" maxlength="40" autocomplete="tel" value="<?= $v('phone') ?>"></div>
       <label class="check"><input type="checkbox" name="agree_phone" value="1"<?= $checked('agree_phone') ?>> <span><?= e($wording['phone']) ?><?= $askReport ? ' Dotyczy tylko zgody na ofertę.' : '' ?></span></label>
       <div class="sr-only" aria-hidden="true"><label for="zg-www">Nie wypełniaj tego pola</label><input id="zg-www" name="strona_www" type="text" tabindex="-1" autocomplete="off"></div>

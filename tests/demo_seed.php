@@ -267,6 +267,7 @@ function demo_seed(): array
                 'created_at' => gmdate('Y-m-d H:i:s', time() - $daysAgo * 86400)]);
         }
         \App\Modules\Outreach\Prospects::saveLetterCost($org, '6,50');
+        \App\Modules\Outreach\Prospects::saveTopics($org, "Roboty drogowe\nChodniki i parkingi\nOdwodnienia");
     }
     // Przykład zgody zapisanej ręcznie: firma poprosiła o ofertę w rozmowie. Firma z przetargów pokazuje drogę listem ze stroną zgody.
     if ($row = \App\Modules\Outreach\Prospects::byHost($org, 'firma-uslugowa.example')) {

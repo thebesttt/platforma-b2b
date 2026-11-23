@@ -25,6 +25,7 @@ $sender = e($org['name']);
       <div class="field"><label for="zo-email">Adres e-mail, na który wysłać ofertę</label><input id="zo-email" name="email" type="email" maxlength="200" required autocomplete="email" value="<?= $v('email') ?>"></div>
       <div class="field"><label for="zo-person">Imię i nazwisko, opcjonalnie</label><input id="zo-person" name="person" type="text" maxlength="120" autocomplete="name" value="<?= $v('person') ?>"></div>
       <label class="check"><input type="checkbox" name="agree" value="1" required<?= $checked('agree') ?>> <span><?= e($wording['email']) ?></span></label>
+      <?= App\Core\View::partial('partials/consent_interest', ['topics' => $topics, 'in' => $in]) ?>
       <div class="field"><label for="zo-phone">Telefon, opcjonalnie</label><input id="zo-phone" name="phone" type="tel" maxlength="40" autocomplete="tel" value="<?= $v('phone') ?>"></div>
       <label class="check"><input type="checkbox" name="agree_phone" value="1"<?= $checked('agree_phone') ?>> <span><?= e($wording['phone']) ?></span></label>
       <div class="sr-only" aria-hidden="true"><label for="zo-www">Nie wypełniaj tego pola</label><input id="zo-www" name="strona_www" type="text" tabindex="-1" autocomplete="off"></div>

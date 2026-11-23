@@ -42,6 +42,9 @@ $openConsent = false;
 <?php if (!empty($facts['consent']) && !$objected && $p['status'] !== 'contacted'): ?>
   <div class="notice low" style="margin-bottom:16px">Firma zostawiła zgodę na ofertę e-mailem <?= e(local_dt($facts['consent']['at'])) ?>. <a href="#droga-consent">Przygotuj ofertę</a>.</div>
 <?php endif ?>
+<?php if (!empty($facts['interest']) && !$objected): $int = $facts['interest']; ?>
+  <div class="notice info" style="margin-bottom:16px"><strong>Co firmę interesuje</strong> (zaznaczone na stronie zgody <?= e(local_dt($int['at'])) ?>)<?= !empty($int['topics']) ? ': ' . e(implode(', ', (array) $int['topics'])) . '.' : '.' ?><?php if (!empty($int['note'])): ?> Wiadomość: „<?= e($int['note']) ?>”<?php endif ?></div>
+<?php endif ?>
 <?php if (!empty($facts['report_request']) && empty($facts['consent']) && !$objected): ?>
   <div class="notice info" style="margin-bottom:16px">Firma poprosiła o raport z audytu <?= e(local_dt($facts['report_request']['at'])) ?> na adres <?= e($facts['report_request']['email']) ?> i dostała go od razu. Zgody na ofertę nie zaznaczyła, więc oferta e-mailem nadal jej wymaga.</div>
 <?php endif ?>

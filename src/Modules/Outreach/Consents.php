@@ -117,7 +117,7 @@ final class Consents
             'email' => $email, 'person' => mb_substr(utrim((string) ($in['person'] ?? '')), 0, 120) ?: null, 'phone' => $phoneOk ? mb_substr(trim($phone), 0, 40) : null,
             'channels' => $phoneOk ? 'email,phone' : 'email', 'wording' => $words['email'] . ($phoneOk ? ' ' . $words['phone'] : ''),
             'source' => 'page', 'detail' => 'Kod QR firmy (wizytówka, stoisko)', 'ip_hash' => Inbound::ipHash($ip), 'user_agent' => mb_substr($userAgent, 0, 300) ?: null, 'created_by' => null,
-        ]);
+        ] + self::interest($in, self::topics($org)));
         if ($res['ok']) {
             $res += ['offer' => true, 'report' => false, 'prospect_id' => (int) $p['id']];
             if (empty($res['repeated'])) {
@@ -146,7 +146,7 @@ final class Consents
             return null;
         }
         return Db::get()->one(
-            'SELECT p.*, o.name AS org_name, o.nip AS org_nip, o.address AS org_address FROM prospects p JOIN organizations o ON o.id = p.org_id WHERE p.consent_code = ?',
+            'SELECT p.*, o.name AS org_name, o.nip AS org_nip, o.address AS org_address, o.settings_json AS org_settings FROM prospects p JOIN organizations o ON o.id = p.org_id WHERE p.consent_code = ?',
             [$code]
         );
     }
@@ -163,6 +163,27 @@ final class Consents
             'phone' => 'Zgadzam się na kontakt telefoniczny firmy ' . $orgName . ' w sprawie tej oferty pod podanym numerem.',
             'report' => 'Proszę o przesłanie raportu z audytu strony' . ($host !== '' ? ' ' . $host : '') . ' na podany adres e-mail.',
         ];
+    }
+
+    /** Tematy, o które pyta strona zgody tej firmy. $p to firma z listy z danymi nadawcy albo sam nadawca. @return string[] */
+    public static function topics(array $p): array
+    {
+        return Prospects::criteria(['settings_json' => $p['org_settings'] ?? $p['settings_json'] ?? null])['topics'];
+    }
+
+    /** Zaznaczone tematy (tylko te z listy nadawcy) i wiadomość firmy. @return array{topics: ?string, note: ?string} */
+    private static function interest(array $in, array $allowed): array
+    {
+        $picked = [];
+        foreach ((array) ($in['topics'] ?? []) as $i) {
+            if (is_scalar($i) && isset($allowed[(int) $i]) && (string) (int) $i === (string) $i) {
+                $picked[(int) $i] = $allowed[(int) $i];
+            }
+        }
+        ksort($picked);
+        // Wiadomość w jednej linii: trafia do karty, powiadomienia i dziennika.
+        $note = mb_substr(utrim((string) preg_replace('/\s+/u', ' ', is_scalar($in['note'] ?? '') ? (string) ($in['note'] ?? '') : '')), 0, 500);
+        return ['topics' => $picked ? implode("\n", $picked) : null, 'note' => $note !== '' ? $note : null];
     }
 
     /** Czy wpis obejmuje dany kanał: email (zgoda na ofertę), phone albo report (prośba o raport). */
@@ -202,7 +223,7 @@ final class Consents
             'channels' => implode(',', array_keys(array_filter(['report' => $wantReport, 'email' => $offer, 'phone' => $phoneOk]))),
             'wording' => implode(' ', array_filter([$wantReport ? $words['report'] : null, $offer ? $words['email'] : null, $phoneOk ? $words['phone'] : null])),
             'source' => 'page', 'detail' => 'Strona zgody z listu', 'ip_hash' => Inbound::ipHash($ip), 'user_agent' => mb_substr($userAgent, 0, 300) ?: null, 'created_by' => null,
-        ]);
+        ] + self::interest($in, self::topics($p)));
         if ($res['ok']) {
             $res += ['offer' => $offer, 'report' => $wantReport];
             if (empty($res['repeated'])) {
@@ -305,7 +326,7 @@ final class Consents
                 'created_at' => $now,
             ] + ($offer ? [] : ['basis' => 'none']));
         }
-        $db->insert('consents', array_intersect_key($c, array_flip(['email', 'phone', 'person', 'channels', 'wording', 'source', 'detail', 'ip_hash', 'user_agent', 'created_by']))
+        $db->insert('consents', array_intersect_key($c, array_flip(['email', 'phone', 'person', 'channels', 'wording', 'source', 'detail', 'ip_hash', 'user_agent', 'created_by', 'topics', 'note']))
             + ['org_id' => $orgId, 'prospect_id' => (int) $p['id'], 'contact_id' => $contactId, 'created_at' => $now]);
         $facts = Prospects::facts($p);
         if ($offer) {
@@ -313,6 +334,10 @@ final class Consents
         }
         if (in_array('report', explode(',', $c['channels']), true)) {
             $facts['report_request'] = ['at' => $now, 'email' => $c['email']];
+        }
+        // Co firmę interesuje: trafia do karty i do szkicu oferty.
+        if (!empty($c['topics']) || !empty($c['note'])) {
+            $facts['interest'] = ['topics' => !empty($c['topics']) ? explode("\n", (string) $c['topics']) : [], 'note' => (string) ($c['note'] ?? ''), 'at' => $now];
         }
         if (in_array('report', explode(',', $c['channels']), true)) {
             ProspectEvents::add($orgId, (int) $p['id'], 'report');
@@ -323,7 +348,7 @@ final class Consents
         }
         // Firma prosi o ofertę albo raport, więc wraca do wybranych, także po wysłanym liście i po wcześniejszym sprzeciwie.
         $db->update('prospects', ['contact_id' => $contactId, 'facts_json' => json_out($facts), 'status' => 'picked', 'updated_at' => $now], 'id = ?', [(int) $p['id']]);
-        return ['ok' => true, 'email' => $c['email'], 'contact_id' => $contactId];
+        return ['ok' => true, 'email' => $c['email'], 'contact_id' => $contactId, 'topics' => $c['topics'] ?? null, 'note' => $c['note'] ?? null];
     }
 
     /**
@@ -348,7 +373,7 @@ final class Consents
                 [$orgId, $contactId, $orgId, $contactId]);
         }
         $facts = Prospects::facts($p);
-        unset($facts['consent'], $facts['report_request']);
+        unset($facts['consent'], $facts['report_request'], $facts['interest']);
         $db->update('prospects', ['facts_json' => json_out($facts), 'updated_at' => now_utc()], 'id = ? AND org_id = ?', [(int) $p['id'], $orgId]);
         return true;
     }
@@ -369,6 +394,8 @@ final class Consents
                 '',
                 'Firma: ' . $p['name'],
                 'Adres: ' . $res['email'],
+                !empty($res['topics']) ? 'Interesuje ją: ' . str_replace("\n", ', ', (string) $res['topics']) : null,
+                !empty($res['note']) ? 'Wiadomość: ' . $res['note'] : null,
                 $report !== null ? 'Raport wysłaliśmy automatycznie: ' . $report['url'] : null,
                 '',
                 $offer ? 'Oferta na ten adres ma teraz podstawę. Karta firmy: ' . $card
@@ -435,7 +462,7 @@ final class Consents
             ProspectEvents::add($orgId, (int) $p['id'], 'refused', 'wypisanie z wiadomości', null, true);
             $facts = Prospects::facts($p);
             if (isset($facts['consent']) || isset($facts['report_request'])) {
-                unset($facts['consent'], $facts['report_request']);
+                unset($facts['consent'], $facts['report_request'], $facts['interest']);
                 $db->update('prospects', ['facts_json' => json_out($facts)], 'id = ?', [(int) $p['id']]);
             }
         }

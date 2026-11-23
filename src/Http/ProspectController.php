@@ -49,6 +49,11 @@ final class ProspectController extends Controller
 
     public function saveCriteria(Request $r): Response
     {
+        // Tematy strony zgody zapisuje osobny formularz przy kodzie QR.
+        if ($r->input('topics') !== null && $r->input('keywords') === null) {
+            Prospects::saveTopics($this->orgId(), (string) $r->input('topics'));
+            return $this->redirect('/klienci/potencjalni#strona-zgody', 'Zapisano tematy strony zgody.');
+        }
         // Koszt listu zapisuje osobny, mały formularz przy lejku.
         if ($r->input('letter_cost') !== null && $r->input('keywords') === null) {
             Prospects::saveLetterCost($this->orgId(), $r->str('letter_cost'));

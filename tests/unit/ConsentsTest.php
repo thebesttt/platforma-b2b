@@ -412,4 +412,72 @@ return [
         eq($org2, (int) $db->val("SELECT org_id FROM prospects WHERE name = 'Klient drugiej'"));
         eq(0, (int) $db->val("SELECT COUNT(*) FROM contacts WHERE org_id = ? AND email = 'klient@drugiej.example'", [$orgId]));
     },
+    'Pytanie na stronie zgody: tematy ustawiane w panelu, wiadomość firmy i nawiązanie w szkicu oferty' => function () use ($setup, $guest) {
+        [$orgId, $uid, $id, $url] = $setup();
+        $db = Db::get();
+        http('GET', $url);
+        $code = (string) $db->val('SELECT consent_code FROM prospects WHERE id = ?', [$id]);
+        http('GET', '/klienci/potencjalni');
+        $open = (string) $db->val('SELECT consent_code FROM organizations WHERE id = ?', [$orgId]);
+
+        // Bez ustawionych tematów strona pyta tylko o wiadomość.
+        $page = $guest(fn () => http('GET', '/z/' . $code))->body;
+        contains('name="note"', $page);
+        ok(!str_contains($page, 'name="topics[]"'), 'bez tematów nie ma pól wyboru');
+
+        // Ustawienie: po jednym w wierszu, bez powtórzeń i pustych, najwyżej sześć, każdy do 60 znaków. Nie rusza kryteriów ani kosztu listu.
+        http('POST', '/klienci/potencjalni/kryteria', ['letter_cost' => '5']);
+        eq(303, http('POST', '/klienci/potencjalni/kryteria', ['topics' => "Nowa strona <b>www</b>\n\n  Reklamy w Google  \nreklamy w google\nPozycjonowanie\nD\nE\nF\nSiódmy\n" . str_repeat('x', 80)])->status);
+        $crit = Prospects::criteria($db->one('SELECT * FROM organizations WHERE id = ?', [$orgId]));
+        eq(['Nowa strona <b>www</b>', 'Reklamy w Google', 'Pozycjonowanie', 'D', 'E', 'F'], $crit['topics']);
+        eq(5.0, $crit['letter_cost']);
+        http('POST', '/klienci/potencjalni/kryteria', ['keywords' => 'budow', 'min_years' => '1']);
+        eq(6, count(Prospects::criteria($db->one('SELECT * FROM organizations WHERE id = ?', [$orgId]))['topics']), 'zapis kryteriów nie kasuje tematów');
+        contains('Nowa strona &lt;b&gt;www&lt;/b&gt;', http('GET', '/klienci/potencjalni')->body);
+
+        // Obie strony zgody pokazują te same tematy jako tekst.
+        foreach ([$code, $open] as $c) {
+            $page = $guest(fn () => http('GET', '/z/' . $c))->body;
+            contains('Co Państwa interesuje? Opcjonalnie', $page);
+            contains('name="topics[]" value="1"> <span>Reklamy w Google</span>', $page);
+            contains('Nowa strona &lt;b&gt;www&lt;/b&gt;', $page);
+            ok(!str_contains($page, '<b>www</b>'), 'temat jako tekst');
+        }
+
+        // Zgoda z tematami i wiadomością: zapis przy dowodzie, tylko tematy z listy nadawcy, wiadomość do 500 znaków.
+        $guest(fn () => http('POST', '/z/' . $code, ['_csrf' => 'brak', 'email' => 'zakupy@przykladowa.example', 'agree' => '1',
+            'topics' => ['2', '0', '9', 'abc', '1x'], 'note' => "  Szukamy wykonawcy <script>strony</script>\nna marzec.  " . str_repeat('a', 600)]));
+        $c = $db->one('SELECT * FROM consents');
+        eq("Nowa strona <b>www</b>\nPozycjonowanie", $c['topics'], 'kolejność jak na liście, obce wartości odrzucone');
+        eq(500, mb_strlen($c['note']));
+        ok(str_starts_with($c['note'], 'Szukamy wykonawcy <script>strony</script> na marzec.'), 'wiadomość w jednej linii');
+        $facts = Prospects::facts($db->one('SELECT * FROM prospects WHERE id = ?', [$id]));
+        eq(['Nowa strona <b>www</b>', 'Pozycjonowanie'], $facts['interest']['topics']);
+        $team = (string) $db->val("SELECT body FROM outbox WHERE kind = 'consent'");
+        contains('Interesuje ją: Nowa strona <b>www</b>, Pozycjonowanie', $team);
+        contains('Wiadomość: Szukamy wykonawcy', $team);
+        $card = http('GET', $url)->body;
+        contains('Co firmę interesuje', $card);
+        contains('Nowa strona &lt;b&gt;www&lt;/b&gt;, Pozycjonowanie.', $card);
+        contains('Szukamy wykonawcy &lt;script&gt;strony&lt;/script&gt; na marzec.', $card);
+        ok(!str_contains($card, '<script>strony'), 'wiadomość firmy jako tekst');
+
+        // Szkic oferty nawiązuje do zaznaczonych tematów.
+        $cid = (int) $db->val('SELECT contact_id FROM prospects WHERE id = ?', [$id]);
+        $compose = html_entity_decode(http('GET', '/klienci/' . $cid . '/wiadomosc', [], ['kind' => 'consented'])->body);
+        contains("Dzień dobry,\n\ndziękujemy za zgodę na kontakt. Zaznaczyli Państwo, że interesuje Państwa: Nowa strona <b>www</b>, Pozycjonowanie.\n\nPiszemy, ponieważ", $compose);
+
+        // Strona z kodu QR: sama wiadomość bez tematów też trafia na kartę. Wycofanie zgody czyści zapis z karty.
+        $guest(fn () => http('POST', '/z/' . $open, ['company' => 'Sklep Ogrodnik', 'email' => 'biuro@ogrodnik.example', 'agree' => '1', 'note' => 'Proszę o kontakt po 15.']));
+        $q = $db->one("SELECT * FROM prospects WHERE source = 'qr'");
+        eq([[], 'Proszę o kontakt po 15.'], [Prospects::facts($q)['interest']['topics'], Prospects::facts($q)['interest']['note']]);
+        eq([null, 'Proszę o kontakt po 15.'], array_values((array) $db->one('SELECT topics, note FROM consents ORDER BY id DESC')));
+        http('POST', $url . '/zgoda', ['withdraw' => '1']);
+        ok(!isset(Prospects::facts($db->one('SELECT * FROM prospects WHERE id = ?', [$id]))['interest']), 'po wycofaniu zgody karta nie pokazuje zainteresowań');
+
+        // Puste pole kasuje tematy: strony wracają do samej wiadomości.
+        http('POST', '/klienci/potencjalni/kryteria', ['topics' => " \n "]);
+        eq([], Prospects::criteria($db->one('SELECT * FROM organizations WHERE id = ?', [$orgId]))['topics']);
+        ok(!str_contains($guest(fn () => http('GET', '/z/' . $open))->body, 'name="topics[]"'), 'bez tematów strona o nie nie pyta');
+    },
 ];
