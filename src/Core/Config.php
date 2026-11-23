@@ -21,6 +21,7 @@ final class Config
         'AI_MAX_INPUT_CHARS' => '300000', // ok. 100 tys. tokenów dokumentacji na jedno zapytanie
         'CRON_TOKEN' => '',
         'PSI_KEY' => '',
+        'CEIDG_TOKEN' => '',          // hurtownia danych CEIDG (biznes.gov.pl): wyszukiwanie jednoosobowych działalności po PKD i regionie
         'CF_ACCOUNT_ID' => '',        // Cloudflare Browser Run: strona po uruchomieniu skryptów (wskaźniki A6 i E2 audytu treści)
         'CF_BROWSER_TOKEN' => '',     // token API z uprawnieniem „Browser Rendering - Edit”
         'RESEND_API_KEY' => '',

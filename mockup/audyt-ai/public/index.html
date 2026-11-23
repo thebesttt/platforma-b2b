@@ -1068,7 +1068,9 @@ function renderSending() {
 
 const resetDecision = () => { state.k.ack = false; state.k.saved = false; };
 const refocus = (id) => { const el = document.getElementById(id); if (el) el.focus(); };
-ACTIONS['k-write'] = (el) => { state.k.contact = Number(el.dataset.id); resetDecision(); rerender('wiadomosc'); go('wiadomosc'); };
+/* Rodzaj wiadomości dopasowany do podstawy kontaktu: odpowiedź na zapytanie, oferta za zgodą albo oferta bez zgody. Tak samo wybiera go silnik. */
+const kindFor = (c) => (c.basis === 'rfq' ? 'rfq_reply' : ['consent', 'client', 'invite'].includes(c.basis) ? 'consented' : 'cold_offer');
+ACTIONS['k-write'] = (el) => { state.k.contact = Number(el.dataset.id); state.k.kind = kindFor(contactOf(state.k.contact)); resetDecision(); rerender('wiadomosc'); go('wiadomosc'); };
 ACTIONS['k-open'] = (el) => { state.k.open = state.k.open === el.dataset.name ? '' : el.dataset.name; const id = el.id; rerender('firmy'); refocus(id); };
 ACTIONS['k-add'] = (el) => {
   const x = PLAT.search.find((s) => s.company === el.dataset.name);
@@ -1079,7 +1081,7 @@ ACTIONS['k-add'] = (el) => {
       at: x.consent ? x.consent[1] : x.invite ? dpl(PLAT.today) : '', unsub: null };
     PLAT.contacts.push(c);
   } else if (x.consent && c.basis === 'none') { c.basis = 'consent'; c.email = x.consent[0]; c.detail = 'zgoda na stronie zgody z listu'; c.at = x.consent[1]; }
-  state.k.contact = c.id; state.k.kind = ['invite', 'consent', 'client'].includes(c.basis) ? 'consented' : 'cold_offer'; resetDecision();
+  state.k.contact = c.id; state.k.kind = kindFor(c); resetDecision();
   rerender('firmy', 'kontakty', 'wiadomosc'); go('wiadomosc');
 };
 ACTIONS['k-rfq'] = (el) => {
@@ -1121,7 +1123,7 @@ ACTIONS['k-send'] = () => {
   PLAT.log.unshift({ at: 'przed chwilą', who: PLAT.org.user, company: c.company, kind: k.kind, level: a.level, ack: a.ack });
   k.saved = true; rerender('wiadomosc', 'wysylka'); refocus('kSaved');
 };
-CHANGES['k-contact'] = (el) => { state.k.contact = Number(el.value); resetDecision(); rerender('wiadomosc'); refocus('kContact'); };
+CHANGES['k-contact'] = (el) => { state.k.contact = Number(el.value); state.k.kind = kindFor(contactOf(state.k.contact)); resetDecision(); rerender('wiadomosc'); refocus('kContact'); };
 CHANGES['k-kind'] = (el) => { state.k.kind = el.value; resetDecision(); rerender('wiadomosc'); refocus('kind-' + el.value); };
 CHANGES['k-ack'] = (el) => { state.k.ack = el.checked; rerender('wiadomosc'); refocus('kAck'); };
 CHANGES['k-filter'] = (el) => { state.k.f[el.dataset.key] = el.value; rerender('firmy'); refocus(el.id); };

@@ -402,16 +402,20 @@ final class OutreachController extends Controller
         return $this->redirect('/wiadomosci/' . $m['id'], 'Oznaczono jako wysłaną.' . $note);
     }
 
+    /**
+     * Rodzaj wiadomości dopasowany do podstawy kontaktu, gdy użytkownik sam go nie wybrał: odpowiedź na zapytanie,
+     * oferta za zgodą albo oferta bez zgody. Prośba o zgodę nie jest domyślna, bo sama wymaga zgody.
+     */
     private function kindFor(Request $r, array $c): string
     {
         $kind = $r->str('kind');
         if (array_key_exists($kind, RiskPolicy::KINDS)) {
             return $kind;
         }
-        return match ($c['basis']) {
-            'rfq' => 'rfq_reply',
-            'consent', 'client', 'invite' => 'consented',
-            default => 'consent_request',
+        return match (true) {
+            $c['basis'] === 'rfq' => 'rfq_reply',
+            in_array($c['basis'], ['consent', 'client', 'invite'], true), !empty($c['marketing_consent_at']) => 'consented',
+            default => 'cold_offer',
         };
     }
 

@@ -96,4 +96,28 @@ return [
         contains('X-Unsent: 1', $eml);
         contains(base64_encode("Linia 1\r\nLinia 2"), str_replace("\r\n", '', $eml));
     },
+    'Wiadomość z listy kontaktów: rodzaj dobiera się sam do podstawy kontaktu' => function () {
+        [$orgId, $uid] = make_org();
+        login_as($uid);
+        $db = App\Core\Db::get();
+        $add = static fn (string $basis, array $extra = []): int => $db->insert('contacts', $extra + ['org_id' => $orgId, 'company_name' => 'Firma ' . $basis,
+            'email' => $basis . '@example.com', 'basis' => $basis, 'created_at' => now_utc()]);
+        $checked = static function (int $cid, array $query = []): string {
+            $html = http('GET', '/klienci/' . $cid . '/wiadomosc', [], $query)->body;
+            return preg_match('/name="kind" value="([a-z_]+)" checked/', $html, $m) ? $m[1] : '';
+        };
+        // Zapytanie ofertowe: odpowiedź na nie. Zgoda, klient i adres podany do ofert: oferta za zgodą. Bez podstawy: oferta bez zgody.
+        eq('rfq_reply', $checked($add('rfq')));
+        eq('consented', $checked($add('consent')));
+        eq('consented', $checked($add('client')));
+        eq('consented', $checked($add('invite')));
+        eq('cold_offer', $checked($add('none')), 'prośba o zgodę nie jest domyślna, bo sama wymaga zgody');
+        eq('consented', $checked($add('none', ['email' => 'widzet@example.com', 'marketing_consent_at' => now_utc()])), 'zgoda zaznaczona w widżecie też się liczy');
+        // Rodzaj wybrany świadomie w adresie ma pierwszeństwo, a nieznany jest pomijany.
+        $rfq = $add('rfq', ['email' => 'drugi@example.com']);
+        eq('consent_request', $checked($rfq, ['kind' => 'consent_request']));
+        eq('rfq_reply', $checked($rfq, ['kind' => 'zmyslony']));
+        // Lista kontaktów prowadzi do wiadomości bez narzuconego rodzaju.
+        contains('href="/klienci/' . $rfq . '/wiadomosc">Napisz</a>', http('GET', '/klienci')->body);
+    },
 ];
