@@ -27,7 +27,9 @@
       ["Wysyłka z własnej skrzynki", "wysylka", "silnik", "Dziś przez program pocztowy albo plik .eml. Gmail i Microsoft 365 są w planie."],
       ["Zapytania ofertowe firm: gdzie szukać i rejestr z terminami", "rfq", "silnik", "Źródła nie udostępniają danych programom. Panel pokazuje, gdzie szukać, a znalezione zapytanie wpisujesz do rejestru: panel pilnuje terminu i przygotowuje odpowiedź."],
       ["Opis idealnego klienta ze strony firmy", "firmy", "silnik", "AI czyta stronę firmy i bibliotekę. Grupa klientów zostaje tylko z cytatem. Opis można poprawić ręcznie."],
-      ["Wyszukiwanie firm: branża, region, wielkość, wiek, kondycja, przetargi", "firmy", "plan", "Firmy z wyników przetargów (branża, region, wygrane) są już w module Przetargi. Pełna baza wymaga kluczy do REGON i CEIDG."],
+      ["Lista potencjalnych klientów: firmy z wyników przetargów i z Twojej listy, dopasowanie i powód kontaktu", "firmy", "silnik", "Dane z wykazu VAT i KRS, punkty z jawnej tabeli. Adresów e-mail panel nie zbiera."],
+      ["Treść oferty układana automatycznie i drogi kontaktu z oceną ryzyka", "firmy", "silnik", "Odpowiedź na zapytanie, adres podany przez firmę do ofert, list pocztą albo e-mail bez zgody z ekranem ryzyka. Decyzja należy do Ciebie."],
+      ["Wyszukiwanie w rejestrach REGON i CEIDG: branża, region, wielkość", "firmy", "plan", "Wymaga kluczy do rejestrów. Do tego czasu firmy pochodzą z wyników przetargów i z Twojej listy."],
       ["Sekwencje z przypomnieniami i dziennymi limitami", "wysylka", "silnik", "Panel pilnuje terminów i przygotowuje treść kolejnych kroków. Wysyłasz ze swojej skrzynki."],
       ["Wykrywanie odpowiedzi i wypisań", "wysylka", "plan", "Wypisanie działa: odbiorca klika adres w stopce oferty. Odpowiedź zaznaczasz ręcznie, bo automat wymaga połączenia ze skrzynką."]
     ] },
@@ -101,7 +103,8 @@
     "none": "Brak podstawy, adres z publicznego źródła",
     "rfq": "Zapytanie ofertowe od tej firmy",
     "consent": "Zgoda na informacje handlowe e-mailem",
-    "client": "Obecny klient (wcześniejsza współpraca)"
+    "client": "Obecny klient (wcześniejsza współpraca)",
+    "invite": "Firma opublikowała adres do przesyłania ofert"
   },
   "kinds": {
     "rfq_reply": ["Odpowiedź na zapytanie ofertowe", "Firma sama poprosiła o oferty i podała adres. Odpowiadasz na jej prośbę."],
@@ -116,26 +119,28 @@
       "Dodatkowo wykroczenie zagrożone grzywną, ścigane na żądanie odbiorcy (art. 448), oraz roszczenia z tytułu czynu nieuczciwej konkurencji."
     ],
     "consent_request": [
+      "Ministerstwo Cyfryzacji, odpowiedź z 13.10.2025 na interpelację nr 12337: „Nie jest również dozwolony kontakt wykonywany na potrzeby uzyskania zgody”. Pismo powołuje się na decyzje Prezesa UKE i Prezesa UOKiK.",
       "Sąd Apelacyjny w Warszawie (wyrok z 12.12.2019, VII AGa 1567/18) uznał SMS z prośbą o zgodę za informację handlową, bo pośrednio promował nadawcę. Wyrok zapadł na gruncie poprzednich przepisów.",
-      "Nie znamy orzeczenia, które pod nowymi przepisami ocenia e-mail z samą prośbą o zgodę. Sprawa jest sporna."
+      "Nie znamy wyroku sądu, który ocenia taką wiadomość już pod nowymi przepisami."
     ],
+    "invite": "Art. 398 ust. 2 Prawa komunikacji elektronicznej: zgodę można wyrazić przez udostępnienie adresu elektronicznego w celu otrzymywania informacji handlowej.",
     "unsub": "Art. 21 RODO: po sprzeciwie dane nie mogą być przetwarzane na potrzeby marketingu bezpośredniego.",
     "ack": "Zapoznałem się z ryzykiem. Sam decyduję o wysłaniu tej wiadomości i odpowiedzialność za wysyłkę ponosi moja firma."
   },
   "log": [
     { "at": "18.11.2026, 15:02", "who": "Jan K.", "company": "Hurtownia Elektryczna Volt (przykład)", "kind": "rfq_reply", "level": "low", "ack": false },
-    { "at": "12.11.2026, 10:41", "who": "Jan K.", "company": "Auto Części 24 (przykład)", "kind": "consent_request", "level": "high", "ack": true }
+    { "at": "12.11.2026, 10:41", "who": "Jan K.", "company": "Auto Części 24 (przykład)", "kind": "consent_request", "level": "very_high", "ack": true }
   ],
   "icp": "Sklepy internetowe i firmy usługowe, które mają już stronę i wydają na reklamę co najmniej 1000 zł miesięcznie, ale nie mierzą, z której kampanii przychodzą zamówienia.",
   "search": [
-    { "company": "Sklep Ogrodnik (przykład)", "pkd": "Sklepy internetowe", "region": "mazowieckie", "size": "10-49 osób", "age": 9, "condition": "dobra", "tenders": false, "reason": "Reklamy Google prowadzą na stronę bez pomiaru konwersji." },
-    { "company": "Kwiaciarnia Internetowa Fiołek (przykład)", "pkd": "Sklepy internetowe", "region": "łódzkie", "size": "do 9 osób", "age": 4, "condition": "dobra", "tenders": false, "reason": "Strona blokuje boty wyszukiwarek AI w robots.txt." },
-    { "company": "Okna Jasne (przykład)", "pkd": "Budownictwo i wykończenia", "region": "mazowieckie", "size": "50-249 osób", "age": 17, "condition": "dobra", "tenders": true, "reason": "Startuje w przetargach, a strona nie ma opisu realizacji." },
-    { "company": "Gabinet Stomatologiczny Uśmiech (przykład)", "pkd": "Usługi medyczne", "region": "śląskie", "size": "do 9 osób", "age": 6, "condition": "dobra", "tenders": false, "reason": "Wizytówka Google bez godzin otwarcia i zdjęć." },
-    { "company": "Transport Szybki (przykład)", "pkd": "Transport i logistyka", "region": "łódzkie", "size": "10-49 osób", "age": 2, "condition": "podwyższone ryzyko", "tenders": true, "reason": "Młoda spółka z szybkim wzrostem zatrudnienia, brak strony ofertowej." },
-    { "company": "Hotel Nad Stawem (przykład)", "pkd": "Hotele i gastronomia", "region": "mazowieckie", "size": "10-49 osób", "age": 12, "condition": "dobra", "tenders": false, "reason": "Rezerwacje tylko przez pośredników, własna strona bez systemu rezerwacji." },
-    { "company": "Meble Dąb (przykład)", "pkd": "Sklepy internetowe", "region": "śląskie", "size": "10-49 osób", "age": 14, "condition": "dobra", "tenders": false, "reason": "Wypisał się z wiadomości 03.11.2026. Platforma nie pozwoli wysłać mu oferty." },
-    { "company": "Budimpex S.A. (przykład)", "pkd": "Budownictwo i wykończenia", "region": "mazowieckie", "size": "50-249 osób", "age": 21, "condition": "podwyższone ryzyko", "tenders": true, "reason": "Decyzja UOKiK o opóźnianiu płatności. Sprawdź przed wyceną." }
+    { "company": "Sklep Ogrodnik (przykład)", "source": "Twoja lista", "score": 80, "pkd": "Sklepy internetowe", "region": "mazowieckie", "size": "10-49 osób", "age": 9, "condition": "dobra", "tenders": false, "reason": "Reklamy Google prowadzą na stronę bez pomiaru konwersji." },
+    { "company": "Kwiaciarnia Internetowa Fiołek (przykład)", "source": "Twoja lista", "score": 75, "invite": ["Propozycje współpracy prosimy przesyłać na adres wspolpraca@fiolek.example.", "wspolpraca@fiolek.example", "fiolek.example/kontakt"], "pkd": "Sklepy internetowe", "region": "łódzkie", "size": "do 9 osób", "age": 4, "condition": "dobra", "tenders": false, "reason": "Strona blokuje boty wyszukiwarek AI w robots.txt." },
+    { "company": "Okna Jasne (przykład)", "source": "wyniki przetargów", "score": 90, "win": "Wymiana stolarki okiennej w szkole podstawowej (przykład)", "pkd": "Budownictwo i wykończenia", "region": "mazowieckie", "size": "50-249 osób", "age": 17, "condition": "dobra", "tenders": true, "reason": "Startuje w przetargach, a strona nie ma opisu realizacji." },
+    { "company": "Gabinet Stomatologiczny Uśmiech (przykład)", "source": "Twoja lista", "score": 60, "pkd": "Usługi medyczne", "region": "śląskie", "size": "do 9 osób", "age": 6, "condition": "dobra", "tenders": false, "reason": "Wizytówka Google bez godzin otwarcia i zdjęć." },
+    { "company": "Transport Szybki (przykład)", "source": "wyniki przetargów", "score": 55, "win": "Dowóz uczniów do szkół w gminie (przykład)", "pkd": "Transport i logistyka", "region": "łódzkie", "size": "10-49 osób", "age": 2, "condition": "podwyższone ryzyko", "tenders": true, "reason": "Młoda spółka z szybkim wzrostem zatrudnienia, brak strony ofertowej." },
+    { "company": "Hotel Nad Stawem (przykład)", "source": "Twoja lista", "score": 70, "pkd": "Hotele i gastronomia", "region": "mazowieckie", "size": "10-49 osób", "age": 12, "condition": "dobra", "tenders": false, "reason": "Rezerwacje tylko przez pośredników, własna strona bez systemu rezerwacji." },
+    { "company": "Meble Dąb (przykład)", "source": "Twoja lista", "score": 65, "pkd": "Sklepy internetowe", "region": "śląskie", "size": "10-49 osób", "age": 14, "condition": "dobra", "tenders": false, "reason": "Wypisał się z wiadomości 03.11.2026. Platforma nie pozwoli wysłać mu oferty." },
+    { "company": "Budimpex S.A. (przykład)", "source": "wyniki przetargów", "score": 50, "win": "Remont elewacji budynku urzędu (przykład)", "pkd": "Budownictwo i wykończenia", "region": "mazowieckie", "size": "50-249 osób", "age": 21, "condition": "podwyższone ryzyko", "tenders": true, "reason": "Decyzja UOKiK o opóźnianiu płatności. Sprawdź przed wyceną." }
   ],
   "rfq_sources": [
     ["Baza Konkurencyjności", "https://bazakonkurencyjnosci.funduszeeuropejskie.gov.pl/", "bazakonkurencyjnosci.funduszeeuropejskie.gov.pl", "Zapytania firm i instytucji, które kupują w projektach z funduszy unijnych. Trafiają tu zamówienia powyżej 50 000 zł netto. Ofertę składa się w samej Bazie."],

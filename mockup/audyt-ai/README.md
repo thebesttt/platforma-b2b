@@ -4,9 +4,9 @@ Klikalny mockup całego panelu: 9 modułów, 32 ekrany. Pokazuje każdą funkcj�
 
 | Moduł | Ekrany |
 |---|---|
-| Pulpit | Dziś, Lista funkcji (60 funkcji ze stanem: działa w silniku, do zbudowania, czeka na zgodę Google i Meta) |
+| Pulpit | Dziś, Lista funkcji (62 funkcje ze stanem: działa w silniku, do zbudowania, czeka na zgodę Google i Meta) |
 | Zapytania | Zapytania, Zasady kwalifikacji, Podgląd widżetu, Wyniki |
-| Klienci | Kontakty, Wiadomość z ekranem ryzyka i decyzją, Zapytania ofertowe, Szukaj firm, Wysyłka i dziennik |
+| Klienci | Kontakty, Wiadomość z ekranem ryzyka i decyzją, Zapytania ofertowe, Potencjalni klienci (lista firm, treść oferty, drogi kontaktu z ryzykiem), Wysyłka i dziennik |
 | Audyt AI | Raport, Wytyczne wskaźników, Przed i po, Cytowania w AI, Strony witryny |
 | SEO i strona | Audyt techniczny, Konkurenci, Google (Search Console i wizytówka) |
 | Reklamy | Wyniki, Kampanie z potwierdzeniem zmian i dziennikiem, Alerty |

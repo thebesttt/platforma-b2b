@@ -6,21 +6,21 @@ Stan na 23.11.2026.
 
 Na perfectdata.pl nic nie zostało zainstalowane. Kod trafi na stronę dopiero po wyraźnej zgodzie właściciela.
 
-**Co się zmieniło 20.11.2026.** Etapy 1 i 2 oraz większość etapu 3 są zbudowane w silniku i przechodzą testy. Tego samego dnia doszło pięć funkcji z etapu 4: wyniki przetargów, praca zespołu nad ofertą, warunki naboru dotacji, przypomnienia z adresem wypisania i opis idealnego klienta. Potem doszły cztery funkcje, których dane nie są dostępne dla programów: panel pokazuje, gdzie je znaleźć, i daje miejsce na wpisanie (szczegóły niżej, w części „Dane wpisywane ręcznie”). Do uruchomienia zostały kroki właściciela z etapu 0: hosting, baza, klucze usług i zgoda na kod widżetu. Lista na końcu, w części „Co jest potrzebne od właściciela”.
+**Co się zmieniło 20.11.2026.** Etapy 1 i 2 oraz większość etapu 3 są zbudowane w silniku i przechodzą testy. Tego samego dnia doszło pięć funkcji z etapu 4: wyniki przetargów, praca zespołu nad ofertą, warunki naboru dotacji, przypomnienia z adresem wypisania i opis idealnego klienta. Potem doszły cztery funkcje, których dane nie są dostępne dla programów: panel pokazuje, gdzie je znaleźć, i daje miejsce na wpisanie (szczegóły niżej, w części „Dane wpisywane ręcznie”). 23.11.2026 doszła lista potencjalnych klientów: panel proponuje firmy, układa treść oferty i pokazuje drogi kontaktu z oceną ryzyka (część „Potencjalni klienci i wysyłka”). Do uruchomienia zostały kroki właściciela z etapu 0: hosting, baza, klucze usług i zgoda na kod widżetu. Lista na końcu, w części „Co jest potrzebne od właściciela”.
 
 ## Co jest gotowe
 
-- **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`, 146 testów na SQLite i PostgreSQL. Gotowa do uruchomienia w Render.
+- **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`, 151 testów na SQLite i PostgreSQL. Gotowa do uruchomienia w Render.
 - **Panel w wyglądzie PerfectData** (zmienna `APP_THEME=perfectdata` albo ustawienie firmy) z wyborem modułów w menu i pulpitem, który pokazuje tylko włączone moduły.
 - **Zapytania ze strony:** widżet do wklejenia jedną linią kodu, kwalifikator z jawną tabelą punktów, lista i karta zapytań, czat AI z bazy wiedzy, lejek i test dwóch wersji.
 - **Audyt AI:** 24 wskaźniki i 100 punktów z jednego pliku wytycznych, raport z linijką punktów i listą „Najpierw to”, „Przed i po”, strona wytycznych, raport dla klienta pod linkiem, audyt wielu stron z mapy witryny. Sprawdzony na prawdziwej stronie perfectdata.pl.
 - **Poczta z panelu:** powiadomienie o zapytaniu, reset hasła, zaproszenia do zespołu i poranny przegląd (przetargi, zapytania, alerty).
 - **Przetargi:** import i dopasowanie do profilu, karta przetargu, analiza SWZ oraz wyniki: kto wygrywa w branży i regionie, za ile i przy ilu ofertach. Alert, gdy zapisany przetarg zostanie rozstrzygnięty.
 - **Oferty i wnioski:** szkic z ogłoszenia i biblioteki, praca zespołu (sekcja przydzielona osobie, zapis nie nadpisuje cudzej zmiany), lista dokumentów do odhaczania, a we wniosku o dotację sprawdzenie warunków naboru z cytatami. Lista obserwowanych naborów z przewodnikiem po pięciu oficjalnych serwisach, przypomnieniami o końcu naboru i wnioskiem zakładanym z naboru.
-- **Klienci i wiadomości:** ocena ryzyka prawnego przed wysyłką, przypomnienia po 4 i po 10 dniach z dziennym limitem, adres wypisania w stopce ofert, opis idealnego klienta ze strony firmy. Rejestr zapytań ofertowych z rynku: gdzie szukać, termin, kontakt z podstawą „zapytanie ofertowe” i odpowiedź jednym kliknięciem.
+- **Klienci i wiadomości:** ocena ryzyka prawnego przed wysyłką, przypomnienia po 4 i po 10 dniach z dziennym limitem, adres wypisania w stopce ofert, opis idealnego klienta ze strony firmy. Rejestr zapytań ofertowych z rynku: gdzie szukać, termin, kontakt z podstawą „zapytanie ofertowe” i odpowiedź jednym kliknięciem. Lista potencjalnych klientów: firmy z wyników przetargów i z listy użytkownika, dane z rejestrów, punkty dopasowania, treść oferty układana automatycznie i drogi kontaktu z oceną ryzyka.
 - **Kontrahenci:** karta firmy z rejestrów publicznych, a do tego dwa sprawdzenia robione ręcznie: Krajowy Rejestr Zadłużonych i liczby ze sprawozdania finansowego, z których panel liczy, po ilu dniach firma płaci dostawcom.
 - **Audyt techniczny:** bez zmian, działa od początku.
-- **Mockup całego panelu:** `mockup/audyt-ai`, 9 modułów i 32 ekrany, z listą 60 funkcji i ich stanem. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip`.
+- **Mockup całego panelu:** `mockup/audyt-ai`, 9 modułów i 32 ekrany, z listą 62 funkcji i ich stanem. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip`.
 - **Wytyczne audytu:** `resources/audyt-ai-rules.json` (czyta je silnik) i dokument dla zespołu `mockup/audyt-ai/WYTYCZNE.md`.
 - **Plany modułów:** `PLAN-ZAPYTANIA.md` i `PLAN-AUDYT-AI.md`.
 
@@ -43,26 +43,26 @@ W platformie wygląd i zestaw modułów będą ustawieniem organizacji (pole `se
 
 ## Funkcje i ich stan
 
-Mockup pokazuje 60 funkcji. Zakładka „Lista funkcji” na pulpicie podaje stan każdej z nich i prowadzi do ekranu.
+Mockup pokazuje 62 funkcje. Zakładka „Lista funkcji” na pulpicie podaje stan każdej z nich i prowadzi do ekranu.
 
 | Moduł | Działa w silniku | Do zbudowania | Czeka na zgodę Google i Meta |
 |---|---|---|---|
 | Zapytania | 5 | 0 | 0 |
-| Klienci | 9 | 2 | 0 |
+| Klienci | 11 | 2 | 0 |
 | Audyt AI | 6 | 1 | 0 |
 | SEO i strona | 3 | 2 | 0 |
 | Reklamy | 0 | 0 | 6 |
 | Przetargi | 9 | 0 | 0 |
 | Oferty i wnioski | 9 | 0 | 0 |
 | Kontrahenci | 7 | 1 | 0 |
-| Razem | 48 | 6 | 6 |
+| Razem | 50 | 6 | 6 |
 
 „Działa w silniku” znaczy, że kod jest w repozytorium i przechodzi testy. Silnik nie jest jeszcze uruchomiony online (etap 0).
 
 Dlaczego 6 funkcji nie jest zbudowanych: każda wymaga zgody albo konta u zewnętrznej firmy.
 
 - Search Console i wizytówka Google (logowanie Google klienta),
-- wyszukiwarka firm (klucze do REGON i CEIDG). Firmy z wyników przetargów są już w module Przetargi,
+- wyszukiwanie w rejestrach REGON i CEIDG (klucze). Do tego czasu lista potencjalnych klientów bierze firmy z wyników przetargów i z listy użytkownika,
 - automatyczne wykrywanie odpowiedzi (połączenie ze skrzynką Gmail lub Microsoft 365). Wypisanie działa już przez adres w stopce, a odpowiedź zaznacza się ręcznie,
 - wpis długu do BIG (umowa z biurem),
 - test cytowań w AI (klucze OpenAI, Perplexity i Gemini oraz decyzja o koszcie).
@@ -81,6 +81,30 @@ Cztery funkcje opierają się na źródłach, które nie udostępniają danych p
 Wpisy widzi tylko firma, która je zrobiła. Sprawdzenia w KRZ i liczby ze sprawozdań nie zmieniają oceny ryzyka liczonej z danych publicznych.
 
 Czego ta wersja nie robi: nie przeszukuje źródeł sama i nie podpowie zapytania ani naboru, którego nie wpiszesz. Gdyby któreś źródło udostępniło dane programom albo zgodziło się na pobieranie, import można dopisać do tych samych tabel.
+
+### Potencjalni klienci i wysyłka
+
+Zapytania ze strony to firmy, które piszą do nas. Lista potencjalnych klientów działa w drugą stronę: panel proponuje firmy, do których warto się odezwać.
+
+Jak to działa:
+
+1. **Skąd są firmy.** Wykonawcy z wyników przetargów (kto wygrał, co i za ile) oraz lista NIP-ów albo stron wklejona przez użytkownika. Adresów e-mail panel nie przyjmuje i nie zbiera ze stron.
+2. **Co panel dopisuje.** Nazwę, adres, formę prawną, staż i ryzyko płatnicze z wykazu VAT i KRS. Liczy dopasowanie z jawnej tabeli: branża 40, region 15, staż 10, kondycja 15, powód kontaktu 20.
+3. **Powód kontaktu i treść oferty.** Panel układa je sam z faktów: wygrane zamówienie albo rzeczy do poprawy na stronie firmy, plus opis z biblioteki. Treść można poprawić albo zlecić AI. Ta sama trafia do listu i do wiadomości.
+4. **Wysyłka.** Prowadzenie listy i napisanie oferty nie wymagają zgody firmy. Zgody wymaga wysłanie oferty e-mailem albo telefon z ofertą, także do firm. Dlatego karta firmy pokazuje wszystkie drogi kontaktu, a wysyła użytkownik.
+
+| Droga kontaktu | Ryzyko | Dlaczego |
+|---|---|---|
+| Odpowiedź na zapytanie ofertowe firmy | niskie | Firma sama prosi o oferty |
+| Oferta do firmy, która wyraziła zgodę albo jest klientem | niskie | Jest zgoda |
+| Oferta na adres, który firma podała do przesyłania ofert | niskie | Udostępnienie adresu w tym celu jest formą zgody (art. 398 ust. 2 PKE). Panel szuka takiego zdania na stronie firmy i pokazuje cytat z linkiem. Podstawą staje się dopiero po potwierdzeniu przez użytkownika |
+| List pocztą | niskie | Art. 398 PKE dotyczy telefonu i środków elektronicznych. Panel przygotowuje list .docx. Dla osób prowadzących działalność dodaje informację z art. 14 RODO i przypomina o terminie miesiąca |
+| E-mail bez zgody | bardzo wysokie | Art. 398 ust. 1 PKE. Panel przygotuje wiadomość, pokaże ekran ryzyka i wymaga potwierdzenia. Decyzję podejmuje użytkownik |
+| Prośba o zgodę wysłana e-mailem | bardzo wysokie | Ministerstwo Cyfryzacji (odpowiedź z 13.10.2025 na interpelację nr 12337) uznaje kontakt w celu uzyskania zgody za niedozwolony. Wcześniej panel oceniał to jako ryzyko wysokie |
+
+Sprzeciw firmy blokuje listy i oferty. Odpowiedź na jej własne zapytanie ofertowe zostaje możliwa.
+
+Źródła: [art. 398 Prawa komunikacji elektronicznej](https://lexlege.pl/komunik-elektr/art-398/), [odpowiedź Ministerstwa Cyfryzacji na interpelację nr 12337](https://api.sejm.gov.pl/sejm/term10/interpellations/attachment/ATTDMGHNP/i12337-o1.pdf), [Grant Thornton o marketingu pocztą tradycyjną](https://grantthornton.pl/publikacja/marketing-rodo-i-wysylka-kartek-swiatecznych/). To opis przepisów, a nie porada prawna. Opinia prawnika o module wiadomości jest na liście rzeczy potrzebnych przed sprzedażą platformy.
 
 Reklamy Google i Meta czekają na zgody platform. Wnioski warto złożyć już teraz, bo zgody trwają tygodnie.
 
@@ -209,7 +233,7 @@ Do sprawdzenia po wdrożeniu: czy rejestr decyzji UOKiK przyjmuje połączenia z
 8. **Pozyskiwanie klientów:**
    - zapytania ofertowe firm (strony firm, Baza Konkurencyjności, platformy zakupowe): rejestr z przewodnikiem po źródłach zbudowany 20.11.2026, zapytania wpisuje użytkownik,
    - opis idealnego klienta z treści strony firmy: zbudowane 20.11.2026,
-   - wyszukiwarka firm: branża, region, wielkość, wiek, kondycja, udział w przetargach,
+   - lista potencjalnych klientów z treścią oferty i drogami kontaktu: zbudowana 23.11.2026. Do zrobienia: wyszukiwanie w rejestrach REGON i CEIDG (branża, region, wielkość), gdy będą klucze,
    - sekwencje z przypomnieniami i dziennym limitem: zbudowane 20.11.2026 w wersji, w której wysyłasz ze swojej skrzynki, a panel pilnuje terminów. Automatyczna wysyłka wymaga połączenia ze skrzynką (punkt 6).
 9. **Widoczność w Google:** dane z Search Console klienta i ocena wizytówki Google.
 10. **Dotacje:** ocena warunków naboru na wgranym regulaminie jest zbudowana (20.11.2026). Lista obserwowanych naborów z przewodnikiem po oficjalnych serwisach i przypomnieniami też (20.11.2026), nabory wpisuje użytkownik.
@@ -252,6 +276,23 @@ Potrzebne przed etapem 4:
   - opinii o module wiadomości (art. 398 Prawa komunikacji elektronicznej) i o module należności (art. 15 i 15a ustawy o udostępnianiu informacji gospodarczych).
 
 ## Co zostało sprawdzone
+
+### Potencjalni klienci (23.11.2026)
+
+- **151 testów** na SQLite i PostgreSQL oraz test obrazu Docker (GitHub Actions). Pięć nowych obejmuje:
+  - wyszukanie wykonawców (bez własnej firmy, bez unieważnionych, bez firm już dodanych), wklejoną listę z błędnymi wierszami i limitem,
+  - kolejkę rejestrów w przeglądarce i w zadaniu dziennym, firmę spoza wykazu VAT,
+  - punkty dopasowania po zmianie kryteriów,
+  - zaproszenie do ofert: zdanie w innym akapicie niż adres, zdanie w skrypcie strony, potwierdzenie, wpis ręczny z błędami,
+  - treść oferty: z faktów, poprawioną, od AI (model dostaje tylko fakty z karty i bibliotekę), tę samą w liście i w wiadomości,
+  - list .docx, informację RODO i termin dla osoby prowadzącej działalność, sprzeciw,
+  - izolację między firmami i kod HTML w każdym polu.
+- **Ryzyko wiadomości:** prośba o zgodę bez podstawy ma poziom bardzo wysoki, adres podany przez firmę do ofert daje poziom niski. Reguły w mockupie dają te same wyniki co silnik.
+- **Przeglądarka (Chromium), 1280, 390 i 320 px:** wklejenie listy, kolejka rejestrów, dodanie firmy z wyników, sprawdzenie strony, potwierdzenie zaproszenia (bez zaznaczenia formularz nie wychodzi), treść oferty z AI, oferta na adres z zaproszenia, pobranie listu, e-mail bez zgody z zablokowanym przyciskiem do czasu potwierdzenia, sprzeciw, usunięcie. Bez błędów i bez poziomego przewijania.
+- **Cały panel po zmianach:** 149 stron i 15 pobrań w 3 szerokościach (1280, 390 i 320 px) bez błędów, bez ostrzeżeń PHP w logu serwera i bez poziomego przewijania. Mockup: 32 ekrany w 4 szerokościach bez błędów.
+- **Przepisy** sprawdzone 23.11.2026 w źródłach podanych w części „Potencjalni klienci i wysyłka”.
+
+Czego nie dało się sprawdzić: wykazu VAT i KRS na dużej liście prawdziwych firm (wykaz ma dzienny limit zapytań, panel pyta zbiorczo po 30 firm), szukania zaproszeń na prawdziwych stronach firm (testy używają stron przykładowych) i prawdziwej odpowiedzi modelu AI. Ocena prawna dróg kontaktu wymaga potwierdzenia przez prawnika.
 
 ### Dane wpisywane ręcznie (20-23.11.2026)
 

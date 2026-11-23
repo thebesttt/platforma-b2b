@@ -1,8 +1,11 @@
 /* ===== Klienci i wiadomości ===== */
-state.k = { contact: 4, kind: 'cold_offer', ack: false, saved: false, f: { pkd: '', region: '', tenders: '' } };
+state.k = { contact: 4, kind: 'cold_offer', ack: false, saved: false, f: { pkd: '', region: '', tenders: '' }, open: '' };
 const RISK = { low: ['good', 'niskie'], high: ['mid', 'wysokie'], very_high: ['bad', 'bardzo wysokie'] };
 const contactOf = (id) => PLAT.contacts.find((c) => c.id === id);
 const basisLine = (c) => PLAT.bases[c.basis] + (c.detail ? ': ' + c.detail : '') + (c.at ? ' (' + c.at + ')' : '');
+
+const INVITE_LEAD = 'Firma sama opublikowała adres do przesyłania ofert. Udostępnienie adresu w tym celu jest formą zgody.';
+const INVITE_NOTES = ['Zgoda obejmuje oferty, o jakie firma prosi. Jeśli zaprasza dostawców materiałów, oferta innej usługi się w tym nie mieści.', 'Pisz tylko na adres podany w zaproszeniu i zachowaj link oraz cytat jako dowód.'];
 
 /* Ocena ryzyka prawnego wiadomości. Te same reguły co w silniku (RiskPolicy): platforma pokazuje ryzyko,
    decyzję podejmuje użytkownik, a jedyna twarda blokada to sprzeciw odbiorcy. */
@@ -16,13 +19,16 @@ function assessMessage(kind, c) {
     if (has('rfq')) { level = 'low'; lead = 'Firma sama poprosiła o oferty. Odpowiedź na zapytanie nie wymaga osobnej zgody marketingowej.'; reasons = basis; }
     else { level = 'high'; lead = 'W karcie kontaktu nie ma zapisanego zapytania ofertowego od tej firmy. Bez niego wiadomość może zostać uznana za niezamówioną informację handlową.'; reasons = ['Dopisz w karcie kontaktu, gdzie i kiedy firma prosiła o oferty, np. link do zapytania.']; law = pke; }
   } else if (kind === 'consented') {
-    if (has('consent', 'client')) { level = 'low'; lead = 'Odbiorca wyraził zgodę albo jest Twoim klientem. Pamiętaj o łatwym sposobie wypisania się w stopce.'; reasons = basis; }
+    if (has('invite')) { level = 'low'; lead = INVITE_LEAD; reasons = basis.concat(INVITE_NOTES); law = [PLAT.law.invite]; }
+    else if (has('consent', 'client')) { level = 'low'; lead = 'Odbiorca wyraził zgodę albo jest Twoim klientem. Pamiętaj o łatwym sposobie wypisania się w stopce.'; reasons = basis; }
     else { level = 'very_high'; lead = 'W karcie kontaktu nie ma zapisanej zgody. Wysłanie oferty bez zgody narusza przepisy o informacji handlowej.'; reasons = ['Zapisz w karcie kontaktu, kiedy i w jaki sposób odbiorca wyraził zgodę.']; law = pke; }
   } else if (kind === 'consent_request') {
-    level = has('consent', 'client', 'rfq') ? 'low' : 'high';
+    level = has('consent', 'client', 'rfq', 'invite') ? 'low' : 'very_high';
     lead = level === 'low' ? 'Masz już podstawę kontaktu. Zamiast prosić o zgodę możesz od razu odpowiedzieć albo wysłać ofertę.'
-      : 'Prośba o zgodę wysłana e-mailem bez wcześniejszej zgody to sprawa sporna. Sądy uznawały takie wiadomości za pośrednią promocję nadawcy.';
-    if (level === 'high') { law = pke.concat(PLAT.law.consent_request); reasons = ['Wiadomość nie może zawierać oferty, cen ani opisu usług. Tylko pytanie o zgodę.']; }
+      : 'Prośba o zgodę wysłana e-mailem też jest kontaktem bez zgody. Ministerstwo Cyfryzacji uznaje taki kontakt za niedozwolony.';
+    if (level !== 'low') { law = pke.concat(PLAT.law.consent_request); reasons = ['Bez zgody możesz wysłać list pocztą albo odpowiedzieć na zapytanie ofertowe firmy. Te drogi nie wymagają zgody na kontakt elektroniczny.']; }
+  } else if (has('invite')) {
+    level = 'low'; lead = INVITE_LEAD; reasons = basis.concat(INVITE_NOTES); law = [PLAT.law.invite];
   } else if (has('consent', 'client')) {
     level = 'low'; lead = 'Masz zapisaną zgodę lub relację z klientem, więc to w praktyce oferta za zgodą.'; reasons = basis;
   } else {
@@ -54,28 +60,49 @@ function renderContacts() {
     <div class="sec">${secHead('Skąd biorą się kontakty')}<ul class="list" style="padding-top:16px">
       <li><b>Zapytania ze strony.</b> Każde zapytanie z widżetu zapisuje się z podstawą „zapytanie od tej firmy”. <a href="#zapytania">Zobacz zapytania</a></li>
       <li><b>Zapytania ofertowe firm.</b> Firma, która publikuje zapytanie i adres do ofert, sama prosi o kontakt. <a href="#rfq">Zobacz zapytania ofertowe</a></li>
-      <li><b>Wyszukiwanie firm.</b> Kontakt dodany z wyszukiwarki ma podstawę „brak”. Przed wysyłką zobaczysz ekran ryzyka. <a href="#firmy">Szukaj firm</a></li>
+      <li><b>Potencjalni klienci.</b> Firma z listy dostaje podstawę kontaktu tylko wtedy, gdy ją ma: zapytanie ofertowe albo adres, który sama podała do ofert. Bez niej zostaje list pocztą albo ekran ryzyka. <a href="#firmy">Zobacz listę</a></li>
       <li><b>Własne kontakty.</b> Klienci i osoby, które zostawiły zgodę, np. na targach albo w formularzu.</li></ul></div>`);
 }
+
+/* Drogi kontaktu z firmą z listy, od najmniej ryzykownej. Lista i treść oferty nie wymagają zgody, zgody wymaga wysyłka e-mailem. */
+function prospectPaths(x) {
+  const known = PLAT.contacts.find((c) => c.company === x.company);
+  if (known && known.unsub) return [['bad', 'zablokowane', 'Firma zgłosiła sprzeciw', 'Wypisała się ' + known.unsub + '. Panel nie przygotuje dla niej listu ani oferty.', '']];
+  const out = [];
+  if (x.invite) out.push(['good', 'niskie ryzyko', 'Oferta na adres, który firma podała do ofert', '„' + x.invite[0] + '” (' + x.invite[2] + '). Udostępnienie adresu w tym celu jest formą zgody. Zgoda obejmuje oferty, o jakie firma prosi.', 'invite']);
+  out.push(['good', 'niskie ryzyko', 'List pocztą', 'Wymóg zgody dotyczy telefonu i środków elektronicznych. List papierowy pod niego nie podlega. Panel przygotowuje plik .docx z tą treścią.', 'letter']);
+  if (!x.invite) out.push(['bad', 'bardzo wysokie ryzyko', 'E-mail bez zgody', 'Informacja handlowa bez wcześniejszej zgody jest zakazana, także wobec firm. Panel przygotuje wiadomość i pokaże ekran ryzyka, a decyzję podejmujesz Ty.', 'email']);
+  return out;
+}
+const prospectPitch = (x) => (x.win ? 'Piszemy, ponieważ Państwa firma zawarła niedawno umowę na zamówienie „' + x.win + '”.' : 'Zajrzeliśmy na Państwa stronę i zauważyliśmy rzecz do poprawy: ' + x.reason.charAt(0).toLowerCase() + x.reason.slice(1));
 
 function renderSearch() {
   const f = state.k.f, uniq = (k) => [...new Set(PLAT.search.map((x) => x[k]))].sort((a, b) => a.localeCompare(b, 'pl'));
   const sel = (id, label, key, opts) => `<label class="field" for="${id}">${label}<select id="${id}" data-on="k-filter" data-key="${key}"><option value="">Wszystkie</option>${opts.map(([v, t]) => `<option value="${esc(v)}"${f[key] === v ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></label>`;
-  const found = PLAT.search.filter((x) => (!f.pkd || x.pkd === f.pkd) && (!f.region || x.region === f.region) && (!f.tenders || (f.tenders === 'tak') === x.tenders));
-  const rows = found.map((x) => {
-    const known = PLAT.contacts.find((c) => c.company === x.company);
+  const found = PLAT.search.filter((x) => (!f.pkd || x.pkd === f.pkd) && (!f.region || x.region === f.region) && (!f.tenders || (f.tenders === 'tak') === x.tenders)).sort((a, b) => b.score - a.score);
+  const rows = found.map((x, i) => {
+    const paths = prospectPaths(x), best = paths[0], open = state.k.open === x.company;
+    const detail = !open ? '' : `<div class="stack" style="grid-column:1/-1;padding:14px 0 6px">
+        ${best[4] === '' ? '' : `<div><h3>Treść oferty</h3><p class="small muted">Panel układa ją z faktów o firmie i z Twojej biblioteki. Napisanie oferty nie wymaga zgody firmy. Ta sama treść trafia do listu i do wiadomości.</p>
+          <p style="padding-top:10px;max-width:78ch">${esc(prospectPitch(x))}</p><p style="padding-top:8px;max-width:78ch" class="muted">[Tu trafia opis „O firmie” z Twojej biblioteki.]</p></div>`}
+        <div><h3>Jak możesz się odezwać</h3>${paths.map(([cls, label, title, text, key]) => `<div class="item" style="--c1:230px"><div><b>${esc(title)}</b></div><div><p>${esc(text)}</p></div>
+          <div class="end">${st(cls, label)}${key === 'invite' || key === 'email' ? `<button class="btn ghost sm" type="button" data-act="k-add" data-name="${esc(x.company)}">Przygotuj wiadomość</button>` : ''}${key === 'letter' ? '<button class="btn ghost sm" type="button" data-note>Pobierz list .docx</button><p class="note" hidden style="flex-basis:100%">W mockupie nie ma pliku. W panelu ten przycisk pobiera list z treścią oferty, adresem z rejestru i zdaniem o rezygnacji.</p>' : ''}</div></div>`).join('')}</div></div>`;
     return `<div class="item" style="--c1:250px">
-      <div><b>${esc(x.company)}</b><p class="small muted">${esc(x.pkd)}, ${esc(x.region)}</p></div>
-      <div><p>${esc(x.reason)}</p><p>${esc(x.size)}, działa ${lata(x.age)}${x.tenders ? ', startuje w przetargach' : ''}</p></div>
-      <div class="end">${st(x.condition === 'dobra' ? 'good' : 'mid', 'kondycja: ' + x.condition)}${known ? `<span class="small muted" tabindex="-1" data-added="${esc(x.company)}">${known.unsub ? 'W kontaktach, wypisany' : 'W kontaktach'}</span>` : `<button class="btn ghost sm" type="button" data-act="k-add" data-name="${esc(x.company)}">Dodaj do kontaktów</button>`}</div></div>`;
+      <div><b>${esc(x.company)}</b><p class="small muted">${esc(x.pkd)}, ${esc(x.region)}, ${esc(x.source)}</p></div>
+      <div><p>${esc(x.win ? 'Wygrane zamówienie: ' + x.win + '.' : x.reason)}</p><p>${esc(x.size)}, działa ${lata(x.age)}, kondycja: ${esc(x.condition)}${x.win ? '. ' + esc(x.reason) : ''}</p></div>
+      <div class="end">${best[1] === 'zablokowane' ? st('bad', 'sprzeciw') : (best[4] === 'invite' ? st('good', 'zaprasza do ofert') : '')}${st(x.score >= 85 ? 'good' : 'plain', 'dopasowanie ' + x.score)}<button class="btn ghost sm" type="button" data-act="k-open" data-name="${esc(x.company)}" aria-expanded="${open}" id="pro-${i}">${open ? 'Zwiń' : 'Oferta i drogi kontaktu'}</button></div>${detail}</div>`;
   }).join('');
-  put('firmy', stan('plan', 'Opis idealnego klienta działa w silniku. Wyszukiwarka firm jest do zbudowania, ekran pokazuje, jak ma działać.') +
-    `<div class="sec">${secHead('Idealny klient', 'Opis powstaje z treści Twojej strony. Zatwierdzasz go albo poprawiasz, zanim posłuży do wyszukiwania.')}
+  put('firmy', stan('silnik', 'Lista z wyników przetargów i z Twojej listy, dane z rejestrów, treść oferty i drogi kontaktu z oceną ryzyka. Wyszukiwanie w rejestrach REGON i CEIDG wymaga kluczy.') +
+    `<div class="sec">${secHead('Idealny klient', 'Opis powstaje z treści Twojej strony. Zatwierdzasz go albo poprawiasz. AI korzysta z niego, gdy pisze treść oferty.')}
       <p style="padding-top:14px;max-width:78ch">${esc(PLAT.icp)}</p></div>
-    <div class="sec">${secHead('Firmy pasujące do opisu', 'Dane z rejestrów publicznych. Powód kontaktu pochodzi z audytu strony firmy.', found.length + ' z ' + PLAT.search.length)}
+    <div class="sec">${secHead('Firmy, do których warto się odezwać', 'Od najlepiej dopasowanej. Punkty wynikają z jawnej tabeli: branża 40, region 15, staż 10, kondycja 15, powód kontaktu 20.', found.length + ' z ' + PLAT.search.length)}
       <div class="filters" style="padding:16px 0 6px">${sel('fPkd', 'Branża', 'pkd', uniq('pkd').map((v) => [v, v]))}${sel('fRegion', 'Województwo', 'region', uniq('region').map((v) => [v, v]))}${sel('fTenders', 'Przetargi', 'tenders', [['tak', 'Startuje w przetargach'], ['nie', 'Nie startuje']])}</div>
       ${rows || '<p class="muted" style="padding:16px 0">Żadna firma nie pasuje do tych filtrów. Zmień albo wyczyść jeden z nich.</p>'}</div>
-    <p class="note">Firma z wyszukiwarki nie prosiła o kontakt. Dodajesz ją z podstawą „brak”, a przy wiadomości zobaczysz ekran ryzyka. Niższe ryzyko mają <a href="#rfq">zapytania ofertowe firm</a>.</p>`);
+    <div class="sec">${secHead('Skąd są firmy')}<ul class="list" style="padding-top:16px">
+      <li><b>Wyniki przetargów.</b> Wykonawcy, którzy wygrywają zamówienia publiczne: wiadomo, co robią, gdzie działają i co właśnie podpisali.</li>
+      <li><b>Twoja lista.</b> Wklejasz NIP-y albo adresy stron z katalogu branżowego, listy wystawców targów albo notatek. Adresów e-mail panel nie przyjmuje i nie zbiera ze stron.</li>
+      <li><b>Dane z rejestrów.</b> Panel dopisuje nazwę, adres, formę prawną, staż i ryzyko płatnicze z wykazu VAT i KRS.</li></ul></div>
+    <p class="note">Prowadzenie listy i napisanie oferty nie wymagają zgody firmy. Zgody wymaga wysłanie oferty e-mailem albo telefon z ofertą, także do firm (art. 398 Prawa komunikacji elektronicznej). Dlatego każda firma ma rozpisane drogi kontaktu z oceną ryzyka, a wysyłasz sam.</p>`);
 }
 
 function renderRfq() {
@@ -158,12 +185,17 @@ function renderSending() {
 const resetDecision = () => { state.k.ack = false; state.k.saved = false; };
 const refocus = (id) => { const el = document.getElementById(id); if (el) el.focus(); };
 ACTIONS['k-write'] = (el) => { state.k.contact = Number(el.dataset.id); resetDecision(); rerender('wiadomosc'); go('wiadomosc'); };
+ACTIONS['k-open'] = (el) => { state.k.open = state.k.open === el.dataset.name ? '' : el.dataset.name; const id = el.id; rerender('firmy'); refocus(id); };
 ACTIONS['k-add'] = (el) => {
   const x = PLAT.search.find((s) => s.company === el.dataset.name);
-  PLAT.contacts.push({ id: Math.max(...PLAT.contacts.map((c) => c.id)) + 1, company: x.company, person: '', email: 'adres ze strony firmy', site: '', basis: 'none', detail: '', at: '', unsub: null });
-  rerender('firmy', 'kontakty', 'wiadomosc');
-  const done = [...document.querySelectorAll('[data-added]')].find((e) => e.dataset.added === x.company);
-  if (done) done.focus();
+  let c = PLAT.contacts.find((k) => k.company === x.company);
+  if (!c) {
+    c = { id: Math.max(...PLAT.contacts.map((k) => k.id)) + 1, company: x.company, person: '', email: x.invite ? x.invite[1] : 'adres wpisany przez Ciebie', site: '', basis: x.invite ? 'invite' : 'none',
+      detail: x.invite ? '„' + x.invite[0] + '”' : '', at: x.invite ? dpl(PLAT.today) : '', unsub: null };
+    PLAT.contacts.push(c);
+  }
+  state.k.contact = c.id; state.k.kind = c.basis === 'invite' ? 'consented' : 'cold_offer'; resetDecision();
+  rerender('firmy', 'kontakty', 'wiadomosc'); go('wiadomosc');
 };
 ACTIONS['k-rfq'] = (el) => {
   const r = PLAT.rfqs[Number(el.dataset.i)];
@@ -194,7 +226,7 @@ CHANGES['k-kind'] = (el) => { state.k.kind = el.value; resetDecision(); rerender
 CHANGES['k-ack'] = (el) => { state.k.ack = el.checked; rerender('wiadomosc'); refocus('kAck'); };
 CHANGES['k-filter'] = (el) => { state.k.f[el.dataset.key] = el.value; rerender('firmy'); refocus(el.id); };
 
-MODS.push({ id: 'klienci', order: 3, label: 'Klienci', about: 'Kontakty z podstawą kontaktu, wiadomości z ekranem ryzyka, zapytania ofertowe firm i wyszukiwanie firm.',
-  head: (v) => ({ crumbs: 'Klienci i wiadomości', title: { kontakty: 'Kontakty', firmy: 'Szukaj firm', rfq: 'Zapytania ofertowe firm', wiadomosc: 'Nowa wiadomość', wysylka: 'Wysyłka i dziennik' }[v.id] }),
+MODS.push({ id: 'klienci', order: 3, label: 'Klienci', about: 'Kontakty z podstawą kontaktu, wiadomości z ekranem ryzyka, zapytania ofertowe firm i lista potencjalnych klientów.',
+  head: (v) => ({ crumbs: 'Klienci i wiadomości', title: { kontakty: 'Kontakty', firmy: 'Potencjalni klienci', rfq: 'Zapytania ofertowe firm', wiadomosc: 'Nowa wiadomość', wysylka: 'Wysyłka i dziennik' }[v.id] }),
   views: [{ id: 'kontakty', label: 'Kontakty', render: renderContacts }, { id: 'wiadomosc', label: 'Wiadomość', gap: 28, render: renderMessage }, { id: 'rfq', label: 'Zapytania ofertowe', render: renderRfq },
-    { id: 'firmy', label: 'Szukaj firm', render: renderSearch }, { id: 'wysylka', label: 'Wysyłka i dziennik', gap: 40, render: renderSending }] });
+    { id: 'firmy', label: 'Potencjalni klienci', render: renderSearch }, { id: 'wysylka', label: 'Wysyłka i dziennik', gap: 40, render: renderSending }] });
