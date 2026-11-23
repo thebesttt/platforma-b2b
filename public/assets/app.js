@@ -133,6 +133,36 @@
     stepQueue();
   }
 
+  // Kolejka pracy w tle (np. dane z rejestrów dla listy firm): kolejne kroki, aż serwer odpowie, że nic nie zostało.
+  var workBox = document.querySelector('[data-work-queue]');
+  if (workBox && window.fetch) {
+    var workUrl = workBox.getAttribute('data-work-queue');
+    var workToken = workBox.getAttribute('data-csrf');
+    var workNote = workBox.querySelector('[data-work-queue-state]');
+    var workFails = 0;
+    var workStep = function () {
+      fetch(workUrl, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': workToken },
+        body: '_csrf=' + encodeURIComponent(workToken)
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        workFails = 0;
+        if (!j.left) { window.location.reload(); return; }
+        if (!j.done) {
+          if (workNote) workNote.textContent = 'Rejestr teraz nie odpowiada. Pozostałe firmy (' + j.left + ') uzupełni zadanie dzienne.';
+          return;
+        }
+        if (workNote) workNote.textContent = 'Dopisuję dane z rejestrów: zostało ' + j.left + '. Zostaw tę kartę otwartą.';
+        workStep();
+      }).catch(function () {
+        if (++workFails <= 2) { window.setTimeout(workStep, 2000); return; }
+        if (workNote) workNote.textContent = 'Połączenie z serwerem zostało przerwane. Odśwież stronę, żeby wznowić.';
+      });
+    };
+    workStep();
+  }
+
   // Numery i słowa do przeklejenia w zewnętrznych rejestrach: kliknięcie kopiuje. Bez schowka zostaje zaznaczenie tekstu.
   document.addEventListener('click', function (e) {
     var el = e.target && e.target.closest ? e.target.closest('code.copy') : null;

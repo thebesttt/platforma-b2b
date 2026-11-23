@@ -60,7 +60,22 @@ return [
         $consent = ['basis' => 'consent', 'basis_detail' => 'formularz', 'unsubscribed_at' => null];
         eq('low', RiskPolicy::assess('rfq_reply', $rfq)['level']);
         eq('high', RiskPolicy::assess('rfq_reply', $none)['level']);
-        eq('high', RiskPolicy::assess('consent_request', $none)['level']);
+        // Prośba o zgodę bez podstawy to też kontakt bez zgody: stanowisko Ministerstwa Cyfryzacji trafia na ekran ryzyka.
+        $ask = RiskPolicy::assess('consent_request', $none);
+        eq(['very_high', true], [$ask['level'], $ask['needs_ack']]);
+        contains('interpelację nr 12337', implode(' ', $ask['law']));
+        contains('list pocztą', implode(' ', $ask['reasons']));
+        eq('low', RiskPolicy::assess('consent_request', $consent)['level']);
+        // Adres opublikowany przez firmę do przesyłania ofert jest formą zgody, ale tylko w zakresie zaproszenia.
+        $invite = ['basis' => 'invite', 'basis_detail' => '„Oferty handlowe prosimy kierować na adres oferty@firma.example”', 'basis_url' => 'https://firma.example/kontakt', 'unsubscribed_at' => null];
+        foreach (['consented', 'cold_offer'] as $kind) {
+            $a = RiskPolicy::assess($kind, $invite);
+            eq(['low', false], [$a['level'], $a['needs_ack']], $kind);
+            contains('opublikowała adres do przesyłania ofert', $a['lead']);
+            contains('Zgoda obejmuje oferty, o jakie firma prosi', implode(' ', $a['reasons']));
+            contains('Art. 398 ust. 2', implode(' ', $a['law']));
+        }
+        ok(RiskPolicy::assess('consented', ['unsubscribed_at' => '2026-11-01 10:00:00'] + $invite)['blocked'], 'sprzeciw blokuje także po zaproszeniu');
         eq('very_high', RiskPolicy::assess('cold_offer', $none)['level']);
         eq('low', RiskPolicy::assess('cold_offer', $consent)['level']);
         eq('very_high', RiskPolicy::assess('consented', $none)['level']);

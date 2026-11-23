@@ -105,6 +105,12 @@ final class CronController
         } catch (\Throwable $e) {
             $out['inbound'] = ['error' => $e->getMessage()];
         }
+        // Lista potencjalnych klientów: dane z rejestrów dla firm, które jeszcze ich nie mają (np. po wklejeniu długiej listy).
+        try {
+            $out['prospects'] = \App\Modules\Outreach\Prospects::enrichPending(null, 30);
+        } catch (\Throwable $e) {
+            $out['prospects'] = ['error' => $e->getMessage()];
+        }
         // Audyty treści, które ktoś zaczął i nie dokończył (zamknięta karta przeglądarki).
         try {
             $out['content_audits'] = ['finished' => ContentAudit::runPending()];

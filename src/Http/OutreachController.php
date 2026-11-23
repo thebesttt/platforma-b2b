@@ -16,6 +16,7 @@ use App\Modules\Ai\Claude;
 use App\Modules\Companies\Companies;
 use App\Modules\Outreach\Icp;
 use App\Modules\Outreach\Outreach;
+use App\Modules\Outreach\Prospects;
 use App\Modules\Outreach\Rfqs;
 use App\Modules\Outreach\RiskPolicy;
 use App\Modules\Outreach\Sequences;
@@ -38,8 +39,9 @@ final class OutreachController extends Controller
         );
         $due = Sequences::dueCount($org);
         $rfqOpen = Rfqs::openCount($org);
+        $prospects = Prospects::counts($org);
         $rfqSoon = Rfqs::dueSoon($org);
-        return $this->view('outreach/index', compact('contacts', 'messages', 'q', 'due', 'rfqOpen', 'rfqSoon') + ['title' => 'Klienci i wiadomości']);
+        return $this->view('outreach/index', compact('contacts', 'messages', 'q', 'due', 'rfqOpen', 'rfqSoon', 'prospects') + ['title' => 'Klienci i wiadomości']);
     }
 
     public function contactForm(Request $r): Response
@@ -379,6 +381,7 @@ final class OutreachController extends Controller
         $this->db()->update('messages', ['status' => 'sent', 'sent_at' => now_utc()], 'id = ? AND org_id = ?', [(int) $m['id'], $this->orgId()]);
         AuditLog::add('message.sent', 'message', (int) $m['id'], [], $r->ip());
         $note = '';
+        Prospects::markContactedByContact($this->orgId(), (int) $m['contact_id']);
         if ($m['kind'] === 'rfq_reply' && Rfqs::markReplied($this->orgId(), (int) $m['contact_id'])) {
             $note = ' Zapytanie w rejestrze ma stan „oferta złożona”.';
         }
@@ -400,7 +403,7 @@ final class OutreachController extends Controller
         }
         return match ($c['basis']) {
             'rfq' => 'rfq_reply',
-            'consent', 'client' => 'consented',
+            'consent', 'client', 'invite' => 'consented',
             default => 'consent_request',
         };
     }

@@ -113,6 +113,17 @@ return [
         . '<p>Nie obsługujemy spółek giełdowych ani firm zatrudniających ponad 50 osób.</p></main></body></html>'),
     '#^GET https://firma-uslugowa\.example/oferta\n#' => $page('<!doctype html><html lang="pl"><head><title>Oferta</title></head><body><main><h1>Oferta</h1>'
         . '<p>Pakiet dla firm usługowych na ryczałcie obejmuje ewidencję przychodów i rozliczenie roczne. Abonament zaczyna się od 300 zł miesięcznie.</p></main></body></html>'),
+    // Strona potencjalnego klienta: strona główna bez opisu, podstrona kontaktowa i podstrona z zaproszeniem do ofert.
+    '#^GET https://firma-zaprasza\.example/\n#' => $page('<!doctype html><html lang="pl"><head><title>Hurtownia materiałów budowlanych</title>'
+        . '<meta name="viewport" content="width=device-width, initial-scale=1"></head><body><nav><a href="/oferta">Oferta</a> <a href="/kontakt">Kontakt</a> <a href="/dla-dostawcow">Dla dostawców</a>'
+        . ' <a href="https://obca-witryna.example/oferty">Oferty partnera</a></nav><main><h1>Hurtownia materiałów budowlanych</h1><p>Sprzedajemy cement, kruszywa i kostkę brukową.</p></main>'
+        . '<footer><p>Zapraszamy do kontaktu: biuro@firma-zaprasza.example</p></footer></body></html>'),
+    '#^GET https://firma-zaprasza\.example/kontakt\n#' => $page('<!doctype html><html lang="pl"><head><title>Kontakt</title></head><body><main><h1>Kontakt</h1>'
+        . '<p>Biuro: biuro@firma-zaprasza.example, tel. 22 000 00 00.</p></main></body></html>'),
+    '#^GET https://firma-zaprasza\.example/dla-dostawcow\n#' => $page('<!doctype html><html lang="pl"><head><title>Dla dostawców</title></head><body><main><h1>Dla dostawców</h1>'
+        . '<p>Szukamy stałych dostawców.</p><p>Oferty handlowe prosimy kierować na adres: Oferty@Firma-Zaprasza.example. Odpowiadamy na wybrane propozycje.</p>'
+        . '<script>var x = "oferty handlowe prosimy kierować na adres zly@skrypt.example";</script></main></body></html>'),
+    '#^GET https?://strona-bez-odpowiedzi\.example/#' => ['status' => 0, 'body' => '', 'error' => 'Serwer nie odpowiada'],
     '#^POST https://api\.anthropic\.com/v1/messages\n.*Opisujesz idealnego klienta firmy#s' => $claude([
         'summary' => 'Sklepy internetowe i małe firmy usługowe, które sprzedają także za granicę i nie chcą same pilnować rozliczeń VAT.',
         'segments' => [

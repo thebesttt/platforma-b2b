@@ -36,6 +36,7 @@ final class RiskPolicy
         'rfq' => 'Zapytanie ofertowe od tej firmy',
         'consent' => 'Zgoda na informacje handlowe e-mailem',
         'client' => 'Obecny klient (wcześniejsza współpraca)',
+        'invite' => 'Firma opublikowała adres do przesyłania ofert',
     ];
 
     public const LEVELS = [
@@ -54,7 +55,9 @@ final class RiskPolicy
         $basis = (string) ($contact['basis'] ?? 'none');
         $unsub = !empty($contact['unsubscribed_at']);
         // Zgoda zaznaczona w formularzu na stronie działa jak zgoda z karty kontaktu, także gdy podstawą jest zapytanie.
-        $consented = in_array($basis, ['consent', 'client'], true) || !empty($contact['marketing_consent_at']);
+        $consented = in_array($basis, ['consent', 'client', 'invite'], true) || !empty($contact['marketing_consent_at']);
+        // Adres opublikowany przez firmę po to, żeby przyjmować oferty, jest formą zgody (art. 398 ust. 2). Zgoda sięga tak daleko jak zaproszenie.
+        $invited = $basis === 'invite' && empty($contact['marketing_consent_at']);
         $reasons = [];
         $law = [];
 
@@ -85,8 +88,14 @@ final class RiskPolicy
             case 'consented':
                 if ($consented) {
                     $level = 'low';
-                    $lead = 'Odbiorca wyraził zgodę albo jest Twoim klientem. Pamiętaj o łatwym sposobie wypisania się w stopce.';
+                    $lead = $invited
+                        ? 'Firma sama opublikowała adres do przesyłania ofert. Udostępnienie adresu w tym celu jest formą zgody.'
+                        : 'Odbiorca wyraził zgodę albo jest Twoim klientem. Pamiętaj o łatwym sposobie wypisania się w stopce.';
                     $reasons[] = 'Podstawa kontaktu: ' . self::basisLine($contact);
+                    if ($invited) {
+                        array_push($reasons, ...self::inviteNotes());
+                        $law = self::inviteLaw();
+                    }
                 } else {
                     $level = 'very_high';
                     $lead = 'W karcie kontaktu nie ma zapisanej zgody. Wysłanie oferty bez zgody narusza przepisy o informacji handlowej.';
@@ -95,24 +104,31 @@ final class RiskPolicy
                 }
                 break;
             case 'consent_request':
-                $level = $consented || $basis === 'rfq' ? 'low' : 'high';
+                $level = $consented || $basis === 'rfq' ? 'low' : 'very_high';
                 $lead = $level === 'low'
                     ? 'Masz już podstawę kontaktu - zamiast prosić o zgodę możesz od razu odpowiedzieć lub wysłać ofertę.'
-                    : 'Prośba o zgodę wysłana e-mailem bez wcześniejszej zgody to sprawa sporna. Sądy uznawały takie wiadomości za pośrednią promocję nadawcy.';
-                if ($level === 'high') {
+                    : 'Prośba o zgodę wysłana e-mailem też jest kontaktem bez zgody. Ministerstwo Cyfryzacji uznaje taki kontakt za niedozwolony.';
+                if ($level !== 'low') {
                     $law = array_merge(self::pkeLaw(), [
+                        'Ministerstwo Cyfryzacji, odpowiedź z 13.10.2025 na interpelację nr 12337: „Nie jest również dozwolony kontakt wykonywany na potrzeby uzyskania zgody”. Pismo powołuje się na decyzje Prezesa UKE i Prezesa UOKiK.',
                         'Sąd Apelacyjny w Warszawie (wyrok z 12.12.2019, VII AGa 1567/18) uznał SMS z prośbą o zgodę za informację handlową, bo pośrednio promował nadawcę. Wyrok zapadł na gruncie poprzednich przepisów.',
-                        'Nie znamy orzeczenia, które pod nowymi przepisami ocenia e-mail z samą prośbą o zgodę - sprawa jest sporna.',
+                        'Nie znamy wyroku sądu, który ocenia taką wiadomość już pod nowymi przepisami.',
                     ]);
-                    $reasons[] = 'Wiadomość nie może zawierać oferty, cen ani opisu usług - tylko pytanie o zgodę.';
+                    $reasons[] = 'Bez zgody możesz wysłać list pocztą albo odpowiedzieć na zapytanie ofertowe firmy. Te drogi nie wymagają zgody na kontakt elektroniczny.';
                 }
                 break;
             case 'cold_offer':
             default:
                 if ($consented) {
                     $level = 'low';
-                    $lead = 'Masz zapisaną zgodę lub relację z klientem, więc to w praktyce oferta za zgodą.';
+                    $lead = $invited
+                        ? 'Firma sama opublikowała adres do przesyłania ofert. Udostępnienie adresu w tym celu jest formą zgody.'
+                        : 'Masz zapisaną zgodę lub relację z klientem, więc to w praktyce oferta za zgodą.';
                     $reasons[] = 'Podstawa kontaktu: ' . self::basisLine($contact);
+                    if ($invited) {
+                        array_push($reasons, ...self::inviteNotes());
+                        $law = self::inviteLaw();
+                    }
                 } else {
                     $level = 'very_high';
                     $lead = 'Informacja handlowa bez wcześniejszej zgody odbiorcy jest zakazana, także wobec firm.';
@@ -139,6 +155,20 @@ final class RiskPolicy
             'Kara Prezesa UKE: do 3% przychodu z poprzedniego roku albo do 1 mln zł, zależnie od tego, która kwota jest wyższa (art. 444 ust. 1 pkt 81 i art. 446 ust. 5).',
             'Dodatkowo wykroczenie zagrożone grzywną, ścigane na żądanie odbiorcy (art. 448), oraz roszczenia z tytułu czynu nieuczciwej konkurencji.',
         ];
+    }
+
+    /** Granice zgody wyrażonej przez opublikowanie adresu do ofert. */
+    private static function inviteNotes(): array
+    {
+        return [
+            'Zgoda obejmuje oferty, o jakie firma prosi. Jeśli zaprasza dostawców materiałów, oferta innej usługi się w tym nie mieści.',
+            'Pisz tylko na adres podany w zaproszeniu i zachowaj link oraz cytat jako dowód.',
+        ];
+    }
+
+    private static function inviteLaw(): array
+    {
+        return ['Art. 398 ust. 2 Prawa komunikacji elektronicznej: zgodę można wyrazić przez udostępnienie adresu elektronicznego w celu otrzymywania informacji handlowej.'];
     }
 
     public static function basisLine(array $contact): string

@@ -6,6 +6,7 @@
     <p class="muted small">Przy każdej wiadomości widzisz ryzyko prawne. Decyzję o wysłaniu podejmujesz Ty, a wiadomość wychodzi z Twojej skrzynki.</p>
   </div>
   <div class="row-flex">
+    <a class="btn ghost" href="/klienci/potencjalni">Potencjalni klienci<?= ($prospects['new'] + $prospects['picked']) ? ' (' . (int) ($prospects['new'] + $prospects['picked']) . ')' : '' ?></a>
     <a class="btn ghost" href="/klienci/zapytania">Zapytania z rynku<?= $rfqOpen ? ' (' . (int) $rfqOpen . ')' : '' ?></a>
     <a class="btn ghost" href="/klienci/idealny-klient">Idealny klient</a>
     <a class="btn ghost" href="/klienci/przypomnienia">Przypomnienia<?= $due ? ' (' . (int) $due . ' na dziś)' : '' ?></a>

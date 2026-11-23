@@ -225,6 +225,23 @@ function demo_seed(): array
         }
     }
 
+    // Potencjalni klienci: firma z wyników przetargów (z danymi z rejestrów) i dwie firmy z listy wklejonej przez użytkownika.
+    // Strony przykładowych firm odpowiadają tylko z plików testowych, więc bez nich sprawdzenie strony pomijamy.
+    \App\Modules\Outreach\Prospects::saveCriteria($org, ['keywords' => "budow\ndrog\nhurtowni", 'regions' => [], 'min_years' => 2]);
+    \App\Modules\Outreach\Prospects::addFromResults($org, $uid, ['1234563218']);
+    \App\Modules\Outreach\Prospects::addList($org, $uid, "firma-zaprasza.example Hurtownia materiałów budowlanych (przykład)\nfirma-uslugowa.example Biuro rachunkowe (przykład)");
+    \App\Modules\Outreach\Prospects::enrichPending($org, 10);
+    if ((string) \App\Core\Config::get('HTTP_FIXTURES') !== '') {
+        foreach (['firma-zaprasza.example', 'firma-uslugowa.example'] as $host) {
+            if ($row = \App\Modules\Outreach\Prospects::byHost($org, $host)) {
+                \App\Modules\Outreach\Prospects::checkSite($row);
+            }
+        }
+    }
+    if ($row = \App\Modules\Outreach\Prospects::byNip($org, '1234563218')) {
+        \App\Modules\Outreach\Prospects::setStatus($org, (int) $row['id'], 'picked');
+    }
+
     // Audyt treści: fikcyjna strona poradnika sprawdzona dwa razy, przed pracami i po nich. Odpowiedzi strony i usług
     // pomiarowych pochodzą z plików testowych, więc na czas przykładu udajemy podłączoną usługę renderowania.
     require_once APP_ROOT . '/tests/fixtures/http/site.php';
