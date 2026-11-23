@@ -7,6 +7,7 @@ namespace App\Http;
 use App\Core\AuditLog;
 use App\Core\Auth;
 use App\Core\Controller;
+use App\Core\Qr;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\Session;
@@ -280,7 +281,9 @@ final class ProspectController extends Controller
         $company = Prospects::company($p);
         // Firma, która już dała zgodę, nie dostaje w liście drugiej prośby o nią.
         $consentUrl = Consents::latest($org, (int) $p['id']) ? '' : Consents::url($p, $r->baseUrl());
-        $letter = Prospects::letter($p, $company, Auth::org() ?? [], Auth::user(), $consentUrl);
+        // Kod QR z adresem strony zgody: adresat skanuje go telefonem zamiast przepisywać adres z listu.
+        $qr = $consentUrl !== '' ? Qr::png($consentUrl, 10) : null;
+        $letter = Prospects::letter($p, $company, Auth::org() ?? [], Auth::user(), $consentUrl, $qr !== null);
         if ($r->method === 'POST') {
             $body = mb_substr(str_replace("\r\n", "\n", (string) $r->input('body', '')), 0, 12000);
             if (trim($body) === '') {
@@ -292,12 +295,13 @@ final class ProspectController extends Controller
                 return $this->redirect('/klienci/potencjalni/' . $p['id'], 'Oznaczono: list wysłany.');
             }
             AuditLog::add('prospect.letter', 'prospect', (int) $p['id'], [], $r->ip());
-            $bin = Docx::build($letter['title'], [['title' => '', 'body' => $body]], false);
+            $bin = Docx::build($letter['title'], [['title' => '', 'body' => $body]], false,
+                $qr !== null ? ['png' => $qr, 'after' => Consents::printed($consentUrl), 'cm' => 3.0, 'alt' => 'Kod QR z adresem strony zgody'] : null);
             return Response::download($bin, 'list-' . (trim(mb_substr((string) preg_replace('/[^a-z0-9]+/', '-', search_text((string) $p['name'])), 0, 40), '-') ?: 'firma') . '.docx',
                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
         }
         return $this->view('outreach/prospect_letter', ['p' => $p, 'company' => $company, 'letter' => $letter, 'person' => Prospects::isPerson($company),
-            'consentUrl' => $consentUrl, 'title' => 'List do ' . $p['name']]);
+            'consentUrl' => $consentUrl, 'qr' => $qr, 'title' => 'List do ' . $p['name']]);
     }
 
     private function card(array $p, string $base): Response

@@ -51,6 +51,12 @@ final class Consents
         return $base !== '' ? rtrim($base, '/') . '/z/' . self::code($p) : '';
     }
 
+    /** Adres w druku: bez „https://” jest krótszy do przepisania, a przeglądarka i tak go otworzy. */
+    public static function printed(string $url): string
+    {
+        return (string) preg_replace('~^https://~', '', $url);
+    }
+
     /** Firma z listy razem z danymi nadawcy, po kodzie z listu. */
     public static function byCode(string $code): ?array
     {

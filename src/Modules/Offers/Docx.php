@@ -7,10 +7,14 @@ namespace App\Modules\Offers;
 /** Minimalny dokument Word (.docx) z nagłówkami i akapitami - bez zewnętrznych bibliotek. */
 final class Docx
 {
-    /** @param array<int, array{title: string, body: string}> $sections */
-    public static function build(string $title, array $sections, bool $stripMarkers = true): string
+    /**
+     * @param array<int, array{title: string, body: string}> $sections
+     * @param ?array{png: string, after: string, cm?: float, alt?: string} $image obraz PNG wstawiany pod pierwszym akapitem, który zawiera tekst „after”
+     */
+    public static function build(string $title, array $sections, bool $stripMarkers = true, ?array $image = null): string
     {
         $p = [];
+        $placed = false;
         $p[] = self::para($title, 'Title');
         foreach ($sections as $s) {
             if (trim((string) $s['title']) !== '') {
@@ -22,10 +26,16 @@ final class Docx
                     $line = trim(str_replace('⟦sprawdź⟧', '[SPRAWDŹ]', $line));
                 }
                 $p[] = self::para($line);
+                if ($image !== null && !$placed && $image['after'] !== '' && str_contains($line, $image['after'])) {
+                    $p[] = self::picture((float) ($image['cm'] ?? 3.0), (string) ($image['alt'] ?? ''));
+                    $placed = true;
+                }
             }
         }
         $doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'
+            . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
+            . ($placed ? ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"' : '')
+            . '><w:body>'
             . implode('', $p)
             . '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr>'
             . '</w:body></w:document>';
@@ -40,15 +50,33 @@ final class Docx
         $tmp = tempnam(sys_get_temp_dir(), 'docx');
         $zip = new \ZipArchive();
         $zip->open($tmp, \ZipArchive::OVERWRITE);
-        $zip->addFromString('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>');
+        $zip->addFromString('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>' . ($placed ? '<Default Extension="png" ContentType="image/png"/>' : '') . '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>');
         $zip->addFromString('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
-        $zip->addFromString('word/_rels/document.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>');
+        $zip->addFromString('word/_rels/document.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
+            . ($placed ? '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image1.png"/>' : '') . '</Relationships>');
+        if ($placed) {
+            $zip->addFromString('word/media/image1.png', $image['png']);
+        }
         $zip->addFromString('word/document.xml', $doc);
         $zip->addFromString('word/styles.xml', $styles);
         $zip->close();
         $bin = (string) file_get_contents($tmp);
         @unlink($tmp);
         return $bin;
+    }
+
+    /** Akapit z jednym obrazem (word/media/image1.png) o boku podanym w centymetrach. */
+    private static function picture(float $cm, string $alt): string
+    {
+        $emu = (int) round(max(1.0, min(15.0, $cm)) * 360000);
+        $alt = htmlspecialchars($alt, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+        return '<w:p><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="' . $emu . '" cy="' . $emu . '"/>'
+            . '<wp:docPr id="1" name="Obraz 1" descr="' . $alt . '"/>'
+            . '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">'
+            . '<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="1" name="image1.png" descr="' . $alt . '"/><pic:cNvPicPr/></pic:nvPicPr>'
+            . '<pic:blipFill><a:blip r:embed="rId2"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>'
+            . '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' . $emu . '" cy="' . $emu . '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic>'
+            . '</a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>';
     }
 
     private static function para(string $text, ?string $style = null): string

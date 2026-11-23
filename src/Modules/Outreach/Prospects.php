@@ -913,13 +913,13 @@ final class Prospects
 
     /**
      * Treść listu z ofertą: tylko fakty z listy i z biblioteki firmy. Miejsca do uzupełnienia są w nawiasach kwadratowych.
+     * Z adresem strony zgody list prosi też o zgodę na e-mail. $qr mówi, że pod tym akapitem w pliku będzie kod QR.
      * @return array{title: string, body: string}
      */
-    public static function letter(array $p, ?array $company, array $org, ?array $user, string $consentUrl = ''): array
+    public static function letter(array $p, ?array $company, array $org, ?array $user, string $consentUrl = '', bool $qr = false): array
     {
         $facts = self::facts($p);
-        // W druku adres bez „https://” jest krótszy do przepisania, a przeglądarka i tak go otworzy.
-        $shown = (string) preg_replace('~^https://~', '', $consentUrl);
+        $shown = Consents::printed($consentUrl);
         $lines = [
             date('d.m.Y'),
             '',
@@ -933,7 +933,8 @@ final class Prospects
             self::afterGreeting(self::pitch($p, $company, $org)['text']),
             '',
             $consentUrl !== ''
-                ? 'Szczegóły chętnie prześlemy e-mailem, ale tylko za Państwa zgodą. Wystarczy wejść na stronę ' . $shown . ' i wpisać adres, na który mamy wysłać ofertę. Mogą też Państwo odpowiedzieć na ten list albo zadzwonić.'
+                ? 'Szczegóły chętnie prześlemy e-mailem, ale tylko za Państwa zgodą. Wystarczy wejść na stronę ' . $shown . ($qr ? ' albo zeskanować telefonem kod pod tym akapitem' : '')
+                    . ' i wpisać adres, na który mamy wysłać ofertę. Mogą też Państwo odpowiedzieć na ten list albo zadzwonić.'
                 : 'Jeśli temat jest dla Państwa ciekawy, prosimy o odpowiedź albo o wskazanie adresu e-mail, na który możemy przesłać szczegóły.',
             '',
             'Z poważaniem',

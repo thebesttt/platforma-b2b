@@ -369,7 +369,8 @@ return [
         contains("Szanowni Państwo,\n\npiszemy, ponieważ Państwa firma zawarła niedawno umowę na zamówienie „Remont drogi gminnej w Testowie”.\n\nDostarczamy kruszywa na budowy dróg", $page);
         $code = (string) $db->val('SELECT consent_code FROM prospects');
         ok(preg_match('/^[a-z2-9]{10}$/', $code) === 1, 'kod strony zgody powstaje razem z listem');
-        contains('Wystarczy wejść na stronę http://localhost/z/' . $code . ' i wpisać adres, na który mamy wysłać ofertę.', $page);
+        contains('Wystarczy wejść na stronę http://localhost/z/' . $code . ' albo zeskanować telefonem kod pod tym akapitem i wpisać adres, na który mamy wysłać ofertę.', $page);
+        contains('<img src="data:image/png;base64,iVBOR', $page, 'podgląd kodu QR przy liście');
         contains('prosimy o informację na adres wlasciciel@example.com albo o zaznaczenie tego na stronie http://localhost/z/' . $code . '. Nie napiszemy ponownie.', $page);
         contains('tel. 22 111 22 33', $page);
         ok(!str_contains($page, 'Informacja o danych osobowych'), 'spółka nie jest osobą fizyczną');
@@ -388,6 +389,29 @@ return [
         $zip->close();
         unlink($tmp);
         contains('to jest poprawiona treść &lt;b&gt;listu&lt;/b&gt; &amp; oferta.', $xml);
+        ok(!str_contains($xml, '<w:drawing>'), 'bez adresu strony zgody w treści nie ma kodu QR');
+
+        // Treść z adresem strony zgody: pod tym akapitem plik ma kod QR z pełnym adresem.
+        $r = http('POST', $url . '/list', ['action' => 'docx', 'body' => "Szanowni Państwo,
+
+prosimy wejść na stronę http://localhost/z/" . $code . " i wpisać adres.
+
+Z poważaniem"]);
+        $tmp = tempnam(sys_get_temp_dir(), 'docx');
+        file_put_contents($tmp, $r->body);
+        $zip = new ZipArchive();
+        ok($zip->open($tmp) === true, 'poprawny plik .docx z obrazem');
+        $xml = (string) $zip->getFromName('word/document.xml');
+        $png = (string) $zip->getFromName('word/media/image1.png');
+        $rels = (string) $zip->getFromName('word/_rels/document.xml.rels');
+        $types = (string) $zip->getFromName('[Content_Types].xml');
+        $zip->close();
+        unlink($tmp);
+        eq(\App\Core\Qr::png('http://localhost/z/' . $code, 10), $png, 'kod QR prowadzi na stronę zgody tej firmy');
+        contains('relationships/image" Target="media/image1.png"', $rels);
+        contains('<Default Extension="png" ContentType="image/png"/>', $types);
+        ok(strpos($xml, 'i wpisać adres.') < strpos($xml, '<a:blip r:embed="rId2"/>') && strpos($xml, '<a:blip r:embed="rId2"/>') < strpos($xml, 'Z poważaniem'), 'kod stoi pod akapitem z adresem');
+        ok(simplexml_load_string($xml) !== false, 'dokument z obrazem jest poprawnym XML');
         eq(303, http('POST', $url . '/list', ['action' => 'docx', 'body' => '   '])->status, 'pusty list nie jest plikiem');
         eq(303, http('POST', $url . '/list', ['action' => 'sent', 'body' => 'Treść'])->status);
         eq(['contacted', 'letter'], array_values((array) $db->one('SELECT status, contacted_how FROM prospects')));

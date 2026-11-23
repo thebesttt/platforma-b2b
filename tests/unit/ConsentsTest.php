@@ -39,7 +39,7 @@ return [
         contains('Wyślij list pocztą z prośbą o zgodę na e-mail', $card);
         $code = (string) $db->val('SELECT consent_code FROM prospects WHERE id = ?', [$id]);
         ok(preg_match('/^[a-z2-9]{10}$/', $code) === 1, 'kod bez znaków łatwych do pomylenia');
-        contains('<code class="copy" title="Kliknij, żeby skopiować">http://localhost/z/' . $code . '</code>', $card);
+        contains('<code class="copy wrap" title="Kliknij, żeby skopiować">http://localhost/z/' . $code . '</code>', $card);
         contains('Wysłany e-mailem albo SMS-em byłby prośbą o zgodę bez zgody.', $card);
         contains('Wyślij ofertę e-mailem bez zgody', $card);
         ok(!str_contains($card, 'Wyślij ofertę e-mailem: masz zgodę'), 'bez zgody nie ma drogi ze zgodą');

@@ -206,6 +206,7 @@ blockquote.quote { margin: 0; padding: 8px 12px; border-left: 3px solid var(--li
 .item-head > div:first-child { flex: 1 1 260px; min-width: 0; overflow-wrap: anywhere; }
 .item-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
 code.copy { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; padding: 1px 6px; border: 1px solid var(--line); border-radius: 6px; user-select: all; white-space: nowrap; cursor: copy; }
+code.copy.wrap { white-space: normal; overflow-wrap: anywhere; }
 code.copy.copied { border-color: var(--low); color: var(--low); }
 /* Warunki naboru: nazwa, stan, cytat z dokumentu i zapis z danych firmy. */
 .terms { list-style: none; margin: 0; padding: 0; }

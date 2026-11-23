@@ -130,7 +130,7 @@ $openConsent = false;
             </form>
           <?php elseif ($path['key'] === 'letter' && $path['level'] === 'low'): ?>
             <?php if (!empty($path['consent_url'])): ?>
-              <p class="small" style="margin:10px 0 0">Strona zgody tej firmy: <code class="copy" title="Kliknij, żeby skopiować"><?= e($path['consent_url']) ?></code></p>
+              <p class="small" style="margin:10px 0 0">Strona zgody tej firmy: <code class="copy wrap" title="Kliknij, żeby skopiować"><?= e($path['consent_url']) ?></code></p>
             <?php endif ?>
             <div class="item-actions">
               <a class="btn sm" href="/klienci/potencjalni/<?= $id ?>/list">Przygotuj list</a>

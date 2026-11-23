@@ -1,5 +1,5 @@
 <?php
-/** @var array $p @var ?array $company @var array{title: string, body: string} $letter @var bool $person @var string $consentUrl adres strony zgody albo pusty */
+/** @var array $p @var ?array $company @var array{title: string, body: string} $letter @var bool $person @var string $consentUrl adres strony zgody albo pusty @var ?string $qr obraz PNG kodu QR */
 $id = (int) $p['id'];
 ?>
 <header class="between page-head">
@@ -30,7 +30,11 @@ $id = (int) $p['id'];
       <h2 id="t-rules">Zanim wyślesz</h2>
       <ul class="law" style="margin-top:10px">
         <?php if ($consentUrl !== ''): ?>
-          <li>W liście jest adres strony zgody tej firmy: <code class="copy" title="Kliknij, żeby skopiować"><?= e($consentUrl) ?></code>. Zostaw go bez zmian. Gdy firma wpisze tam e-mail i zaznaczy zgodę, dostaniesz powiadomienie, a oferta e-mailem będzie miała podstawę.</li>
+          <li>W liście jest adres strony zgody tej firmy: <code class="copy wrap" title="Kliknij, żeby skopiować"><?= e($consentUrl) ?></code>. Zostaw go bez zmian. Gdy firma wpisze tam e-mail i zaznaczy zgodę, dostaniesz powiadomienie, a oferta e-mailem będzie miała podstawę.</li>
+          <?php if ($qr !== null): ?>
+            <li>W pliku .docx pod akapitem z adresem jest kod QR tej strony. Adresat skanuje go telefonem i nie musi przepisywać adresu.<br>
+              <img src="data:image/png;base64,<?= base64_encode($qr) ?>" width="120" height="120" alt="Kod QR z adresem strony zgody" style="margin-top:8px;border-radius:6px;image-rendering:pixelated"></li>
+          <?php endif ?>
           <li>Gdy firma odpowie inaczej, np. odpisze listownie z adresem e-mail, zapisz zgodę na jej karcie.</li>
         <?php else: ?>
           <li>List jest propozycją rozmowy. Poproś w nim o adres e-mail do szczegółów: odpowiedź z adresem jest zgodą na wiadomość.</li>
