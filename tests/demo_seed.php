@@ -261,8 +261,8 @@ function demo_seed(): array
                     $find('mobile', 'speed', 'ok', 0, 'Strona dopasowuje się do telefonu'),
                 ]])]);
         \App\Modules\Outreach\ProspectAudit::attach($org, $row, $aid);
-        // Przykładowa historia do lejka listów: list wyszedł sześć dni temu, firma weszła na stronę zgody po dwóch dniach.
-        foreach ([['letter', 6], ['visit', 4]] as [$kind, $daysAgo]) {
+        // Przykładowa historia do lejka listów: list wyszedł 23 dni temu, firma weszła na stronę zgody i nie odpowiedziała. Panel proponuje drugi list.
+        foreach ([['letter', 23], ['visit', 21]] as [$kind, $daysAgo]) {
             $db->insert('prospect_events', ['org_id' => $org, 'prospect_id' => (int) $row['id'], 'kind' => $kind, 'created_by' => $kind === 'letter' ? $uid : null,
                 'created_at' => gmdate('Y-m-d H:i:s', time() - $daysAgo * 86400)]);
         }

@@ -42,6 +42,9 @@ $openConsent = false;
 <?php if (!empty($facts['consent']) && !$objected && $p['status'] !== 'contacted'): ?>
   <div class="notice low" style="margin-bottom:16px">Firma zostawiła zgodę na ofertę e-mailem <?= e(local_dt($facts['consent']['at'])) ?>. <a href="#droga-consent">Przygotuj ofertę</a>.</div>
 <?php endif ?>
+<?php if ($followUp): ?>
+  <div class="notice info" style="margin-bottom:16px">List wyszedł ponad <?= App\Modules\Outreach\Prospects::FOLLOWUP_DAYS ?> dni temu i firma się nie odezwała. Możesz wysłać drugi, krótszy list. <a href="/klienci/potencjalni/<?= $id ?>/list">Przygotuj drugi list</a>.</div>
+<?php endif ?>
 <?php if (!empty($facts['interest']) && !$objected): $int = $facts['interest']; ?>
   <div class="notice info" style="margin-bottom:16px"><strong>Co firmę interesuje</strong> (zaznaczone na stronie zgody <?= e(local_dt($int['at'])) ?>)<?= !empty($int['topics']) ? ': ' . e(implode(', ', (array) $int['topics'])) . '.' : '.' ?><?php if (!empty($int['note'])): ?> Wiadomość: „<?= e($int['note']) ?>”<?php endif ?></div>
 <?php endif ?>

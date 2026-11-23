@@ -1,5 +1,6 @@
 <?php
-/** @var array $p @var ?array $company @var array{title: string, body: string} $letter @var bool $person @var string $consentUrl adres strony zgody albo pusty @var ?string $qr obraz PNG kodu QR */
+/** @var array $p @var ?array $company @var array{title: string, body: string} $letter @var bool $person @var string $consentUrl adres strony zgody albo pusty @var ?string $qr obraz PNG kodu QR
+ * @var int $sentCount ile listów już wyszło do tej firmy @var ?string $sentLast data ostatniego */
 $id = (int) $p['id'];
 ?>
 <header class="between page-head">
@@ -11,6 +12,11 @@ $id = (int) $p['id'];
   <a class="btn ghost" href="/klienci/potencjalni/<?= $id ?>">Wróć do karty firmy</a>
 </header>
 
+<?php if ($sentCount === 1): $dueAt = date('d.m.Y', strtotime($sentLast . ' UTC') + App\Modules\Outreach\Prospects::FOLLOWUP_DAYS * 86400); ?>
+  <div class="notice info" style="margin-bottom:16px">To drugi, krótszy list. Pierwszy wyszedł <?= e(local_date($sentLast)) ?>. Drugi warto wysłać po <?= App\Modules\Outreach\Prospects::FOLLOWUP_DAYS ?> dniach bez odpowiedzi, czyli od <?= e($dueAt) ?>. Zapowiada, że jest ostatni.</div>
+<?php elseif ($sentCount >= 2): ?>
+  <div class="notice mid" style="margin-bottom:16px">Do tej firmy wyszły już <?= (int) $sentCount ?> listy, ostatni <?= e(local_date($sentLast)) ?>, a drugi zapowiadał, że jest ostatni. Panel nie przypomina o kolejnych. Jeśli mimo to wysyłasz następny, decyzja należy do Ciebie.</div>
+<?php endif ?>
 <div class="cols">
   <section class="card main" aria-labelledby="t-letter">
     <h2 id="t-letter">Treść listu</h2>

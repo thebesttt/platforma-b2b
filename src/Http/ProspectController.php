@@ -50,6 +50,7 @@ final class ProspectController extends Controller
             'period' => $period, 'funnel' => ProspectEvents::funnel($org, $period),
             'cardUrl' => $cardUrl, 'cardQr' => $cardUrl !== '' ? Qr::png($cardUrl, 6) : null,
             'ceidgOn' => Ceidg::enabled(), 'ceidgFilters' => $cf, 'ceidg' => $ceidg,
+            'followUps' => Prospects::followUps($org),
         ]);
     }
 
@@ -273,9 +274,10 @@ final class ProspectController extends Controller
     public function letters(Request $r): Response
     {
         $org = $this->orgId();
-        $rows = Prospects::letterRows($org);
+        $second = $r->str('drugi') === '1';
+        $rows = Prospects::letterRows($org, $second);
         if ($r->method !== 'POST') {
-            return $this->view('outreach/prospect_letters', ['rows' => $rows, 'title' => 'Listy seryjnie']);
+            return $this->view('outreach/prospect_letters', ['rows' => $rows, 'second' => $second, 'title' => 'Listy seryjnie']);
         }
         $picked = [];
         foreach (array_unique(array_map('intval', (array) $r->input('ids', []))) as $id) {
@@ -306,7 +308,8 @@ final class ProspectController extends Controller
         foreach ($picked as $row) {
             $url = Consents::url($row['p'], $r->baseUrl());
             $qr = $url !== '' ? Qr::png($url, 10) : null;
-            $letter = Prospects::letter($row['p'], $row['company'], Auth::org() ?? [], Auth::user(), $url, $qr !== null);
+            // Firma, która dostała już list, dostaje krótkie przypomnienie zamiast drugiego pełnego listu.
+            $letter = Prospects::letter($row['p'], $row['company'], Auth::org() ?? [], Auth::user(), $url, $qr !== null, $row['letters'] > 0 ? $row['last'] : null);
             $docs[] = ['title' => $letter['title'], 'body' => $letter['body'],
                 'image' => $qr !== null ? ['png' => $qr, 'after' => Consents::printed($url), 'cm' => 3.0, 'alt' => 'Kod QR z adresem strony zgody'] : null];
         }
@@ -398,7 +401,9 @@ final class ProspectController extends Controller
         $consentUrl = Consents::latest($org, (int) $p['id']) ? '' : Consents::url($p, $r->baseUrl());
         // Kod QR z adresem strony zgody: adresat skanuje go telefonem zamiast przepisywać adres z listu.
         $qr = $consentUrl !== '' ? Qr::png($consentUrl, 10) : null;
-        $letter = Prospects::letter($p, $company, Auth::org() ?? [], Auth::user(), $consentUrl, $qr !== null);
+        // Po pierwszym liście ekran przygotowuje drugi, krótszy: przypomnienie zamiast powtórzenia oferty.
+        [$sentCount, $sentLast] = Prospects::lettersSent($org)[(int) $p['id']] ?? [0, null];
+        $letter = Prospects::letter($p, $company, Auth::org() ?? [], Auth::user(), $consentUrl, $qr !== null, $sentCount > 0 ? $sentLast : null);
         if ($r->method === 'POST') {
             $body = mb_substr(str_replace("\r\n", "\n", (string) $r->input('body', '')), 0, 12000);
             if (trim($body) === '') {
@@ -416,7 +421,7 @@ final class ProspectController extends Controller
                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
         }
         return $this->view('outreach/prospect_letter', ['p' => $p, 'company' => $company, 'letter' => $letter, 'person' => Prospects::isPerson($company),
-            'consentUrl' => $consentUrl, 'qr' => $qr, 'title' => 'List do ' . $p['name']]);
+            'consentUrl' => $consentUrl, 'qr' => $qr, 'sentCount' => $sentCount, 'sentLast' => $sentLast, 'title' => 'List do ' . $p['name']]);
     }
 
     private function renderCard(array $p, string $base): Response
@@ -431,6 +436,7 @@ final class ProspectController extends Controller
             'pitch' => Prospects::pitch($p, $company, Auth::org() ?? []), 'aiEnabled' => Claude::enabled(),
             'report' => ProspectAudit::report($p, $base), 'reportAsked' => Consents::reportRequest($org, (int) $p['id']),
             'timeline' => ProspectEvents::timeline($org, (int) $p['id']),
+            'followUp' => (bool) array_filter(Prospects::followUps($org), static fn ($x) => (int) $x['id'] === (int) $p['id']),
             'hasLibrary' => (bool) $this->db()->val("SELECT 1 FROM library_items WHERE org_id = ? AND kind = 'text' LIMIT 1", [$org]),
         ]);
     }

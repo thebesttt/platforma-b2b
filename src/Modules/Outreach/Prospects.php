@@ -1064,12 +1064,15 @@ final class Prospects
      * Z adresem strony zgody list prosi też o zgodę na e-mail. $qr mówi, że pod tym akapitem w pliku będzie kod QR.
      * @return array{title: string, body: string}
      */
-    public static function letter(array $p, ?array $company, array $org, ?array $user, string $consentUrl = '', bool $qr = false): array
+    public static function letter(array $p, ?array $company, array $org, ?array $user, string $consentUrl = '', bool $qr = false, ?string $firstLetterAt = null): array
     {
         $facts = self::facts($p);
         $shown = Consents::printed($consentUrl);
         $report = $consentUrl !== '' ? ProspectAudit::report($p) : null;
         $where = 'Wystarczy wejść na stronę ' . $shown . ($qr ? ' albo zeskanować telefonem kod pod tym akapitem' : '');
+        if ($firstLetterAt !== null) {
+            return self::secondLetter($p, $company, $org, $user, $consentUrl, $where, $report, $firstLetterAt);
+        }
         $lines = [
             date('d.m.Y'),
             '',
@@ -1105,7 +1108,8 @@ final class Prospects
         $lines[] = '';
         if (self::isPerson($company)) {
             $lines[] = 'Informacja o danych osobowych: administratorem danych jest ' . ($org['name'] ?? '') . (!empty($org['address']) ? ', ' . $org['address'] : '')
-                . '. Nazwę firmy, adres i NIP mamy z publicznych rejestrów (wykaz podatników VAT' . (!empty($facts['wins']) ? ', ogłoszenia o wynikach zamówień publicznych' : '')
+                . '. Nazwę firmy, adres i NIP mamy z publicznych rejestrów (' . (($p['source'] ?? '') === 'ceidg' ? 'Centralna Ewidencja i Informacja o Działalności Gospodarczej, ' : '')
+                . 'wykaz podatników VAT' . (!empty($facts['wins']) ? ', ogłoszenia o wynikach zamówień publicznych' : '')
                 . '). Przetwarzamy je, żeby przedstawić ofertę, na podstawie prawnie uzasadnionego interesu (art. 6 ust. 1 lit. f RODO), do zakończenia rozmów o współpracy albo do Państwa sprzeciwu. '
                 . 'Nie przekazujemy ich innym odbiorcom poza dostawcą naszego systemu informatycznego. Przysługuje Państwu prawo dostępu do danych, ich sprostowania, usunięcia, ograniczenia przetwarzania, '
                 . 'sprzeciwu wobec przetwarzania do celów marketingu oraz skargi do Prezesa Urzędu Ochrony Danych Osobowych.';
@@ -1113,6 +1117,87 @@ final class Prospects
         $lines[] = 'Jeśli nie chcą Państwo otrzymywać od nas korespondencji, prosimy o informację' . (!empty($user['email']) ? ' na adres ' . $user['email'] : '')
             . ($consentUrl !== '' ? ' albo o zaznaczenie tego na stronie ' . $shown : '') . '. Nie napiszemy ponownie.';
         return ['title' => 'Propozycja współpracy', 'body' => implode("\n", $lines)];
+    }
+
+    /** Po ilu dniach bez odpowiedzi panel proponuje drugi list. */
+    public const FOLLOWUP_DAYS = 21;
+
+    /** O ilu listach do jednej firmy panel przypomina. Kolejne zostają decyzją użytkownika. */
+    public const LETTERS_REMINDED = 2;
+
+    /**
+     * Drugi list: krótkie przypomnienie pierwszego. Bez ponownego opisu oferty, z tą samą drogą do zgody i wyraźną zapowiedzią,
+     * że to ostatni list w tej sprawie. Informację o danych osobowych firma dostała w pierwszym liście.
+     */
+    private static function secondLetter(array $p, ?array $company, array $org, ?array $user, string $consentUrl, string $where, ?array $report, string $firstLetterAt): array
+    {
+        $shown = Consents::printed($consentUrl);
+        $lines = [
+            date('d.m.Y'),
+            '',
+            (string) ($company['name'] ?? $p['name']),
+            trim((string) ($company['address'] ?? '')) ?: '[adres firmy]',
+            '',
+            'Dotyczy: nasz list z ' . local_date($firstLetterAt),
+            '',
+            'Szanowni Państwo,',
+            '',
+            local_date($firstLetterAt) . ' wysłaliśmy do Państwa list z propozycją współpracy. Piszemy jeszcze raz, krótko, i na tym poprzestaniemy.',
+            '',
+            match (true) {
+                $report !== null => 'Bezpłatny raport z audytu strony ' . $report['host'] . ' nadal na Państwa czeka. ' . $where
+                    . ' i wpisać adres, na który mamy go wysłać. Ofertę prześlemy tylko wtedy, gdy zaznaczą tam Państwo zgodę.',
+                $consentUrl !== '' => 'Jeśli temat jest dla Państwa aktualny, szczegóły prześlemy e-mailem. ' . $where
+                    . ' i wpisać adres. Bez Państwa zgody nie wyślemy żadnej wiadomości.',
+                default => 'Jeśli temat jest dla Państwa aktualny, prosimy o odpowiedź albo o wskazanie adresu e-mail, na który możemy przesłać szczegóły.',
+            },
+            '',
+            'Z poważaniem',
+            trim((string) ($user['name'] ?? '')),
+            (string) ($org['name'] ?? ''),
+        ];
+        foreach (['phone' => 'tel. ', 'website' => ''] as $k => $prefix) {
+            if (!empty($org[$k])) {
+                $lines[] = $prefix . $org[$k];
+            }
+        }
+        if (!empty($user['email'])) {
+            $lines[] = (string) $user['email'];
+        }
+        $lines[] = '';
+        $lines[] = 'To nasz ostatni list w tej sprawie. Jeśli nie chcą Państwo otrzymywać od nas korespondencji, prosimy o informację' . (!empty($user['email']) ? ' na adres ' . $user['email'] : '')
+            . ($consentUrl !== '' ? ' albo o zaznaczenie tego na stronie ' . $shown : '') . '.';
+        return ['title' => 'Przypomnienie', 'body' => implode("\n", $lines)];
+    }
+
+    /** Ile listów wyszło do firmy i kiedy ostatni. @return array<int, array{0: int, 1: string}> [id firmy => [liczba, data ostatniego]] */
+    public static function lettersSent(int $orgId): array
+    {
+        $out = [];
+        foreach (Db::get()->all("SELECT prospect_id, COUNT(*) AS n, MAX(created_at) AS last FROM prospect_events WHERE org_id = ? AND kind = 'letter' GROUP BY prospect_id", [$orgId]) as $r) {
+            $out[(int) $r['prospect_id']] = [(int) $r['n'], (string) $r['last']];
+        }
+        return $out;
+    }
+
+    /**
+     * Firmy, które dostały jeden list co najmniej trzy tygodnie temu i nie odezwały się: bez zgody, prośby o raport, odmowy i odpowiedzi.
+     * $dueSince: tylko te, którym termin minął po tej chwili (do porannego przeglądu, żeby nie powtarzać tej samej firmy codziennie).
+     * @return array<int, array> wiersze firm z polem letter_at
+     */
+    public static function followUps(int $orgId, ?string $dueSince = null): array
+    {
+        $before = gmdate('Y-m-d H:i:s', time() - self::FOLLOWUP_DAYS * 86400);
+        $rows = Db::get()->all(
+            "SELECT p.*, e.last AS letter_at FROM prospects p
+               JOIN (SELECT prospect_id, COUNT(*) AS n, MAX(created_at) AS last FROM prospect_events WHERE org_id = ? AND kind = 'letter' GROUP BY prospect_id) e ON e.prospect_id = p.id
+              WHERE p.org_id = ? AND p.status IN ('new', 'picked', 'contacted') AND e.n = 1 AND e.last <= ?
+                AND NOT EXISTS (SELECT 1 FROM prospect_events x WHERE x.prospect_id = p.id AND x.kind IN ('consent', 'refused', 'report', 'reply', 'offer'))
+              ORDER BY e.last LIMIT 100",
+            [$orgId, $orgId, $before]
+        );
+        $from = $dueSince !== null ? gmdate('Y-m-d H:i:s', strtotime($dueSince . ' UTC') - self::FOLLOWUP_DAYS * 86400) : null;
+        return array_values(array_filter($rows, static fn (array $p): bool => empty(self::facts($p)['consent']) && ($from === null || $p['letter_at'] > $from)));
     }
 
     // --- Listy seryjnie ----------------------------------------------------------------------------------------------
@@ -1125,13 +1210,11 @@ final class Prospects
      * Gotowa do listu jest firma z adresem i bez zgody na e-mail (firmie ze zgodą wysyłasz ofertę e-mailem).
      * @return array<int, array{p: array, company: ?array, name: string, address: string, letters: int, last: ?string, consent: bool, ready: bool, checked: bool, why: string}>
      */
-    public static function letterRows(int $orgId): array
+    public static function letterRows(int $orgId, bool $second = false): array
     {
         $db = Db::get();
-        $sent = [];
-        foreach ($db->all("SELECT prospect_id, COUNT(*) AS n, MAX(created_at) AS last FROM prospect_events WHERE org_id = ? AND kind = 'letter' GROUP BY prospect_id", [$orgId]) as $r) {
-            $sent[(int) $r['prospect_id']] = [(int) $r['n'], (string) $r['last']];
-        }
+        $sent = self::lettersSent($orgId);
+        $due = array_flip(array_map(static fn ($p) => (int) $p['id'], self::followUps($orgId)));
         $out = [];
         $rows = $db->all("SELECT * FROM prospects WHERE org_id = ? AND status IN ('new', 'picked', 'contacted')
             ORDER BY CASE status WHEN 'picked' THEN 0 WHEN 'new' THEN 1 ELSE 2 END, score DESC, id LIMIT 300", [$orgId]);
@@ -1140,11 +1223,16 @@ final class Prospects
             $address = trim((string) ($company['address'] ?? ''));
             $consent = !empty(self::facts($p)['consent']);
             [$n, $last] = $sent[(int) $p['id']] ?? [0, null];
-            $ready = $address !== '' && !$consent;
+            // Po dwóch listach panel nie proponuje trzeciego w paczce. Pojedynczy list nadal da się przygotować na karcie firmy.
+            $ready = $address !== '' && !$consent && $n < self::LETTERS_REMINDED;
+            $isDue = isset($due[(int) $p['id']]);
             $out[(int) $p['id']] = [
                 'p' => $p, 'company' => $company, 'name' => (string) ($company['name'] ?? $p['name']), 'address' => $address, 'letters' => $n, 'last' => $last,
-                'consent' => $consent, 'ready' => $ready, 'checked' => $ready && $p['status'] === 'picked' && $n === 0,
-                'why' => $consent ? 'ma zgodę na e-mail: wyślij ofertę e-mailem' : ($address === '' ? 'brak adresu: dopisz NIP na karcie firmy' : ''),
+                'consent' => $consent, 'ready' => $ready, 'due' => $isDue,
+                // Zwykle zaznaczamy wybrane firmy bez listu. W trybie „drugi list” te, które nie odpowiedziały na pierwszy.
+                'checked' => $ready && ($second ? $isDue : ($p['status'] === 'picked' && $n === 0)),
+                'why' => $consent ? 'ma zgodę na e-mail: wyślij ofertę e-mailem' : ($address === '' ? 'brak adresu: dopisz NIP na karcie firmy'
+                    : ($n >= self::LETTERS_REMINDED ? 'wyszły już ' . $n . ' listy: kolejny tylko pojedynczo, z karty firmy' : '')),
             ];
         }
         return $out;

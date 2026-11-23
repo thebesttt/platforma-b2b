@@ -38,6 +38,12 @@ $total = array_sum($counts);
     </div>
   <?php endif ?>
 
+  <?php if (!empty($followUps)): $nf = count($followUps); ?>
+    <div class="notice info" id="drugi-list">
+      <strong><?= $nf ?> <?= plural($nf, 'firma nie odpowiedziała', 'firmy nie odpowiedziały', 'firm nie odpowiedziało') ?> na list sprzed <?= Prospects::FOLLOWUP_DAYS ?> dni.</strong>
+      Możesz wysłać drugi, krótszy list: <a href="/klienci/potencjalni/listy?drugi=1">przygotuj przypomnienia</a>.
+    </div>
+  <?php endif ?>
   <?php if (!empty($waiting)): $nw = count($waiting); ?>
     <div class="notice low" id="zgody">
       <strong><?= $nw ?> <?= plural($nw, 'firma zostawiła zgodę na ofertę e-mailem i czeka', 'firmy zostawiły zgodę na ofertę e-mailem i czekają', 'firm zostawiło zgodę na ofertę e-mailem i czeka') ?> na wiadomość:</strong>

@@ -137,6 +137,19 @@ final class Digest
                 $lines[] = '';
             }
 
+            // Listy bez odpowiedzi: firmy, którym właśnie minęły trzy tygodnie od pierwszego listu.
+            $quiet = \App\Modules\Outreach\Prospects::followUps($id, $since);
+            if ($quiet) {
+                $n = count($quiet);
+                $parts[] = $n . ' ' . plural($n, 'list bez odpowiedzi', 'listy bez odpowiedzi', 'listów bez odpowiedzi');
+                $lines[] = 'LISTY BEZ ODPOWIEDZI: PORA NA DRUGI, KRÓTSZY (' . $n . ')';
+                foreach (array_slice($quiet, 0, 8) as $q) {
+                    $lines[] = '- ' . truncate((string) $q['name'], 80) . ', list z ' . local_date((string) $q['letter_at']);
+                }
+                $lines[] = '  ' . $baseUrl . '/klienci/potencjalni/listy?drugi=1';
+                $lines[] = '';
+            }
+
             // Zapytania ofertowe wpisane do rejestru, których termin mija w najbliższych dniach.
             $soon = \App\Modules\Outreach\Rfqs::dueSoon($id);
             if ($soon) {

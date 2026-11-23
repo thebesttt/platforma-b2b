@@ -418,6 +418,8 @@ Z poważaniem"]);
         contains('List wysłany', http('GET', '/klienci/potencjalni', [], ['stan' => 'contacted'])->body);
 
         // Osoba prowadząca działalność: nota o terminie informacji i klauzula w liście. Po kontakcie nota znika.
+        // Firma wraca do stanu sprzed listu (po wysłanym liście ekran przygotowuje już krótkie przypomnienie, patrz ProspectFollowUpTest).
+        $db->run('DELETE FROM prospect_events');
         $db->update('companies', ['legal_form' => Prospects::PERSON_FORM], "nip = '1234563218'");
         $db->update('prospects', ['status' => 'new', 'created_at' => gmdate('Y-m-d H:i:s', time() - 26 * 86400 - 60)], 'id = ?', [$id]);
         $card = http('GET', $url)->body;
