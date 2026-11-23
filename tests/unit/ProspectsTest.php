@@ -309,7 +309,7 @@ return [
         contains('Treść oferty jest pusta', http('GET', $url)->body);
         eq("Nasza <b>poprawiona</b> treść oferty.\nDruga linia.", Prospects::facts(Prospects::find($orgId, $id))['pitch']['text']);
         // Ta sama treść w liście i w wiadomości e-mail (ze stopką rezygnacji i bez zmiany wielkości liter cudzego tekstu).
-        contains("Szanowni Państwo,\n\nNasza &lt;b&gt;poprawiona&lt;/b&gt; treść oferty.\nDruga linia.\n\nJeśli temat jest dla Państwa ciekawy", http('GET', $url . '/list')->body);
+        contains("Szanowni Państwo,\n\nNasza &lt;b&gt;poprawiona&lt;/b&gt; treść oferty.\nDruga linia.\n\nSzczegóły chętnie prześlemy e-mailem, ale tylko za Państwa zgodą.", http('GET', $url . '/list')->body);
         http('POST', $url . '/kontakt', ['email' => 'biuro@przykladowa.example', 'person' => 'Anna Nowak']);
         $cid = (int) $db->val('SELECT id FROM contacts');
         $compose = http('GET', '/klienci/' . $cid . '/wiadomosc', [], ['kind' => 'cold_offer'])->body;
@@ -367,8 +367,10 @@ return [
         contains('PRZYKŁADOWA SPÓŁKA BUDOWLANA SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ', $page);
         contains('UL. PRZYKŁADOWA 1, 00-001 WARSZAWA', $page);
         contains("Szanowni Państwo,\n\npiszemy, ponieważ Państwa firma zawarła niedawno umowę na zamówienie „Remont drogi gminnej w Testowie”.\n\nDostarczamy kruszywa na budowy dróg", $page);
-        contains('o wskazanie adresu e-mail, na który możemy przesłać szczegóły', $page);
-        contains('Jeśli nie chcą Państwo otrzymywać od nas korespondencji, prosimy o informację na adres wlasciciel@example.com. Nie napiszemy ponownie.', $page);
+        $code = (string) $db->val('SELECT consent_code FROM prospects');
+        ok(preg_match('/^[a-z2-9]{10}$/', $code) === 1, 'kod strony zgody powstaje razem z listem');
+        contains('Wystarczy wejść na stronę http://localhost/z/' . $code . ' i wpisać adres, na który mamy wysłać ofertę.', $page);
+        contains('prosimy o informację na adres wlasciciel@example.com albo o zaznaczenie tego na stronie http://localhost/z/' . $code . '. Nie napiszemy ponownie.', $page);
         contains('tel. 22 111 22 33', $page);
         ok(!str_contains($page, 'Informacja o danych osobowych'), 'spółka nie jest osobą fizyczną');
         ok(!str_contains(http('GET', $url)->body, 'chroni RODO'), 'bez not o RODO dla spółki');

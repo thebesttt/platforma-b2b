@@ -124,6 +124,19 @@ final class Digest
         }
 
         if (Brand::has($org, 'klienci')) {
+            // Firmy z listy potencjalnych klientów, które same zostawiły adres i zgodę na stronie zgody z listu.
+            $consents = \App\Modules\Outreach\Consents::since($id, $since);
+            if ($consents) {
+                $n = count($consents);
+                $parts[] = $n . ' ' . plural($n, 'zgoda na ofertę e-mailem', 'zgody na ofertę e-mailem', 'zgód na ofertę e-mailem');
+                $lines[] = 'ZGODY NA OFERTĘ E-MAILEM (' . $n . ')';
+                foreach (array_slice($consents, 0, 8) as $c) {
+                    $lines[] = '- ' . truncate((string) ($c['company_name'] ?? $c['email']), 80) . ': ' . $c['email'];
+                    $lines[] = '  ' . $baseUrl . '/klienci/potencjalni/' . (int) $c['prospect_id'];
+                }
+                $lines[] = '';
+            }
+
             // Zapytania ofertowe wpisane do rejestru, których termin mija w najbliższych dniach.
             $soon = \App\Modules\Outreach\Rfqs::dueSoon($id);
             if ($soon) {

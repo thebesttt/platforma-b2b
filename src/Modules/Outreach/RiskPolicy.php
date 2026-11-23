@@ -115,6 +115,7 @@ final class RiskPolicy
                         'Nie znamy wyroku sądu, który ocenia taką wiadomość już pod nowymi przepisami.',
                     ]);
                     $reasons[] = 'Bez zgody możesz wysłać list pocztą albo odpowiedzieć na zapytanie ofertowe firmy. Te drogi nie wymagają zgody na kontakt elektroniczny.';
+                    $reasons[] = 'Zgodę zbierzesz bez ryzyka listem: panel drukuje w nim adres strony zgody, na której firma sama wpisuje e-mail i zaznacza zgodę. Znajdziesz to w zakładce „Potencjalni klienci”.';
                 }
                 break;
             case 'cold_offer':

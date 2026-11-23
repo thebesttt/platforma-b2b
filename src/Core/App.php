@@ -30,8 +30,8 @@ final class App
                 Db::get()->val('SELECT 1');
                 return Response::text('ok');
             }
-            // Widżet na stronie klienta i strona wypisania z wiadomości działają bez sesji i bez plików cookie.
-            if (!str_starts_with($request->path, '/w/') && !str_starts_with($request->path, '/wypisz/')) {
+            // Widżet na stronie klienta, strona wypisania z wiadomości i strona zgody na ofertę działają bez sesji i bez plików cookie.
+            if (!str_starts_with($request->path, '/w/') && !str_starts_with($request->path, '/wypisz/') && !str_starts_with($request->path, '/z/')) {
                 Session::start($request);
             }
             [$route, $otherMethod] = self::router()->match($request->method, $request->path);

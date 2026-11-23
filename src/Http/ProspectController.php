@@ -13,6 +13,7 @@ use App\Core\Session;
 use App\Core\View;
 use App\Modules\Ai\Claude;
 use App\Modules\Offers\Docx;
+use App\Modules\Outreach\Consents;
 use App\Modules\Outreach\Outreach;
 use App\Modules\Outreach\Prospects;
 use App\Modules\Tenders\Regions;
@@ -35,7 +36,7 @@ final class ProspectController extends Controller
             'rows' => Prospects::listing($org, $status), 'counts' => Prospects::counts($org), 'status' => $status,
             'criteria' => Prospects::criteria(Auth::org()), 'pending' => Prospects::pendingCount($org),
             'filters' => $filters, 'searched' => $searched, 'candidates' => $searched ? Prospects::candidates($org, $filters) : [],
-            'coverage' => Results::coverage(), 'title' => 'Potencjalni klienci',
+            'coverage' => Results::coverage(), 'waiting' => Consents::waiting($org), 'title' => 'Potencjalni klienci',
         ]);
     }
 
@@ -93,7 +94,7 @@ final class ProspectController extends Controller
         if (!$p) {
             return $this->notFound();
         }
-        return $this->card($p);
+        return $this->card($p, $r->baseUrl());
     }
 
     /** Adres strony, NIP i notatka. */
@@ -219,6 +220,33 @@ final class ProspectController extends Controller
         return $this->redirect($url, 'Zapisano zaproszenie jako podstawę kontaktu. Cytat i link zostają jako dowód.');
     }
 
+    /** Zgoda firmy wyrażona poza stroną zgody (np. w odpowiedzi na list) albo wycofanie zgody. */
+    public function consent(Request $r): Response
+    {
+        $org = $this->orgId();
+        $p = Prospects::find($org, (int) $r->param('id'));
+        if (!$p) {
+            return $this->notFound();
+        }
+        $url = '/klienci/potencjalni/' . $p['id'] . '#kontakt';
+        if ($r->str('withdraw') === '1') {
+            if (!Consents::withdraw($org, $p)) {
+                return $this->redirect($url, 'Ta firma nie ma zapisanej zgody.', 'error');
+            }
+            AuditLog::add('consent.withdrawn', 'prospect', (int) $p['id'], [], $r->ip());
+            return $this->redirect($url, 'Zgoda wycofana. Oferta e-mailem do tej firmy nie ma już podstawy.');
+        }
+        if ($r->str('confirm') !== '1') {
+            return $this->redirect($url, 'Zaznacz, że firma wyraziła tę zgodę i że potrafisz to wykazać.', 'error');
+        }
+        $res = Consents::manual($p, (int) Auth::id(), $r->post);
+        if (!$res['ok']) {
+            return $this->redirect($url, (string) $res['error'], 'error');
+        }
+        AuditLog::add('consent.manual', 'prospect', (int) $p['id'], ['way' => $r->str('way'), 'contact' => $res['contact_id']], $r->ip());
+        return $this->redirect($url, 'Zapisano zgodę razem z opisem. Oferta e-mailem do tej firmy ma teraz podstawę.');
+    }
+
     /** Zakłada kontakt i otwiera ekran wiadomości z oceną ryzyka. */
     public function contact(Request $r): Response
     {
@@ -250,7 +278,9 @@ final class ProspectController extends Controller
             return $this->redirect('/klienci/potencjalni/' . $p['id'], 'Firma zgłosiła sprzeciw. Nie przygotujemy dla niej listu.', 'error');
         }
         $company = Prospects::company($p);
-        $letter = Prospects::letter($p, $company, Auth::org() ?? [], Auth::user());
+        // Firma, która już dała zgodę, nie dostaje w liście drugiej prośby o nią.
+        $consentUrl = Consents::latest($org, (int) $p['id']) ? '' : Consents::url($p, $r->baseUrl());
+        $letter = Prospects::letter($p, $company, Auth::org() ?? [], Auth::user(), $consentUrl);
         if ($r->method === 'POST') {
             $body = mb_substr(str_replace("\r\n", "\n", (string) $r->input('body', '')), 0, 12000);
             if (trim($body) === '') {
@@ -266,17 +296,18 @@ final class ProspectController extends Controller
             return Response::download($bin, 'list-' . (trim(mb_substr((string) preg_replace('/[^a-z0-9]+/', '-', search_text((string) $p['name'])), 0, 40), '-') ?: 'firma') . '.docx',
                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
         }
-        return $this->view('outreach/prospect_letter', ['p' => $p, 'company' => $company, 'letter' => $letter, 'person' => Prospects::isPerson($company), 'title' => 'List do ' . $p['name']]);
+        return $this->view('outreach/prospect_letter', ['p' => $p, 'company' => $company, 'letter' => $letter, 'person' => Prospects::isPerson($company),
+            'consentUrl' => $consentUrl, 'title' => 'List do ' . $p['name']]);
     }
 
-    private function card(array $p): Response
+    private function card(array $p, string $base): Response
     {
         $org = $this->orgId();
         $company = Prospects::company($p);
         $contact = !empty($p['contact_id']) ? Outreach::contact($org, (int) $p['contact_id']) : null;
         return $this->view('outreach/prospect', [
             'p' => $p, 'company' => $company, 'contact' => $contact, 'facts' => Prospects::facts($p), 'score' => json_in($p['score_json'] ?? null),
-            'reasons' => Prospects::reasons($p, $company), 'paths' => Prospects::paths($org, $p, $company, $contact),
+            'reasons' => Prospects::reasons($p, $company), 'paths' => Prospects::paths($org, $p, $company, $contact, $base),
             'infoDays' => Prospects::infoDaysLeft($p, $company), 'criteria' => Prospects::criteria(Auth::org()), 'title' => (string) $p['name'],
             'pitch' => Prospects::pitch($p, $company, Auth::org() ?? []), 'aiEnabled' => Claude::enabled(),
             'hasLibrary' => (bool) $this->db()->val("SELECT 1 FROM library_items WHERE org_id = ? AND kind = 'text' LIMIT 1", [$org]),

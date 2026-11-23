@@ -17,7 +17,7 @@ $total = array_sum($counts);
   <div>
     <p class="crumbs"><a href="/klienci">Klienci i wiadomości</a> / Potencjalni klienci</p>
     <h1>Potencjalni klienci</h1>
-    <p class="muted small">Firmy, do których warto się odezwać. Panel dopisuje dane z rejestrów, liczy dopasowanie i przygotowuje ofertę. Lista i szkic oferty nie wymagają zgody firmy. Zgody wymaga wysyłka e-mailem, dlatego na karcie firmy widzisz wszystkie drogi kontaktu z oceną ryzyka.</p>
+    <p class="muted small">Firmy, do których warto się odezwać. Panel dopisuje dane z rejestrów, liczy dopasowanie i przygotowuje ofertę. Lista i szkic oferty nie wymagają zgody firmy. Zgody wymaga wysyłka e-mailem, dlatego na karcie firmy widzisz wszystkie drogi kontaktu z oceną ryzyka. Zgodę zbierzesz listem: jest w nim adres strony, na której firma sama zostawia e-mail.</p>
   </div>
   <div class="row-flex">
     <a class="btn ghost" href="#kryteria">Kogo szukasz</a>
@@ -30,6 +30,13 @@ $total = array_sum($counts);
     <div class="notice info" data-work-queue="/klienci/potencjalni/krok" data-csrf="<?= e(App\Core\Csrf::token()) ?>" data-left="<?= (int) $pending ?>">
       <span data-work-queue-state>Dopisuję dane z rejestrów: <?= (int) $pending ?> <?= plural($pending, 'firma czeka', 'firmy czekają', 'firm czeka') ?>. Zostaw tę kartę otwartą.</span>
       <noscript>Dane dopisze też zadanie dzienne, bez Twojego udziału.</noscript>
+    </div>
+  <?php endif ?>
+
+  <?php if (!empty($waiting)): $nw = count($waiting); ?>
+    <div class="notice low" id="zgody">
+      <strong><?= $nw ?> <?= plural($nw, 'firma zostawiła', 'firmy zostawiły', 'firm zostawiło') ?> zgodę na ofertę e-mailem i czeka na wiadomość:</strong>
+      <?php foreach ($waiting as $i => $w): ?><?= $i ? ', ' : ' ' ?><a href="/klienci/potencjalni/<?= (int) $w['id'] ?>#kontakt"><?= e(truncate((string) $w['name'], 60)) ?></a><?php endforeach ?>.
     </div>
   <?php endif ?>
 
@@ -52,6 +59,7 @@ $total = array_sum($counts);
               </div>
               <span class="row-flex" style="gap:6px">
                 <?php if ($p['status'] === 'objected'): ?><span class="chip high">sprzeciw</span><?php endif ?>
+                <?php if (!empty($facts['consent']) && $p['status'] !== 'objected'): ?><span class="chip low">zgoda na e-mail</span><?php endif ?>
                 <?php if (!empty($facts['invite'])): ?><span class="chip low">zaprasza do ofert</span><?php elseif (!empty($facts['invite_found'])): ?><span class="chip mid">zaproszenie do potwierdzenia</span><?php endif ?>
                 <?php if ($p['enriched_at'] === null && $p['nip']): ?><span class="chip neutral">czeka na rejestry</span><?php endif ?>
                 <span class="score <?= score_class((int) $p['score']) ?>" title="Dopasowanie <?= (int) $p['score'] ?> na 100"><?= (int) $p['score'] ?></span>

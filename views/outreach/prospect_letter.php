@@ -1,5 +1,5 @@
 <?php
-/** @var array $p @var ?array $company @var array{title: string, body: string} $letter @var bool $person */
+/** @var array $p @var ?array $company @var array{title: string, body: string} $letter @var bool $person @var string $consentUrl adres strony zgody albo pusty */
 $id = (int) $p['id'];
 ?>
 <header class="between page-head">
@@ -29,7 +29,12 @@ $id = (int) $p['id'];
     <section class="card" aria-labelledby="t-rules">
       <h2 id="t-rules">Zanim wyślesz</h2>
       <ul class="law" style="margin-top:10px">
-        <li>List jest propozycją rozmowy. Poproś w nim o adres e-mail do szczegółów: odpowiedź z adresem jest zgodą na wiadomość.</li>
+        <?php if ($consentUrl !== ''): ?>
+          <li>W liście jest adres strony zgody tej firmy: <code class="copy" title="Kliknij, żeby skopiować"><?= e($consentUrl) ?></code>. Zostaw go bez zmian. Gdy firma wpisze tam e-mail i zaznaczy zgodę, dostaniesz powiadomienie, a oferta e-mailem będzie miała podstawę.</li>
+          <li>Gdy firma odpowie inaczej, np. odpisze listownie z adresem e-mail, zapisz zgodę na jej karcie.</li>
+        <?php else: ?>
+          <li>List jest propozycją rozmowy. Poproś w nim o adres e-mail do szczegółów: odpowiedź z adresem jest zgodą na wiadomość.</li>
+        <?php endif ?>
         <?php if ($person): ?><li>Adresat to osoba prowadząca działalność. Zostaw w liście informację o danych osobowych: to Twój obowiązek z art. 14 RODO.</li><?php endif ?>
         <li>Zostaw ostatnie zdanie o rezygnacji. Gdy firma napisze, że nie chce korespondencji, zapisz sprzeciw na jej karcie.</li>
         <li>Po wysłaniu kliknij „Oznacz: list wysłany”. Firma przejdzie do zakładki „Po kontakcie”.</li>

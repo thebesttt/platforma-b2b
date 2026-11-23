@@ -7,6 +7,7 @@ use App\Core\Router;
 use App\Http\AuditController;
 use App\Http\AuthController;
 use App\Http\CompanyController;
+use App\Http\ConsentController;
 use App\Http\ContentController;
 use App\Http\CronController;
 use App\Http\DashboardController;
@@ -40,6 +41,9 @@ return static function (Router $r): void {
     $r->get('/r/{token}', [ContentController::class, 'publicReport']);
 
     // Wypisanie z wiadomości: link w stopce e-maila. Bez logowania, bez sesji, bez tokenu CSRF (odbiorca nie ma konta).
+    // Strona zgody na ofertę: adres jest wydrukowany w liście wysłanym pocztą. Bez logowania, sesji i plików cookie.
+    $r->get('/z/{code}', [ConsentController::class, 'page']);
+    $r->post('/z/{code}', [ConsentController::class, 'page'], ['csrf' => false]);
     $r->get('/wypisz/{token}', [OutreachController::class, 'unsubForm']);
     $r->post('/wypisz/{token}', [OutreachController::class, 'unsubForm'], ['csrf' => false]);
 
@@ -140,6 +144,7 @@ return static function (Router $r): void {
     $r->post('/klienci/potencjalni/{id}/strona', [ProspectController::class, 'checkSite'], $a);
     $r->post('/klienci/potencjalni/{id}/oferta', [ProspectController::class, 'pitch'], $a);
     $r->post('/klienci/potencjalni/{id}/zaproszenie', [ProspectController::class, 'invite'], $a);
+    $r->post('/klienci/potencjalni/{id}/zgoda', [ProspectController::class, 'consent'], $a);
     $r->post('/klienci/potencjalni/{id}/kontakt', [ProspectController::class, 'contact'], $a);
     $r->get('/klienci/potencjalni/{id}/list', [ProspectController::class, 'letter'], $a);
     $r->post('/klienci/potencjalni/{id}/list', [ProspectController::class, 'letter'], $a);

@@ -74,6 +74,7 @@ final class Outreach
     public static function unsubscribe(array $contact): bool
     {
         Sequences::stopForContact((int) $contact['org_id'], (int) $contact['id'], 'unsubscribed');
+        Consents::withdrawForContact((int) $contact['org_id'], (int) $contact['id']);
         if (!empty($contact['unsubscribed_at'])) {
             return false;
         }

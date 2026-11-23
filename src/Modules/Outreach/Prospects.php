@@ -676,7 +676,7 @@ final class Prospects
      * Zgody wymaga wysłanie informacji handlowej e-mailem albo telefonicznie (art. 398 Prawa komunikacji elektronicznej).
      * @return array<int, array{key: string, title: string, level: string, text: string, notes: string[], law: string[]}>
      */
-    public static function paths(int $orgId, array $p, ?array $company, ?array $contact): array
+    public static function paths(int $orgId, array $p, ?array $company, ?array $contact, string $base = ''): array
     {
         $db = Db::get();
         $facts = self::facts($p);
@@ -700,8 +700,16 @@ final class Prospects
 
         $consented = $contact && (in_array($contact['basis'], ['consent', 'client'], true) || !empty($contact['marketing_consent_at']));
         if ($consented) {
-            $paths[] = ['key' => 'consent', 'title' => 'Wyślij ofertę e-mailem: masz zgodę', 'level' => 'low',
-                'text' => 'W kontaktach jest zapisana podstawa: ' . RiskPolicy::basisLine($contact) . '.', 'notes' => [], 'law' => []];
+            $evidence = Consents::latest($orgId, (int) $p['id']);
+            $paths[] = ['key' => 'consent', 'title' => 'Wyślij ofertę e-mailem: masz zgodę', 'level' => 'low', 'evidence' => $evidence,
+                'text' => $evidence
+                    ? ($evidence['source'] === 'page'
+                        ? 'Firma sama wpisała adres ' . $evidence['email'] . ' na stronie zgody i zaznaczyła zgodę na ofertę.'
+                        : 'Zapisałeś zgodę firmy na ofertę pod adresem ' . $evidence['email'] . '.')
+                    : 'W kontaktach jest zapisana podstawa: ' . RiskPolicy::basisLine($contact) . '.',
+                'notes' => $evidence ? ['Zgoda dotyczy oferty Twojej firmy. Pisz na adres, który podała firma, i zostaw w wiadomości link rezygnacji.'] : [],
+                'law' => $evidence ? ['Art. 398 ust. 2 Prawa komunikacji elektronicznej: zgodę można wyrazić przez udostępnienie adresu elektronicznego w celu otrzymywania informacji handlowej.',
+                    'Art. 7 ust. 1 RODO i art. 398 ust. 1: to nadawca musi umieć wykazać zgodę. Dlatego panel przechowuje jej treść, czas i źródło.'] : []];
         }
         if (!empty($facts['invite'])) {
             $i = $facts['invite'];
@@ -716,13 +724,17 @@ final class Prospects
 
         $person = self::isPerson($company);
         $address = trim((string) ($company['address'] ?? ''));
-        $paths[] = ['key' => 'letter', 'title' => 'Wyślij list pocztą', 'level' => $address !== '' ? 'low' : 'none',
+        $consentUrl = $address !== '' && !$consented ? Consents::url($p, $base) : '';
+        $paths[] = ['key' => 'letter', 'title' => $consented ? 'Wyślij list pocztą' : 'Wyślij list pocztą z prośbą o zgodę na e-mail', 'level' => $address !== '' ? 'low' : 'none',
+            'consent_url' => $consentUrl,
             'text' => $address !== ''
                 ? 'Wymóg zgody dotyczy telefonu i środków elektronicznych: e-maila, SMS-a, komunikatorów. List papierowy pod niego nie podlega. Panel przygotuje list z ofertą do druku.'
                 : 'Żeby przygotować list, potrzebny jest adres firmy z rejestrów. Dopisz NIP firmy.',
             'notes' => array_values(array_filter([
+                $consentUrl !== '' ? 'W liście jest adres strony zgody tej firmy. Firma wpisuje tam swój e-mail i zaznacza zgodę. Panel zapisuje dowód i od tej chwili oferta e-mailem ma podstawę.' : null,
+                $consentUrl !== '' ? 'Adres strony zgody podawaj tylko w liście, na wizytówce albo w rozmowie osobistej. Wysłany e-mailem albo SMS-em byłby prośbą o zgodę bez zgody.' : null,
                 $person ? 'To osoba prowadząca działalność, więc jej dane chroni RODO. List zawiera informację, skąd masz dane, i prawo sprzeciwu.' : null,
-                'W liście poproś o adres, na który możesz przesłać szczegóły. Odpowiedź z adresem jest zgodą na e-mail.',
+                $consentUrl === '' && !$consented ? 'W liście poproś o adres, na który możesz przesłać szczegóły. Odpowiedź z adresem jest zgodą na e-mail.' : null,
             ])),
             'law' => ['Art. 398 ust. 1 Prawa komunikacji elektronicznej zakazuje używania bez zgody automatycznych systemów wywołujących i telekomunikacyjnych urządzeń końcowych. List papierowy nie jest wysyłany takim urządzeniem.']
                 + ($person ? [1 => 'RODO: podstawą jest prawnie uzasadniony interes (art. 6 ust. 1 lit. f, motyw 47), a adresat ma prawo sprzeciwu (art. 21) i prawo do informacji o źródle danych (art. 14).'] : [])];
@@ -731,7 +743,7 @@ final class Prospects
             $cold = RiskPolicy::assess('cold_offer', ['basis' => 'none']);
             $paths[] = ['key' => 'email', 'title' => 'Wyślij ofertę e-mailem bez zgody', 'level' => 'very_high',
                 'text' => $cold['lead'] . ' Panel przygotuje wiadomość i pokaże ekran ryzyka. Decyzję o wysłaniu podejmujesz Ty.',
-                'notes' => ['Telefon z ofertą i prośba o zgodę wysłana e-mailem też wymagają wcześniejszej zgody.'], 'law' => $cold['law']];
+                'notes' => ['Telefon z ofertą i prośba o zgodę wysłana e-mailem też wymagają wcześniejszej zgody. Zgodę bez ryzyka zbierzesz listem ze stroną zgody.'], 'law' => $cold['law']];
         }
         return $paths;
     }
@@ -903,9 +915,11 @@ final class Prospects
      * Treść listu z ofertą: tylko fakty z listy i z biblioteki firmy. Miejsca do uzupełnienia są w nawiasach kwadratowych.
      * @return array{title: string, body: string}
      */
-    public static function letter(array $p, ?array $company, array $org, ?array $user): array
+    public static function letter(array $p, ?array $company, array $org, ?array $user, string $consentUrl = ''): array
     {
         $facts = self::facts($p);
+        // W druku adres bez „https://” jest krótszy do przepisania, a przeglądarka i tak go otworzy.
+        $shown = (string) preg_replace('~^https://~', '', $consentUrl);
         $lines = [
             date('d.m.Y'),
             '',
@@ -918,7 +932,9 @@ final class Prospects
             '',
             self::afterGreeting(self::pitch($p, $company, $org)['text']),
             '',
-            'Jeśli temat jest dla Państwa ciekawy, prosimy o odpowiedź albo o wskazanie adresu e-mail, na który możemy przesłać szczegóły.',
+            $consentUrl !== ''
+                ? 'Szczegóły chętnie prześlemy e-mailem, ale tylko za Państwa zgodą. Wystarczy wejść na stronę ' . $shown . ' i wpisać adres, na który mamy wysłać ofertę. Mogą też Państwo odpowiedzieć na ten list albo zadzwonić.'
+                : 'Jeśli temat jest dla Państwa ciekawy, prosimy o odpowiedź albo o wskazanie adresu e-mail, na który możemy przesłać szczegóły.',
             '',
             'Z poważaniem',
             trim((string) ($user['name'] ?? '')),
@@ -940,7 +956,8 @@ final class Prospects
                 . 'Nie przekazujemy ich innym odbiorcom poza dostawcą naszego systemu informatycznego. Przysługuje Państwu prawo dostępu do danych, ich sprostowania, usunięcia, ograniczenia przetwarzania, '
                 . 'sprzeciwu wobec przetwarzania do celów marketingu oraz skargi do Prezesa Urzędu Ochrony Danych Osobowych.';
         }
-        $lines[] = 'Jeśli nie chcą Państwo otrzymywać od nas korespondencji, prosimy o informację' . (!empty($user['email']) ? ' na adres ' . $user['email'] : '') . '. Nie napiszemy ponownie.';
+        $lines[] = 'Jeśli nie chcą Państwo otrzymywać od nas korespondencji, prosimy o informację' . (!empty($user['email']) ? ' na adres ' . $user['email'] : '')
+            . ($consentUrl !== '' ? ' albo o zaznaczenie tego na stronie ' . $shown : '') . '. Nie napiszemy ponownie.';
         return ['title' => 'Propozycja współpracy', 'body' => implode("\n", $lines)];
     }
 

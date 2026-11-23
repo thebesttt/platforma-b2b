@@ -15,6 +15,8 @@ $site = $facts['site'] ?? null;
 $wins = $facts['wins'] ?? null;
 $sub = array_filter([!empty($p['nip']) ? 'NIP ' . Nip::format((string) $p['nip']) : null, $company['address'] ?? $p['city'], Regions::name($p['voivodeship']) ?: null]);
 $objected = $p['status'] === 'objected';
+$hasConsent = (bool) array_filter($paths, static fn ($x) => $x['key'] === 'consent');
+$openConsent = false;
 ?>
 <header class="between page-head">
   <div class="stack-sm">
@@ -37,6 +39,9 @@ $objected = $p['status'] === 'objected';
   </div>
 </header>
 
+<?php if (!empty($facts['consent']) && !$objected && $p['status'] !== 'contacted'): ?>
+  <div class="notice low" style="margin-bottom:16px">Firma zostawiła zgodę na ofertę e-mailem <?= e(local_dt($facts['consent']['at'])) ?>. <a href="#droga-consent">Przygotuj ofertę</a>.</div>
+<?php endif ?>
 <?php if ($infoDays !== null): ?>
   <div class="notice <?= $infoDays <= 5 ? 'mid' : 'info' ?>" style="margin-bottom:16px">
     To osoba prowadząca działalność, więc jej dane chroni RODO. Masz obowiązek poinformować ją, skąd masz dane, najpóźniej w ciągu miesiąca od dodania do listy albo przy pierwszym kontakcie.
@@ -101,8 +106,17 @@ $objected = $p['status'] === 'objected';
 
           <?php if ($path['key'] === 'rfq'): ?>
             <div class="item-actions"><a class="btn sm" href="/klienci/zapytania#z<?= (int) $path['rfq_id'] ?>">Otwórz zapytanie</a></div>
-          <?php elseif ($path['key'] === 'consent'): ?>
-            <div class="item-actions"><a class="btn sm" href="/klienci/<?= (int) $contact['id'] ?>/wiadomosc?kind=consented">Przygotuj ofertę</a></div>
+          <?php elseif ($path['key'] === 'consent'): $ev = $path['evidence'] ?? null; ?>
+            <?php if ($ev): ?>
+              <blockquote class="quote small" style="margin:10px 0 0">
+                <?= $ev['source'] === 'page' ? '„' . e($ev['wording']) . '”' : e($ev['wording']) ?><br>
+                <span class="muted"><?= $ev['source'] === 'page' ? 'Strona zgody z listu' : 'Zapisane ręcznie' ?>, <?= e(local_dt($ev['created_at'])) ?><?= !empty($ev['person']) ? ', ' . e($ev['person']) : '' ?><?= !empty($ev['phone']) ? ', zgoda także na telefon: ' . e($ev['phone']) : '' ?></span>
+              </blockquote>
+            <?php endif ?>
+            <div class="item-actions">
+              <a class="btn sm" href="/klienci/<?= (int) $contact['id'] ?>/wiadomosc?kind=consented">Przygotuj ofertę</a>
+              <?php if ($ev): ?><form class="inline" method="post" action="/klienci/potencjalni/<?= $id ?>/zgoda" data-confirm="Wycofać zgodę? Oferta e-mailem do tej firmy straci podstawę."><?= csrf_field() ?><input type="hidden" name="withdraw" value="1"><button class="btn ghost sm" type="submit">Firma wycofała zgodę</button></form><?php endif ?>
+            </div>
           <?php elseif ($path['key'] === 'invite'): ?>
             <div class="item-actions">
               <form class="inline" method="post" action="/klienci/potencjalni/<?= $id ?>/kontakt"><?= csrf_field() ?><input type="hidden" name="email" value="<?= e($path['invite']['email']) ?>"><button class="btn sm" type="submit">Przygotuj ofertę na <?= e($path['invite']['email']) ?></button></form>
@@ -115,7 +129,13 @@ $objected = $p['status'] === 'objected';
               <div class="row-flex"><button class="btn sm" type="submit">Potwierdzam zaproszenie</button><button class="btn ghost sm" type="submit" name="drop" value="1" formnovalidate>To nie jest zaproszenie</button></div>
             </form>
           <?php elseif ($path['key'] === 'letter' && $path['level'] === 'low'): ?>
-            <div class="item-actions"><a class="btn sm" href="/klienci/potencjalni/<?= $id ?>/list">Przygotuj list</a></div>
+            <?php if (!empty($path['consent_url'])): ?>
+              <p class="small" style="margin:10px 0 0">Strona zgody tej firmy: <code class="copy" title="Kliknij, żeby skopiować"><?= e($path['consent_url']) ?></code></p>
+            <?php endif ?>
+            <div class="item-actions">
+              <a class="btn sm" href="/klienci/potencjalni/<?= $id ?>/list">Przygotuj list</a>
+              <?php if (!empty($path['consent_url'])): ?><a class="btn ghost sm" href="<?= e($path['consent_url']) ?>" target="_blank" rel="noopener noreferrer">Zobacz stronę zgody</a><?php endif ?>
+            </div>
           <?php elseif ($path['key'] === 'email'): ?>
             <form method="post" action="/klienci/potencjalni/<?= $id ?>/kontakt" class="form-grid two" style="margin-top:10px">
               <?= csrf_field() ?>
@@ -136,6 +156,22 @@ $objected = $p['status'] === 'objected';
             <div class="field"><label for="pi-url">Link do tej strony</label><input id="pi-url" name="url" type="url" maxlength="500" required placeholder="https://"></div>
             <div class="field"><label for="pi-email">Adres e-mail z zaproszenia</label><input id="pi-email" name="email" type="email" maxlength="200" required></div>
             <div class="field" style="grid-column:1/-1"><label class="check"><input type="checkbox" name="confirm" value="1" required> Firma prosi w tym zdaniu o przesyłanie ofert takich jak moja.</label><button class="btn ghost sm" type="submit">Zapisz zaproszenie</button></div>
+          </form>
+        </details>
+      <?php endif ?>
+      <?php if (!$objected && !$hasConsent): ?>
+        <details class="small" style="margin-top:14px"<?= $openConsent ? ' open' : '' ?> id="zgoda-reczna">
+          <summary>Firma zgodziła się inaczej, np. odpisała na list albo poprosiła o ofertę w rozmowie? Zapisz zgodę</summary>
+          <p class="muted" style="margin:10px 0 0">Zapisz tylko zgodę, którą firma naprawdę wyraziła i którą potrafisz wykazać: odpowiedź na list, notatkę ze spotkania, wiadomość od firmy. Sama wizytówka albo adres ze strony internetowej nie są zgodą.</p>
+          <form method="post" action="/klienci/potencjalni/<?= $id ?>/zgoda" class="form-grid two" style="margin-top:10px">
+            <?= csrf_field() ?>
+            <div class="field"><label for="pz-email">Adres e-mail, na który firma chce ofertę</label><input id="pz-email" name="email" type="email" maxlength="200" required></div>
+            <div class="field"><label for="pz-person">Osoba, opcjonalnie</label><input id="pz-person" name="person" type="text" maxlength="120"></div>
+            <div class="field"><label for="pz-way">Jak firma wyraziła zgodę</label>
+              <select id="pz-way" name="way" required><option value="">Wybierz</option><?php foreach (App\Modules\Outreach\Consents::MANUAL_WAYS as $k => $label): ?><option value="<?= e($k) ?>"><?= e($label) ?></option><?php endforeach ?></select></div>
+            <div class="field"><label for="pz-on">Kiedy</label><input id="pz-on" name="on" type="date" max="<?= e(today_pl()) ?>" value="<?= e(today_pl()) ?>" required></div>
+            <div class="field" style="grid-column:1/-1"><label for="pz-detail">Kto i co dokładnie powiedział albo napisał</label><textarea id="pz-detail" name="detail" rows="2" maxlength="500" required minlength="10" placeholder="np. Pani Anna Nowak, kierownik zakupów, odpisała na list: proszę o ofertę na adres zakupy@firma.pl"></textarea><span class="hint">To Twój dowód w razie sporu. Zachowaj też oryginał: list, notatkę albo wiadomość.</span></div>
+            <div class="field" style="grid-column:1/-1"><label class="check"><input type="checkbox" name="confirm" value="1" required> Firma wyraziła tę zgodę i potrafię to wykazać.</label><button class="btn ghost sm" type="submit">Zapisz zgodę</button></div>
           </form>
         </details>
       <?php endif ?>
