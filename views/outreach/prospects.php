@@ -59,7 +59,8 @@ $total = array_sum($counts);
               </div>
               <span class="row-flex" style="gap:6px">
                 <?php if ($p['status'] === 'objected'): ?><span class="chip high">sprzeciw</span><?php endif ?>
-                <?php if (!empty($facts['consent']) && $p['status'] !== 'objected'): ?><span class="chip low">zgoda na e-mail</span><?php endif ?>
+                <?php if (!empty($facts['consent']) && $p['status'] !== 'objected'): ?><span class="chip low">zgoda na e-mail</span>
+                <?php elseif (!empty($facts['report_request']) && $p['status'] !== 'objected'): ?><span class="chip info">poprosiła o raport</span><?php endif ?>
                 <?php if (!empty($facts['invite'])): ?><span class="chip low">zaprasza do ofert</span><?php elseif (!empty($facts['invite_found'])): ?><span class="chip mid">zaproszenie do potwierdzenia</span><?php endif ?>
                 <?php if ($p['enriched_at'] === null && $p['nip']): ?><span class="chip neutral">czeka na rejestry</span><?php endif ?>
                 <span class="score <?= score_class((int) $p['score']) ?>" title="Dopasowanie <?= (int) $p['score'] ?> na 100"><?= (int) $p['score'] ?></span>

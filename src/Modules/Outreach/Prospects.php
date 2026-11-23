@@ -418,9 +418,15 @@ final class Prospects
         $issues = count((array) ($facts['site']['findings'] ?? []));
         $fromWin = $winDays === null ? 0 : ($winDays <= 90 ? 20 : ($winDays <= 365 ? 10 : 0));
         $fromSite = $issues >= 3 ? 20 : ($issues >= 1 ? 10 : 0);
-        $rows[] = ['label' => 'Powód kontaktu', 'max' => 20, 'points' => max($fromWin, $fromSite),
-            'note' => $fromWin >= $fromSite && $fromWin > 0 ? 'wygrane zamówienie ' . ($winDays === 0 ? 'dziś' : $winDays . ' dni temu')
-                : ($fromSite > 0 ? $issues . ' ' . plural($issues, 'rzecz', 'rzeczy', 'rzeczy') . ' do poprawy na stronie firmy' : 'brak świeżego powodu: sprawdź stronę firmy')];
+        // Audyt strony: im niższy wynik, tym więcej jest do zaproponowania.
+        $report = ProspectAudit::report($p);
+        $fromAudit = $report === null ? 0 : ($report['score'] < 60 ? 20 : ($report['score'] < 85 ? 10 : 0));
+        $best = max($fromWin, $fromSite, $fromAudit);
+        $rows[] = ['label' => 'Powód kontaktu', 'max' => 20, 'points' => $best,
+            'note' => $best === 0 ? ($report !== null ? 'audyt strony: ' . $report['score'] . ' na 100, niewiele do poprawy' : 'brak świeżego powodu: sprawdź stronę firmy')
+                : ($fromWin === $best ? 'wygrane zamówienie ' . ($winDays === 0 ? 'dziś' : $winDays . ' dni temu')
+                    : ($fromAudit === $best ? 'audyt strony: ' . $report['score'] . ' na 100 punktów'
+                        : $issues . ' ' . plural($issues, 'rzecz', 'rzeczy', 'rzeczy') . ' do poprawy na stronie firmy'))];
 
         return [min(100, array_sum(array_column($rows, 'points'))), $rows];
     }
@@ -467,6 +473,9 @@ final class Prospects
         }
         foreach (array_slice((array) ($facts['site']['findings'] ?? []), 0, 3) as $f) {
             $out[] = 'Na stronie firmy: ' . lcfirst((string) $f);
+        }
+        if ($report = ProspectAudit::report($p)) {
+            $out[] = 'Strona ' . $report['host'] . ': ' . lcfirst(ProspectAudit::sentence($report));
         }
         return $out;
     }
@@ -732,6 +741,8 @@ final class Prospects
                 : 'Żeby przygotować list, potrzebny jest adres firmy z rejestrów. Dopisz NIP firmy.',
             'notes' => array_values(array_filter([
                 $consentUrl !== '' ? 'W liście jest adres strony zgody tej firmy. Firma wpisuje tam swój e-mail i zaznacza zgodę. Panel zapisuje dowód i od tej chwili oferta e-mailem ma podstawę.' : null,
+                $consentUrl !== '' && !empty($p['audit_id']) ? 'List obiecuje raport z audytu strony. Firma dostaje go na stronie zgody, gdy o niego poprosi. Zgoda na ofertę jest tam osobnym polem.' : null,
+                $consentUrl !== '' && empty($p['audit_id']) && !empty($p['website']) ? 'Zrób audyt strony firmy (sekcja „Strona firmy”). List obieca wtedy raport, a firmy chętniej zostawiają adres po coś konkretnego.' : null,
                 $consentUrl !== '' ? 'Adres strony zgody podawaj tylko w liście, na wizytówce albo w rozmowie osobistej. Wysłany e-mailem albo SMS-em byłby prośbą o zgodę bez zgody.' : null,
                 $person ? 'To osoba prowadząca działalność, więc jej dane chroni RODO. List zawiera informację, skąd masz dane, i prawo sprzeciwu.' : null,
                 $consentUrl === '' && !$consented ? 'W liście poproś o adres, na który możesz przesłać szczegóły. Odpowiedź z adresem jest zgodą na e-mail.' : null,
@@ -743,7 +754,10 @@ final class Prospects
             $cold = RiskPolicy::assess('cold_offer', ['basis' => 'none']);
             $paths[] = ['key' => 'email', 'title' => 'Wyślij ofertę e-mailem bez zgody', 'level' => 'very_high',
                 'text' => $cold['lead'] . ' Panel przygotuje wiadomość i pokaże ekran ryzyka. Decyzję o wysłaniu podejmujesz Ty.',
-                'notes' => ['Telefon z ofertą i prośba o zgodę wysłana e-mailem też wymagają wcześniejszej zgody. Zgodę bez ryzyka zbierzesz listem ze stroną zgody.'], 'law' => $cold['law']];
+                'notes' => array_values(array_filter([
+                    !empty($facts['report_request']) ? 'Firma poprosiła o raport z audytu na adres ' . $facts['report_request']['email'] . ' i go dostała. To nie jest zgoda na ofertę.' : null,
+                    'Telefon z ofertą i prośba o zgodę wysłana e-mailem też wymagają wcześniejszej zgody. Zgodę bez ryzyka zbierzesz listem ze stroną zgody.',
+                ])), 'law' => $cold['law']];
         }
         return $paths;
     }
@@ -824,8 +838,12 @@ final class Prospects
         $facts = self::facts($p);
         $last = $facts['wins']['rows'][0] ?? null;
         $findings = array_slice((array) ($facts['site']['findings'] ?? []), 0, 3);
+        $report = ProspectAudit::report($p);
         if ($last) {
-            $opening = 'Piszemy, ponieważ Państwa firma zawarła niedawno umowę na zamówienie „' . $last['title'] . '”.';
+            $opening = 'Piszemy, ponieważ Państwa firma zawarła niedawno umowę na zamówienie „' . $last['title'] . '”.'
+                . ($report ? ' Sprawdziliśmy też Państwa stronę ' . $report['host'] . '. ' . ProspectAudit::sentence($report) : '');
+        } elseif ($report) {
+            $opening = 'Sprawdziliśmy Państwa stronę ' . $report['host'] . '. ' . ProspectAudit::sentence($report);
         } elseif ($findings) {
             $opening = 'Zajrzeliśmy na Państwa stronę ' . ($p['host'] ?? '') . ' i zauważyliśmy ' . count($findings) . ' ' . plural(count($findings), 'rzecz', 'rzeczy', 'rzeczy')
                 . ' do poprawy: ' . implode('; ', array_map(static fn ($f) => rtrim(lcfirst((string) $f), '.'), $findings)) . '.';
@@ -892,13 +910,15 @@ final class Prospects
     }
 
     /** Wiadomość e-mail z treścią oferty: powitanie, treść, pytanie o rozmowę, podpis i stopka z rezygnacją. @return array{subject: string, body: string} */
-    public static function emailDraft(array $p, ?array $company, array $org, ?array $user, array $contact, string $unsubUrl = ''): array
+    public static function emailDraft(array $p, ?array $company, array $org, ?array $user, array $contact, string $unsubUrl = '', string $base = ''): array
     {
+        $report = ProspectAudit::report($p, $base);
         $greet = !empty($contact['person']) ? 'Dzień dobry, ' . trim((string) $contact['person']) . ',' : 'Dzień dobry,';
         $sig = trim(($user['name'] ?? '') . "\n" . ($org['name'] ?? '') . (!empty($org['phone']) ? "\ntel. " . $org['phone'] : '') . (!empty($org['website']) ? "\n" . $org['website'] : ''));
         return [
             'subject' => 'Propozycja współpracy - ' . ($org['name'] ?? ''),
             'body' => $greet . "\n\n" . self::afterGreeting(self::pitch($p, $company, $org)['text'])
+                . ($report !== null && $report['url'] !== '' ? "\n\nPełny raport z audytu strony " . $report['host'] . ': ' . $report['url'] : '')
                 . "\n\nCzy możemy umówić krótką rozmowę w przyszłym tygodniu?\n\nZ poważaniem\n" . $sig . Outreach::optOut($unsubUrl),
         ];
     }
@@ -906,7 +926,7 @@ final class Prospects
     /** Po powitaniu zakończonym przecinkiem zdanie zaczyna się małą literą. Zmieniamy tylko początki ułożone przez panel, nie nazwy własne. */
     public static function afterGreeting(string $text): string
     {
-        return preg_match('/^(Piszemy|Zajrzeliśmy)\b/u', $text) ? mb_strtolower(mb_substr($text, 0, 1)) . mb_substr($text, 1) : $text;
+        return preg_match('/^(Piszemy|Zajrzeliśmy|Sprawdziliśmy)\b/u', $text) ? mb_strtolower(mb_substr($text, 0, 1)) . mb_substr($text, 1) : $text;
     }
 
     // --- List pocztą -------------------------------------------------------------------------------------------------
@@ -920,22 +940,27 @@ final class Prospects
     {
         $facts = self::facts($p);
         $shown = Consents::printed($consentUrl);
+        $report = $consentUrl !== '' ? ProspectAudit::report($p) : null;
+        $where = 'Wystarczy wejść na stronę ' . $shown . ($qr ? ' albo zeskanować telefonem kod pod tym akapitem' : '');
         $lines = [
             date('d.m.Y'),
             '',
             (string) ($company['name'] ?? $p['name']),
             trim((string) ($company['address'] ?? '')) ?: '[adres firmy]',
             '',
-            'Dotyczy: propozycja współpracy',
+            $report !== null ? 'Dotyczy: audyt Państwa strony i propozycja współpracy' : 'Dotyczy: propozycja współpracy',
             '',
             'Szanowni Państwo,',
             '',
             self::afterGreeting(self::pitch($p, $company, $org)['text']),
             '',
-            $consentUrl !== ''
-                ? 'Szczegóły chętnie prześlemy e-mailem, ale tylko za Państwa zgodą. Wystarczy wejść na stronę ' . $shown . ($qr ? ' albo zeskanować telefonem kod pod tym akapitem' : '')
-                    . ' i wpisać adres, na który mamy wysłać ofertę. Mogą też Państwo odpowiedzieć na ten list albo zadzwonić.'
-                : 'Jeśli temat jest dla Państwa ciekawy, prosimy o odpowiedź albo o wskazanie adresu e-mail, na który możemy przesłać szczegóły.',
+            match (true) {
+                $report !== null => 'Pełny raport z audytu strony ' . $report['host'] . ' przygotowaliśmy bezpłatnie: lista rzeczy do poprawy z opisem, jak to zrobić. Wyślemy go e-mailem na Państwa prośbę. '
+                    . $where . ' i wpisać adres. Ofertę prześlemy tylko wtedy, gdy zaznaczą tam Państwo zgodę. Mogą też Państwo odpowiedzieć na ten list albo zadzwonić.',
+                $consentUrl !== '' => 'Szczegóły chętnie prześlemy e-mailem, ale tylko za Państwa zgodą. ' . $where
+                    . ' i wpisać adres, na który mamy wysłać ofertę. Mogą też Państwo odpowiedzieć na ten list albo zadzwonić.',
+                default => 'Jeśli temat jest dla Państwa ciekawy, prosimy o odpowiedź albo o wskazanie adresu e-mail, na który możemy przesłać szczegóły.',
+            },
             '',
             'Z poważaniem',
             trim((string) ($user['name'] ?? '')),

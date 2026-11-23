@@ -240,6 +240,27 @@ function demo_seed(): array
     }
     if ($row = \App\Modules\Outreach\Prospects::byNip($org, '1234563218')) {
         \App\Modules\Outreach\Prospects::setStatus($org, (int) $row['id'], 'picked');
+        // Przykładowy audyt strony tej firmy: list i strona zgody obiecują raport z niego.
+        $db->update('prospects', ['website' => 'https://przykladowa-budowlana.example', 'host' => 'przykladowa-budowlana.example'], 'id = ?', [(int) $row['id']]);
+        $find = static fn (string $id, string $cat, string $sev, int $points, string $title, string $detail = '', ?string $fix = null): array
+            => ['id' => $id, 'cat' => $cat, 'sev' => $sev, 'title' => $title, 'detail' => $detail, 'fix' => $fix, 'service' => null, 'points' => $points];
+        $aid = $db->insert('site_audits', ['org_id' => $org, 'url' => 'https://przykladowa-budowlana.example/', 'host' => 'przykladowa-budowlana.example', 'score' => 58,
+            'created_by' => $uid, 'created_at' => now_utc(), 'result_json' => json_out([
+                'scanner_version' => 'przykład', 'input' => 'przykladowa-budowlana.example', 'host' => 'przykladowa-budowlana.example', 'scanned_at' => gmdate('c'),
+                'final_url' => 'https://przykladowa-budowlana.example/', 'score' => 58, 'grade' => 'poor', 'label' => 'Potencjalny klient (dane przykładowe)',
+                'categories' => ['security' => ['label' => 'Bezpieczeństwo', 'score' => 70], 'speed' => ['label' => 'Szybkość', 'score' => 45],
+                    'seo' => ['label' => 'SEO', 'score' => 55], 'marketing' => ['label' => 'Analityka i RODO', 'score' => 50]],
+                'counts' => ['critical' => 1, 'warning' => 3, 'info' => 0, 'ok' => 3], 'services' => [], 'psi_done' => false, 'meta' => ['prestashop' => ['is' => false]],
+                'findings' => [
+                    $find('redirect', 'security', 'critical', 8, 'Adres bez szyfrowania nie przekierowuje na HTTPS', 'Wejście przez http:// zostaje na nieszyfrowanej wersji strony.', 'Ustaw stałe przekierowanie 301 z http:// na https://.'),
+                    $find('desc', 'seo', 'warning', 5, 'Strona główna nie ma opisu dla wyszukiwarek', 'Wyszukiwarka sama wybiera fragment tekstu pod tytułem w wynikach.', 'Dodaj opis do 155 znaków: co firma robi i gdzie działa.'),
+                    $find('img', 'speed', 'warning', 6, 'Zdjęcia realizacji nie są zmniejszone', 'Strona główna pobiera 6,2 MB zdjęć. Na telefonie ładuje się kilka sekund.', 'Zmniejsz zdjęcia do szerokości ekranu i zapisz w formacie WebP.'),
+                    $find('analytics', 'marketing', 'warning', 5, 'Brak pomiaru ruchu na stronie', 'Nie widać Google Analytics ani innego narzędzia. Nie wiadomo, skąd przychodzą zapytania.', 'Podłącz pomiar ruchu z banerem zgody.'),
+                    $find('tls', 'security', 'ok', 0, 'Certyfikat SSL jest ważny'),
+                    $find('title', 'seo', 'ok', 0, 'Strona ma tytuł'),
+                    $find('mobile', 'speed', 'ok', 0, 'Strona dopasowuje się do telefonu'),
+                ]])]);
+        \App\Modules\Outreach\ProspectAudit::attach($org, $row, $aid);
     }
     // Przykład zgody zapisanej ręcznie: firma poprosiła o ofertę w rozmowie. Firma z przetargów pokazuje drogę listem ze stroną zgody.
     if ($row = \App\Modules\Outreach\Prospects::byHost($org, 'firma-uslugowa.example')) {

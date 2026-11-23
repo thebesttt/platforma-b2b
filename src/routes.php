@@ -44,6 +44,8 @@ return static function (Router $r): void {
     // Strona zgody na ofertę: adres jest wydrukowany w liście wysłanym pocztą. Bez logowania, sesji i plików cookie.
     $r->get('/z/{code}', [ConsentController::class, 'page']);
     $r->post('/z/{code}', [ConsentController::class, 'page'], ['csrf' => false]);
+    // Raport z audytu strony dla firmy z listy potencjalnych klientów: link z losowym tokenem, bez logowania i plików cookie.
+    $r->get('/raport/{token}', [ConsentController::class, 'report']);
     $r->get('/wypisz/{token}', [OutreachController::class, 'unsubForm']);
     $r->post('/wypisz/{token}', [OutreachController::class, 'unsubForm'], ['csrf' => false]);
 
@@ -145,6 +147,7 @@ return static function (Router $r): void {
     $r->post('/klienci/potencjalni/{id}/oferta', [ProspectController::class, 'pitch'], $a);
     $r->post('/klienci/potencjalni/{id}/zaproszenie', [ProspectController::class, 'invite'], $a);
     $r->post('/klienci/potencjalni/{id}/zgoda', [ProspectController::class, 'consent'], $a);
+    $r->post('/klienci/potencjalni/{id}/audyt', [ProspectController::class, 'audit'], $a);
     $r->post('/klienci/potencjalni/{id}/kontakt', [ProspectController::class, 'contact'], $a);
     $r->get('/klienci/potencjalni/{id}/list', [ProspectController::class, 'letter'], $a);
     $r->post('/klienci/potencjalni/{id}/list', [ProspectController::class, 'letter'], $a);

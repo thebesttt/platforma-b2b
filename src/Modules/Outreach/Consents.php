@@ -69,19 +69,30 @@ final class Consents
         );
     }
 
-    /** Dokładna treść zgód pokazywana firmie. Zapisujemy ją razem ze zgodą. @return array{email: string, phone: string} */
-    public static function wording(string $orgName): array
+    /**
+     * Dokładna treść oświadczeń pokazywana firmie. Zapisujemy ją razem ze zgodą.
+     * Prośba o raport i zgoda na ofertę to dwa osobne pola: raportu nie uzależniamy od zgody na ofertę.
+     * @return array{email: string, phone: string, report: string}
+     */
+    public static function wording(string $orgName, string $host = ''): array
     {
         return [
             'email' => 'Zgadzam się na przesłanie przez firmę ' . $orgName . ' oferty handlowej na podany adres e-mail.',
             'phone' => 'Zgadzam się na kontakt telefoniczny firmy ' . $orgName . ' w sprawie tej oferty pod podanym numerem.',
+            'report' => 'Proszę o przesłanie raportu z audytu strony' . ($host !== '' ? ' ' . $host : '') . ' na podany adres e-mail.',
         ];
     }
 
+    /** Czy wpis obejmuje dany kanał: email (zgoda na ofertę), phone albo report (prośba o raport). */
+    public static function has(?array $row, string $channel): bool
+    {
+        return $row !== null && in_array($channel, explode(',', (string) ($row['channels'] ?? '')), true);
+    }
+
     /**
-     * Zgoda wyrażona przez firmę na stronie zgody.
-     * @param array{email?: string, person?: string, phone?: string, agree?: string, agree_phone?: string} $in
-     * @return array{ok: bool, error?: string, email?: string, repeated?: bool}
+     * Oświadczenie firmy na stronie zgody: zgoda na ofertę, prośba o raport z audytu albo jedno i drugie.
+     * @param array{email?: string, person?: string, phone?: string, agree?: string, agree_phone?: string, want_report?: string} $in
+     * @return array{ok: bool, error?: string, email?: string, repeated?: bool, offer?: bool, report?: bool}
      */
     public static function give(array $p, array $in, string $ip, string $userAgent, string $panelBase = ''): array
     {
@@ -89,22 +100,32 @@ final class Consents
         if (!filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($email) > 200) {
             return ['ok' => false, 'error' => 'Wpisz poprawny adres e-mail.'];
         }
-        if (($in['agree'] ?? '') !== '1') {
-            return ['ok' => false, 'error' => 'Zaznacz zgodę. Bez niej nie możemy wysłać oferty.'];
+        $report = ProspectAudit::report($p, $panelBase);
+        $offer = ($in['agree'] ?? '') === '1';
+        $wantReport = $report !== null && ($in['want_report'] ?? '') === '1';
+        if (!$offer && !$wantReport) {
+            return ['ok' => false, 'error' => $report !== null
+                ? 'Zaznacz, że chcą Państwo dostać raport. Bez tego nie możemy go wysłać.'
+                : 'Zaznacz zgodę. Bez niej nie możemy wysłać oferty.'];
         }
+        // Zgoda na telefon dotyczy rozmowy o ofercie, więc ma sens tylko razem ze zgodą na ofertę.
         $phone = preg_replace('/[^\d+ ]/', '', (string) ($in['phone'] ?? '')) ?? '';
-        $phoneOk = ($in['agree_phone'] ?? '') === '1';
+        $phoneOk = $offer && ($in['agree_phone'] ?? '') === '1';
         if ($phoneOk && strlen(preg_replace('/\D/', '', $phone) ?? '') < 9) {
             return ['ok' => false, 'error' => 'Żeby zgodzić się na telefon, wpisz numer.'];
         }
-        $words = self::wording((string) $p['org_name']);
+        $words = self::wording((string) $p['org_name'], (string) ($report['host'] ?? ''));
         $res = self::apply($p, [
             'email' => $email, 'person' => mb_substr(utrim((string) ($in['person'] ?? '')), 0, 120) ?: null, 'phone' => $phoneOk ? mb_substr(trim($phone), 0, 40) : null,
-            'channels' => $phoneOk ? 'email,phone' : 'email', 'wording' => $words['email'] . ($phoneOk ? ' ' . $words['phone'] : ''),
+            'channels' => implode(',', array_keys(array_filter(['report' => $wantReport, 'email' => $offer, 'phone' => $phoneOk]))),
+            'wording' => implode(' ', array_filter([$wantReport ? $words['report'] : null, $offer ? $words['email'] : null, $phoneOk ? $words['phone'] : null])),
             'source' => 'page', 'detail' => 'Strona zgody z listu', 'ip_hash' => Inbound::ipHash($ip), 'user_agent' => mb_substr($userAgent, 0, 300) ?: null, 'created_by' => null,
         ]);
-        if ($res['ok'] && empty($res['repeated'])) {
-            self::notify($p, $res, $panelBase);
+        if ($res['ok']) {
+            $res += ['offer' => $offer, 'report' => $wantReport];
+            if (empty($res['repeated'])) {
+                self::notify($p, $res, $panelBase, $wantReport ? $report : null);
+            }
         }
         return $res;
     }
@@ -152,14 +173,23 @@ final class Consents
         if ($p['status'] === 'objected' && $c['source'] !== 'page') {
             return ['ok' => false, 'error' => 'Firma zgłosiła sprzeciw. Zgodę może zostawić tylko sama, na stronie zgody.'];
         }
-        // Powtórne wysłanie tego samego formularza nie tworzy drugiego dowodu.
-        $same = $db->one('SELECT id, contact_id FROM consents WHERE org_id = ? AND prospect_id = ? AND email = ? AND source = ? AND withdrawn_at IS NULL ORDER BY id DESC LIMIT 1',
-            [$orgId, (int) $p['id'], $c['email'], $c['source']]);
-        if ($same && $c['source'] === 'page') {
-            return ['ok' => true, 'email' => $c['email'], 'contact_id' => (int) $same['contact_id'], 'repeated' => true];
+        // Powtórne wysłanie tego samego formularza nie tworzy drugiego dowodu. Nowy powstaje, gdy firma dodaje coś, czego wcześniej nie zaznaczyła.
+        $offer = in_array('email', explode(',', $c['channels']), true);
+        if ($c['source'] === 'page') {
+            $had = [];
+            $contactWas = 0;
+            foreach ($db->all('SELECT channels, contact_id FROM consents WHERE org_id = ? AND prospect_id = ? AND email = ? AND source = ? AND withdrawn_at IS NULL',
+                [$orgId, (int) $p['id'], $c['email'], 'page']) as $row) {
+                $had = array_merge($had, explode(',', (string) $row['channels']));
+                $contactWas = (int) $row['contact_id'];
+            }
+            if ($had && !array_diff(explode(',', $c['channels']), $had)) {
+                return ['ok' => true, 'email' => $c['email'], 'contact_id' => $contactWas, 'repeated' => true];
+            }
         }
         $now = now_utc();
-        $basis = [
+        // Sama prośba o raport nie jest zgodą na ofertę: kontakt powstaje, ale bez podstawy do wysyłki ofert.
+        $basis = !$offer ? [] : [
             'basis' => 'consent',
             'basis_detail' => mb_substr($c['source'] === 'page' ? 'Zgoda na stronie zgody z listu: „' . $c['wording'] . '”' : 'Zgoda zapisana ręcznie. ' . $c['wording'], 0, 500),
             'basis_at' => $on ?? today_pl(),
@@ -186,14 +216,21 @@ final class Consents
             $contactId = $db->insert('contacts', $basis + [
                 'org_id' => $orgId, 'company_name' => mb_substr((string) $p['name'], 0, 200), 'nip' => $p['nip'] ?? null, 'email' => $c['email'], 'person' => $c['person'],
                 'phone' => $c['phone'], 'website' => $p['website'] ?? null, 'company_id' => $p['company_id'] ?? null,
-                'notes' => 'Z listy potencjalnych klientów. Firma sama zostawiła adres i zgodę.', 'created_at' => $now,
-            ]);
+                'notes' => $offer ? 'Z listy potencjalnych klientów. Firma sama zostawiła adres i zgodę.'
+                    : 'Z listy potencjalnych klientów. Firma poprosiła o raport z audytu strony. Zgody na ofertę nie zaznaczyła.',
+                'created_at' => $now,
+            ] + ($offer ? [] : ['basis' => 'none']));
         }
         $db->insert('consents', array_intersect_key($c, array_flip(['email', 'phone', 'person', 'channels', 'wording', 'source', 'detail', 'ip_hash', 'user_agent', 'created_by']))
             + ['org_id' => $orgId, 'prospect_id' => (int) $p['id'], 'contact_id' => $contactId, 'created_at' => $now]);
         $facts = Prospects::facts($p);
-        $facts['consent'] = ['at' => $now, 'email' => $c['email'], 'source' => $c['source'], 'phone' => $c['phone'] !== null];
-        // Firma prosi o ofertę, więc wraca do wybranych, także po wysłanym liście i po wcześniejszym sprzeciwie.
+        if ($offer) {
+            $facts['consent'] = ['at' => $now, 'email' => $c['email'], 'source' => $c['source'], 'phone' => $c['phone'] !== null];
+        }
+        if (in_array('report', explode(',', $c['channels']), true)) {
+            $facts['report_request'] = ['at' => $now, 'email' => $c['email']];
+        }
+        // Firma prosi o ofertę albo raport, więc wraca do wybranych, także po wysłanym liście i po wcześniejszym sprzeciwie.
         $db->update('prospects', ['contact_id' => $contactId, 'facts_json' => json_out($facts), 'status' => 'picked', 'updated_at' => $now], 'id = ?', [(int) $p['id']]);
         return ['ok' => true, 'email' => $c['email'], 'contact_id' => $contactId];
     }
@@ -212,7 +249,7 @@ final class Consents
         $db->update('consents', ['withdrawn_at' => now_utc()], 'org_id = ? AND prospect_id = ? AND withdrawn_at IS NULL', [$orgId, (int) $p['id']]);
         foreach (array_unique(array_filter(array_map(static fn ($r) => (int) $r['contact_id'], $rows))) as $contactId) {
             // Zgoda z innego źródła (np. z widżetu na stronie) albo inna ważna zgoda z listy zostaje.
-            if ($db->val('SELECT 1 FROM consents WHERE org_id = ? AND contact_id = ? AND withdrawn_at IS NULL LIMIT 1', [$orgId, $contactId])) {
+            if ($db->val("SELECT 1 FROM consents WHERE org_id = ? AND contact_id = ? AND withdrawn_at IS NULL AND channels LIKE '%email%' LIMIT 1", [$orgId, $contactId])) {
                 continue;
             }
             $db->run("UPDATE contacts SET basis = 'none', basis_detail = NULL, basis_at = NULL WHERE org_id = ? AND id = ? AND basis = 'consent'", [$orgId, $contactId]);
@@ -220,42 +257,62 @@ final class Consents
                 [$orgId, $contactId, $orgId, $contactId]);
         }
         $facts = Prospects::facts($p);
-        unset($facts['consent']);
+        unset($facts['consent'], $facts['report_request']);
         $db->update('prospects', ['facts_json' => json_out($facts), 'updated_at' => now_utc()], 'id = ? AND org_id = ?', [(int) $p['id'], $orgId]);
         return true;
     }
 
-    /** Powiadomienie zespołu i potwierdzenie dla firmy. Potwierdzenie nie zawiera oferty: mówi tylko, co zapisaliśmy i jak to cofnąć. */
-    private static function notify(array $p, array $res, string $panelBase): void
+    /**
+     * Powiadomienie zespołu i potwierdzenie dla firmy. Potwierdzenie nie zawiera oferty: mówi, co zapisaliśmy i jak to cofnąć.
+     * Gdy firma poprosiła o raport, potwierdzenie niesie jego adres, bo o tę wiadomość sama poprosiła.
+     */
+    private static function notify(array $p, array $res, string $panelBase, ?array $report = null): void
     {
         try {
             $orgId = (int) $p['org_id'];
-            Mailer::notifyOrg($orgId, 'Zgoda na ofertę e-mailem: ' . truncate((string) $p['name'], 80), implode("\n", [
-                'Firma z listy potencjalnych klientów sama zostawiła adres e-mail i zgodę na ofertę.',
+            $offer = !empty($res['offer']);
+            $card = ($panelBase !== '' ? rtrim($panelBase, '/') : '') . '/klienci/potencjalni/' . (int) $p['id'];
+            Mailer::notifyOrg($orgId, ($offer ? 'Zgoda na ofertę e-mailem: ' : 'Prośba o raport z audytu: ') . truncate((string) $p['name'], 80), implode("\n", array_filter([
+                $offer ? 'Firma z listy potencjalnych klientów sama zostawiła adres e-mail i zgodę na ofertę.'
+                    : 'Firma z listy potencjalnych klientów poprosiła o raport z audytu swojej strony. Zgody na ofertę nie zaznaczyła.',
                 '',
                 'Firma: ' . $p['name'],
                 'Adres: ' . $res['email'],
+                $report !== null ? 'Raport wysłaliśmy automatycznie: ' . $report['url'] : null,
                 '',
-                'Oferta na ten adres ma teraz podstawę. Karta firmy: ' . ($panelBase !== '' ? rtrim($panelBase, '/') : '') . '/klienci/potencjalni/' . (int) $p['id'],
-            ]), 'consent');
+                $offer ? 'Oferta na ten adres ma teraz podstawę. Karta firmy: ' . $card
+                    : 'Oferta e-mailem nadal wymaga zgody. Raport prowadzi z powrotem na stronę zgody. Karta firmy: ' . $card,
+            ], static fn ($l) => $l !== null)), 'consent');
             $contact = Outreach::contact($orgId, (int) $res['contact_id']);
             $unsub = $contact ? Outreach::unsubUrl($contact, $panelBase) : '';
-            Mailer::send((string) $res['email'], 'Potwierdzenie zgody na ofertę od firmy ' . $p['org_name'], implode("\n", array_filter([
+            $subject = $report !== null ? 'Raport z audytu strony ' . $report['host'] : 'Potwierdzenie zgody na ofertę od firmy ' . $p['org_name'];
+            Mailer::send((string) $res['email'], $subject, implode("\n", array_filter([
                 'Dzień dobry,',
                 '',
-                'potwierdzamy zapisanie zgody na przesłanie oferty firmy ' . $p['org_name'] . ' na ten adres e-mail. Ofertę wyślemy osobną wiadomością.',
+                $report !== null ? 'raport z audytu strony ' . $report['host'] . ', o który Państwo poprosili, jest tutaj: ' . $report['url'] : null,
+                $report !== null ? '' : null,
+                $offer
+                    ? ($report !== null ? 'Potwierdzamy też' : 'potwierdzamy') . ' zapisanie zgody na przesłanie oferty firmy ' . $p['org_name'] . ' na ten adres e-mail. Ofertę wyślemy osobną wiadomością.'
+                    : 'Zgody na ofertę Państwo nie zaznaczyli, więc nie wyślemy żadnej innej wiadomości. Raport przygotowała firma ' . $p['org_name'] . '.',
                 '',
-                $unsub !== '' ? 'Jeśli to pomyłka albo zmienili Państwo zdanie, zgodę można wycofać tutaj: ' . $unsub : 'Jeśli to pomyłka albo zmienili Państwo zdanie, wystarczy odpisać „rezygnuję”.',
+                $unsub === '' ? 'Jeśli to pomyłka albo zmienili Państwo zdanie, wystarczy odpisać „rezygnuję”.'
+                    : ($offer ? 'Jeśli to pomyłka albo zmienili Państwo zdanie, zgodę można wycofać tutaj: ' : 'Jeśli to pomyłka, adres można wypisać tutaj: ') . $unsub,
             ], static fn ($l) => $l !== null)), $orgId, 'consent_receipt');
         } catch (\Throwable $e) {
             error_log('[consents] powiadomienie: ' . $e->getMessage());
         }
     }
 
-    /** Ostatnia ważna zgoda firmy z listy (dowód do pokazania na karcie). */
+    /** Ostatnia ważna zgoda firmy z listy na ofertę e-mailem (dowód do pokazania na karcie). Sama prośba o raport zgodą nie jest. */
     public static function latest(int $orgId, int $prospectId): ?array
     {
-        return Db::get()->one('SELECT * FROM consents WHERE org_id = ? AND prospect_id = ? AND withdrawn_at IS NULL ORDER BY id DESC LIMIT 1', [$orgId, $prospectId]);
+        return Db::get()->one("SELECT * FROM consents WHERE org_id = ? AND prospect_id = ? AND withdrawn_at IS NULL AND channels LIKE '%email%' ORDER BY id DESC LIMIT 1", [$orgId, $prospectId]);
+    }
+
+    /** Ostatnia prośba firmy o raport z audytu. */
+    public static function reportRequest(int $orgId, int $prospectId): ?array
+    {
+        return Db::get()->one("SELECT * FROM consents WHERE org_id = ? AND prospect_id = ? AND withdrawn_at IS NULL AND channels LIKE '%report%' ORDER BY id DESC LIMIT 1", [$orgId, $prospectId]);
     }
 
     /** Zgody ze strony zgody od podanej chwili, do porannego przeglądu. */
@@ -273,7 +330,7 @@ final class Consents
     {
         return Db::get()->all(
             "SELECT p.id, p.name, MAX(c.created_at) AS consent_at FROM consents c JOIN prospects p ON p.id = c.prospect_id
-              WHERE c.org_id = ? AND c.withdrawn_at IS NULL AND p.status IN ('new', 'picked') GROUP BY p.id, p.name ORDER BY consent_at DESC LIMIT 10",
+              WHERE c.org_id = ? AND c.withdrawn_at IS NULL AND c.channels LIKE '%email%' AND p.status IN ('new', 'picked') GROUP BY p.id, p.name ORDER BY consent_at DESC LIMIT 10",
             [$orgId]
         );
     }
@@ -285,8 +342,8 @@ final class Consents
         $db->update('consents', ['withdrawn_at' => now_utc()], 'org_id = ? AND contact_id = ? AND withdrawn_at IS NULL', [$orgId, $contactId]);
         foreach ($db->all('SELECT * FROM prospects WHERE org_id = ? AND contact_id = ?', [$orgId, $contactId]) as $p) {
             $facts = Prospects::facts($p);
-            if (isset($facts['consent'])) {
-                unset($facts['consent']);
+            if (isset($facts['consent']) || isset($facts['report_request'])) {
+                unset($facts['consent'], $facts['report_request']);
                 $db->update('prospects', ['facts_json' => json_out($facts)], 'id = ?', [(int) $p['id']]);
             }
         }

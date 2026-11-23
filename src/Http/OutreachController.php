@@ -255,7 +255,7 @@ final class OutreachController extends Controller
         // Firma z listy potencjalnych klientów ma już treść oferty na swojej karcie: ta sama trafia do wiadomości.
         $prospect = in_array($kind, ['cold_offer', 'consented'], true) ? Prospects::forContact($this->orgId(), (int) $c['id']) : null;
         $draft = $prospect
-            ? Prospects::emailDraft($prospect, Prospects::company($prospect), Auth::org() ?? [], Auth::user(), $c, $unsub)
+            ? Prospects::emailDraft($prospect, Prospects::company($prospect), Auth::org() ?? [], Auth::user(), $c, $unsub, $r->baseUrl())
             : Outreach::draft($kind, $c, Auth::org() ?? [], Auth::user(), $unsub);
         return $this->renderCompose($c, $kind, $draft['subject'], $draft['body']);
     }

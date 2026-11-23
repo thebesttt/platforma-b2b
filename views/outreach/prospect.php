@@ -42,6 +42,9 @@ $openConsent = false;
 <?php if (!empty($facts['consent']) && !$objected && $p['status'] !== 'contacted'): ?>
   <div class="notice low" style="margin-bottom:16px">Firma zostawiła zgodę na ofertę e-mailem <?= e(local_dt($facts['consent']['at'])) ?>. <a href="#droga-consent">Przygotuj ofertę</a>.</div>
 <?php endif ?>
+<?php if (!empty($facts['report_request']) && empty($facts['consent']) && !$objected): ?>
+  <div class="notice info" style="margin-bottom:16px">Firma poprosiła o raport z audytu <?= e(local_dt($facts['report_request']['at'])) ?> na adres <?= e($facts['report_request']['email']) ?> i dostała go od razu. Zgody na ofertę nie zaznaczyła, więc oferta e-mailem nadal jej wymaga.</div>
+<?php endif ?>
 <?php if ($infoDays !== null): ?>
   <div class="notice <?= $infoDays <= 5 ? 'mid' : 'info' ?>" style="margin-bottom:16px">
     To osoba prowadząca działalność, więc jej dane chroni RODO. Masz obowiązek poinformować ją, skąd masz dane, najpóźniej w ciągu miesiąca od dodania do listy albo przy pierwszym kontakcie.
@@ -200,7 +203,26 @@ $openConsent = false;
         <div class="field" style="flex:1 1 240px;min-width:0"><label for="ps-web">Adres strony<?= !empty($facts['website_from']) ? ' (z ' . e($facts['website_from']) . ')' : '' ?></label><input id="ps-web" name="website" type="text" maxlength="300" placeholder="firma.pl" value="<?= e((string) ($p['website'] ?? '')) ?>" required></div>
         <button class="btn ghost" type="submit" data-busy="Sprawdzam stronę…"><?= $site ? 'Sprawdź ponownie' : 'Sprawdź stronę' ?></button>
       </form>
-      <?php if (!empty($p['website'])): ?><p class="xs muted" style="margin:10px 0 0">Pełny audyt techniczny tej strony uruchomisz w zakładce <a href="/audyt">Audyt</a>.</p><?php endif ?>
+      <?php if (!empty($p['website'])): ?>
+        <div class="item" id="audyt-strony" style="margin-top:14px">
+          <?php if ($report): ?>
+            <div class="row-flex"><?= App\Core\View::partial('partials/audit_score', ['v' => ['score' => $report['score']]]) ?><strong>Audyt strony: <?= (int) $report['score'] ?> na 100 punktów</strong><span class="small muted"><?= e(local_dt($report['at'], 'd.m.Y')) ?>, do poprawy: <?= (int) $report['issues'] ?></span></div>
+            <p class="small" style="margin:8px 0 0">List i strona zgody obiecują firmie ten raport. Firma dostaje go, gdy sama o niego poprosi na stronie zgody. Treść oferty zaczyna się od wyniku.</p>
+            <?php if ($report['url'] !== ''): ?><p class="small" style="margin:8px 0 0">Adres raportu dla firmy: <code class="copy wrap" title="Kliknij, żeby skopiować"><?= e($report['url']) ?></code></p><?php endif ?>
+            <p class="xs muted" style="margin:6px 0 0">Tego adresu też nie wysyłaj e-mailem bez zgody albo prośby firmy.</p>
+            <div class="item-actions">
+              <a class="btn ghost sm" href="/audyt/<?= (int) $report['id'] ?>">Otwórz audyt</a>
+              <?php if ($report['url'] !== ''): ?><a class="btn ghost sm" href="<?= e($report['url']) ?>" target="_blank" rel="noopener noreferrer">Zobacz raport dla firmy</a><?php endif ?>
+              <form class="inline" method="post" action="/klienci/potencjalni/<?= $id ?>/audyt"><?= csrf_field() ?><button class="btn ghost sm" type="submit" data-busy="Sprawdzam stronę…">Powtórz audyt</button></form>
+              <form class="inline" method="post" action="/klienci/potencjalni/<?= $id ?>/audyt" data-confirm="Odpiąć raport? List i strona zgody przestaną go obiecywać, a adres raportu przestanie działać."><?= csrf_field() ?><input type="hidden" name="action" value="drop"><button class="btn ghost sm" type="submit">Odepnij raport</button></form>
+            </div>
+          <?php else: ?>
+            <p style="font-weight:600">Audyt strony jako zachęta</p>
+            <p class="small muted" style="margin:4px 0 0">Panel sprawdzi szyfrowanie, szybkość, podstawy pozycjonowania, pomiar ruchu i RODO. Wynik trafi do treści oferty, a list obieca firmie pełny raport. Firmy chętniej zostawiają adres e-mail po coś konkretnego.</p>
+            <div class="item-actions"><form class="inline" method="post" action="/klienci/potencjalni/<?= $id ?>/audyt"><?= csrf_field() ?><button class="btn ghost sm" type="submit" data-busy="Sprawdzam stronę…">Zrób audyt strony</button></form></div>
+          <?php endif ?>
+        </div>
+      <?php endif ?>
     </section>
   </div>
 

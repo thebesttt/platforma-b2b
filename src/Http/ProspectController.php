@@ -16,6 +16,7 @@ use App\Modules\Ai\Claude;
 use App\Modules\Offers\Docx;
 use App\Modules\Outreach\Consents;
 use App\Modules\Outreach\Outreach;
+use App\Modules\Outreach\ProspectAudit;
 use App\Modules\Outreach\Prospects;
 use App\Modules\Tenders\Regions;
 use App\Modules\Tenders\Results;
@@ -221,6 +222,28 @@ final class ProspectController extends Controller
         return $this->redirect($url, 'Zapisano zaproszenie jako podstawę kontaktu. Cytat i link zostają jako dowód.');
     }
 
+    /** Audyt strony firmy: raport, który list i strona zgody obiecują w zamian za adres e-mail. */
+    public function audit(Request $r): Response
+    {
+        $org = $this->orgId();
+        $p = Prospects::find($org, (int) $r->param('id'));
+        if (!$p) {
+            return $this->notFound();
+        }
+        $url = '/klienci/potencjalni/' . $p['id'] . '#strona';
+        if ($r->str('action') === 'drop') {
+            ProspectAudit::detach($org, $p);
+            AuditLog::add('prospect.audit_dropped', 'prospect', (int) $p['id'], [], $r->ip());
+            return $this->redirect($url, 'Raport odpięty. List i strona zgody już go nie obiecują, a jego adres przestał działać.');
+        }
+        $res = ProspectAudit::run($org, (int) Auth::id(), $p);
+        if (!$res['ok']) {
+            return $this->redirect($url, (string) $res['error'], 'error');
+        }
+        AuditLog::add('prospect.audit', 'prospect', (int) $p['id'], ['audit' => $res['id']], $r->ip());
+        return $this->redirect($url, 'Audyt gotowy. List i strona zgody obiecują teraz raport, a treść oferty zaczyna się od wyniku.');
+    }
+
     /** Zgoda firmy wyrażona poza stroną zgody (np. w odpowiedzi na list) albo wycofanie zgody. */
     public function consent(Request $r): Response
     {
@@ -314,6 +337,7 @@ final class ProspectController extends Controller
             'reasons' => Prospects::reasons($p, $company), 'paths' => Prospects::paths($org, $p, $company, $contact, $base),
             'infoDays' => Prospects::infoDaysLeft($p, $company), 'criteria' => Prospects::criteria(Auth::org()), 'title' => (string) $p['name'],
             'pitch' => Prospects::pitch($p, $company, Auth::org() ?? []), 'aiEnabled' => Claude::enabled(),
+            'report' => ProspectAudit::report($p, $base), 'reportAsked' => Consents::reportRequest($org, (int) $p['id']),
             'hasLibrary' => (bool) $this->db()->val("SELECT 1 FROM library_items WHERE org_id = ? AND kind = 'text' LIMIT 1", [$org]),
         ]);
     }

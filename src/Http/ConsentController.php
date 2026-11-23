@@ -9,7 +9,9 @@ use App\Core\Kv;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\View;
+use App\Modules\Audit\Audit;
 use App\Modules\Outreach\Consents;
+use App\Modules\Outreach\ProspectAudit;
 use App\Modules\Outreach\Prospects;
 
 /**
@@ -30,10 +32,13 @@ final class ConsentController extends Controller
         if (!$p) {
             return $render('errors/message', ['title' => 'Adres nie działa', 'message' => 'Sprawdź, czy adres jest przepisany dokładnie tak jak w liście. Kod ma 10 znaków: małe litery i cyfry.'], 404);
         }
-        $given = Consents::latest((int) $p['org_id'], (int) $p['id']);
+        $orgId = (int) $p['org_id'];
+        $report = ProspectAudit::report($p, $r->baseUrl());
+        $given = Consents::latest($orgId, (int) $p['id']);
+        $asked = $report ? Consents::reportRequest($orgId, (int) $p['id']) : null;
         $state = $p['status'] === 'objected' ? 'refused' : ($given ? 'already' : 'form');
         $error = null;
-        $email = (string) ($given['email'] ?? '');
+        $email = (string) ($given['email'] ?? $asked['email'] ?? '');
         if ($r->method === 'POST') {
             // Pole niewidoczne dla ludzi: wypełniają je tylko automaty. Udajemy powodzenie i nic nie zapisujemy.
             if ($r->str('strona_www') !== '') {
@@ -45,10 +50,13 @@ final class ConsentController extends Controller
             } else {
                 $res = Consents::give($p, $r->post, $r->ip(), $r->header('User-Agent'), $r->baseUrl());
                 if ($res['ok']) {
-                    $state = 'done';
                     $email = (string) $res['email'];
+                    $given = Consents::latest($orgId, (int) $p['id']);
+                    $asked = $report ? Consents::reportRequest($orgId, (int) $p['id']) : null;
+                    // Sama prośba o raport: firma dostaje raport, a formularz zgody na ofertę zostaje dostępny.
+                    $state = $given ? 'done' : 'sent';
                     if (empty($res['repeated'])) {
-                        $this->log($p, 'consent.given', ['channels' => ($r->str('agree_phone') === '1' ? 'email,phone' : 'email')], $r);
+                        $this->log($p, !empty($res['offer']) ? 'consent.given' : 'report.requested', ['report' => !empty($res['report']), 'phone' => $r->str('agree_phone') === '1' && !empty($res['offer'])], $r);
                     }
                 } else {
                     $error = (string) $res['error'];
@@ -58,8 +66,28 @@ final class ConsentController extends Controller
         }
         return $render('outreach/consent', [
             'p' => $p, 'state' => $state, 'error' => $error, 'email' => $email, 'in' => $r->method === 'POST' ? $r->post : [],
-            'wording' => Consents::wording((string) $p['org_name']), 'code' => (string) $r->param('code'), 'title' => 'Zgoda na ofertę e-mailem',
+            'wording' => Consents::wording((string) $p['org_name'], (string) ($report['host'] ?? '')), 'code' => (string) $r->param('code'),
+            // Raport pokazujemy dopiero firmie, która o niego poprosiła. Wcześniej strona tylko go obiecuje.
+            'report' => $report, 'reportOpen' => $asked !== null && $state !== 'refused', 'title' => $report ? 'Raport z audytu strony' : 'Zgoda na ofertę e-mailem',
         ], $error !== null ? 422 : 200);
+    }
+
+    /** Raport z audytu strony dla firmy z listy: adres z losowym tokenem, bez logowania, sesji i plików cookie. */
+    public function report(Request $r): Response
+    {
+        $headers = ['X-Robots-Tag' => 'noindex, nofollow', 'Cache-Control' => 'private, no-store', 'Content-Type' => 'text/html; charset=utf-8'];
+        $row = ProspectAudit::byToken((string) $r->param('token'));
+        if (!$row) {
+            return new Response(View::render('errors/message', ['title' => 'Link nie działa', 'message' => 'Ten link do raportu wygasł albo został wyłączony.', 'bare' => true, 'footNote' => ''], 'public'), 404, $headers);
+        }
+        $p = $row['prospect'];
+        // Zachęta do zgody na ofertę tylko wtedy, gdy firma jej jeszcze nie dała i nie zgłosiła sprzeciwu.
+        $consentUrl = $p && $p['status'] !== 'objected' && !empty($p['consent_code']) && !Consents::latest((int) $row['org_id'], (int) $p['id'])
+            ? '/z/' . $p['consent_code'] : '';
+        return new Response(View::render('audit/public', [
+            'row' => $row, 'v' => Audit::view($row), 'agency' => (string) $row['org_name'], 'consentUrl' => $consentUrl,
+            'title' => 'Raport z audytu strony ' . $row['host'], 'bare' => true, 'footNote' => '', 'wrap' => 'pub-wide',
+        ], 'public'), 200, $headers);
     }
 
     /** Wpis w dzienniku firmy, do której należy lista (odwiedzający nie jest zalogowany). */
