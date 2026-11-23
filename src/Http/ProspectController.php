@@ -230,6 +230,51 @@ final class ProspectController extends Controller
         return $this->redirect($url, 'Zapisano zaproszenie jako podstawę kontaktu. Cytat i link zostają jako dowód.');
     }
 
+    /** Listy seryjnie: jeden plik do druku dla zaznaczonych firm, adresy na koperty i zbiorcze oznaczenie wysyłki. */
+    public function letters(Request $r): Response
+    {
+        $org = $this->orgId();
+        $rows = Prospects::letterRows($org);
+        if ($r->method !== 'POST') {
+            return $this->view('outreach/prospect_letters', ['rows' => $rows, 'title' => 'Listy seryjnie']);
+        }
+        $picked = [];
+        foreach (array_unique(array_map('intval', (array) $r->input('ids', []))) as $id) {
+            if (isset($rows[$id]) && $rows[$id]['ready']) {
+                $picked[$id] = $rows[$id];
+            }
+        }
+        if (!$picked) {
+            return $this->redirect('/klienci/potencjalni/listy', 'Zaznacz co najmniej jedną firmę gotową do listu.', 'error');
+        }
+        if (count($picked) > Prospects::LETTERS_LIMIT) {
+            return $this->redirect('/klienci/potencjalni/listy', 'Najwyżej ' . Prospects::LETTERS_LIMIT . ' listów w jednym pliku. Odznacz część firm i pobierz drugą paczkę osobno.', 'error');
+        }
+        $n = count($picked);
+        $stamp = date('Y-m-d');
+        if ($r->str('action') === 'sent') {
+            foreach (array_keys($picked) as $id) {
+                Prospects::markContacted($org, $id, 'letter', (int) Auth::id());
+            }
+            AuditLog::add('prospect.letters_sent', 'organization', $org, ['count' => $n], $r->ip());
+            return $this->redirect('/klienci/potencjalni?stan=contacted', 'Oznaczono ' . $n . ' ' . plural($n, 'list jako wysłany', 'listy jako wysłane', 'listów jako wysłane') . '. Lejek liczy od teraz wejścia na strony zgody.');
+        }
+        if ($r->str('action') === 'addresses') {
+            AuditLog::add('prospect.letters_addresses', 'organization', $org, ['count' => $n], $r->ip());
+            return Response::download(Prospects::addressesCsv($picked), 'adresy-' . $stamp . '.csv', 'text/csv; charset=utf-8');
+        }
+        $docs = [];
+        foreach ($picked as $row) {
+            $url = Consents::url($row['p'], $r->baseUrl());
+            $qr = $url !== '' ? Qr::png($url, 10) : null;
+            $letter = Prospects::letter($row['p'], $row['company'], Auth::org() ?? [], Auth::user(), $url, $qr !== null);
+            $docs[] = ['title' => $letter['title'], 'body' => $letter['body'],
+                'image' => $qr !== null ? ['png' => $qr, 'after' => Consents::printed($url), 'cm' => 3.0, 'alt' => 'Kod QR z adresem strony zgody'] : null];
+        }
+        AuditLog::add('prospect.letters', 'organization', $org, ['count' => $n], $r->ip());
+        return Response::download(Docx::buildMany($docs), 'listy-' . $stamp . '.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    }
+
     /** Audyt strony firmy: raport, który list i strona zgody obiecują w zamian za adres e-mail. */
     public function audit(Request $r): Response
     {

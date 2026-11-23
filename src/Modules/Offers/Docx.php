@@ -13,6 +13,30 @@ final class Docx
      */
     public static function build(string $title, array $sections, bool $stripMarkers = true, ?array $image = null): string
     {
+        $images = [];
+        return self::pack(self::paragraphs($title, $sections, $stripMarkers, $image, $images), $images);
+    }
+
+    /**
+     * Kilka dokumentów w jednym pliku, każdy od nowej strony. Do druku listów seryjnych: jeden plik, jedna kolejka wydruku.
+     * @param array<int, array{title: string, body: string, image?: ?array{png: string, after: string, cm?: float, alt?: string}}> $docs
+     */
+    public static function buildMany(array $docs): string
+    {
+        $images = [];
+        $p = [];
+        foreach (array_values($docs) as $i => $d) {
+            if ($i > 0) {
+                $p[] = '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+            }
+            array_push($p, ...self::paragraphs((string) $d['title'], [['title' => '', 'body' => (string) $d['body']]], false, $d['image'] ?? null, $images));
+        }
+        return self::pack($p, $images);
+    }
+
+    /** Akapity jednego dokumentu. Obraz trafia do wspólnej listy $images, a akapit dostaje jego kolejny numer. @return string[] */
+    private static function paragraphs(string $title, array $sections, bool $stripMarkers, ?array $image, array &$images): array
+    {
         $p = [];
         $placed = false;
         $p[] = self::para($title, 'Title');
@@ -27,16 +51,23 @@ final class Docx
                 }
                 $p[] = self::para($line);
                 if ($image !== null && !$placed && $image['after'] !== '' && str_contains($line, $image['after'])) {
-                    $p[] = self::picture((float) ($image['cm'] ?? 3.0), (string) ($image['alt'] ?? ''));
+                    $images[] = (string) $image['png'];
+                    $p[] = self::picture(count($images), (float) ($image['cm'] ?? 3.0), (string) ($image['alt'] ?? ''));
                     $placed = true;
                 }
             }
         }
+        return $p;
+    }
+
+    /** Składa plik .docx z gotowych akapitów i obrazów (word/media/image1.png, image2.png itd.). */
+    private static function pack(array $paragraphs, array $images): string
+    {
         $doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
-            . ($placed ? ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"' : '')
+            . ($images ? ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"' : '')
             . '><w:body>'
-            . implode('', $p)
+            . implode('', $paragraphs)
             . '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr>'
             . '</w:body></w:document>';
         $styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
@@ -47,15 +78,19 @@ final class Docx
             . '<w:style w:type="paragraph" w:styleId="Title"><w:name w:val="Title"/><w:basedOn w:val="Normal"/><w:pPr><w:spacing w:after="240"/></w:pPr><w:rPr><w:b/><w:sz w:val="32"/></w:rPr></w:style>'
             . '<w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:pPr><w:keepNext/><w:spacing w:before="240" w:after="120"/><w:outlineLvl w:val="0"/></w:pPr><w:rPr><w:b/><w:sz w:val="26"/></w:rPr></w:style>'
             . '</w:styles>';
+        $rels = '';
+        foreach (array_keys($images) as $i) {
+            $rels .= '<Relationship Id="rId' . ($i + 2) . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image' . ($i + 1) . '.png"/>';
+        }
         $tmp = tempnam(sys_get_temp_dir(), 'docx');
         $zip = new \ZipArchive();
         $zip->open($tmp, \ZipArchive::OVERWRITE);
-        $zip->addFromString('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>' . ($placed ? '<Default Extension="png" ContentType="image/png"/>' : '') . '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>');
+        $zip->addFromString('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>' . ($images ? '<Default Extension="png" ContentType="image/png"/>' : '') . '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>');
         $zip->addFromString('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
         $zip->addFromString('word/_rels/document.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
-            . ($placed ? '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image1.png"/>' : '') . '</Relationships>');
-        if ($placed) {
-            $zip->addFromString('word/media/image1.png', $image['png']);
+            . $rels . '</Relationships>');
+        foreach ($images as $i => $png) {
+            $zip->addFromString('word/media/image' . ($i + 1) . '.png', $png);
         }
         $zip->addFromString('word/document.xml', $doc);
         $zip->addFromString('word/styles.xml', $styles);
@@ -65,16 +100,16 @@ final class Docx
         return $bin;
     }
 
-    /** Akapit z jednym obrazem (word/media/image1.png) o boku podanym w centymetrach. */
-    private static function picture(float $cm, string $alt): string
+    /** Akapit z obrazem numer $n (word/media/image$n.png) o boku podanym w centymetrach. */
+    private static function picture(int $n, float $cm, string $alt): string
     {
         $emu = (int) round(max(1.0, min(15.0, $cm)) * 360000);
         $alt = htmlspecialchars($alt, ENT_XML1 | ENT_QUOTES, 'UTF-8');
         return '<w:p><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="' . $emu . '" cy="' . $emu . '"/>'
-            . '<wp:docPr id="1" name="Obraz 1" descr="' . $alt . '"/>'
+            . '<wp:docPr id="' . $n . '" name="Obraz ' . $n . '" descr="' . $alt . '"/>'
             . '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">'
-            . '<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="1" name="image1.png" descr="' . $alt . '"/><pic:cNvPicPr/></pic:nvPicPr>'
-            . '<pic:blipFill><a:blip r:embed="rId2"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>'
+            . '<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="' . $n . '" name="image' . $n . '.png" descr="' . $alt . '"/><pic:cNvPicPr/></pic:nvPicPr>'
+            . '<pic:blipFill><a:blip r:embed="rId' . ($n + 1) . '"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>'
             . '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' . $emu . '" cy="' . $emu . '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic>'
             . '</a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>';
     }

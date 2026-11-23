@@ -999,6 +999,67 @@ final class Prospects
         return ['title' => 'Propozycja współpracy', 'body' => implode("\n", $lines)];
     }
 
+    // --- Listy seryjnie ----------------------------------------------------------------------------------------------
+
+    /** Ile listów trafia najwyżej do jednego pliku. */
+    public const LETTERS_LIMIT = 50;
+
+    /**
+     * Firmy do listów seryjnych: wybrane, do oceny i po kontakcie, razem z adresem z rejestrów i historią listów.
+     * Gotowa do listu jest firma z adresem i bez zgody na e-mail (firmie ze zgodą wysyłasz ofertę e-mailem).
+     * @return array<int, array{p: array, company: ?array, name: string, address: string, letters: int, last: ?string, consent: bool, ready: bool, checked: bool, why: string}>
+     */
+    public static function letterRows(int $orgId): array
+    {
+        $db = Db::get();
+        $sent = [];
+        foreach ($db->all("SELECT prospect_id, COUNT(*) AS n, MAX(created_at) AS last FROM prospect_events WHERE org_id = ? AND kind = 'letter' GROUP BY prospect_id", [$orgId]) as $r) {
+            $sent[(int) $r['prospect_id']] = [(int) $r['n'], (string) $r['last']];
+        }
+        $out = [];
+        $rows = $db->all("SELECT * FROM prospects WHERE org_id = ? AND status IN ('new', 'picked', 'contacted')
+            ORDER BY CASE status WHEN 'picked' THEN 0 WHEN 'new' THEN 1 ELSE 2 END, score DESC, id LIMIT 300", [$orgId]);
+        foreach ($rows as $p) {
+            $company = self::company($p);
+            $address = trim((string) ($company['address'] ?? ''));
+            $consent = !empty(self::facts($p)['consent']);
+            [$n, $last] = $sent[(int) $p['id']] ?? [0, null];
+            $ready = $address !== '' && !$consent;
+            $out[(int) $p['id']] = [
+                'p' => $p, 'company' => $company, 'name' => (string) ($company['name'] ?? $p['name']), 'address' => $address, 'letters' => $n, 'last' => $last,
+                'consent' => $consent, 'ready' => $ready, 'checked' => $ready && $p['status'] === 'picked' && $n === 0,
+                'why' => $consent ? 'ma zgodę na e-mail: wyślij ofertę e-mailem' : ($address === '' ? 'brak adresu: dopisz NIP na karcie firmy' : ''),
+            ];
+        }
+        return $out;
+    }
+
+    /** Adres z rejestru rozbity na pola do etykiet i korespondencji seryjnej. @return array{street: string, zip: string, city: string} */
+    public static function addressParts(string $address): array
+    {
+        $address = trim((string) preg_replace('/\s+/u', ' ', $address));
+        if (preg_match('/^(.*?)[,\s]+(\d{2}-\d{3})\s+(.+)$/u', $address, $m)) {
+            return ['street' => trim($m[1], ' ,'), 'zip' => $m[2], 'city' => trim($m[3], ' ,')];
+        }
+        return ['street' => $address, 'zip' => '', 'city' => ''];
+    }
+
+    /** Plik CSV z adresami zaznaczonych firm: średnik i znacznik UTF-8, żeby Excel otworzył go od razu z polskimi znakami. */
+    public static function addressesCsv(array $rows): string
+    {
+        // Wartość zaczynająca się od znaku formuły dostaje apostrof, żeby arkusz nie potraktował jej jak polecenia.
+        $cell = static function (string $v): string {
+            $v = preg_match('/^[=+\-@\t\r]/', $v) ? "'" . $v : $v;
+            return '"' . str_replace('"', '""', $v) . '"';
+        };
+        $lines = [implode(';', array_map($cell, ['Firma', 'Ulica i numer', 'Kod pocztowy', 'Miejscowość']))];
+        foreach ($rows as $row) {
+            $a = self::addressParts($row['address']);
+            $lines[] = implode(';', array_map($cell, [$row['name'], $a['street'], $a['zip'], $a['city']]));
+        }
+        return "\xEF\xBB\xBF" . implode("\r\n", $lines) . "\r\n";
+    }
+
     // --- Stany -------------------------------------------------------------------------------------------------------
 
     public static function setStatus(int $orgId, int $id, string $status): bool
