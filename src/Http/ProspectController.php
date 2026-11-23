@@ -14,6 +14,7 @@ use App\Core\Session;
 use App\Core\View;
 use App\Modules\Ai\Claude;
 use App\Modules\Offers\Docx;
+use App\Modules\Companies\Ceidg;
 use App\Modules\Outreach\Consents;
 use App\Modules\Outreach\Outreach;
 use App\Modules\Outreach\ProspectAudit;
@@ -36,6 +37,10 @@ final class ProspectController extends Controller
             'dni' => in_array($r->int('dni'), [30, 90, 180, 365], true) ? $r->int('dni') : 180];
         $searched = $r->str('szukaj') === '1';
         $period = isset(ProspectEvents::PERIODS[$r->int('okres', 90)]) ? $r->int('okres', 90) : 90;
+        // Wyszukiwanie w CEIDG: tylko gdy jest token i użytkownik kliknął „Szukaj”.
+        $cf = ['pkd' => mb_substr($r->str('pkd'), 0, 60), 'woj' => isset(Regions::ALL[$r->str('cwoj')]) ? $r->str('cwoj') : '', 'miasto' => mb_substr($r->str('miasto'), 0, 60),
+            'dni' => isset(Ceidg::SINCE[$r->int('od')]) ? $r->int('od') : 0];
+        $ceidg = $r->str('ceidg') === '1' && Ceidg::enabled() ? Prospects::ceidgSearch($org, $cf) : null;
         $cardUrl = Consents::orgUrl(Auth::org() ?? [], $r->baseUrl());
         return $this->view('outreach/prospects', [
             'rows' => Prospects::listing($org, $status), 'counts' => Prospects::counts($org), 'status' => $status,
@@ -44,6 +49,7 @@ final class ProspectController extends Controller
             'coverage' => Results::coverage(), 'waiting' => Consents::waiting($org), 'title' => 'Potencjalni klienci',
             'period' => $period, 'funnel' => ProspectEvents::funnel($org, $period),
             'cardUrl' => $cardUrl, 'cardQr' => $cardUrl !== '' ? Qr::png($cardUrl, 6) : null,
+            'ceidgOn' => Ceidg::enabled(), 'ceidgFilters' => $cf, 'ceidg' => $ceidg,
         ]);
     }
 
@@ -62,6 +68,16 @@ final class ProspectController extends Controller
         Prospects::saveCriteria($this->orgId(), ['keywords' => $r->str('keywords'), 'regions' => (array) $r->input('regions', []), 'min_years' => $r->int('min_years', 2)]);
         AuditLog::add('prospect.criteria', 'organization', $this->orgId(), [], $r->ip());
         return $this->redirect('/klienci/potencjalni', 'Zapisano. Punkty dopasowania na liście są przeliczone.');
+    }
+
+    public function addFromCeidg(Request $r): Response
+    {
+        $n = Prospects::addFromCeidg($this->orgId(), (int) Auth::id(), array_map('strval', (array) $r->input('nips', [])));
+        if ($n === 0) {
+            return $this->redirect('/klienci/potencjalni#ceidg', 'Zaznacz firmy z wyników. Jeśli od wyszukiwania minęło pół godziny, wyszukaj ponownie.', 'error');
+        }
+        AuditLog::add('prospect.add_ceidg', 'organization', $this->orgId(), ['count' => $n], $r->ip());
+        return $this->redirect('/klienci/potencjalni', 'Dodano ' . $n . ' ' . plural($n, 'firmę', 'firmy', 'firm') . ' z CEIDG. To osoby prowadzące działalność: list do nich ma informację o danych osobowych, a karta liczy termin na jej przekazanie.');
     }
 
     public function addFromResults(Request $r): Response

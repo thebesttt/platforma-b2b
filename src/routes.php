@@ -142,6 +142,7 @@ return static function (Router $r): void {
     $r->get('/klienci/potencjalni/listy', [ProspectController::class, 'letters'], $a);
     $r->post('/klienci/potencjalni/listy', [ProspectController::class, 'letters'], $a);
     $r->post('/klienci/potencjalni/z-przetargow', [ProspectController::class, 'addFromResults'], $a);
+    $r->post('/klienci/potencjalni/z-ceidg', [ProspectController::class, 'addFromCeidg'], $a);
     $r->post('/klienci/potencjalni/lista', [ProspectController::class, 'addList'], $a);
     $r->post('/klienci/potencjalni/krok', [ProspectController::class, 'step'], $a);
     $r->get('/klienci/potencjalni/{id}', [ProspectController::class, 'show'], $a);
@@ -200,6 +201,7 @@ return static function (Router $r): void {
     $r->post('/ustawienia/haslo', [SettingsController::class, 'password'], $a);
     $r->post('/ustawienia/zespol', [SettingsController::class, 'invite'], $a);
     $r->post('/ustawienia/test-ai', [SettingsController::class, 'testAi'], $a);
+    $r->post('/ustawienia/test-ceidg', [SettingsController::class, 'testCeidg'], $a);
     $r->post('/ustawienia/wyglad', [SettingsController::class, 'appearance'], $a);
     $r->post('/ustawienia/test-poczty', [SettingsController::class, 'testMail'], $a);
     $r->post('/ustawienia/przeglad', [SettingsController::class, 'digest'], $a);

@@ -6,6 +6,7 @@ use App\Modules\Tenders\Regions;
  * @var int $pending ile firm czeka na dane z rejestrów @var array $filters @var bool $searched @var array $candidates @var array $coverage
  * @var array $funnel lejek listów @var int $period okres lejka w dniach, 0 = od początku
  * @var string $cardUrl adres ogólnej strony zgody @var ?string $cardQr obraz PNG kodu QR tej strony
+ * @var bool $ceidgOn czy jest token CEIDG @var array $ceidgFilters @var ?array $ceidg wynik wyszukiwania w CEIDG
  */
 $share = static fn (int $n): string => $funnel['firms'] > 0 ? (int) round($n / $funnel['firms'] * 100) . '%' : '';
 $tabs = ['new' => 'Do oceny', 'picked' => 'Wybrane', 'contacted' => 'Po kontakcie', 'skipped' => 'Pominięte'];
@@ -147,6 +148,56 @@ $total = array_sum($counts);
         <?php endif ?>
       </div>
     <?php endif ?>
+
+    <div class="src-step" id="ceidg" style="margin-top:20px">
+      <h3>Jednoosobowe działalności z CEIDG</h3>
+      <?php if (!$ceidgOn): ?>
+        <p class="small muted" style="margin:6px 0 10px">Panel może szukać firm w CEIDG po branży (kod PKD), województwie, mieście i dacie założenia. Dostęp jest bezpłatny, ale wymaga tokenu, o który występuje właściciel firmy:</p>
+        <ol class="law">
+          <li>Zaloguj się profilem zaufanym w hurtowni danych: <a href="https://dane.biznes.gov.pl" target="_blank" rel="noopener noreferrer">dane.biznes.gov.pl</a>.</li>
+          <li>Złóż na biznes.gov.pl „Wniosek o dostęp do raportów CEIDG” i zaakceptuj oświadczenie o przetwarzaniu danych.</li>
+          <li>Token przyjdzie e-mailem. Wpisz go w Render jako zmienną <code>CEIDG_TOKEN</code>.</li>
+          <li>W Ustawieniach kliknij „Sprawdź połączenie z CEIDG”.</li>
+        </ol>
+      <?php else: ?>
+        <p class="small muted" style="margin:6px 0 12px">Aktywne działalności o podanej branży. Z CEIDG bierzemy nazwę, NIP, adres i datę rozpoczęcia. Adresów e-mail i telefonów nie pobieramy.</p>
+        <form method="get" action="/klienci/potencjalni#ceidg" class="form-grid">
+          <input type="hidden" name="ceidg" value="1">
+          <div class="field"><label for="pc-pkd">Kody PKD</label><input id="pc-pkd" name="pkd" type="text" maxlength="60" required placeholder="np. 41.20.Z, 43.31.Z" value="<?= e($ceidgFilters['pkd']) ?>"><span class="hint">Najwyżej 5 kodów podklas, po przecinku. Kody są w <a href="https://bip.stat.gov.pl/dzialalnosc-statystyki-publicznej/rejestr-regon/pkd-2025" target="_blank" rel="noopener noreferrer">klasyfikacji PKD na stronie GUS</a>.</span></div>
+          <div class="field"><label for="pc-woj">Województwo</label><select id="pc-woj" name="cwoj"><option value="">Cała Polska</option><?php foreach (Regions::ALL as $slug => $r): ?><option value="<?= e($slug) ?>"<?= $ceidgFilters['woj'] === $slug ? ' selected' : '' ?>><?= e($r[0]) ?></option><?php endforeach ?></select></div>
+          <div class="field"><label for="pc-city">Miasto, opcjonalnie</label><input id="pc-city" name="miasto" type="text" maxlength="60" value="<?= e($ceidgFilters['miasto']) ?>"></div>
+          <div class="field"><label for="pc-od">Założone</label><select id="pc-od" name="od"><?php foreach (App\Modules\Companies\Ceidg::SINCE as $d => $label): ?><option value="<?= (int) $d ?>"<?= $ceidgFilters['dni'] === $d ? ' selected' : '' ?>><?= e($label) ?></option><?php endforeach ?></select></div>
+          <div class="field" style="align-self:end"><button class="btn ghost" type="submit" data-busy="Szukam w CEIDG…">Szukaj w CEIDG</button></div>
+        </form>
+        <?php if ($ceidg !== null && !$ceidg['ok']): ?>
+          <p class="small" style="margin:12px 0 0;color:var(--high)" role="alert"><?= e($ceidg['error']) ?></p>
+        <?php elseif ($ceidg !== null && $ceidg['rows']): ?>
+          <form method="post" action="/klienci/potencjalni/z-ceidg" style="margin-top:14px">
+            <?= csrf_field() ?>
+            <p class="small" style="margin:0 0 10px"><strong><?= count($ceidg['rows']) ?> <?= plural(count($ceidg['rows']), 'firma', 'firmy', 'firm') ?></strong> spoza Twojej listy<?= $ceidg['count'] > count($ceidg['rows']) + $ceidg['known'] ? ' (CEIDG ma ' . (int) $ceidg['count'] . ' pasujących wpisów, pokazujemy pierwszą stronę: zawęź miasto albo okres)' : '' ?><?= $ceidg['known'] ? '. Na liście masz już ' . (int) $ceidg['known'] . ' z tej strony wyników' : '' ?>.</p>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th scope="col"><span class="sr-only">Zaznacz</span></th><th scope="col">Firma</th><th scope="col">Adres</th><th scope="col">Działa od</th></tr></thead>
+                <tbody>
+                  <?php foreach ($ceidg['rows'] as $i => $c): ?>
+                    <tr>
+                      <td><input type="checkbox" id="cei-<?= $i ?>" name="nips[]" value="<?= e($c['nip']) ?>" style="width:18px;height:18px"></td>
+                      <td><label for="cei-<?= $i ?>"><strong><?= e($c['name']) ?></strong></label><div class="t-sub"><?= e(implode(' · ', array_filter([$c['owner'], 'NIP ' . App\Core\Nip::format($c['nip'])]))) ?></div></td>
+                      <td class="small"><?= $c['address'] !== '' ? e($c['address']) : '<span class="muted">brak w rejestrze</span>' ?></td>
+                      <td class="nowrap"><?= $c['started'] ? e(date('d.m.Y', strtotime($c['started']))) : '<span class="muted">brak</span>' ?></td>
+                    </tr>
+                  <?php endforeach ?>
+                </tbody>
+              </table>
+            </div>
+            <p class="xs muted" style="margin:10px 0 0">Wpisy w CEIDG to osoby prowadzące działalność, więc ich dane chroni RODO. List do takiej firmy ma informację o danych osobowych, a karta liczy 30 dni na jej przekazanie. Sprzeciw kończy kontakt.</p>
+            <div style="margin-top:12px"><button class="btn" type="submit">Dodaj zaznaczone do listy</button></div>
+          </form>
+        <?php elseif ($ceidg !== null): ?>
+          <p class="small" style="margin:12px 0 0">Przy tych filtrach CEIDG nie ma nowych firm<?= !empty($ceidg['known']) ? ' (' . (int) $ceidg['known'] . ' już jest na Twojej liście)' : '' ?>. Zmień kod PKD, okres albo województwo.</p>
+        <?php endif ?>
+      <?php endif ?>
+    </div>
   </section>
 
   <section class="card" id="kod-qr" aria-labelledby="t-card">

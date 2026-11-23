@@ -7,6 +7,7 @@ namespace App\Modules\Outreach;
 use App\Core\Brand;
 use App\Core\Db;
 use App\Core\Nip;
+use App\Modules\Companies\Ceidg;
 use App\Modules\Companies\Companies;
 use App\Modules\Companies\Registries;
 use App\Modules\Content\Fetcher;
@@ -28,7 +29,7 @@ use App\Modules\Tenders\Results;
 final class Prospects
 {
     public const STATUSES = ['new' => 'do oceny', 'picked' => 'wybrane', 'contacted' => 'po kontakcie', 'skipped' => 'pominięte', 'objected' => 'sprzeciw'];
-    public const SOURCES = ['results' => 'wyniki przetargów', 'list' => 'Twoja lista', 'qr' => 'kod QR firmy'];
+    public const SOURCES = ['results' => 'wyniki przetargów', 'list' => 'Twoja lista', 'qr' => 'kod QR firmy', 'ceidg' => 'CEIDG'];
     /** Tyle wierszy przyjmujemy z jednego wklejenia i tyle firm z jednego wyszukiwania. */
     public const PASTE_LIMIT = 50;
     public const PICK_LIMIT = 40;
@@ -225,6 +226,61 @@ final class Prospects
         }
         $name = utrim(trim($rest, " \t,;|-"));
         return ['nip' => $nip, 'website' => $website, 'host' => $host, 'name' => mb_substr($name !== '' && mb_strlen($name) >= 3 ? $name : ($host ?? 'NIP ' . Nip::format((string) $nip)), 0, 200)];
+    }
+
+    /**
+     * Wyszukiwanie w CEIDG: jednoosobowe działalności po kodzie PKD i regionie, bez firm, które już są na liście.
+     * Wynik zapamiętujemy na pół godziny, żeby przy dodawaniu wziąć dane z rejestru, a nie z formularza.
+     * @return array{ok: bool, rows?: array, count?: int, known?: int, error?: string}
+     */
+    public static function ceidgSearch(int $orgId, array $f): array
+    {
+        $res = Ceidg::search($f);
+        if (!$res['ok']) {
+            return $res;
+        }
+        $db = Db::get();
+        $own = Nip::clean((string) $db->val('SELECT nip FROM organizations WHERE id = ?', [$orgId]));
+        $onList = array_flip(array_map('strval', array_column($db->all('SELECT nip FROM prospects WHERE org_id = ? AND nip IS NOT NULL', [$orgId]), 'nip')));
+        $rows = [];
+        $known = 0;
+        foreach ($res['rows'] as $row) {
+            if ($row['nip'] === $own) {
+                continue;
+            }
+            if (isset($onList[$row['nip']])) {
+                $known++;
+                continue;
+            }
+            $rows[$row['nip']] = $row;
+        }
+        \App\Core\Kv::set('ceidg-wynik:' . $orgId, $rows, 1800);
+        return ['ok' => true, 'rows' => array_values($rows), 'count' => (int) $res['count'], 'known' => $known];
+    }
+
+    /** Dodaje do listy firmy zaznaczone w ostatnim wyniku z CEIDG. Adres i datę rozpoczęcia bierzemy z rejestru. @return int ile firm doszło */
+    public static function addFromCeidg(int $orgId, int $userId, array $nips): int
+    {
+        $found = \App\Core\Kv::get('ceidg-wynik:' . $orgId);
+        $found = is_array($found) ? $found : [];
+        $org = Db::get()->one('SELECT * FROM organizations WHERE id = ?', [$orgId]);
+        $added = 0;
+        foreach (array_slice(array_unique(array_map(static fn ($n) => Nip::clean((string) $n), $nips)), 0, self::PICK_LIMIT) as $nip) {
+            $row = $found[$nip] ?? null;
+            if (!is_array($row) || self::byNip($orgId, $nip)) {
+                continue;
+            }
+            $id = self::insert($orgId, $userId, [
+                'name' => $row['name'], 'nip' => $nip, 'source' => 'ceidg', 'company_id' => Ceidg::saveCompany($row),
+                'city' => $row['city'] !== '' ? mb_convert_case(mb_strtolower($row['city']), MB_CASE_TITLE) : null, 'voivodeship' => $row['voivodeship'] ?: null,
+                'facts_json' => json_out(['ceidg' => ['owner' => $row['owner'], 'started' => $row['started']]]),
+                // Firma trafia też do kolejki rejestrów: wykaz VAT dopisze ryzyko płatnicze, jeśli ją zna.
+                'enriched_at' => null,
+            ]);
+            self::rescore(self::find($orgId, $id) ?? [], $org);
+            $added++;
+        }
+        return $added;
     }
 
     /**
@@ -481,12 +537,18 @@ final class Prospects
         // Audyt strony: im niższy wynik, tym więcej jest do zaproponowania.
         $report = ProspectAudit::report($p);
         $fromAudit = $report === null ? 0 : ($report['score'] < 60 ? 20 : ($report['score'] < 85 ? 10 : 0));
-        $best = max($fromWin, $fromSite, $fromAudit);
+        // Świeżo założona firma dopiero buduje stronę i reklamę: to też powód, żeby się odezwać.
+        // Liczymy tylko datę rozpoczęcia z CEIDG. Data z wykazu VAT to dzień rejestracji do VAT, a nie założenia firmy.
+        $started = (string) ($facts['ceidg']['started'] ?? '');
+        $ageDays = $started !== '' ? (int) floor((time() - strtotime($started)) / 86400) : null;
+        $fromNew = $ageDays === null || $ageDays < 0 ? 0 : ($ageDays <= 90 ? 20 : ($ageDays <= 365 ? 10 : 0));
+        $best = max($fromWin, $fromSite, $fromAudit, $fromNew);
         $rows[] = ['label' => 'Powód kontaktu', 'max' => 20, 'points' => $best,
             'note' => $best === 0 ? ($report !== null ? 'audyt strony: ' . $report['score'] . ' na 100, niewiele do poprawy' : 'brak świeżego powodu: sprawdź stronę firmy')
                 : ($fromWin === $best ? 'wygrane zamówienie ' . ($winDays === 0 ? 'dziś' : $winDays . ' dni temu')
+                    : ($fromNew === $best && $fromAudit < $best && $fromSite < $best ? 'nowa firma: działa od ' . $ageDays . ' ' . plural((int) $ageDays, 'dnia', 'dni', 'dni')
                     : ($fromAudit === $best ? 'audyt strony: ' . $report['score'] . ' na 100 punktów'
-                        : $issues . ' ' . plural($issues, 'rzecz', 'rzeczy', 'rzeczy') . ' do poprawy na stronie firmy'))];
+                        : $issues . ' ' . plural($issues, 'rzecz', 'rzeczy', 'rzeczy') . ' do poprawy na stronie firmy')))];
 
         return [min(100, array_sum(array_column($rows, 'points'))), $rows];
     }
@@ -907,6 +969,8 @@ final class Prospects
         } elseif ($findings) {
             $opening = 'Zajrzeliśmy na Państwa stronę ' . ($p['host'] ?? '') . ' i zauważyliśmy ' . count($findings) . ' ' . plural(count($findings), 'rzecz', 'rzeczy', 'rzeczy')
                 . ' do poprawy: ' . implode('; ', array_map(static fn ($f) => rtrim(lcfirst((string) $f), '.'), $findings)) . '.';
+        } elseif (!empty($facts['ceidg']['started']) && strtotime((string) $facts['ceidg']['started']) > time() - 365 * 86400) {
+            $opening = 'Piszemy, ponieważ niedawno rozpoczęli Państwo działalność.';
         } else {
             $opening = 'Piszemy, ponieważ Państwa firma działa w branży, z którą pracujemy na co dzień.';
         }

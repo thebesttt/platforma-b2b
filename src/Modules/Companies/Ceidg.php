@@ -76,7 +76,8 @@ final class Ceidg
         }
         $region = isset(Regions::ALL[(string) ($f['woj'] ?? '')]) ? Regions::ALL[(string) $f['woj']][0] : '';
         $city = mb_substr(utrim((string) ($f['miasto'] ?? '')), 0, 60);
-        $days = isset(self::SINCE[(int) ($f['dni'] ?? 0)]) ? (int) $f['dni'] : 0;
+        $days = (int) ($f['dni'] ?? 0);
+        $days = isset(self::SINCE[$days]) ? $days : 0;
 
         $build = static function (string $regionValue) use ($codes, $city, $days, $page): string {
             $q = ['status=AKTYWNY'];

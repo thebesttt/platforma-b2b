@@ -166,6 +166,40 @@ return [
         'usage' => ['input_tokens' => 21, 'output_tokens' => 3],
     ]),
 
+    // CEIDG, hurtownia danych (API v3): odpowiedzi w formacie z dokumentacji dla integratorów. Znaczniki w zapytaniu udają błędy usługi.
+    '#^GET https://dane\.biznes\.gov\.pl/api/ceidg/v3/firmy\?.*miasto=Odmowa#' => $json(['message' => 'Unauthorized', 'http_status_code' => 401], 401),
+    '#^GET https://dane\.biznes\.gov\.pl/api/ceidg/v3/firmy\?.*miasto=Limit#' => $json(['message' => 'Too Many Requests'], 429),
+    '#^GET https://dane\.biznes\.gov\.pl/api/ceidg/v3/firmy\?.*miasto=Awaria#' => $json(['message' => 'Internal Server Error'], 500),
+    '#^GET https://dane\.biznes\.gov\.pl/api/ceidg/v3/firmy\?.*pkd=9999Z#' => ['status' => 204, 'body' => ''],
+    // Województwo wielkimi literami nie daje wyniku, małymi daje: sprawdza drugie podejście z innym zapisem.
+    '#^GET https://dane\.biznes\.gov\.pl/api/ceidg/v3/firmy\?.*wojewodztwo=LUBELSKIE#' => ['status' => 204, 'body' => ''],
+    '#^GET https://dane\.biznes\.gov\.pl/api/ceidg/v3/firmy\?#' => $json([
+        'firmy' => [
+            ['id' => 'a1b2c3d4-0000-4000-8000-000000000001', 'nazwa' => 'Usługi Budowlane Jan Kowalski',
+                'adresDzialalnosci' => ['ulica' => 'ul. Polna', 'budynek' => '3', 'lokal' => '5', 'miasto' => 'Piaseczno', 'wojewodztwo' => 'MAZOWIECKIE', 'powiat' => 'piaseczyński',
+                    'gmina' => 'Piaseczno', 'kraj' => 'PL', 'kod' => '05-500', 'terc' => '1418043', 'simc' => '0920806'],
+                'wlasciciel' => ['imie' => 'Jan', 'nazwisko' => 'Kowalski', 'nip' => '8410000015', 'regon' => '140000001'],
+                'dataRozpoczecia' => date('Y-m-d', time() - 20 * 86400), 'status' => 'AKTYWNY', 'link' => 'https://dane.biznes.gov.pl/api/ceidg/v3/firma/a1b2c3d4-0000-4000-8000-000000000001'],
+            ['id' => 'a1b2c3d4-0000-4000-8000-000000000002', 'nazwa' => 'Sklep <b>Ogrodnik</b> Ewa Zielona',
+                'adresDzialalnosci' => ['ulica' => '', 'budynek' => '12', 'lokal' => '', 'miasto' => 'Wólka', 'wojewodztwo' => 'LUBELSKIE', 'powiat' => 'lubartowski', 'gmina' => 'Lubartów', 'kraj' => 'PL', 'kod' => '21100'],
+                'wlasciciel' => ['imie' => 'Ewa', 'nazwisko' => 'Zielona', 'nip' => '8410000021', 'regon' => '140000002'],
+                'dataRozpoczecia' => '2015-04-01', 'status' => 'AKTYWNY', 'link' => 'https://dane.biznes.gov.pl/api/ceidg/v3/firma/a1b2c3d4-0000-4000-8000-000000000002'],
+            // Wpis, który jest już firmą testową z wykazu VAT (ten sam NIP co w innych testach).
+            ['id' => 'a1b2c3d4-0000-4000-8000-000000000003', 'nazwa' => 'Przykładowa Budowlana Adam Nowak',
+                'adresDzialalnosci' => ['ulica' => 'ul. Przykładowa', 'budynek' => '1', 'miasto' => 'Warszawa', 'wojewodztwo' => 'MAZOWIECKIE', 'kod' => '00-001'],
+                'wlasciciel' => ['imie' => 'Adam', 'nazwisko' => 'Nowak', 'nip' => '1234563218', 'regon' => '140000003'],
+                'dataRozpoczecia' => '2012-01-02', 'status' => 'AKTYWNY', 'link' => ''],
+            // Wpisy do pominięcia: zawieszona działalność i błędny NIP.
+            ['id' => 'a1b2c3d4-0000-4000-8000-000000000004', 'nazwa' => 'Zawieszona Firma', 'adresDzialalnosci' => ['miasto' => 'Radom', 'kod' => '26-600'],
+                'wlasciciel' => ['imie' => 'Piotr', 'nazwisko' => 'Cichy', 'nip' => '8410000038'], 'dataRozpoczecia' => '2010-01-01', 'status' => 'ZAWIESZONY', 'link' => ''],
+            ['id' => 'a1b2c3d4-0000-4000-8000-000000000005', 'nazwa' => 'Błędny NIP', 'adresDzialalnosci' => ['miasto' => 'Radom'],
+                'wlasciciel' => ['imie' => 'Anna', 'nazwisko' => 'Błędna', 'nip' => '1234567890'], 'dataRozpoczecia' => '2010-01-01', 'status' => 'AKTYWNY', 'link' => ''],
+        ],
+        'count' => 31,
+        'links' => ['first' => '', 'prev' => '', 'self' => '', 'next' => '', 'last' => ''],
+        'properties' => ['dc:title' => 'Lista firm', 'schema:provider' => 'CEIDG'],
+    ]),
+
     // Resend: wysyłka e-maili platformy. Adres zaczynający się od „odrzucony” udaje błąd usługi.
     '#^POST https://api\.resend\.com/emails\n.*"to":\["odrzucony#s' => $json(['statusCode' => 422, 'name' => 'validation_error', 'message' => 'Domena nadawcy nie jest zweryfikowana.'], 422),
     '#^POST https://api\.resend\.com/emails#' => $json(['id' => 'test-wiadomosc']),

@@ -115,6 +115,18 @@ final class SettingsController extends Controller
         return $this->redirect('/ustawienia', 'AI działa. Model ' . config('AI_MODEL') . ' odpowiedział: „' . truncate((string) $res['text'], 40) . '” (tokeny: ' . (int) ($u['input_tokens'] ?? 0) . ' wejście, ' . (int) ($u['output_tokens'] ?? 0) . ' wyjście).');
     }
 
+    /** Zapytanie kontrolne do CEIDG: sprawdza token i połączenie. Tylko administrator platformy. */
+    public function testCeidg(Request $r): Response
+    {
+        if (!Auth::isAdmin()) {
+            return $this->notFound();
+        }
+        $res = \App\Modules\Companies\Ceidg::check();
+        return $res['ok']
+            ? $this->redirect('/ustawienia', 'CEIDG działa: token przyjęty. Wyszukiwanie firm jest w zakładce Klienci → Potencjalni klienci.')
+            : $this->redirect('/ustawienia', 'Test CEIDG nieudany. ' . $res['error'], 'error');
+    }
+
     /** Wygląd panelu i widoczne moduły. Ustawia właściciel konta. */
     public function appearance(Request $r): Response
     {
