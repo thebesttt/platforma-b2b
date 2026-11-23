@@ -72,22 +72,29 @@ function prospectPaths(x) {
   const known = PLAT.contacts.find((c) => c.company === x.company);
   if (known && known.unsub) return [['bad', 'zablokowane', 'Firma zgłosiła sprzeciw', 'Wypisała się ' + known.unsub + '. Panel nie przygotuje dla niej listu ani oferty.', '']];
   const out = [];
-  if (x.consent) out.push(['good', 'niskie ryzyko', 'Oferta e-mailem: masz zgodę', 'Firma sama wpisała adres ' + x.consent[0] + ' na stronie zgody z listu i zaznaczyła zgodę (' + x.consent[1] + '). Panel przechowuje dowód: treść zgody, czas i źródło.', 'consent']);
+  if (x.consent) out.push(['good', 'niskie ryzyko', 'Oferta e-mailem: masz zgodę', 'Firma sama wpisała adres ' + x.consent[0] + ' na stronie zgody z listu i zaznaczyła zgodę (' + x.consent[1] + '). Panel przechowuje dowód: treść zgody, czas i źródło.'
+    + (x.topics && x.topics.length ? ' Interesuje ją: ' + x.topics.join(', ') + '.' : ''), 'consent']);
   if (x.invite) out.push(['good', 'niskie ryzyko', 'Oferta na adres, który firma podała do ofert', '„' + x.invite[0] + '” (' + x.invite[2] + '). Udostępnienie adresu w tym celu jest formą zgody. Zgoda obejmuje oferty, o jakie firma prosi.', 'invite']);
   out.push(['good', 'niskie ryzyko', x.consent ? 'List pocztą' : 'List pocztą z prośbą o zgodę na e-mail', 'Wymóg zgody dotyczy telefonu i środków elektronicznych. List papierowy pod niego nie podlega. Panel przygotowuje plik .docx z tą treścią.'
-    + (x.consent ? '' : ' W liście jest adres strony zgody i kod QR. Firma sama wpisuje tam e-mail i zaznacza zgodę, a od tej chwili oferta e-mailem ma podstawę.'), 'letter']);
+    + (x.consent ? '' : ' W liście jest adres strony zgody i kod QR. Firma sama wpisuje tam e-mail i zaznacza zgodę, a od tej chwili oferta e-mailem ma podstawę.')
+    + (x.audit && !x.consent ? ' List obiecuje bezpłatny raport z audytu strony (wynik ' + x.audit + ' na 100). Firma dostaje go, gdy sama o niego poprosi.' : '')
+    + (x.report && !x.consent ? ' Firma poprosiła o raport na adres ' + x.report[0] + ' (' + x.report[1] + ') i go dostała. To nie jest zgoda na ofertę.' : ''), 'letter']);
   if (!x.invite && !x.consent) out.push(['bad', 'bardzo wysokie ryzyko', 'E-mail bez zgody', 'Informacja handlowa bez wcześniejszej zgody jest zakazana, także wobec firm. Prośba o zgodę wysłana e-mailem też. Panel przygotuje wiadomość i pokaże ekran ryzyka, a decyzję podejmujesz Ty.', 'email']);
   return out;
 }
 /* Strona zgody tak, jak widzi ją firma po wpisaniu adresu z listu albo zeskanowaniu kodu QR. */
 function consentPage(x, i) {
-  const who = PLAT.org.name;
+  const who = PLAT.org.name, rep = x.audit && !x.report;
+  const topics = `<p class="small" style="padding-top:12px">Co Państwa interesuje? Opcjonalnie</p>${PLAT.topics.map((t, n) => `<label class="check" style="padding-top:6px"><input type="checkbox" id="cpT-${i}-${n}"> <span>${esc(t)}</span></label>`).join('')}`;
   return `<div class="note" style="grid-column:1/-1;margin-top:6px"><p class="small muted">Tak wygląda strona zgody tej firmy. Adres i kod QR są wydrukowane w liście. Strona działa bez logowania i nie zapisuje plików cookie.</p>
-    <div style="max-width:440px;padding:16px 0 4px"><h3>Zgoda na ofertę e-mailem</h3>
-      <p style="padding-top:8px">Firma <b>${esc(who)}</b> wysłała do Państwa list z propozycją współpracy. Jeśli chcą Państwo dostać ofertę e-mailem, prosimy wpisać adres i zaznaczyć zgodę. Bez zgody nie wyślemy żadnej wiadomości.</p>
-      <label class="field" for="cpMail-${i}" style="padding-top:12px">Adres e-mail, na który wysłać ofertę<input id="cpMail-${i}" type="email" maxlength="120" autocomplete="off"></label>
-      <label class="check" style="padding-top:12px"><input type="checkbox" id="cpOk-${i}"> <span>Zgadzam się na przesłanie przez firmę ${esc(who)} oferty handlowej na podany adres e-mail.</span></label>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;padding-top:14px"><button class="btn sm" type="button" data-act="k-consent" data-name="${esc(x.company)}" data-i="${i}">Zgadzam się i proszę o ofertę</button>
+    <div style="max-width:440px;padding:16px 0 4px"><h3>${rep ? 'Raport z audytu strony' : 'Zgoda na ofertę e-mailem'}</h3>
+      <p style="padding-top:8px">${rep ? `Firma <b>${esc(who)}</b> sprawdziła Państwa stronę i wysłała list z wynikiem: <b>${x.audit} na 100 punktów</b>. Pełny raport pokażemy od razu i wyślemy na podany adres. Jest bezpłatny i do niczego nie zobowiązuje.`
+        : `Firma <b>${esc(who)}</b> wysłała do Państwa list z propozycją współpracy. Jeśli chcą Państwo dostać ofertę e-mailem, prosimy wpisać adres i zaznaczyć zgodę. Bez zgody nie wyślemy żadnej wiadomości.`}</p>
+      <label class="field" for="cpMail-${i}" style="padding-top:12px">${rep ? 'Adres e-mail, na który wysłać raport' : 'Adres e-mail, na który wysłać ofertę'}<input id="cpMail-${i}" type="email" maxlength="120" autocomplete="off"></label>
+      ${rep ? `<label class="check" style="padding-top:12px"><input type="checkbox" id="cpRep-${i}"> <span>Proszę o przesłanie raportu z audytu strony na podany adres e-mail.</span></label>` : ''}
+      <label class="check" style="padding-top:12px"><input type="checkbox" id="cpOk-${i}"> <span>Zgadzam się na przesłanie przez firmę ${esc(who)} oferty handlowej na podany adres e-mail.${rep ? ' To pole nie jest wymagane.' : ''}</span></label>
+      ${topics}
+      <div style="display:flex;gap:10px;flex-wrap:wrap;padding-top:14px"><button class="btn sm" type="button" data-act="k-consent" data-name="${esc(x.company)}" data-i="${i}">${rep ? 'Pokaż i wyślij mi raport' : 'Zgadzam się i proszę o ofertę'}</button>
         <button class="btn ghost sm" type="button" data-act="k-consent-no" data-name="${esc(x.company)}">Nie chcemy korespondencji od tej firmy</button></div>
       <p class="small muted" id="cpNote-${i}" tabindex="-1" hidden style="padding-top:10px"></p></div></div>`;
 }
@@ -114,15 +121,30 @@ function renderSearch() {
       <div><p>${esc(x.win ? 'Wygrane zamówienie: ' + x.win + '.' : x.reason)}</p><p>${esc(x.size)}, działa ${lata(x.age)}, kondycja: ${esc(x.condition)}${x.win ? '. ' + esc(x.reason) : ''}</p></div>
       <div class="end">${best[1] === 'zablokowane' ? st('bad', 'sprzeciw') : (best[4] === 'consent' ? st('good', 'zgoda na e-mail') : best[4] === 'invite' ? st('good', 'zaprasza do ofert') : '')}${st(x.score >= 85 ? 'good' : 'plain', 'dopasowanie ' + x.score)}<button class="btn ghost sm" type="button" data-act="k-open" data-name="${esc(x.company)}" aria-expanded="${open}" id="pro-${i}">${open ? 'Zwiń' : 'Oferta i drogi kontaktu'}</button></div>${detail}</div>`;
   }).join('');
-  put('firmy', stan('silnik', 'Lista z wyników przetargów i z Twojej listy, dane z rejestrów, treść oferty i drogi kontaktu z oceną ryzyka. Wyszukiwanie w rejestrach REGON i CEIDG wymaga kluczy.') +
+  const L = PLAT.letters, pct = (n) => Math.round(100 * n / L.firms), zl = (v) => v.toFixed(2).replace('.', ',') + ' zł';
+  const funnel = [['Firmy z listem', L.firms, L.letters + ' listów, w tym drugie'], ['Weszły na stronę zgody', L.visit, pct(L.visit) + '% firm z listem'], ['Zostawiły zgodę na ofertę', L.consent, pct(L.consent) + '% firm z listem'],
+    ['Dostały ofertę e-mailem', L.offer, pct(L.offer) + '% firm z listem'], ['Odpowiedziały', L.reply, pct(L.reply) + '% firm z listem']]
+    .map(([name, n, sub]) => `<div class="meter"><span>${esc(name)} <span class="muted small">${esc(sub)}</span></span><span class="num"><b>${n}</b></span><div class="hbar key"><i style="width:${Math.round(100 * n / L.firms)}%"></i></div></div>`).join('');
+  put('firmy', stan('silnik', 'Lista firm, dane z rejestrów, treść oferty, drogi kontaktu z oceną ryzyka, listy z kodem QR i lejek listów. Wyszukiwanie w CEIDG wymaga bezpłatnego tokenu.') +
     `<div class="sec">${secHead('Idealny klient', 'Opis powstaje z treści Twojej strony. Zatwierdzasz go albo poprawiasz. AI korzysta z niego, gdy pisze treść oferty.')}
       <p style="padding-top:14px;max-width:78ch">${esc(PLAT.icp)}</p></div>
     <div class="sec">${secHead('Firmy, do których warto się odezwać', 'Od najlepiej dopasowanej. Punkty wynikają z jawnej tabeli: branża 40, region 15, staż 10, kondycja 15, powód kontaktu 20.', found.length + ' z ' + PLAT.search.length)}
       <div class="filters" style="padding:16px 0 6px">${sel('fPkd', 'Branża', 'pkd', uniq('pkd').map((v) => [v, v]))}${sel('fRegion', 'Województwo', 'region', uniq('region').map((v) => [v, v]))}${sel('fTenders', 'Przetargi', 'tenders', [['tak', 'Startuje w przetargach'], ['nie', 'Nie startuje']])}</div>
       ${rows || '<p class="muted" style="padding:16px 0">Żadna firma nie pasuje do tych filtrów. Zmień albo wyczyść jeden z nich.</p>'}</div>
+    <div class="sec">${secHead('Czy listy działają', 'Firmy, do których wyszedł list, i co stało się potem. Wejścia liczy serwer, bez plików cookie.')}
+      <div class="stack" style="padding-top:16px;max-width:640px">${funnel}</div>
+      <p style="padding-top:16px;max-width:78ch">Poprosiły o raport z audytu: <b>${L.report}</b>. Odmówiły korespondencji: <b>${L.refused}</b>. Listy kosztowały <b>${zl(L.letters * L.cost)}</b>, czyli <b>${zl(L.letters * L.cost / L.consent)}</b> za jedną zgodę.</p>
+      <p class="note" style="margin-top:14px">${L.quiet} firm nie odpowiedziało na list sprzed 21 dni. Panel proponuje drugi, krótszy list, który zapowiada, że jest ostatni. Trzeciego nie proponuje. Listy do wielu firm pobierasz jednym plikiem: każdy od nowej strony, z własnym kodem QR, a adresy na koperty w pliku dla arkusza.</p></div>
+    <div class="sec">${secHead('Kod QR na wizytówkę i stoisko', 'Jedna strona zgody Twojej firmy, niezwiązana z żadnym listem.')}
+      <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start;padding-top:16px">
+        <img src="${PLAT.cardQr}" width="132" height="132" alt="Przykładowy kod QR ogólnej strony zgody" style="background:#fff;border-radius:8px;image-rendering:pixelated;flex:none">
+        <div style="flex:1 1 320px;min-width:0;max-width:62ch"><p>Wydrukuj kod na wizytówce, ulotce albo postaw na stoisku. Kto go zeskanuje, sam wpisuje firmę i e-mail i zaznacza zgodę. Panel dopisuje firmę do listy i zakłada kontakt z podstawą „zgoda”.</p>
+          <p class="small muted" style="padding-top:8px">Kod w mockupie jest przykładowy. Tego adresu nie wysyła się e-mailem ani SMS-em do firm, które o to nie prosiły: taka wiadomość byłaby prośbą o zgodę bez zgody.</p></div></div></div>
     <div class="sec">${secHead('Skąd są firmy')}<ul class="list" style="padding-top:16px">
       <li><b>Wyniki przetargów.</b> Wykonawcy, którzy wygrywają zamówienia publiczne: wiadomo, co robią, gdzie działają i co właśnie podpisali.</li>
       <li><b>Twoja lista.</b> Wklejasz NIP-y albo adresy stron z katalogu branżowego, listy wystawców targów albo notatek. Adresów e-mail panel nie przyjmuje i nie zbiera ze stron.</li>
+      <li><b>CEIDG.</b> Jednoosobowe działalności po kodzie PKD, województwie, mieście i dacie założenia. Wymaga bezpłatnego tokenu, o który występuje właściciel firmy. Panel bierze nazwę, NIP i adres, bez adresów e-mail i telefonów.</li>
+      <li><b>Kod QR firmy.</b> Osoby, które zeskanowały kod z wizytówki albo ze stoiska i same zostawiły zgodę.</li>
       <li><b>Dane z rejestrów.</b> Panel dopisuje nazwę, adres, formę prawną, staż i ryzyko płatnicze z wykazu VAT i KRS.</li></ul></div>
     <p class="note">Prowadzenie listy i napisanie oferty nie wymagają zgody firmy. Zgody wymaga wysłanie oferty e-mailem albo telefon z ofertą, także do firm (art. 398 Prawa komunikacji elektronicznej). Prośba o zgodę wysłana e-mailem też jej wymaga, dlatego zgodę zbiera list: jest w nim adres strony, na której firma sama zostawia e-mail. Każda firma ma rozpisane drogi kontaktu z oceną ryzyka, a wysyłasz sam.</p>`);
 }
@@ -236,9 +258,13 @@ ACTIONS['k-cpage'] = (el) => { state.k.cpage = state.k.cpage === el.dataset.name
 ACTIONS['k-consent'] = (el) => {
   const i = el.dataset.i, mail = document.getElementById('cpMail-' + i).value.trim().toLowerCase(), ok = document.getElementById('cpOk-' + i).checked;
   const say = (text) => { const n = document.getElementById('cpNote-' + i); n.textContent = text; n.hidden = false; n.focus(); };
+  const x = PLAT.search.find((s) => s.company === el.dataset.name), repBox = document.getElementById('cpRep-' + i);
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) { say('Wpisz poprawny adres e-mail.'); return; }
-  if (!ok) { say('Zaznacz zgodę. Bez niej nie możemy wysłać oferty.'); return; }
-  PLAT.search.find((s) => s.company === el.dataset.name).consent = [mail, dpl(PLAT.today)];
+  if (repBox && !repBox.checked && !ok) { say('Zaznacz, że chcą Państwo dostać raport. Bez tego nie możemy go wysłać.'); return; }
+  if (!repBox && !ok) { say('Zaznacz zgodę. Bez niej nie możemy wysłać oferty.'); return; }
+  x.topics = PLAT.topics.filter((t, n) => document.getElementById('cpT-' + i + '-' + n).checked);
+  if (repBox && repBox.checked) x.report = [mail, dpl(PLAT.today)];
+  if (ok) x.consent = [mail, dpl(PLAT.today)];
   state.k.cpage = ''; rerender('firmy'); refocus('pro-' + i);
 };
 ACTIONS['k-consent-no'] = (el) => {

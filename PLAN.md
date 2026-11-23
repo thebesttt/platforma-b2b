@@ -6,21 +6,21 @@ Stan na 23.11.2026.
 
 Na perfectdata.pl nic nie zostało zainstalowane. Kod trafi na stronę dopiero po wyraźnej zgodzie właściciela.
 
-**Co się zmieniło 20.11.2026.** Etapy 1 i 2 oraz większość etapu 3 są zbudowane w silniku i przechodzą testy. Tego samego dnia doszło pięć funkcji z etapu 4: wyniki przetargów, praca zespołu nad ofertą, warunki naboru dotacji, przypomnienia z adresem wypisania i opis idealnego klienta. Potem doszły cztery funkcje, których dane nie są dostępne dla programów: panel pokazuje, gdzie je znaleźć, i daje miejsce na wpisanie (szczegóły niżej, w części „Dane wpisywane ręcznie”). 23.11.2026 doszła lista potencjalnych klientów: panel proponuje firmy, układa treść oferty i pokazuje drogi kontaktu z oceną ryzyka (część „Potencjalni klienci i wysyłka”). Tego samego dnia doszła zgoda na ofertę e-mailem zbierana listem: strona zgody z kodem QR i zapisanym dowodem. Do uruchomienia zostały kroki właściciela z etapu 0: hosting, baza, klucze usług i zgoda na kod widżetu. Lista na końcu, w części „Co jest potrzebne od właściciela”.
+**Co się zmieniło 20.11.2026.** Etapy 1 i 2 oraz większość etapu 3 są zbudowane w silniku i przechodzą testy. Tego samego dnia doszło pięć funkcji z etapu 4: wyniki przetargów, praca zespołu nad ofertą, warunki naboru dotacji, przypomnienia z adresem wypisania i opis idealnego klienta. Potem doszły cztery funkcje, których dane nie są dostępne dla programów: panel pokazuje, gdzie je znaleźć, i daje miejsce na wpisanie (szczegóły niżej, w części „Dane wpisywane ręcznie”). 23.11.2026 doszła lista potencjalnych klientów: panel proponuje firmy, układa treść oferty i pokazuje drogi kontaktu z oceną ryzyka (część „Potencjalni klienci i wysyłka”). Tego samego dnia doszła zgoda na ofertę e-mailem zbierana listem: strona zgody z kodem QR i zapisanym dowodem. Potem siedem dodatków do listów i zgód: audyt strony jako zachęta, lejek listów, listy seryjnie, kod QR na wizytówkę, pytanie o zainteresowania, wyszukiwanie w CEIDG i drugi list (część „Listy i zgody: siedem dodatków”). Do uruchomienia zostały kroki właściciela z etapu 0: hosting, baza, klucze usług i zgoda na kod widżetu. Lista na końcu, w części „Co jest potrzebne od właściciela”.
 
 ## Co jest gotowe
 
-- **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`, 156 testów na SQLite i PostgreSQL. Gotowa do uruchomienia w Render.
+- **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`, 167 testów na SQLite i PostgreSQL. Gotowa do uruchomienia w Render.
 - **Panel w wyglądzie PerfectData** (zmienna `APP_THEME=perfectdata` albo ustawienie firmy) z wyborem modułów w menu i pulpitem, który pokazuje tylko włączone moduły.
 - **Zapytania ze strony:** widżet do wklejenia jedną linią kodu, kwalifikator z jawną tabelą punktów, lista i karta zapytań, czat AI z bazy wiedzy, lejek i test dwóch wersji.
 - **Audyt AI:** 24 wskaźniki i 100 punktów z jednego pliku wytycznych, raport z linijką punktów i listą „Najpierw to”, „Przed i po”, strona wytycznych, raport dla klienta pod linkiem, audyt wielu stron z mapy witryny. Sprawdzony na prawdziwej stronie perfectdata.pl.
 - **Poczta z panelu:** powiadomienie o zapytaniu, reset hasła, zaproszenia do zespołu i poranny przegląd (przetargi, zapytania, alerty).
 - **Przetargi:** import i dopasowanie do profilu, karta przetargu, analiza SWZ oraz wyniki: kto wygrywa w branży i regionie, za ile i przy ilu ofertach. Alert, gdy zapisany przetarg zostanie rozstrzygnięty.
 - **Oferty i wnioski:** szkic z ogłoszenia i biblioteki, praca zespołu (sekcja przydzielona osobie, zapis nie nadpisuje cudzej zmiany), lista dokumentów do odhaczania, a we wniosku o dotację sprawdzenie warunków naboru z cytatami. Lista obserwowanych naborów z przewodnikiem po pięciu oficjalnych serwisach, przypomnieniami o końcu naboru i wnioskiem zakładanym z naboru.
-- **Klienci i wiadomości:** ocena ryzyka prawnego przed wysyłką, przypomnienia po 4 i po 10 dniach z dziennym limitem, adres wypisania w stopce ofert, opis idealnego klienta ze strony firmy. Rejestr zapytań ofertowych z rynku: gdzie szukać, termin, kontakt z podstawą „zapytanie ofertowe” i odpowiedź jednym kliknięciem. Lista potencjalnych klientów: firmy z wyników przetargów i z listy użytkownika, dane z rejestrów, punkty dopasowania, treść oferty układana automatycznie i drogi kontaktu z oceną ryzyka. Zgoda na ofertę e-mailem zbierana listem: w liście jest adres strony zgody i kod QR, firma sama zostawia e-mail, a panel zapisuje dowód.
+- **Klienci i wiadomości:** ocena ryzyka prawnego przed wysyłką, przypomnienia po 4 i po 10 dniach z dziennym limitem, adres wypisania w stopce ofert, opis idealnego klienta ze strony firmy. Rejestr zapytań ofertowych z rynku: gdzie szukać, termin, kontakt z podstawą „zapytanie ofertowe” i odpowiedź jednym kliknięciem. Lista potencjalnych klientów: firmy z wyników przetargów i z listy użytkownika, dane z rejestrów, punkty dopasowania, treść oferty układana automatycznie i drogi kontaktu z oceną ryzyka. Zgoda na ofertę e-mailem zbierana listem: w liście jest adres strony zgody i kod QR, firma sama zostawia e-mail, a panel zapisuje dowód. Do tego audyt strony jako zachęta, lejek listów z kosztem jednej zgody, listy seryjnie, drugi list po 21 dniach, kod QR na wizytówkę, pytanie o zainteresowania i wyszukiwanie firm w CEIDG (po wpisaniu tokenu). Przycisk „Napisz” przy kontakcie sam dobiera rodzaj wiadomości do podstawy kontaktu.
 - **Kontrahenci:** karta firmy z rejestrów publicznych, a do tego dwa sprawdzenia robione ręcznie: Krajowy Rejestr Zadłużonych i liczby ze sprawozdania finansowego, z których panel liczy, po ilu dniach firma płaci dostawcom.
 - **Audyt techniczny:** bez zmian, działa od początku.
-- **Mockup całego panelu:** `mockup/audyt-ai`, 9 modułów i 32 ekrany, z listą 63 funkcji i ich stanem. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip`.
+- **Mockup całego panelu:** `mockup/audyt-ai`, 9 modułów i 32 ekrany, z listą 69 funkcji i ich stanem. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip`.
 - **Wytyczne audytu:** `resources/audyt-ai-rules.json` (czyta je silnik) i dokument dla zespołu `mockup/audyt-ai/WYTYCZNE.md`.
 - **Plany modułów:** `PLAN-ZAPYTANIA.md` i `PLAN-AUDYT-AI.md`.
 
@@ -43,29 +43,30 @@ W platformie wygląd i zestaw modułów będą ustawieniem organizacji (pole `se
 
 ## Funkcje i ich stan
 
-Mockup pokazuje 63 funkcje. Zakładka „Lista funkcji” na pulpicie podaje stan każdej z nich i prowadzi do ekranu.
+Mockup pokazuje 69 funkcji. Zakładka „Lista funkcji” na pulpicie podaje stan każdej z nich i prowadzi do ekranu.
 
 | Moduł | Działa w silniku | Do zbudowania | Czeka na zgodę Google i Meta |
 |---|---|---|---|
 | Zapytania | 5 | 0 | 0 |
-| Klienci | 12 | 2 | 0 |
+| Klienci | 19 | 1 | 0 |
 | Audyt AI | 6 | 1 | 0 |
 | SEO i strona | 3 | 2 | 0 |
 | Reklamy | 0 | 0 | 6 |
 | Przetargi | 9 | 0 | 0 |
 | Oferty i wnioski | 9 | 0 | 0 |
 | Kontrahenci | 7 | 1 | 0 |
-| Razem | 51 | 6 | 6 |
+| Razem | 58 | 5 | 6 |
 
 „Działa w silniku” znaczy, że kod jest w repozytorium i przechodzi testy. Silnik nie jest jeszcze uruchomiony online (etap 0).
 
-Dlaczego 6 funkcji nie jest zbudowanych: każda wymaga zgody albo konta u zewnętrznej firmy.
+Dlaczego 5 funkcji nie jest zbudowanych: każda wymaga zgody albo konta u zewnętrznej firmy.
 
 - Search Console i wizytówka Google (logowanie Google klienta),
-- wyszukiwanie w rejestrach REGON i CEIDG (klucze). Do tego czasu lista potencjalnych klientów bierze firmy z wyników przetargów i z listy użytkownika,
 - automatyczne wykrywanie odpowiedzi (połączenie ze skrzynką Gmail lub Microsoft 365). Wypisanie działa już przez adres w stopce, a odpowiedź zaznacza się ręcznie,
 - wpis długu do BIG (umowa z biurem),
 - test cytowań w AI (klucze OpenAI, Perplexity i Gemini oraz decyzja o koszcie).
+
+Wyszukiwanie firm w CEIDG jest zbudowane i czeka tylko na bezpłatny token (zmienna `CEIDG_TOKEN`). Obejmuje jednoosobowe działalności. Spółek po branży szukać się tak nie da: KRS nie udostępnia takiego wyszukiwania, a REGON pyta tylko po numerze.
 
 ### Dane wpisywane ręcznie
 
@@ -88,7 +89,7 @@ Zapytania ze strony to firmy, które piszą do nas. Lista potencjalnych klientó
 
 Jak to działa:
 
-1. **Skąd są firmy.** Wykonawcy z wyników przetargów (kto wygrał, co i za ile) oraz lista NIP-ów albo stron wklejona przez użytkownika. Adresów e-mail panel nie przyjmuje i nie zbiera ze stron.
+1. **Skąd są firmy.** Wykonawcy z wyników przetargów (kto wygrał, co i za ile), lista NIP-ów albo stron wklejona przez użytkownika, jednoosobowe działalności z CEIDG (po kodzie PKD, regionie i dacie założenia) oraz osoby, które same zgłosiły się przez kod QR firmy. Adresów e-mail panel nie przyjmuje i nie zbiera ze stron ani z CEIDG.
 2. **Co panel dopisuje.** Nazwę, adres, formę prawną, staż i ryzyko płatnicze z wykazu VAT i KRS. Liczy dopasowanie z jawnej tabeli: branża 40, region 15, staż 10, kondycja 15, powód kontaktu 20.
 3. **Powód kontaktu i treść oferty.** Panel układa je sam z faktów: wygrane zamówienie albo rzeczy do poprawy na stronie firmy, plus opis z biblioteki. Treść można poprawić albo zlecić AI. Ta sama trafia do listu i do wiadomości.
 4. **Wysyłka.** Prowadzenie listy i napisanie oferty nie wymagają zgody firmy. Zgody wymaga wysłanie oferty e-mailem albo telefon z ofertą, także do firm. Dlatego karta firmy pokazuje wszystkie drogi kontaktu, a wysyła użytkownik.
@@ -100,7 +101,7 @@ Jak to działa:
 | Oferta na adres, który firma podała do przesyłania ofert | niskie | Udostępnienie adresu w tym celu jest formą zgody (art. 398 ust. 2 PKE). Panel szuka takiego zdania na stronie firmy i pokazuje cytat z linkiem. Podstawą staje się dopiero po potwierdzeniu przez użytkownika |
 | List pocztą z prośbą o zgodę na e-mail | niskie | Art. 398 PKE dotyczy telefonu i środków elektronicznych. Panel przygotowuje list .docx z adresem strony zgody i kodem QR. Dla osób prowadzących działalność dodaje informację z art. 14 RODO i przypomina o terminie miesiąca |
 | E-mail bez zgody | bardzo wysokie | Art. 398 ust. 1 PKE. Panel przygotuje wiadomość, pokaże ekran ryzyka i wymaga potwierdzenia. Decyzję podejmuje użytkownik |
-| Prośba o zgodę wysłana e-mailem | bardzo wysokie | Ministerstwo Cyfryzacji (odpowiedź z 13.10.2025 na interpelację nr 12337) uznaje kontakt w celu uzyskania zgody za niedozwolony. Wcześniej panel oceniał to jako ryzyko wysokie. Ocena wskazuje drogę bez ryzyka: list ze stroną zgody |
+| Pytanie e-mailem, czy i gdzie firma przyjmuje oferty | bardzo wysokie | Ministerstwo Cyfryzacji (odpowiedź z 13.10.2025 na interpelację nr 12337) uznaje kontakt w celu uzyskania zgody za niedozwolony. Sąd Apelacyjny w Warszawie (VII AGa 1567/18) uznał SMS z prośbą o zgodę za informację handlową. W drugą stronę poszedł Sąd Okręgowy Warszawa-Praga (IV Ca 1873/16): dopuścił pierwszy telefon z samym pytaniem. Oba wyroki dotyczą poprzednich przepisów. Szkic w panelu to samo pytanie, bez nazwy usługi. Ryzyko dotyczy tej jednej wiadomości: gdy firma odpowie i poda adres, zgodę zapisuje się z opisem, a kolejne oferty mają podstawę |
 
 Sprzeciw firmy blokuje listy i oferty. Odpowiedź na jej własne zapytanie ofertowe zostaje możliwa.
 
@@ -123,7 +124,19 @@ Zasady, których panel pilnuje:
 - Adres, który się wypisał, nie wróci przez formularz.
 - Potwierdzenie nie jest podwójne (bez klikania w link z e-maila), bo adres strony zna tylko adresat listu, a potwierdzenie z linkiem wycofania wychodzi od razu.
 
-Inne legalne drogi do e-maila, które panel już obsługuje: odpowiedź na zapytanie ofertowe firmy, adres podany przez firmę do przesyłania ofert i zgoda zaznaczona w rozmowie w widżecie na stronie.
+Inne legalne drogi do e-maila, które panel już obsługuje: odpowiedź na zapytanie ofertowe firmy, adres podany przez firmę do przesyłania ofert, zgoda zaznaczona w rozmowie w widżecie na stronie i kod QR na wizytówce albo stoisku.
+
+#### Listy i zgody: siedem dodatków
+
+1. **Audyt strony jako zachęta.** Na karcie firmy jeden przycisk uruchamia audyt techniczny jej strony. Wynik trafia do treści oferty i do punktów dopasowania, a list obiecuje pełny raport. Na stronie zgody prośba o raport i zgoda na ofertę to dwa osobne pola: raport nie zależy od zgody na ofertę. Firma, która poprosi tylko o raport, dostaje go od razu i e-mailem, ale kontakt nie zyskuje podstawy do ofert. Raport ma publiczny adres z losowym tokenem i prowadzi z powrotem na stronę zgody. W liście nie ma ustaleń o bezpieczeństwie, te są dopiero w raporcie.
+2. **Lejek listów.** Panel zapisuje zdarzenia: list wysłany, wejście na stronę zgody, prośba o raport, otwarcie raportu, zgoda, odmowa, oferta, odpowiedź. Na liście pokazuje, ile firm z listem przeszło każdy krok, w wybranym okresie. Po wpisaniu kosztu listu liczy koszt jednej zgody. Wejścia liczy serwer, bez plików cookie, raz na godzinę z jednego adresu. Podgląd z panelu się nie liczy. Karta firmy ma historię.
+3. **Listy seryjnie.** Ekran z firmami gotowymi do listu (adres z rejestrów, bez zgody na e-mail). Jeden plik .docx: każdy list od nowej strony, z adresem strony zgody tej firmy i jej kodem QR. Do tego adresy w CSV dla arkusza i zbiorcze „Oznacz: listy wysłane”. Najwyżej 50 listów w pliku.
+4. **Kod QR na wizytówkę i stoisko.** Ogólna strona zgody firmy pod tym samym adresem `/z/kod`. Osoba sama wpisuje nazwę firmy, e-mail i zaznacza zgodę. Panel dopisuje firmę do listy (albo dołącza zgodę do firmy z tym samym NIP-em) i zakłada kontakt z podstawą „zgoda”. Zgłoszenie z otwartej strony nie cofa sprzeciwu zapisanego dla firmy. Dzienny limit 200 zgłoszeń, kod można wymienić.
+5. **Pytanie, co firmę interesuje.** Do sześciu tematów ustawianych w panelu i krótka wiadomość, na obu stronach zgody. Odpowiedź jest zapisana przy dowodzie zgody, widoczna na karcie, a szkic oferty do niej nawiązuje.
+6. **Wyszukiwanie w CEIDG.** Aktywne jednoosobowe działalności po kodach PKD, województwie, mieście i dacie założenia. Panel bierze nazwę, NIP, adres i datę rozpoczęcia. To osoby prowadzące działalność: list ma informację o danych osobowych ze wskazaniem CEIDG jako źródła, a karta liczy 30 dni na jej przekazanie. Nowa firma (do 90 dni) dostaje punkty za powód kontaktu i własne otwarcie treści oferty. Włącza się tokenem `CEIDG_TOKEN`, bez niego panel pokazuje, jak go zdobyć.
+7. **Drugi list.** Po 21 dniach bez zgody, odmowy, prośby o raport i odpowiedzi panel proponuje krótkie przypomnienie: na liście, karcie, w listach seryjnych i w porannym przeglądzie. Drugi list zapowiada, że jest ostatni. Po dwóch listach przypomnienia się kończą, a ekran listu ostrzega przed trzecim.
+
+Do tego poprawka z uwagi właściciela: przycisk „Napisz” przy kontakcie sam dobiera rodzaj wiadomości. Zapytanie ofertowe daje odpowiedź na zapytanie, zgoda i klient ofertę za zgodą, a brak podstawy ofertę bez zgody z ekranem ryzyka. Prośba o zgodę nie jest domyślna, bo sama wymaga zgody.
 
 Źródła: [art. 398 Prawa komunikacji elektronicznej](https://lexlege.pl/komunik-elektr/art-398/), [odpowiedź Ministerstwa Cyfryzacji na interpelację nr 12337](https://api.sejm.gov.pl/sejm/term10/interpellations/attachment/ATTDMGHNP/i12337-o1.pdf), [Grant Thornton o marketingu pocztą tradycyjną](https://grantthornton.pl/publikacja/marketing-rodo-i-wysylka-kartek-swiatecznych/). To opis przepisów, a nie porada prawna. Opinia prawnika o module wiadomości jest na liście rzeczy potrzebnych przed sprzedażą platformy.
 
@@ -213,7 +226,7 @@ Przetargi, oferty, kontrahenci, kontakty i wiadomości działają w silniku od r
 2. **Konto i zespół:** zaproszenia e-mailem są. Do zrobienia: potwierdzenie adresu e-mail przy rejestracji, usunięcie konta i eksport danych (RODO).
 3. **AI:** czat w widżecie ma miesięczny limit odpowiedzi. Do zrobienia: limit wydatków na AI dla pozostałych funkcji. Zużycie tokenów jest zapisywane w dzienniku.
 4. **Kopie i awarie:** kopie zapasowe bazy. Powiadomienie o nieudanym imporcie już działa (GitHub wysyła e-mail).
-5. **Firmy spoza wykazu VAT:** integracja z CEIDG, żeby dało się sprawdzić jednoosobowe firmy zwolnione z VAT.
+5. **Firmy spoza wykazu VAT:** firmy dodane z wyszukiwania w CEIDG mają już nazwę, adres i formę prawną z CEIDG, także gdy nie ma ich w wykazie VAT. Do zrobienia: sprawdzenie pojedynczej firmy w CEIDG po NIP-ie z karty kontrahenta.
 
 Do sprawdzenia po wdrożeniu: czy rejestr decyzji UOKiK przyjmuje połączenia z serwera we Frankfurcie. Jeśli nie, decyzje wgrywa się ręcznie w Ustawienia → Decyzje UOKiK (minuta raz w tygodniu).
 
@@ -254,7 +267,7 @@ Do sprawdzenia po wdrożeniu: czy rejestr decyzji UOKiK przyjmuje połączenia z
 8. **Pozyskiwanie klientów:**
    - zapytania ofertowe firm (strony firm, Baza Konkurencyjności, platformy zakupowe): rejestr z przewodnikiem po źródłach zbudowany 20.11.2026, zapytania wpisuje użytkownik,
    - opis idealnego klienta z treści strony firmy: zbudowane 20.11.2026,
-   - lista potencjalnych klientów z treścią oferty i drogami kontaktu: zbudowana 23.11.2026. Do zrobienia: wyszukiwanie w rejestrach REGON i CEIDG (branża, region, wielkość), gdy będą klucze,
+   - lista potencjalnych klientów z treścią oferty i drogami kontaktu: zbudowana 23.11.2026, razem z listami, stroną zgody, lejkiem i wyszukiwaniem w CEIDG (po wpisaniu tokenu),
    - sekwencje z przypomnieniami i dziennym limitem: zbudowane 20.11.2026 w wersji, w której wysyłasz ze swojej skrzynki, a panel pilnuje terminów. Automatyczna wysyłka wymaga połączenia ze skrzynką (punkt 6).
 9. **Widoczność w Google:** dane z Search Console klienta i ocena wizytówki Google.
 10. **Dotacje:** ocena warunków naboru na wgranym regulaminie jest zbudowana (20.11.2026). Lista obserwowanych naborów z przewodnikiem po oficjalnych serwisach i przypomnieniami też (20.11.2026), nabory wpisuje użytkownik.
@@ -274,6 +287,7 @@ Bez tego panel nie ruszy albo nie zrobi części pracy. Tych rzeczy nie da się 
 | Zgoda na kod widżetu i wpis w polityce prywatności | zapytania z perfectdata.pl | decyzja właściciela |
 | Plik logo | nagłówek panelu i raporty | - |
 | Własny adres panelu, opcjonalnie | krótszy adres strony zgody w listach | domena w Render i zmienna `APP_URL` |
+| `CEIDG_TOKEN`, opcjonalnie | wyszukiwanie jednoosobowych działalności po branży i regionie | dane.biznes.gov.pl: logowanie profilem zaufanym i „Wniosek o dostęp do raportów CEIDG” na biznes.gov.pl. Token przychodzi e-mailem |
 | Wnioski do Google i Meta | moduł Reklamy | Google Ads API (dostęp Basic), Meta App Review |
 | Logowanie Google dla aplikacji | Search Console, wizytówka Google | Google Cloud, ekran zgody OAuth |
 
@@ -286,6 +300,9 @@ Decyzje:
 5. **Raport dla klienta:** teraz pokazuje punkty. Do decyzji, czy mają zostać same stany „Dobrze”, „Do poprawy”, „Źle”.
 6. **Czas odpowiedzi w podziękowaniu.** Widżet obiecuje kontakt w następnym dniu roboczym. Tekst zmienisz w ustawieniach widżetu.
 7. **Test cytowań w AI:** które wyszukiwarki i jak często.
+8. **Potwierdzanie adresu na stronie zgody.** Teraz zgoda jest ważna od razu. Przy literówce potwierdzenie i oferta trafią do obcej osoby. Potwierdzanie linkiem z e-maila to wyklucza, ale część firm nie kliknie.
+9. **Koszt jednego listu** (druk, koperta, znaczek) do wpisania przy lejku. Bez niego panel nie liczy kosztu zgody.
+10. **Tematy na stronie zgody.** Do sześciu, np. usługi agencji. Puste pole oznacza samą wiadomość.
 
 Potrzebne przed etapem 4:
 
@@ -295,13 +312,38 @@ Potrzebne przed etapem 4:
 - **Prawnik.** Potrzebny do:
   - regulaminu i polityki prywatności (po ich przygotowaniu wpisz adresy w `TERMS_URL` i `PRIVACY_URL`),
   - umowy powierzenia przetwarzania danych: klienci wpisują dane osób kontaktowych, więc platforma przetwarza je w ich imieniu, a podwykonawcami są Render, Anthropic i usługa e-mail,
-  - opinii o module wiadomości (art. 398 Prawa komunikacji elektronicznej) i o module należności (art. 15 i 15a ustawy o udostępnianiu informacji gospodarczych).
+  - opinii o module wiadomości (art. 398 Prawa komunikacji elektronicznej) i o module należności (art. 15 i 15a ustawy o udostępnianiu informacji gospodarczych),
+  - opinii o zbieraniu zgód: treść zgody i prośby o raport, raport jako zachęta, drugi list, wykorzystanie danych z CEIDG do listów i pytanie e-mailem o adres do ofert.
 
 ## Co zostało sprawdzone
 
+### Listy i zgody: siedem dodatków (23.11.2026)
+
+- **167 testów** na SQLite i PostgreSQL oraz test obrazu Docker (GitHub Actions). Jedenaście nowych obejmuje:
+  - audyt jako zachętę: wynik w ofercie, liście i punktach, prośbę o sam raport (kontakt bez podstawy, ryzyko oferty bez zmian), raport i zgodę naraz, odpięcie raportu,
+  - lejek: każde zdarzenie, wejście liczone raz na godzinę, podgląd z panelu poza lejkiem, okresy, koszt zgody, historię na karcie,
+  - listy seryjnie: dwa listy z własnymi kodami QR w jednym pliku, adresy w CSV (z wartością zaczynającą się od znaku formuły), limit 50,
+  - ogólną stronę zgody: błędy, firmę z listy o tym samym NIP-ie, firmę ze sprzeciwem, wypisany adres, dzienny limit, wymianę kodu,
+  - tematy: zapis ustawień, odrzucenie obcych wartości, nawiązanie w szkicu oferty,
+  - CEIDG: budowę zapytania, adres z pól rejestru, pominięcie zawieszonych i błędnych wpisów, zły token, limit, awarię, drugi zapis województwa,
+  - drugi list: termin 21 dni, firmy z reakcją poza przypomnieniem, treść, koniec przypomnień po dwóch listach,
+  - dobór rodzaju wiadomości do podstawy kontaktu i szkic pytania o adres do ofert.
+- **Kod QR w pliku z trzema listami:** po wydruku do PDF niezależny czytnik (OpenCV) odczytał na każdej stronie adres właściwej firmy.
+- **Przeglądarka (Chromium), 1280, 390 i 320 px:** każdy dodatek przeklikany na danych przykładowych, strony publiczne bez plików cookie, bez błędów w konsoli i bez poziomego przewijania.
+- **Cały panel po zmianach:** 171 stron i 48 pobrań w 3 szerokościach bez błędów, bez ostrzeżeń PHP w logu serwera i bez poziomego przewijania. Mockup: 32 ekrany w 4 szerokościach.
+- **Znalezione i poprawione przy okazji:** w mockupie opis drogi kontaktu zwężał się do jednego słowa w wierszu, gdy obok były dwa przyciski.
+
+Czego nie dało się sprawdzić:
+
+- prawdziwego zapytania do CEIDG (wymaga tokenu). Wywołanie jest napisane według dokumentacji dla integratorów i sprawdzone na odpowiedzi w jej formacie. Dokumentacja nie podaje zapisu nazw województw, dlatego panel pyta wielkimi literami, a przy pustym wyniku małymi. Do potwierdzenia przy pierwszym użyciu przyciskiem „Sprawdź połączenie z CEIDG” i jednym wyszukiwaniem,
+- audytu prawdziwej strony uruchomionego z karty firmy (w testach audyt jest zapisanym wynikiem w formacie silnika, sam silnik audytu działa od początku),
+- prawdziwej wysyłki raportu i potwierdzeń (wymaga klucza Resend), skanowania kodu z papieru telefonem i zachowania na Render.
+
+Ocena prawna wymaga potwierdzenia przez prawnika. Najważniejsze pytania są w części „Co jest potrzebne od właściciela”.
+
 ### Zgoda na ofertę e-mailem (23.11.2026)
 
-- **156 testów** na SQLite i PostgreSQL oraz test obrazu Docker (GitHub Actions). Pięć nowych obejmuje:
+- **156 testów** (stan z tego etapu) na SQLite i PostgreSQL oraz test obrazu Docker (GitHub Actions). Pięć nowych obejmuje:
   - stronę zgody: błędny adres, brak zaznaczonej zgody, zgodę na telefon bez numeru, pole-pułapkę dla automatów, powtórne wysłanie formularza,
   - dowód zgody, kontakt z podstawą „zgoda”, powiadomienie zespołu, potwierdzenie dla firmy i niskie ryzyko oferty,
   - wycofanie linkiem z wiadomości, przyciskiem na stronie zgody i w panelu, odmowę jako sprzeciw,

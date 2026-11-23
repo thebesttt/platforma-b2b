@@ -30,7 +30,13 @@
       ["Lista potencjalnych klientów: firmy z wyników przetargów i z Twojej listy, dopasowanie i powód kontaktu", "firmy", "silnik", "Dane z wykazu VAT i KRS, punkty z jawnej tabeli. Adresów e-mail panel nie zbiera."],
       ["Treść oferty układana automatycznie i drogi kontaktu z oceną ryzyka", "firmy", "silnik", "Odpowiedź na zapytanie, adres podany przez firmę do ofert, list pocztą albo e-mail bez zgody z ekranem ryzyka. Decyzja należy do Ciebie."],
       ["Zgoda na ofertę e-mailem zbierana listem: strona zgody z kodem QR i dowodem", "firmy", "silnik", "Prośba o zgodę wysłana e-mailem sama wymaga zgody. Dlatego list ma adres strony, na której firma sama wpisuje e-mail i zaznacza zgodę. Panel zapisuje treść zgody, czas i źródło."],
-      ["Wyszukiwanie w rejestrach REGON i CEIDG: branża, region, wielkość", "firmy", "plan", "Wymaga kluczy do rejestrów. Do tego czasu firmy pochodzą z wyników przetargów i z Twojej listy."],
+      ["Audyt strony jako zachęta: list obiecuje raport, firma dostaje go na własną prośbę", "firmy", "silnik", "Wynik trafia do treści oferty. Na stronie zgody prośba o raport i zgoda na ofertę to dwa osobne pola."],
+      ["Lejek listów: wejścia na stronę zgody, zgody, oferty, odpowiedzi i koszt jednej zgody", "firmy", "silnik", "Wejścia liczy serwer, bez plików cookie. Podgląd z panelu się nie liczy."],
+      ["Listy seryjnie: jeden plik do druku z kodami QR i adresy na koperty", "firmy", "silnik", "Każdy list od nowej strony, z adresem strony zgody tej firmy. Adresy w pliku dla arkusza."],
+      ["Przypomnienie po liście i drugi, krótszy list", "firmy", "silnik", "Po 21 dniach bez odpowiedzi. Drugi list zapowiada, że jest ostatni, a panel nie proponuje trzeciego."],
+      ["Kod QR na wizytówkę i stoisko: ogólna strona zgody", "firmy", "silnik", "Kto zeskanuje kod, sam wpisuje firmę i e-mail. Panel zakłada kontakt z podstawą „zgoda”."],
+      ["Pytanie na stronie zgody, co firmę interesuje", "firmy", "silnik", "Tematy ustawiasz w panelu. Szkic oferty nawiązuje do zaznaczonych."],
+      ["Wyszukiwanie firm w CEIDG: branża, region, data założenia", "firmy", "silnik", "Działa po wpisaniu bezpłatnego tokenu hurtowni danych CEIDG. Bez adresów e-mail i telefonów. Spółek z KRS tak szukać się nie da."],
       ["Sekwencje z przypomnieniami i dziennymi limitami", "wysylka", "silnik", "Panel pilnuje terminów i przygotowuje treść kolejnych kroków. Wysyłasz ze swojej skrzynki."],
       ["Wykrywanie odpowiedzi i wypisań", "wysylka", "plan", "Wypisanie działa: odbiorca klika adres w stopce oferty. Odpowiedź zaznaczasz ręcznie, bo automat wymaga połączenia ze skrzynką."]
     ] },
@@ -134,8 +140,11 @@
     { "at": "12.11.2026, 10:41", "who": "Jan K.", "company": "Auto Części 24 (przykład)", "kind": "consent_request", "level": "very_high", "ack": true }
   ],
   "icp": "Sklepy internetowe i firmy usługowe, które mają już stronę i wydają na reklamę co najmniej 1000 zł miesięcznie, ale nie mierzą, z której kampanii przychodzą zamówienia.",
+  "letters": { "firms": 40, "letters": 46, "visit": 14, "report": 9, "consent": 6, "offer": 6, "reply": 2, "refused": 1, "quiet": 9, "cost": 6.5 },
+  "topics": ["Nowa strona internetowa", "Reklamy w Google", "Pozycjonowanie"],
+  "cardQr": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIQAAACEAQAAAAB5P74KAAAA/0lEQVR42s2WwQ3DMAwDuYH235IbqCLVFEF/oR9tYCDpPVSKop2gvy/8mACoQjXbjzGpnlX6uY8xmcIsEtQfnBEVLvY5mdq6HZFpb6wCee/9ObHze91n8Zh4+tZYt2w8JyWBMp7wEGNi2131SlRE2tqmrPXlBIWWPioMzEnDudxZsmPiTkGH6db7czKhnIISx3cyIwKp09JWYU6ccMotXp2GRFNsbsMVk9YOobwqr5iMX5sERSIn0Lk2d/a1UzKyu3Usk8YDohgN99H2TkJEan2HIlWfmQbEBxuUBu/eE+IMSOfnTZQRbpjkW05cbjWSOfHJP3nSC2Qdy8h/fbe8AMRb2QXClmR5AAAAAElFTkSuQmCC",
   "search": [
-    { "company": "Sklep Ogrodnik (przykład)", "source": "Twoja lista", "score": 80, "pkd": "Sklepy internetowe", "region": "mazowieckie", "size": "10-49 osób", "age": 9, "condition": "dobra", "tenders": false, "reason": "Reklamy Google prowadzą na stronę bez pomiaru konwersji." },
+    { "company": "Sklep Ogrodnik (przykład)", "source": "Twoja lista", "score": 80, "audit": 58, "pkd": "Sklepy internetowe", "region": "mazowieckie", "size": "10-49 osób", "age": 9, "condition": "dobra", "tenders": false, "reason": "Reklamy Google prowadzą na stronę bez pomiaru konwersji." },
     { "company": "Kwiaciarnia Internetowa Fiołek (przykład)", "source": "Twoja lista", "score": 75, "invite": ["Propozycje współpracy prosimy przesyłać na adres wspolpraca@fiolek.example.", "wspolpraca@fiolek.example", "fiolek.example/kontakt"], "pkd": "Sklepy internetowe", "region": "łódzkie", "size": "do 9 osób", "age": 4, "condition": "dobra", "tenders": false, "reason": "Strona blokuje boty wyszukiwarek AI w robots.txt." },
     { "company": "Okna Jasne (przykład)", "source": "wyniki przetargów", "score": 90, "win": "Wymiana stolarki okiennej w szkole podstawowej (przykład)", "pkd": "Budownictwo i wykończenia", "region": "mazowieckie", "size": "50-249 osób", "age": 17, "condition": "dobra", "tenders": true, "reason": "Startuje w przetargach, a strona nie ma opisu realizacji." },
     { "company": "Gabinet Stomatologiczny Uśmiech (przykład)", "source": "Twoja lista", "score": 60, "pkd": "Usługi medyczne", "region": "śląskie", "size": "do 9 osób", "age": 6, "condition": "dobra", "tenders": false, "reason": "Wizytówka Google bez godzin otwarcia i zdjęć." },
