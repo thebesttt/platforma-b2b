@@ -6,21 +6,21 @@ Stan na 23.11.2026.
 
 Na perfectdata.pl nic nie zostało zainstalowane. Kod trafi na stronę dopiero po wyraźnej zgodzie właściciela.
 
-**Co się zmieniło 20.11.2026.** Etapy 1 i 2 oraz większość etapu 3 są zbudowane w silniku i przechodzą testy. Tego samego dnia doszło pięć funkcji z etapu 4: wyniki przetargów, praca zespołu nad ofertą, warunki naboru dotacji, przypomnienia z adresem wypisania i opis idealnego klienta. Potem doszły cztery funkcje, których dane nie są dostępne dla programów: panel pokazuje, gdzie je znaleźć, i daje miejsce na wpisanie (szczegóły niżej, w części „Dane wpisywane ręcznie”). 23.11.2026 doszła lista potencjalnych klientów: panel proponuje firmy, układa treść oferty i pokazuje drogi kontaktu z oceną ryzyka (część „Potencjalni klienci i wysyłka”). Do uruchomienia zostały kroki właściciela z etapu 0: hosting, baza, klucze usług i zgoda na kod widżetu. Lista na końcu, w części „Co jest potrzebne od właściciela”.
+**Co się zmieniło 20.11.2026.** Etapy 1 i 2 oraz większość etapu 3 są zbudowane w silniku i przechodzą testy. Tego samego dnia doszło pięć funkcji z etapu 4: wyniki przetargów, praca zespołu nad ofertą, warunki naboru dotacji, przypomnienia z adresem wypisania i opis idealnego klienta. Potem doszły cztery funkcje, których dane nie są dostępne dla programów: panel pokazuje, gdzie je znaleźć, i daje miejsce na wpisanie (szczegóły niżej, w części „Dane wpisywane ręcznie”). 23.11.2026 doszła lista potencjalnych klientów: panel proponuje firmy, układa treść oferty i pokazuje drogi kontaktu z oceną ryzyka (część „Potencjalni klienci i wysyłka”). Tego samego dnia doszła zgoda na ofertę e-mailem zbierana listem: strona zgody z kodem QR i zapisanym dowodem. Do uruchomienia zostały kroki właściciela z etapu 0: hosting, baza, klucze usług i zgoda na kod widżetu. Lista na końcu, w części „Co jest potrzebne od właściciela”.
 
 ## Co jest gotowe
 
-- **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`, 151 testów na SQLite i PostgreSQL. Gotowa do uruchomienia w Render.
+- **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`, 156 testów na SQLite i PostgreSQL. Gotowa do uruchomienia w Render.
 - **Panel w wyglądzie PerfectData** (zmienna `APP_THEME=perfectdata` albo ustawienie firmy) z wyborem modułów w menu i pulpitem, który pokazuje tylko włączone moduły.
 - **Zapytania ze strony:** widżet do wklejenia jedną linią kodu, kwalifikator z jawną tabelą punktów, lista i karta zapytań, czat AI z bazy wiedzy, lejek i test dwóch wersji.
 - **Audyt AI:** 24 wskaźniki i 100 punktów z jednego pliku wytycznych, raport z linijką punktów i listą „Najpierw to”, „Przed i po”, strona wytycznych, raport dla klienta pod linkiem, audyt wielu stron z mapy witryny. Sprawdzony na prawdziwej stronie perfectdata.pl.
 - **Poczta z panelu:** powiadomienie o zapytaniu, reset hasła, zaproszenia do zespołu i poranny przegląd (przetargi, zapytania, alerty).
 - **Przetargi:** import i dopasowanie do profilu, karta przetargu, analiza SWZ oraz wyniki: kto wygrywa w branży i regionie, za ile i przy ilu ofertach. Alert, gdy zapisany przetarg zostanie rozstrzygnięty.
 - **Oferty i wnioski:** szkic z ogłoszenia i biblioteki, praca zespołu (sekcja przydzielona osobie, zapis nie nadpisuje cudzej zmiany), lista dokumentów do odhaczania, a we wniosku o dotację sprawdzenie warunków naboru z cytatami. Lista obserwowanych naborów z przewodnikiem po pięciu oficjalnych serwisach, przypomnieniami o końcu naboru i wnioskiem zakładanym z naboru.
-- **Klienci i wiadomości:** ocena ryzyka prawnego przed wysyłką, przypomnienia po 4 i po 10 dniach z dziennym limitem, adres wypisania w stopce ofert, opis idealnego klienta ze strony firmy. Rejestr zapytań ofertowych z rynku: gdzie szukać, termin, kontakt z podstawą „zapytanie ofertowe” i odpowiedź jednym kliknięciem. Lista potencjalnych klientów: firmy z wyników przetargów i z listy użytkownika, dane z rejestrów, punkty dopasowania, treść oferty układana automatycznie i drogi kontaktu z oceną ryzyka.
+- **Klienci i wiadomości:** ocena ryzyka prawnego przed wysyłką, przypomnienia po 4 i po 10 dniach z dziennym limitem, adres wypisania w stopce ofert, opis idealnego klienta ze strony firmy. Rejestr zapytań ofertowych z rynku: gdzie szukać, termin, kontakt z podstawą „zapytanie ofertowe” i odpowiedź jednym kliknięciem. Lista potencjalnych klientów: firmy z wyników przetargów i z listy użytkownika, dane z rejestrów, punkty dopasowania, treść oferty układana automatycznie i drogi kontaktu z oceną ryzyka. Zgoda na ofertę e-mailem zbierana listem: w liście jest adres strony zgody i kod QR, firma sama zostawia e-mail, a panel zapisuje dowód.
 - **Kontrahenci:** karta firmy z rejestrów publicznych, a do tego dwa sprawdzenia robione ręcznie: Krajowy Rejestr Zadłużonych i liczby ze sprawozdania finansowego, z których panel liczy, po ilu dniach firma płaci dostawcom.
 - **Audyt techniczny:** bez zmian, działa od początku.
-- **Mockup całego panelu:** `mockup/audyt-ai`, 9 modułów i 32 ekrany, z listą 62 funkcji i ich stanem. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip`.
+- **Mockup całego panelu:** `mockup/audyt-ai`, 9 modułów i 32 ekrany, z listą 63 funkcji i ich stanem. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip`.
 - **Wytyczne audytu:** `resources/audyt-ai-rules.json` (czyta je silnik) i dokument dla zespołu `mockup/audyt-ai/WYTYCZNE.md`.
 - **Plany modułów:** `PLAN-ZAPYTANIA.md` i `PLAN-AUDYT-AI.md`.
 
@@ -43,19 +43,19 @@ W platformie wygląd i zestaw modułów będą ustawieniem organizacji (pole `se
 
 ## Funkcje i ich stan
 
-Mockup pokazuje 62 funkcje. Zakładka „Lista funkcji” na pulpicie podaje stan każdej z nich i prowadzi do ekranu.
+Mockup pokazuje 63 funkcje. Zakładka „Lista funkcji” na pulpicie podaje stan każdej z nich i prowadzi do ekranu.
 
 | Moduł | Działa w silniku | Do zbudowania | Czeka na zgodę Google i Meta |
 |---|---|---|---|
 | Zapytania | 5 | 0 | 0 |
-| Klienci | 11 | 2 | 0 |
+| Klienci | 12 | 2 | 0 |
 | Audyt AI | 6 | 1 | 0 |
 | SEO i strona | 3 | 2 | 0 |
 | Reklamy | 0 | 0 | 6 |
 | Przetargi | 9 | 0 | 0 |
 | Oferty i wnioski | 9 | 0 | 0 |
 | Kontrahenci | 7 | 1 | 0 |
-| Razem | 50 | 6 | 6 |
+| Razem | 51 | 6 | 6 |
 
 „Działa w silniku” znaczy, że kod jest w repozytorium i przechodzi testy. Silnik nie jest jeszcze uruchomiony online (etap 0).
 
@@ -96,13 +96,34 @@ Jak to działa:
 | Droga kontaktu | Ryzyko | Dlaczego |
 |---|---|---|
 | Odpowiedź na zapytanie ofertowe firmy | niskie | Firma sama prosi o oferty |
-| Oferta do firmy, która wyraziła zgodę albo jest klientem | niskie | Jest zgoda |
+| Oferta do firmy, która wyraziła zgodę albo jest klientem | niskie | Jest zgoda. Zgodę ze strony zgody panel pokazuje razem z dowodem: treść, czas, źródło |
 | Oferta na adres, który firma podała do przesyłania ofert | niskie | Udostępnienie adresu w tym celu jest formą zgody (art. 398 ust. 2 PKE). Panel szuka takiego zdania na stronie firmy i pokazuje cytat z linkiem. Podstawą staje się dopiero po potwierdzeniu przez użytkownika |
-| List pocztą | niskie | Art. 398 PKE dotyczy telefonu i środków elektronicznych. Panel przygotowuje list .docx. Dla osób prowadzących działalność dodaje informację z art. 14 RODO i przypomina o terminie miesiąca |
+| List pocztą z prośbą o zgodę na e-mail | niskie | Art. 398 PKE dotyczy telefonu i środków elektronicznych. Panel przygotowuje list .docx z adresem strony zgody i kodem QR. Dla osób prowadzących działalność dodaje informację z art. 14 RODO i przypomina o terminie miesiąca |
 | E-mail bez zgody | bardzo wysokie | Art. 398 ust. 1 PKE. Panel przygotuje wiadomość, pokaże ekran ryzyka i wymaga potwierdzenia. Decyzję podejmuje użytkownik |
-| Prośba o zgodę wysłana e-mailem | bardzo wysokie | Ministerstwo Cyfryzacji (odpowiedź z 13.10.2025 na interpelację nr 12337) uznaje kontakt w celu uzyskania zgody za niedozwolony. Wcześniej panel oceniał to jako ryzyko wysokie |
+| Prośba o zgodę wysłana e-mailem | bardzo wysokie | Ministerstwo Cyfryzacji (odpowiedź z 13.10.2025 na interpelację nr 12337) uznaje kontakt w celu uzyskania zgody za niedozwolony. Wcześniej panel oceniał to jako ryzyko wysokie. Ocena wskazuje drogę bez ryzyka: list ze stroną zgody |
 
 Sprzeciw firmy blokuje listy i oferty. Odpowiedź na jej własne zapytanie ofertowe zostaje możliwa.
+
+#### Jak zdobyć zgodę na e-mail zgodnie z prawem
+
+Pytanie o zgodę wysłane e-mailem, SMS-em albo zadane przez telefon samo wymaga zgody. Zgodę musi więc zebrać kanał, który jej nie wymaga. Panel robi to tak:
+
+1. **List pocztą.** Panel przygotowuje list z ofertą. Jest w nim zdanie o zgodzie, adres strony zgody tej firmy (np. `panel.pl/z/tb6y4s29mb`) i kod QR do zeskanowania telefonem.
+2. **Strona zgody.** Firma wchodzi na nią sama. Widzi, kto pyta, wpisuje adres e-mail i zaznacza zgodę o dokładnej treści. Może dodać telefon z osobną zgodą albo kliknąć „Nie chcemy korespondencji”. Strona działa bez logowania i nie zapisuje plików cookie.
+3. **Dowód.** Panel zapisuje treść zgody, czas, źródło i skrót adresu IP. Kontakt dostaje podstawę „zgoda”. Zespół dostaje powiadomienie, a firma potwierdzenie z linkiem wycofania (bez oferty).
+4. **Oferta e-mailem.** Od tej chwili wiadomość ma niskie ryzyko. Karta firmy pokazuje dowód obok przycisku „Przygotuj ofertę”, a lista przypomina o firmach, które czekają na wiadomość.
+
+Zgodę wyrażoną inaczej (odpowiedź na list, rozmowa na targach, prośba firmy o ofertę) użytkownik zapisuje ręcznie: adres, sposób, data i opis, kto co powiedział. To on musi umieć ją wykazać.
+
+Zasady, których panel pilnuje:
+
+- Adres strony zgody trafia tylko do listu. Karta ostrzega, że wysłany e-mailem albo SMS-em byłby prośbą o zgodę bez zgody.
+- Zgoda dotyczy oferty tej jednej firmy. Wycofuje ją link w każdej wiadomości, przycisk na stronie zgody albo użytkownik w panelu. Dowód zostaje w bazie z datą wycofania.
+- Odmowa na stronie zgody jest sprzeciwem. Sprzeciwu nie nadpisze ręczny wpis użytkownika. Zdanie może zmienić tylko sama firma, na swojej stronie zgody.
+- Adres, który się wypisał, nie wróci przez formularz.
+- Potwierdzenie nie jest podwójne (bez klikania w link z e-maila), bo adres strony zna tylko adresat listu, a potwierdzenie z linkiem wycofania wychodzi od razu.
+
+Inne legalne drogi do e-maila, które panel już obsługuje: odpowiedź na zapytanie ofertowe firmy, adres podany przez firmę do przesyłania ofert i zgoda zaznaczona w rozmowie w widżecie na stronie.
 
 Źródła: [art. 398 Prawa komunikacji elektronicznej](https://lexlege.pl/komunik-elektr/art-398/), [odpowiedź Ministerstwa Cyfryzacji na interpelację nr 12337](https://api.sejm.gov.pl/sejm/term10/interpellations/attachment/ATTDMGHNP/i12337-o1.pdf), [Grant Thornton o marketingu pocztą tradycyjną](https://grantthornton.pl/publikacja/marketing-rodo-i-wysylka-kartek-swiatecznych/). To opis przepisów, a nie porada prawna. Opinia prawnika o module wiadomości jest na liście rzeczy potrzebnych przed sprzedażą platformy.
 
@@ -252,6 +273,7 @@ Bez tego panel nie ruszy albo nie zrobi części pracy. Tych rzeczy nie da się 
 | `CF_ACCOUNT_ID`, `CF_BROWSER_TOKEN` | wskaźniki A6 i E2 | Cloudflare, Browser Run |
 | Zgoda na kod widżetu i wpis w polityce prywatności | zapytania z perfectdata.pl | decyzja właściciela |
 | Plik logo | nagłówek panelu i raporty | - |
+| Własny adres panelu, opcjonalnie | krótszy adres strony zgody w listach | domena w Render i zmienna `APP_URL` |
 | Wnioski do Google i Meta | moduł Reklamy | Google Ads API (dostęp Basic), Meta App Review |
 | Logowanie Google dla aplikacji | Search Console, wizytówka Google | Google Cloud, ekran zgody OAuth |
 
@@ -277,9 +299,24 @@ Potrzebne przed etapem 4:
 
 ## Co zostało sprawdzone
 
+### Zgoda na ofertę e-mailem (23.11.2026)
+
+- **156 testów** na SQLite i PostgreSQL oraz test obrazu Docker (GitHub Actions). Pięć nowych obejmuje:
+  - stronę zgody: błędny adres, brak zaznaczonej zgody, zgodę na telefon bez numeru, pole-pułapkę dla automatów, powtórne wysłanie formularza,
+  - dowód zgody, kontakt z podstawą „zgoda”, powiadomienie zespołu, potwierdzenie dla firmy i niskie ryzyko oferty,
+  - wycofanie linkiem z wiadomości, przyciskiem na stronie zgody i w panelu, odmowę jako sprzeciw,
+  - zgodę zapisaną ręcznie (bez opisu, potwierdzenia albo z datą z przyszłości się nie zapisze), klienta z mocniejszą podstawą,
+  - zły kod (404), limit 40 wejść na godzinę z jednego adresu, brak plików cookie, izolację między firmami i kod HTML w polach,
+  - kod QR: rozmiary dla kolejnych długości tekstu, znaczniki narożne, poprawny plik PNG i kod w pliku .docx pod akapitem z adresem.
+- **Kod QR** powstaje bez zewnętrznych bibliotek. 48 kodów o różnych długościach odczytał niezależny czytnik (OpenCV). Kod z listu wydrukowanego do PDF prowadzi na właściwą stronę zgody.
+- **Przeglądarka (Chromium), 1280, 390 i 320 px:** karta firmy z adresem strony zgody, list z kodem QR, strona zgody bez logowania (błędy, zgoda, stan „zgoda już zapisana”, zły kod), karta i lista po zgodzie, ekran oferty z niskim ryzykiem, formularz ręcznej zgody. Bez błędów, bez plików cookie na stronie zgody i bez poziomego przewijania.
+- **Cały panel po zmianach:** 167 stron w 3 szerokościach bez błędów i bez poziomego przewijania. Mockup: 32 ekrany w 4 szerokościach, z klikalnym podglądem strony zgody.
+
+Czego nie dało się sprawdzić: prawdziwej wysyłki powiadomienia i potwierdzenia (wymaga klucza Resend), skanowania kodu z papieru prawdziwym telefonem i zachowania na Render. Ocena prawna wymaga potwierdzenia przez prawnika, zwłaszcza treść zgody i brak podwójnego potwierdzenia.
+
 ### Potencjalni klienci (23.11.2026)
 
-- **151 testów** na SQLite i PostgreSQL oraz test obrazu Docker (GitHub Actions). Pięć nowych obejmuje:
+- **151 testów** (stan z tego etapu) na SQLite i PostgreSQL oraz test obrazu Docker (GitHub Actions). Pięć nowych obejmuje:
   - wyszukanie wykonawców (bez własnej firmy, bez unieważnionych, bez firm już dodanych), wklejoną listę z błędnymi wierszami i limitem,
   - kolejkę rejestrów w przeglądarce i w zadaniu dziennym, firmę spoza wykazu VAT,
   - punkty dopasowania po zmianie kryteriów,
