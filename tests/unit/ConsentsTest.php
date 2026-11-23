@@ -113,6 +113,11 @@ return [
         contains('Dziękujemy, zgoda zapisana', $again->body);
         eq(1, (int) $db->val('SELECT COUNT(*) FROM consents'));
         eq(1, (int) $db->val("SELECT COUNT(*) FROM outbox WHERE kind = 'consent_receipt'"));
+        // Kolejne wejście na stronę mówi, że zgoda już jest, i nie pokazuje pełnego adresu.
+        $seen = $guest(fn () => http('GET', '/z/' . $code))->body;
+        contains('Zgoda jest już zapisana', $seen);
+        contains('Wycofuję zgodę i nie chcę korespondencji', $seen);
+        ok(!str_contains($seen, 'zakupy@przykladowa.example') && !str_contains($seen, 'name="email"'), 'bez pełnego adresu i bez drugiego formularza');
 
         // Panel: karta pokazuje dowód i drogę o niskim ryzyku, lista ma oznaczenie i przypomnienie.
         $card = http('GET', $url)->body;
@@ -272,6 +277,14 @@ return [
         ok(!str_contains(http('GET', $url2)->body, 'masz zgodę'), 'zgoda dla jednej firmy z panelu nie działa u drugiej');
         eq([], Consents::waiting($org2));
         eq(1, count(Consents::waiting($orgId)));
+
+        // Firma wycofuje zgodę przyciskiem na swojej stronie: dowód dostaje datę wycofania, a firma ma sprzeciw.
+        $out = $guest(fn () => http('POST', '/z/' . $code, ['_csrf' => 'brak', 'action' => 'refuse']));
+        contains('Zapisane: bez korespondencji', $out->body);
+        ok($db->val('SELECT withdrawn_at FROM consents WHERE org_id = ?', [$orgId]) !== null, 'zgoda wycofana na stronie zgody');
+        eq('objected', $db->val('SELECT status FROM prospects WHERE id = ?', [$id]));
+        ok($db->val('SELECT unsubscribed_at FROM contacts WHERE org_id = ?', [$orgId]) !== null, 'adres wypisany');
+        eq([], Consents::waiting($orgId));
 
         // Limit prób z jednego adresu: po 40 wejściach w godzinie strona odmawia.
         Kv::set('consent:' . hash('sha256', '127.0.0.1') . ':' . gmdate('YmdH'), 40, 3600);

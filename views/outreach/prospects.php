@@ -35,7 +35,7 @@ $total = array_sum($counts);
 
   <?php if (!empty($waiting)): $nw = count($waiting); ?>
     <div class="notice low" id="zgody">
-      <strong><?= $nw ?> <?= plural($nw, 'firma zostawiła', 'firmy zostawiły', 'firm zostawiło') ?> zgodę na ofertę e-mailem i czeka na wiadomość:</strong>
+      <strong><?= $nw ?> <?= plural($nw, 'firma zostawiła zgodę na ofertę e-mailem i czeka', 'firmy zostawiły zgodę na ofertę e-mailem i czekają', 'firm zostawiło zgodę na ofertę e-mailem i czeka') ?> na wiadomość:</strong>
       <?php foreach ($waiting as $i => $w): ?><?= $i ? ', ' : ' ' ?><a href="/klienci/potencjalni/<?= (int) $w['id'] ?>#kontakt"><?= e(truncate((string) $w['name'], 60)) ?></a><?php endforeach ?>.
     </div>
   <?php endif ?>

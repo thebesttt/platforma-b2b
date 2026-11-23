@@ -64,7 +64,7 @@ code { color: var(--text-2); }
 .btn.danger:hover { background: var(--high-bg); color: var(--high); filter: none; }
 .btn[disabled], .btn.disabled { background: var(--raised); color: var(--muted); border-color: var(--line); filter: none; }
 .link-btn { color: var(--gold-hi); }
-input[type=text], input[type=email], input[type=password], input[type=number], input[type=date], input[type=url], input[type=search], select, textarea { background: var(--bg); border-color: var(--line); color: var(--text); border-radius: 9px; }
+input[type=text], input[type=email], input[type=password], input[type=number], input[type=date], input[type=url], input[type=tel], input[type=search], select, textarea { background: var(--bg); border-color: var(--line); color: var(--text); border-radius: 9px; }
 input::placeholder, textarea::placeholder { color: #6f7a93; }
 input:focus-visible, select:focus-visible, textarea:focus-visible, .btn:focus-visible, a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .opt, .filters a { background: transparent; }

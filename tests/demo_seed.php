@@ -241,6 +241,11 @@ function demo_seed(): array
     if ($row = \App\Modules\Outreach\Prospects::byNip($org, '1234563218')) {
         \App\Modules\Outreach\Prospects::setStatus($org, (int) $row['id'], 'picked');
     }
+    // Przykład zgody zapisanej ręcznie: firma poprosiła o ofertę w rozmowie. Firma z przetargów pokazuje drogę listem ze stroną zgody.
+    if ($row = \App\Modules\Outreach\Prospects::byHost($org, 'firma-uslugowa.example')) {
+        \App\Modules\Outreach\Consents::manual($row, $uid, ['email' => 'biuro@firma-uslugowa.example', 'person' => 'Maria Przykładowa', 'way' => 'in_person',
+            'detail' => 'Na spotkaniu izby gospodarczej pani Maria Przykładowa poprosiła o ofertę na ten adres. Mam wizytówkę z dopiskiem.', 'on' => today_pl()]);
+    }
 
     // Audyt treści: fikcyjna strona poradnika sprawdzona dwa razy, przed pracami i po nich. Odpowiedzi strony i usług
     // pomiarowych pochodzą z plików testowych, więc na czas przykładu udajemy podłączoną usługę renderowania.

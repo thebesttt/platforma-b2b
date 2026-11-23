@@ -1,6 +1,6 @@
 <?php
 /**
- * @var array $p firma z listy razem z danymi nadawcy @var string $state form | done | refused @var ?string $error
+ * @var array $p firma z listy razem z danymi nadawcy @var string $state form | done | already | refused @var ?string $error
  * @var string $email @var array $in @var array{email: string, phone: string} $wording @var string $code
  */
 $v = static fn (string $k): string => e((string) ($in[$k] ?? ''));
@@ -13,6 +13,13 @@ $sender = e($p['org_name']);
     <h1 id="t-consent">Dziękujemy, zgoda zapisana</h1>
     <p>Firma <strong><?= $sender ?></strong> wyśle ofertę<?= $masked !== '' ? ' na adres ' . e($masked) : '' ?>.</p>
     <p class="muted small" style="margin:0">Zgodę można wycofać w każdej chwili: w każdej wiadomości jest link rezygnacji.</p>
+  <?php elseif ($state === 'already'): ?>
+    <h1 id="t-consent">Zgoda jest już zapisana</h1>
+    <p>Firma <strong><?= $sender ?></strong> ma Państwa zgodę na ofertę<?= $masked !== '' ? ' pod adresem ' . e($masked) : '' ?>.</p>
+    <p class="muted small" style="margin:0">Zgodę można wycofać linkiem w każdej wiadomości albo przyciskiem poniżej.</p>
+    <form method="post" action="/z/<?= e($code) ?>">
+      <button class="btn ghost sm" type="submit" name="action" value="refuse">Wycofuję zgodę i nie chcę korespondencji</button>
+    </form>
   <?php elseif ($state === 'refused'): ?>
     <h1 id="t-consent">Zapisane: bez korespondencji</h1>
     <p>Firma <strong><?= $sender ?></strong> nie wyśle do Państwa kolejnych listów ani ofert.</p>
@@ -21,7 +28,7 @@ $sender = e($p['org_name']);
     <h1 id="t-consent">Zgoda na ofertę e-mailem</h1>
     <p>Firma <strong><?= $sender ?></strong> wysłała do Państwa list z propozycją współpracy. Jeśli chcą Państwo dostać ofertę e-mailem, prosimy wpisać adres i zaznaczyć zgodę. Bez zgody nie wyślemy żadnej wiadomości.</p>
   <?php endif ?>
-  <?php if ($state !== 'done'): ?>
+  <?php if ($state === 'form' || $state === 'refused'): ?>
     <?php if ($error !== null): ?><div class="flash error" role="alert"><?= e($error) ?></div><?php endif ?>
     <form method="post" action="/z/<?= e($code) ?>" class="stack-sm">
       <p class="muted small" style="margin:0">Dla: <?= e($p['name']) ?></p>

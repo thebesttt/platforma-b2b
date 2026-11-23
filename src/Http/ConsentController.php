@@ -30,9 +30,10 @@ final class ConsentController extends Controller
         if (!$p) {
             return $render('errors/message', ['title' => 'Adres nie działa', 'message' => 'Sprawdź, czy adres jest przepisany dokładnie tak jak w liście. Kod ma 10 znaków: małe litery i cyfry.'], 404);
         }
-        $state = $p['status'] === 'objected' ? 'refused' : 'form';
+        $given = Consents::latest((int) $p['org_id'], (int) $p['id']);
+        $state = $p['status'] === 'objected' ? 'refused' : ($given ? 'already' : 'form');
         $error = null;
-        $email = '';
+        $email = (string) ($given['email'] ?? '');
         if ($r->method === 'POST') {
             // Pole niewidoczne dla ludzi: wypełniają je tylko automaty. Udajemy powodzenie i nic nie zapisujemy.
             if ($r->str('strona_www') !== '') {
