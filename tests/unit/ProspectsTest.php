@@ -70,7 +70,7 @@ return [
         // Punkty z jawnej tabeli: bez słów branżowych branża ma zero, po ich podaniu punkty się przeliczają.
         eq([0, 15, 10, 20], [$rows($p)['Branża'], $rows($p)['Region'], $rows($p)['Staż firmy'], $rows($p)['Powód kontaktu']]);
         eq(303, http('POST', '/klienci/potencjalni/kryteria', ['keywords' => "transport\nbudow\nab", 'regions' => ['mazowieckie', 'nieznane'], 'min_years' => '5'])->status);
-        eq(['keywords' => "transport\nbudow", 'regions' => ['mazowieckie'], 'min_years' => 5], Prospects::criteria($db->one('SELECT * FROM organizations WHERE id = ?', [$orgId])));
+        eq(['keywords' => "transport\nbudow", 'regions' => ['mazowieckie'], 'min_years' => 5, 'letter_cost' => 0.0], Prospects::criteria($db->one('SELECT * FROM organizations WHERE id = ?', [$orgId])));
         $p = Prospects::find($orgId, (int) $p['id']);
         eq([40, 15, 10, 20], [$rows($p)['Branża'], $rows($p)['Region'], $rows($p)['Staż firmy'], $rows($p)['Powód kontaktu']]);
         eq((int) $p['score'], array_sum($rows($p)));

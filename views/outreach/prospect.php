@@ -137,7 +137,7 @@ $openConsent = false;
             <?php endif ?>
             <div class="item-actions">
               <a class="btn sm" href="/klienci/potencjalni/<?= $id ?>/list">Przygotuj list</a>
-              <?php if (!empty($path['consent_url'])): ?><a class="btn ghost sm" href="<?= e($path['consent_url']) ?>" target="_blank" rel="noopener noreferrer">Zobacz stronę zgody</a><?php endif ?>
+              <?php if (!empty($path['consent_url'])): ?><a class="btn ghost sm" href="<?= e($path['consent_url']) ?>?podglad=1" target="_blank" rel="noopener noreferrer">Zobacz stronę zgody</a><?php endif ?>
             </div>
           <?php elseif ($path['key'] === 'email'): ?>
             <form method="post" action="/klienci/potencjalni/<?= $id ?>/kontakt" class="form-grid two" style="margin-top:10px">
@@ -212,7 +212,7 @@ $openConsent = false;
             <p class="xs muted" style="margin:6px 0 0">Tego adresu też nie wysyłaj e-mailem bez zgody albo prośby firmy.</p>
             <div class="item-actions">
               <a class="btn ghost sm" href="/audyt/<?= (int) $report['id'] ?>">Otwórz audyt</a>
-              <?php if ($report['url'] !== ''): ?><a class="btn ghost sm" href="<?= e($report['url']) ?>" target="_blank" rel="noopener noreferrer">Zobacz raport dla firmy</a><?php endif ?>
+              <?php if ($report['url'] !== ''): ?><a class="btn ghost sm" href="<?= e($report['url']) ?>?podglad=1" target="_blank" rel="noopener noreferrer">Zobacz raport dla firmy</a><?php endif ?>
               <form class="inline" method="post" action="/klienci/potencjalni/<?= $id ?>/audyt"><?= csrf_field() ?><button class="btn ghost sm" type="submit" data-busy="Sprawdzam stronę…">Powtórz audyt</button></form>
               <form class="inline" method="post" action="/klienci/potencjalni/<?= $id ?>/audyt" data-confirm="Odpiąć raport? List i strona zgody przestaną go obiecywać, a adres raportu przestanie działać."><?= csrf_field() ?><input type="hidden" name="action" value="drop"><button class="btn ghost sm" type="submit">Odepnij raport</button></form>
             </div>
@@ -235,6 +235,14 @@ $openConsent = false;
       <p class="xs muted" style="margin:10px 0 0">Punkty wynikają z ustawień <a href="/klienci/potencjalni#kryteria">Kogo szukasz</a>.</p>
     </section>
 
+    <?php if ($timeline): ?>
+    <section class="card" id="historia" aria-labelledby="t-hist">
+      <h2 id="t-hist">Historia</h2>
+      <?php foreach ($timeline as $ev): ?>
+        <div class="kv-row"><div><p class="v" style="font-weight:600"><?= e($ev['label']) ?><?= $ev['times'] > 1 ? ' (' . (int) $ev['times'] . ' razy)' : '' ?></p><?php if ($ev['detail'] !== ''): ?><p class="k" style="margin:2px 0 0"><?= e($ev['detail']) ?></p><?php endif ?></div><span class="small nowrap muted"><?= e(local_dt($ev['at'], 'd.m.Y')) ?></span></div>
+      <?php endforeach ?>
+    </section>
+    <?php endif ?>
     <section class="card" aria-labelledby="t-data">
       <h2 id="t-data">Dane i notatka</h2>
       <form method="post" action="/klienci/potencjalni/<?= $id ?>" class="stack-sm" style="margin-top:10px">

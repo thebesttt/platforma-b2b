@@ -261,6 +261,12 @@ function demo_seed(): array
                     $find('mobile', 'speed', 'ok', 0, 'Strona dopasowuje się do telefonu'),
                 ]])]);
         \App\Modules\Outreach\ProspectAudit::attach($org, $row, $aid);
+        // Przykładowa historia do lejka listów: list wyszedł sześć dni temu, firma weszła na stronę zgody po dwóch dniach.
+        foreach ([['letter', 6], ['visit', 4]] as [$kind, $daysAgo]) {
+            $db->insert('prospect_events', ['org_id' => $org, 'prospect_id' => (int) $row['id'], 'kind' => $kind, 'created_by' => $kind === 'letter' ? $uid : null,
+                'created_at' => gmdate('Y-m-d H:i:s', time() - $daysAgo * 86400)]);
+        }
+        \App\Modules\Outreach\Prospects::saveLetterCost($org, '6,50');
     }
     // Przykład zgody zapisanej ręcznie: firma poprosiła o ofertę w rozmowie. Firma z przetargów pokazuje drogę listem ze stroną zgody.
     if ($row = \App\Modules\Outreach\Prospects::byHost($org, 'firma-uslugowa.example')) {

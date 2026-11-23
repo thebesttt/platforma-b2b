@@ -56,7 +56,18 @@ final class Prospects
             'keywords' => (string) ($c['keywords'] ?? ''),
             'regions' => array_values(array_intersect(array_map('strval', (array) ($c['regions'] ?? [])), array_keys(Regions::ALL))),
             'min_years' => max(0, min(30, (int) ($c['min_years'] ?? 2))),
+            // Koszt jednego listu (druk, koperta, znaczek) do policzenia, ile kosztuje jedna zgoda. Zero: nie liczymy.
+            'letter_cost' => max(0.0, min(1000.0, round((float) ($c['letter_cost'] ?? 0), 2))),
         ];
+    }
+
+    /** Zapis kosztu listu bez ruszania pozostałych kryteriów. */
+    public static function saveLetterCost(int $orgId, string $value): void
+    {
+        $org = Db::get()->one('SELECT * FROM organizations WHERE id = ?', [$orgId]);
+        $c = self::criteria($org);
+        $c['letter_cost'] = max(0.0, min(1000.0, round((float) str_replace([' ', ','], ['', '.'], $value), 2)));
+        Brand::save($orgId, ['prospecting' => $c]);
     }
 
     /** Zapis kryteriów i przeliczenie punktów na całej liście firmy. */
@@ -67,6 +78,7 @@ final class Prospects
             'keywords' => implode("\n", array_map(static fn ($w) => mb_substr($w, 0, 60), $words)),
             'regions' => array_values(array_intersect(array_map('strval', (array) ($in['regions'] ?? [])), array_keys(Regions::ALL))),
             'min_years' => max(0, min(30, (int) ($in['min_years'] ?? 2))),
+            'letter_cost' => self::criteria(Db::get()->one('SELECT * FROM organizations WHERE id = ?', [$orgId]))['letter_cost'],
         ]]);
         self::rescoreAll($orgId);
     }
@@ -998,10 +1010,13 @@ final class Prospects
     }
 
     /** Kontakt nawiązany: listem albo e-mailem. */
-    public static function markContacted(int $orgId, int $id, string $how): void
+    public static function markContacted(int $orgId, int $id, string $how, ?int $userId = null): void
     {
-        Db::get()->update('prospects', ['status' => 'contacted', 'contacted_how' => $how === 'letter' ? 'letter' : 'email', 'contacted_at' => now_utc(), 'updated_at' => now_utc()],
+        $changed = Db::get()->update('prospects', ['status' => 'contacted', 'contacted_how' => $how === 'letter' ? 'letter' : 'email', 'contacted_at' => now_utc(), 'updated_at' => now_utc()],
             "id = ? AND org_id = ? AND status <> 'objected'", [$id, $orgId]);
+        if ($changed) {
+            ProspectEvents::add($orgId, $id, $how === 'letter' ? 'letter' : 'offer', null, $userId);
+        }
     }
 
     /** Po wysłanej wiadomości do kontaktu firma z listy przechodzi do „po kontakcie”. */
@@ -1009,12 +1024,14 @@ final class Prospects
     {
         Db::get()->update('prospects', ['status' => 'contacted', 'contacted_how' => 'email', 'contacted_at' => now_utc(), 'updated_at' => now_utc()],
             "org_id = ? AND contact_id = ? AND status IN ('new', 'picked')", [$orgId, $contactId]);
+        ProspectEvents::forContact($orgId, $contactId, 'offer');
     }
 
     /** Sprzeciw firmy: koniec ofert i listów. Jeśli jest kontakt, zostaje wypisany. */
     public static function object(int $orgId, array $p): void
     {
         Db::get()->update('prospects', ['status' => 'objected', 'updated_at' => now_utc()], 'id = ? AND org_id = ?', [(int) $p['id'], $orgId]);
+        ProspectEvents::add($orgId, (int) $p['id'], 'refused', null, null, true);
         if (!empty($p['contact_id']) && ($c = Outreach::contact($orgId, (int) $p['contact_id']))) {
             Outreach::unsubscribe($c);
         }
@@ -1022,6 +1039,7 @@ final class Prospects
 
     public static function delete(int $orgId, int $id): bool
     {
+        ProspectEvents::forget($orgId, $id);
         return Db::get()->run('DELETE FROM prospects WHERE id = ? AND org_id = ?', [$id, $orgId])->rowCount() > 0;
     }
 }

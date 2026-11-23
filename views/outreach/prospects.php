@@ -4,7 +4,9 @@ use App\Modules\Tenders\Regions;
 /**
  * @var array $rows firmy w wybranym stanie @var array<string,int> $counts @var string $status @var array $criteria
  * @var int $pending ile firm czeka na dane z rejestrów @var array $filters @var bool $searched @var array $candidates @var array $coverage
+ * @var array $funnel lejek listów @var int $period okres lejka w dniach, 0 = od początku
  */
+$share = static fn (int $n): string => $funnel['firms'] > 0 ? (int) round($n / $funnel['firms'] * 100) . '%' : '';
 $tabs = ['new' => 'Do oceny', 'picked' => 'Wybrane', 'contacted' => 'Po kontakcie', 'skipped' => 'Pominięte'];
 $tabCount = static fn (string $k): int => $k === 'skipped' ? $counts['skipped'] + $counts['objected'] : $counts[$k];
 $post = static fn (int $id, string $value, string $label, string $back): string =>
@@ -143,6 +145,42 @@ $total = array_sum($counts);
         <?php endif ?>
       </div>
     <?php endif ?>
+  </section>
+
+  <section class="card" id="lejek" aria-labelledby="t-funnel">
+    <div class="between" style="align-items:flex-start">
+      <div>
+        <h2 id="t-funnel">Czy listy działają</h2>
+        <p class="small muted" style="margin:4px 0 0">Firmy, do których wyszedł list, i co stało się potem. Wejścia liczy serwer, bez plików cookie. Podgląd strony zgody z panelu się nie liczy.</p>
+      </div>
+      <form method="get" action="/klienci/potencjalni#lejek" class="row-flex">
+        <label class="sr-only" for="pf-okres">Okres</label>
+        <select id="pf-okres" name="okres" data-autosubmit><?php foreach (App\Modules\Outreach\ProspectEvents::PERIODS as $d => $label): ?><option value="<?= (int) $d ?>"<?= $period === $d ? ' selected' : '' ?>><?= e($label) ?></option><?php endforeach ?></select>
+        <noscript><button class="btn ghost sm" type="submit">Pokaż</button></noscript>
+      </form>
+    </div>
+    <?php if ($funnel['firms'] === 0): ?>
+      <p class="small" style="margin:14px 0 0">W tym okresie nie wyszedł żaden list. Gdy wyślesz list, kliknij na jego ekranie „Oznacz: list wysłany”. Od tej chwili panel liczy wejścia na stronę zgody, zgody i oferty.</p>
+    <?php else: ?>
+      <div class="grid-stats" style="margin-top:14px">
+        <div class="card"><div class="stat-label">Firmy z listem</div><div class="stat-value"><?= (int) $funnel['firms'] ?></div><div class="small muted"><?= (int) $funnel['letters'] ?> <?= plural((int) $funnel['letters'], 'list', 'listy', 'listów') ?></div></div>
+        <?php foreach (['visit' => 'Weszły na stronę zgody', 'consent' => 'Zostawiły zgodę na ofertę', 'offer' => 'Dostały ofertę e-mailem', 'reply' => 'Odpowiedziały'] as $k => $label): ?>
+          <div class="card"><div class="stat-label"><?= e($label) ?></div><div class="stat-value"><?= (int) $funnel[$k] ?></div><div class="small muted"><?= e($share((int) $funnel[$k])) ?> firm z listem</div></div>
+        <?php endforeach ?>
+      </div>
+      <p class="small" style="margin:14px 0 0">
+        Poprosiły o raport z audytu: <strong><?= (int) $funnel['report'] ?></strong>. Odmówiły korespondencji: <strong><?= (int) $funnel['refused'] ?></strong>.
+        <?php if ($criteria['letter_cost'] > 0): $spent = $funnel['letters'] * $criteria['letter_cost']; ?>
+          Listy kosztowały <strong><?= e(money_pl($spent)) ?></strong><?php if ($funnel['consent'] > 0): ?>, czyli <strong><?= e(money_pl($spent / $funnel['consent'])) ?></strong> za jedną zgodę<?php endif ?>.
+        <?php endif ?>
+      </p>
+    <?php endif ?>
+    <?php if ($funnel['other_consents'] > 0): ?><p class="small muted" style="margin:8px 0 0">Zgody firm bez listu (zapisane ręcznie albo z innych dróg): <?= (int) $funnel['other_consents'] ?>.</p><?php endif ?>
+    <form method="post" action="/klienci/potencjalni/kryteria" class="row-flex" style="margin-top:14px;align-items:flex-end">
+      <?= csrf_field() ?><input type="hidden" name="okres" value="<?= (int) $period ?>">
+      <div class="field" style="flex:0 1 260px;min-width:0"><label for="pf-cost">Koszt jednego listu w zł (druk, koperta, znaczek)</label><input id="pf-cost" name="letter_cost" type="text" inputmode="decimal" maxlength="8" value="<?= $criteria['letter_cost'] > 0 ? e(number_format($criteria['letter_cost'], 2, ',', '')) : '' ?>" placeholder="np. 6,50"></div>
+      <button class="btn ghost sm" type="submit">Zapisz koszt</button>
+    </form>
   </section>
 
   <section class="card" id="kryteria" aria-labelledby="t-crit">

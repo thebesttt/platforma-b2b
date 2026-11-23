@@ -230,6 +230,12 @@ final class Consents
         if (in_array('report', explode(',', $c['channels']), true)) {
             $facts['report_request'] = ['at' => $now, 'email' => $c['email']];
         }
+        if (in_array('report', explode(',', $c['channels']), true)) {
+            ProspectEvents::add($orgId, (int) $p['id'], 'report');
+        }
+        if ($offer) {
+            ProspectEvents::add($orgId, (int) $p['id'], 'consent', $c['source'] === 'page' ? 'strona zgody' : 'zapisana ręcznie', $c['created_by']);
+        }
         // Firma prosi o ofertę albo raport, więc wraca do wybranych, także po wysłanym liście i po wcześniejszym sprzeciwie.
         $db->update('prospects', ['contact_id' => $contactId, 'facts_json' => json_out($facts), 'status' => 'picked', 'updated_at' => $now], 'id = ?', [(int) $p['id']]);
         return ['ok' => true, 'email' => $c['email'], 'contact_id' => $contactId];
@@ -341,6 +347,7 @@ final class Consents
         $db = Db::get();
         $db->update('consents', ['withdrawn_at' => now_utc()], 'org_id = ? AND contact_id = ? AND withdrawn_at IS NULL', [$orgId, $contactId]);
         foreach ($db->all('SELECT * FROM prospects WHERE org_id = ? AND contact_id = ?', [$orgId, $contactId]) as $p) {
+            ProspectEvents::add($orgId, (int) $p['id'], 'refused', 'wypisanie z wiadomości', null, true);
             $facts = Prospects::facts($p);
             if (isset($facts['consent']) || isset($facts['report_request'])) {
                 unset($facts['consent'], $facts['report_request']);

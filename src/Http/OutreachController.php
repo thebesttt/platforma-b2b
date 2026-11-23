@@ -16,6 +16,7 @@ use App\Modules\Ai\Claude;
 use App\Modules\Companies\Companies;
 use App\Modules\Outreach\Icp;
 use App\Modules\Outreach\Outreach;
+use App\Modules\Outreach\ProspectEvents;
 use App\Modules\Outreach\Prospects;
 use App\Modules\Outreach\Rfqs;
 use App\Modules\Outreach\RiskPolicy;
@@ -142,6 +143,8 @@ final class OutreachController extends Controller
         $on = empty($c['replied_at']);
         $this->db()->update('contacts', ['replied_at' => $on ? now_utc() : null], 'id = ?', [(int) $c['id']]);
         $stopped = $on ? Sequences::stopForContact($this->orgId(), (int) $c['id'], 'replied') : 0;
+        // Firma z listy potencjalnych klientów: odpowiedź trafia do lejka listów.
+        $on ? ProspectEvents::forContact($this->orgId(), (int) $c['id'], 'reply', (int) Auth::id()) : ProspectEvents::dropForContact($this->orgId(), (int) $c['id'], 'reply');
         AuditLog::add($on ? 'contact.replied' : 'contact.replied_undo', 'contact', (int) $c['id'], [], $r->ip());
         $back = $r->str('back') === 'sekwencje' ? '/klienci/przypomnienia' : '/klienci/' . $c['id'];
         return $this->redirect($back, $on ? 'Zapisano odpowiedź' . ($stopped ? '. Przypomnienia dla tej firmy są zatrzymane.' : '.') : 'Usunięto oznaczenie odpowiedzi.');

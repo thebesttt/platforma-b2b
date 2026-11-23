@@ -12,6 +12,7 @@ use App\Core\View;
 use App\Modules\Audit\Audit;
 use App\Modules\Outreach\Consents;
 use App\Modules\Outreach\ProspectAudit;
+use App\Modules\Outreach\ProspectEvents;
 use App\Modules\Outreach\Prospects;
 
 /**
@@ -37,6 +38,10 @@ final class ConsentController extends Controller
         $given = Consents::latest($orgId, (int) $p['id']);
         $asked = $report ? Consents::reportRequest($orgId, (int) $p['id']) : null;
         $state = $p['status'] === 'objected' ? 'refused' : ($given ? 'already' : 'form');
+        // Wejście z listu liczymy do lejka. Podgląd z panelu (parametr podglad) się nie liczy.
+        if ($r->method === 'GET' && $r->str('podglad') !== '1') {
+            ProspectEvents::visit($orgId, (int) $p['id'], 'visit', $r->ip());
+        }
         $error = null;
         $email = (string) ($given['email'] ?? $asked['email'] ?? '');
         if ($r->method === 'POST') {
@@ -81,6 +86,9 @@ final class ConsentController extends Controller
             return new Response(View::render('errors/message', ['title' => 'Link nie działa', 'message' => 'Ten link do raportu wygasł albo został wyłączony.', 'bare' => true, 'footNote' => ''], 'public'), 404, $headers);
         }
         $p = $row['prospect'];
+        if ($p && $r->str('podglad') !== '1') {
+            ProspectEvents::visit((int) $row['org_id'], (int) $p['id'], 'report_view', $r->ip());
+        }
         // Zachęta do zgody na ofertę tylko wtedy, gdy firma jej jeszcze nie dała i nie zgłosiła sprzeciwu.
         $consentUrl = $p && $p['status'] !== 'objected' && !empty($p['consent_code']) && !Consents::latest((int) $row['org_id'], (int) $p['id'])
             ? '/z/' . $p['consent_code'] : '';

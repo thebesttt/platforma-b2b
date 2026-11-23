@@ -17,6 +17,7 @@ use App\Modules\Offers\Docx;
 use App\Modules\Outreach\Consents;
 use App\Modules\Outreach\Outreach;
 use App\Modules\Outreach\ProspectAudit;
+use App\Modules\Outreach\ProspectEvents;
 use App\Modules\Outreach\Prospects;
 use App\Modules\Tenders\Regions;
 use App\Modules\Tenders\Results;
@@ -34,16 +35,23 @@ final class ProspectController extends Controller
         $filters = ['q' => mb_substr($r->str('q'), 0, 120), 'cpv' => mb_substr($r->str('cpv'), 0, 40), 'woj' => isset(Regions::ALL[$r->str('woj')]) ? $r->str('woj') : '',
             'dni' => in_array($r->int('dni'), [30, 90, 180, 365], true) ? $r->int('dni') : 180];
         $searched = $r->str('szukaj') === '1';
+        $period = isset(ProspectEvents::PERIODS[$r->int('okres', 90)]) ? $r->int('okres', 90) : 90;
         return $this->view('outreach/prospects', [
             'rows' => Prospects::listing($org, $status), 'counts' => Prospects::counts($org), 'status' => $status,
             'criteria' => Prospects::criteria(Auth::org()), 'pending' => Prospects::pendingCount($org),
             'filters' => $filters, 'searched' => $searched, 'candidates' => $searched ? Prospects::candidates($org, $filters) : [],
             'coverage' => Results::coverage(), 'waiting' => Consents::waiting($org), 'title' => 'Potencjalni klienci',
+            'period' => $period, 'funnel' => ProspectEvents::funnel($org, $period),
         ]);
     }
 
     public function saveCriteria(Request $r): Response
     {
+        // Koszt listu zapisuje osobny, mały formularz przy lejku.
+        if ($r->input('letter_cost') !== null && $r->input('keywords') === null) {
+            Prospects::saveLetterCost($this->orgId(), $r->str('letter_cost'));
+            return $this->redirect('/klienci/potencjalni?okres=' . $r->int('okres', 90) . '#lejek', 'Zapisano koszt listu.');
+        }
         Prospects::saveCriteria($this->orgId(), ['keywords' => $r->str('keywords'), 'regions' => (array) $r->input('regions', []), 'min_years' => $r->int('min_years', 2)]);
         AuditLog::add('prospect.criteria', 'organization', $this->orgId(), [], $r->ip());
         return $this->redirect('/klienci/potencjalni', 'Zapisano. Punkty dopasowania na liście są przeliczone.');
@@ -313,7 +321,7 @@ final class ProspectController extends Controller
                 return $this->redirect('/klienci/potencjalni/' . $p['id'] . '/list', 'List jest pusty.', 'error');
             }
             if ($r->str('action') === 'sent') {
-                Prospects::markContacted($org, (int) $p['id'], 'letter');
+                Prospects::markContacted($org, (int) $p['id'], 'letter', (int) Auth::id());
                 AuditLog::add('prospect.letter_sent', 'prospect', (int) $p['id'], [], $r->ip());
                 return $this->redirect('/klienci/potencjalni/' . $p['id'], 'Oznaczono: list wysłany.');
             }
@@ -338,6 +346,7 @@ final class ProspectController extends Controller
             'infoDays' => Prospects::infoDaysLeft($p, $company), 'criteria' => Prospects::criteria(Auth::org()), 'title' => (string) $p['name'],
             'pitch' => Prospects::pitch($p, $company, Auth::org() ?? []), 'aiEnabled' => Claude::enabled(),
             'report' => ProspectAudit::report($p, $base), 'reportAsked' => Consents::reportRequest($org, (int) $p['id']),
+            'timeline' => ProspectEvents::timeline($org, (int) $p['id']),
             'hasLibrary' => (bool) $this->db()->val("SELECT 1 FROM library_items WHERE org_id = ? AND kind = 'text' LIMIT 1", [$org]),
         ]);
     }
