@@ -34,15 +34,97 @@ final class Consents
         if (!empty($p['consent_code'])) {
             return (string) $p['consent_code'];
         }
+        $code = self::newCode();
+        Db::get()->update('prospects', ['consent_code' => $code], 'id = ?', [(int) $p['id']]);
+        return $code;
+    }
+
+    /** Nowy kod, wolny zarówno wśród firm z listy, jak i wśród ogólnych stron zgody: oba rodzaje działają pod adresem /z/kod. */
+    private static function newCode(): string
+    {
         $db = Db::get();
         do {
             $code = '';
             for ($i = 0; $i < 10; $i++) {
                 $code .= self::ALPHABET[random_int(0, strlen(self::ALPHABET) - 1)];
             }
-        } while ($db->val('SELECT 1 FROM prospects WHERE consent_code = ?', [$code]));
-        $db->update('prospects', ['consent_code' => $code], 'id = ?', [(int) $p['id']]);
+        } while ($db->val('SELECT 1 FROM prospects WHERE consent_code = ?', [$code]) || $db->val('SELECT 1 FROM organizations WHERE consent_code = ?', [$code]));
         return $code;
+    }
+
+    // --- Ogólna strona zgody: kod QR na wizytówkę i stoisko --------------------------------------------------------------
+
+    /** Ile zgłoszeń dziennie przyjmuje ogólna strona zgody jednej firmy. Chroni przed zalaniem listy przez automat. */
+    public const OPEN_DAILY_LIMIT = 200;
+
+    /** Kod ogólnej strony zgody. Powstaje przy pierwszym użyciu. */
+    public static function orgCode(array $org): string
+    {
+        if (!empty($org['consent_code'])) {
+            return (string) $org['consent_code'];
+        }
+        return self::rotateOrgCode((int) $org['id']);
+    }
+
+    /** Nowy kod ogólnej strony zgody. Stary przestaje działać, więc wydrukowane wizytówki tracą ważność. */
+    public static function rotateOrgCode(int $orgId): string
+    {
+        $code = self::newCode();
+        Db::get()->update('organizations', ['consent_code' => $code], 'id = ?', [$orgId]);
+        return $code;
+    }
+
+    public static function orgUrl(array $org, string $base): string
+    {
+        return $base !== '' ? rtrim($base, '/') . '/z/' . self::orgCode($org) : '';
+    }
+
+    public static function orgByCode(string $code): ?array
+    {
+        return preg_match('/^[a-z2-9]{10}$/', $code) ? Db::get()->one('SELECT * FROM organizations WHERE consent_code = ?', [$code]) : null;
+    }
+
+    /**
+     * Zgoda zostawiona na ogólnej stronie zgody: osoba sama wpisuje firmę i e-mail. Firma trafia na listę potencjalnych klientów.
+     * @param array{company?: string, nip?: string, email?: string, person?: string, phone?: string, agree?: string, agree_phone?: string} $in
+     * @return array{ok: bool, error?: string, email?: string, repeated?: bool}
+     */
+    public static function giveOpen(array $org, array $in, string $ip, string $userAgent, string $panelBase = ''): array
+    {
+        $orgId = (int) $org['id'];
+        $name = mb_substr(utrim((string) ($in['company'] ?? '')), 0, 200);
+        $nip = \App\Core\Nip::clean((string) ($in['nip'] ?? ''));
+        $email = mb_strtolower(trim((string) ($in['email'] ?? '')));
+        $phone = preg_replace('/[^\d+ ]/', '', (string) ($in['phone'] ?? '')) ?? '';
+        $phoneOk = ($in['agree_phone'] ?? '') === '1';
+        $error = match (true) {
+            mb_strlen($name) < 2 => 'Wpisz nazwę firmy.',
+            $nip !== '' && !\App\Core\Nip::valid($nip) => 'NIP ma 10 cyfr. Sprawdź numer albo zostaw pole puste.',
+            !filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($email) > 200 => 'Wpisz poprawny adres e-mail.',
+            ($in['agree'] ?? '') !== '1' => 'Zaznacz zgodę. Bez niej nie możemy wysłać oferty.',
+            $phoneOk && strlen(preg_replace('/\D/', '', $phone) ?? '') < 9 => 'Żeby zgodzić się na telefon, wpisz numer.',
+            default => null,
+        };
+        if ($error !== null) {
+            return ['ok' => false, 'error' => $error];
+        }
+        if (\App\Core\Kv::hit('consent-open:' . $orgId . ':' . gmdate('Ymd'), 86400) > self::OPEN_DAILY_LIMIT) {
+            return ['ok' => false, 'error' => 'Dziś nie przyjmujemy już zgłoszeń. Prosimy spróbować jutro.'];
+        }
+        $p = Prospects::fromCard($orgId, $name, $nip !== '' ? $nip : null, $email) + ['org_name' => (string) $org['name']];
+        $words = self::wording((string) $org['name']);
+        $res = self::apply($p, [
+            'email' => $email, 'person' => mb_substr(utrim((string) ($in['person'] ?? '')), 0, 120) ?: null, 'phone' => $phoneOk ? mb_substr(trim($phone), 0, 40) : null,
+            'channels' => $phoneOk ? 'email,phone' : 'email', 'wording' => $words['email'] . ($phoneOk ? ' ' . $words['phone'] : ''),
+            'source' => 'page', 'detail' => 'Kod QR firmy (wizytówka, stoisko)', 'ip_hash' => Inbound::ipHash($ip), 'user_agent' => mb_substr($userAgent, 0, 300) ?: null, 'created_by' => null,
+        ]);
+        if ($res['ok']) {
+            $res += ['offer' => true, 'report' => false, 'prospect_id' => (int) $p['id']];
+            if (empty($res['repeated'])) {
+                self::notify($p, $res, $panelBase);
+            }
+        }
+        return $res;
     }
 
     /** Adres strony zgody do wydrukowania w liście. Pusty, gdy nie znamy publicznego adresu panelu. */
@@ -191,7 +273,9 @@ final class Consents
         // Sama prośba o raport nie jest zgodą na ofertę: kontakt powstaje, ale bez podstawy do wysyłki ofert.
         $basis = !$offer ? [] : [
             'basis' => 'consent',
-            'basis_detail' => mb_substr($c['source'] === 'page' ? 'Zgoda na stronie zgody z listu: „' . $c['wording'] . '”' : 'Zgoda zapisana ręcznie. ' . $c['wording'], 0, 500),
+            'basis_detail' => mb_substr($c['source'] === 'page'
+                ? (str_starts_with((string) $c['detail'], 'Kod QR') ? 'Zgoda na stronie zgody z kodu QR firmy: „' : 'Zgoda na stronie zgody z listu: „') . $c['wording'] . '”'
+                : 'Zgoda zapisana ręcznie. ' . $c['wording'], 0, 500),
             'basis_at' => $on ?? today_pl(),
             'marketing_consent_at' => $on !== null ? gmdate('Y-m-d H:i:s', strtotime($on . ' 12:00:00')) : $now,
             'marketing_consent_text' => mb_substr($c['wording'], 0, 1000),
@@ -234,7 +318,8 @@ final class Consents
             ProspectEvents::add($orgId, (int) $p['id'], 'report');
         }
         if ($offer) {
-            ProspectEvents::add($orgId, (int) $p['id'], 'consent', $c['source'] === 'page' ? 'strona zgody' : 'zapisana ręcznie', $c['created_by']);
+            ProspectEvents::add($orgId, (int) $p['id'], 'consent',
+                $c['source'] !== 'page' ? 'zapisana ręcznie' : (str_starts_with((string) $c['detail'], 'Kod QR') ? 'kod QR firmy' : 'strona zgody'), $c['created_by']);
         }
         // Firma prosi o ofertę albo raport, więc wraca do wybranych, także po wysłanym liście i po wcześniejszym sprzeciwie.
         $db->update('prospects', ['contact_id' => $contactId, 'facts_json' => json_out($facts), 'status' => 'picked', 'updated_at' => $now], 'id = ?', [(int) $p['id']]);
@@ -279,7 +364,7 @@ final class Consents
             $offer = !empty($res['offer']);
             $card = ($panelBase !== '' ? rtrim($panelBase, '/') : '') . '/klienci/potencjalni/' . (int) $p['id'];
             Mailer::notifyOrg($orgId, ($offer ? 'Zgoda na ofertę e-mailem: ' : 'Prośba o raport z audytu: ') . truncate((string) $p['name'], 80), implode("\n", array_filter([
-                $offer ? 'Firma z listy potencjalnych klientów sama zostawiła adres e-mail i zgodę na ofertę.'
+                $offer ? (($p['source'] ?? '') === 'qr' ? 'Firma zostawiła adres e-mail i zgodę na ofertę na Twojej stronie zgody z kodu QR.' : 'Firma z listy potencjalnych klientów sama zostawiła adres e-mail i zgodę na ofertę.')
                     : 'Firma z listy potencjalnych klientów poprosiła o raport z audytu swojej strony. Zgody na ofertę nie zaznaczyła.',
                 '',
                 'Firma: ' . $p['name'],

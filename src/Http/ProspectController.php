@@ -36,12 +36,14 @@ final class ProspectController extends Controller
             'dni' => in_array($r->int('dni'), [30, 90, 180, 365], true) ? $r->int('dni') : 180];
         $searched = $r->str('szukaj') === '1';
         $period = isset(ProspectEvents::PERIODS[$r->int('okres', 90)]) ? $r->int('okres', 90) : 90;
+        $cardUrl = Consents::orgUrl(Auth::org() ?? [], $r->baseUrl());
         return $this->view('outreach/prospects', [
             'rows' => Prospects::listing($org, $status), 'counts' => Prospects::counts($org), 'status' => $status,
             'criteria' => Prospects::criteria(Auth::org()), 'pending' => Prospects::pendingCount($org),
             'filters' => $filters, 'searched' => $searched, 'candidates' => $searched ? Prospects::candidates($org, $filters) : [],
             'coverage' => Results::coverage(), 'waiting' => Consents::waiting($org), 'title' => 'Potencjalni klienci',
             'period' => $period, 'funnel' => ProspectEvents::funnel($org, $period),
+            'cardUrl' => $cardUrl, 'cardQr' => $cardUrl !== '' ? Qr::png($cardUrl, 6) : null,
         ]);
     }
 
@@ -104,7 +106,7 @@ final class ProspectController extends Controller
         if (!$p) {
             return $this->notFound();
         }
-        return $this->card($p, $r->baseUrl());
+        return $this->renderCard($p, $r->baseUrl());
     }
 
     /** Adres strony, NIP i notatka. */
@@ -228,6 +230,22 @@ final class ProspectController extends Controller
         }
         AuditLog::add('prospect.invite', 'prospect', (int) $p['id'], ['manual' => $manual !== null], $r->ip());
         return $this->redirect($url, 'Zapisano zaproszenie jako podstawę kontaktu. Cytat i link zostają jako dowód.');
+    }
+
+    /** Kod QR ogólnej strony zgody: obraz do druku na wizytówce albo stoisku (GET) i wymiana kodu na nowy (POST). */
+    public function card(Request $r): Response
+    {
+        $org = Auth::org() ?? [];
+        if ($r->method === 'POST') {
+            Consents::rotateOrgCode((int) $org['id']);
+            AuditLog::add('consent.card_rotated', 'organization', (int) $org['id'], [], $r->ip());
+            return $this->redirect('/klienci/potencjalni#kod-qr', 'Nowy kod jest gotowy. Stary adres przestał działać, więc wydrukowane z nim materiały trzeba wymienić.');
+        }
+        $png = Qr::png(Consents::orgUrl($org, $r->baseUrl()), 16);
+        if ($png === null) {
+            return $this->notFound();
+        }
+        return Response::download($png, 'kod-qr-zgoda.png', 'image/png');
     }
 
     /** Listy seryjnie: jeden plik do druku dla zaznaczonych firm, adresy na koperty i zbiorcze oznaczenie wysyłki. */
@@ -380,7 +398,7 @@ final class ProspectController extends Controller
             'consentUrl' => $consentUrl, 'qr' => $qr, 'title' => 'List do ' . $p['name']]);
     }
 
-    private function card(array $p, string $base): Response
+    private function renderCard(array $p, string $base): Response
     {
         $org = $this->orgId();
         $company = Prospects::company($p);

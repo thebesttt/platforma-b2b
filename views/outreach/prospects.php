@@ -5,6 +5,7 @@ use App\Modules\Tenders\Regions;
  * @var array $rows firmy w wybranym stanie @var array<string,int> $counts @var string $status @var array $criteria
  * @var int $pending ile firm czeka na dane z rejestrów @var array $filters @var bool $searched @var array $candidates @var array $coverage
  * @var array $funnel lejek listów @var int $period okres lejka w dniach, 0 = od początku
+ * @var string $cardUrl adres ogólnej strony zgody @var ?string $cardQr obraz PNG kodu QR tej strony
  */
 $share = static fn (int $n): string => $funnel['firms'] > 0 ? (int) round($n / $funnel['firms'] * 100) . '%' : '';
 $tabs = ['new' => 'Do oceny', 'picked' => 'Wybrane', 'contacted' => 'Po kontakcie', 'skipped' => 'Pominięte'];
@@ -146,6 +147,23 @@ $total = array_sum($counts);
         <?php endif ?>
       </div>
     <?php endif ?>
+  </section>
+
+  <section class="card" id="kod-qr" aria-labelledby="t-card">
+    <h2 id="t-card">Kod QR na wizytówkę i stoisko</h2>
+    <div class="row-flex" style="align-items:flex-start;gap:20px;margin-top:10px">
+      <?php if ($cardQr !== null): ?><img src="data:image/png;base64,<?= base64_encode($cardQr) ?>" width="132" height="132" alt="Kod QR z adresem ogólnej strony zgody" style="border-radius:8px;image-rendering:pixelated;flex:none"><?php endif ?>
+      <div style="flex:1 1 320px;min-width:0">
+        <p class="small" style="margin:0">Jedna strona zgody Twojej firmy, niezwiązana z żadnym listem. Wydrukuj kod na wizytówce, ulotce albo postaw na stoisku. Kto go zeskanuje, sam wpisuje firmę i e-mail i zaznacza zgodę. Panel dopisuje firmę do listy i zakłada kontakt z podstawą „zgoda”.</p>
+        <?php if ($cardUrl !== ''): ?><p class="small" style="margin:10px 0 0">Adres: <code class="copy wrap" title="Kliknij, żeby skopiować"><?= e($cardUrl) ?></code></p><?php endif ?>
+        <p class="xs muted" style="margin:6px 0 0">Tego adresu nie wysyłaj e-mailem ani SMS-em do firm, które o to nie prosiły. Taka wiadomość byłaby prośbą o zgodę bez zgody.</p>
+        <div class="item-actions">
+          <a class="btn ghost sm" href="/klienci/potencjalni/kod-qr.png">Pobierz kod do druku (.png)</a>
+          <?php if ($cardUrl !== ''): ?><a class="btn ghost sm" href="<?= e($cardUrl) ?>" target="_blank" rel="noopener noreferrer">Zobacz stronę</a><?php endif ?>
+          <form class="inline" method="post" action="/klienci/potencjalni/kod-qr" data-confirm="Wygenerować nowy kod? Stary adres przestanie działać, a wydrukowane z nim wizytówki i ulotki stracą ważność."><?= csrf_field() ?><button class="btn ghost sm" type="submit">Wygeneruj nowy kod</button></form>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section class="card" id="lejek" aria-labelledby="t-funnel">

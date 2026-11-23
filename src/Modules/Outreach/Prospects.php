@@ -28,7 +28,7 @@ use App\Modules\Tenders\Results;
 final class Prospects
 {
     public const STATUSES = ['new' => 'do oceny', 'picked' => 'wybrane', 'contacted' => 'po kontakcie', 'skipped' => 'pominięte', 'objected' => 'sprzeciw'];
-    public const SOURCES = ['results' => 'wyniki przetargów', 'list' => 'Twoja lista'];
+    public const SOURCES = ['results' => 'wyniki przetargów', 'list' => 'Twoja lista', 'qr' => 'kod QR firmy'];
     /** Tyle wierszy przyjmujemy z jednego wklejenia i tyle firm z jednego wyszukiwania. */
     public const PASTE_LIMIT = 50;
     public const PICK_LIMIT = 40;
@@ -205,11 +205,37 @@ final class Prospects
         return ['nip' => $nip, 'website' => $website, 'host' => $host, 'name' => mb_substr($name !== '' && mb_strlen($name) >= 3 ? $name : ($host ?? 'NIP ' . Nip::format((string) $nip)), 0, 200)];
     }
 
+    /**
+     * Firma, która sama zgłosiła się na ogólnej stronie zgody. Jeśli jest już na liście (ten sam NIP albo kontakt z tym adresem), zostaje ta sama.
+     * Firmy ze sprzeciwem nie ruszamy: zgłoszenie z otwartej strony nie cofa odmowy zapisanej dla całej firmy.
+     */
+    public static function fromCard(int $orgId, string $name, ?string $nip, string $email): array
+    {
+        $db = Db::get();
+        $note = null;
+        if ($nip !== null && ($known = self::byNip($orgId, $nip))) {
+            if ($known['status'] !== 'objected') {
+                return $known;
+            }
+            $note = 'Na stronie zgody podano NIP ' . Nip::format($nip) . '. Firma o tym NIP-ie ma na liście zapisany sprzeciw, dlatego to zgłoszenie jest osobnym wpisem.';
+            $nip = null;
+        }
+        $known = $db->one("SELECT p.* FROM prospects p JOIN contacts c ON c.id = p.contact_id WHERE p.org_id = ? AND LOWER(c.email) = ? AND p.status <> 'objected' ORDER BY p.id DESC LIMIT 1", [$orgId, $email]);
+        if ($known) {
+            return $known;
+        }
+        $id = self::insert($orgId, 0, ['name' => $name, 'nip' => $nip, 'source' => 'qr', 'status' => 'picked', 'notes' => $note,
+            // Z NIP-em firma trafia do kolejki rejestrów, bez niego nie ma czego pobierać.
+            'enriched_at' => $nip !== null ? null : now_utc()]);
+        self::rescore(self::find($orgId, $id) ?? []);
+        return self::find($orgId, $id) ?? [];
+    }
+
     private static function insert(int $orgId, int $userId, array $row): int
     {
         $now = now_utc();
         $row['search'] = search_text((string) $row['name']);
-        return Db::get()->insert('prospects', $row + ['org_id' => $orgId, 'status' => 'new', 'created_by' => $userId, 'created_at' => $now, 'updated_at' => $now]);
+        return Db::get()->insert('prospects', $row + ['org_id' => $orgId, 'status' => 'new', 'created_by' => $userId ?: null, 'created_at' => $now, 'updated_at' => $now]);
     }
 
     /** Wygrane firmy w wynikach przetargów: liczba, suma, ostatnia data i trzy ostatnie umowy. */

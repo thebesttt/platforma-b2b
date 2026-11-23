@@ -31,6 +31,11 @@ final class ConsentController extends Controller
         }
         $p = Consents::byCode((string) $r->param('code'));
         if (!$p) {
+            // Ten sam adres obsługuje ogólną stronę zgody firmy: kod QR z wizytówki albo ze stoiska.
+            $org = Consents::orgByCode((string) $r->param('code'));
+            if ($org) {
+                return $this->open($r, $org, $render);
+            }
             return $render('errors/message', ['title' => 'Adres nie działa', 'message' => 'Sprawdź, czy adres jest przepisany dokładnie tak jak w liście. Kod ma 10 znaków: małe litery i cyfry.'], 404);
         }
         $orgId = (int) $p['org_id'];
@@ -74,6 +79,34 @@ final class ConsentController extends Controller
             'wording' => Consents::wording((string) $p['org_name'], (string) ($report['host'] ?? '')), 'code' => (string) $r->param('code'),
             // Raport pokazujemy dopiero firmie, która o niego poprosiła. Wcześniej strona tylko go obiecuje.
             'report' => $report, 'reportOpen' => $asked !== null && $state !== 'refused', 'title' => $report ? 'Raport z audytu strony' : 'Zgoda na ofertę e-mailem',
+        ], $error !== null ? 422 : 200);
+    }
+
+    /** Ogólna strona zgody: osoba, która dostała adres na wizytówce albo zeskanowała kod na stoisku, sama wpisuje firmę i e-mail. */
+    private function open(Request $r, array $org, callable $render): Response
+    {
+        $state = 'form';
+        $error = null;
+        $email = '';
+        if ($r->method === 'POST') {
+            if ($r->str('strona_www') !== '') {
+                $state = 'done'; // pole-pułapka: automat dostaje „powodzenie”, nic nie zapisujemy
+            } else {
+                $res = Consents::giveOpen($org, $r->post, $r->ip(), $r->header('User-Agent'), $r->baseUrl());
+                if ($res['ok']) {
+                    $state = 'done';
+                    $email = (string) $res['email'];
+                    if (empty($res['repeated'])) {
+                        $this->log(['org_id' => $org['id'], 'id' => $res['prospect_id']], 'consent.given', ['via' => 'qr', 'phone' => $r->str('agree_phone') === '1'], $r);
+                    }
+                } else {
+                    $error = (string) $res['error'];
+                }
+            }
+        }
+        return $render('outreach/consent_open', [
+            'org' => $org, 'state' => $state, 'error' => $error, 'email' => $email, 'in' => $r->method === 'POST' ? $r->post : [],
+            'wording' => Consents::wording((string) $org['name']), 'code' => (string) $r->param('code'), 'title' => 'Zgoda na ofertę e-mailem',
         ], $error !== null ? 422 : 200);
     }
 

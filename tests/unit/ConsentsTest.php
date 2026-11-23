@@ -298,4 +298,118 @@ return [
         contains('list pocztą', implode(' ', $a['reasons']));
         contains('adres strony zgody', implode(' ', $a['reasons']));
     },
+    'Kod QR na wizytówkę i stoisko: ogólna strona zgody zakłada firmę na liście i kontakt ze zgodą' => function () use ($setup, $guest) {
+        [$orgId, $uid, $id, $url] = $setup();
+        $db = Db::get();
+
+        // Panel: sekcja z kodem, adresem i ostrzeżeniem. Kod powstaje raz i się nie zmienia, bo trafia do druku.
+        $list = http('GET', '/klienci/potencjalni')->body;
+        contains('Kod QR na wizytówkę i stoisko', $list);
+        $code = (string) $db->val('SELECT consent_code FROM organizations WHERE id = ?', [$orgId]);
+        ok(preg_match('/^[a-z2-9]{10}$/', $code) === 1, 'kod ogólnej strony zgody');
+        contains('<code class="copy wrap" title="Kliknij, żeby skopiować">http://localhost/z/' . $code . '</code>', $list);
+        contains('Taka wiadomość byłaby prośbą o zgodę bez zgody.', $list);
+        contains('<img src="data:image/png;base64,iVBOR', $list);
+        http('GET', '/klienci/potencjalni');
+        eq($code, (string) $db->val('SELECT consent_code FROM organizations WHERE id = ?', [$orgId]));
+        $png = http('GET', '/klienci/potencjalni/kod-qr.png');
+        eq(200, $png->status);
+        eq('image/png', $png->headers['Content-Type']);
+        eq(App\Core\Qr::png('http://localhost/z/' . $code, 16), $png->body, 'kod do druku prowadzi na stronę zgody firmy');
+
+        // Strona: bez logowania i plików cookie, z nazwą nadawcy i polami do wpisania firmy.
+        $page = $guest(fn () => http('GET', '/z/' . $code));
+        eq(200, $page->status);
+        eq('noindex, nofollow', $page->headers['X-Robots-Tag']);
+        ok(!isset($page->headers['Set-Cookie']), 'bez plików cookie');
+        contains('Oferta od firmy Firma Testowa sp. z o.o.', $page->body);
+        contains('name="company"', $page->body);
+        contains('Zgadzam się na przesłanie przez firmę Firma Testowa sp. z o.o. oferty handlowej na podany adres e-mail.', $page->body);
+        ok(!str_contains($page->body, 'Nie chcemy korespondencji') && !str_contains($page->body, 'Zaloguj'), 'bez odmowy (nie było listu) i bez logowania');
+
+        // Błędy nic nie zapisują: brak nazwy, zły NIP, zły adres, brak zgody, pole-pułapka.
+        $ok = ['_csrf' => 'brak', 'company' => 'Sklep <b>Ogrodnik</b>', 'email' => 'Biuro@Ogrodnik.example', 'person' => 'Ewa Zielona', 'agree' => '1'];
+        foreach ([['company' => ' ', 'Wpisz nazwę firmy.'], ['nip' => '1234567890', 'NIP ma 10 cyfr.'], ['email' => 'zly', 'Wpisz poprawny adres e-mail.'], ['agree' => '', 'Zaznacz zgodę.']] as $case) {
+            $msg = array_pop($case);
+            $bad = $guest(fn () => http('POST', '/z/' . $code, $case + $ok));
+            eq(422, $bad->status, $msg);
+            contains($msg, $bad->body);
+        }
+        contains('Dziękujemy, zgoda zapisana', $guest(fn () => http('POST', '/z/' . $code, ['strona_www' => 'http://spam.example'] + $ok))->body);
+        eq([1, 0, 0], [(int) $db->val('SELECT COUNT(*) FROM prospects'), (int) $db->val('SELECT COUNT(*) FROM consents'), (int) $db->val('SELECT COUNT(*) FROM contacts')]);
+
+        // Zgoda bez NIP-u: nowa firma na liście, od razu wybrana, kontakt z podstawą „zgoda”, dowód ze źródłem, powiadomienie.
+        $done = $guest(fn () => http('POST', '/z/' . $code, $ok));
+        eq(200, $done->status);
+        contains('Dziękujemy, zgoda zapisana', $done->body);
+        ok(!str_contains($done->body, 'biuro@ogrodnik.example'), 'strona nie powtarza pełnego adresu');
+        $p = $db->one("SELECT * FROM prospects WHERE source = 'qr'");
+        eq(['Sklep <b>Ogrodnik</b>', 'picked', null, null], [$p['name'], $p['status'], $p['nip'], $p['created_by']]);
+        ok($p['enriched_at'] !== null, 'bez NIP-u nie ma czego pobierać z rejestrów');
+        $c = $db->one('SELECT * FROM consents');
+        eq(['biuro@ogrodnik.example', 'email', 'page', 'Kod QR firmy (wizytówka, stoisko)', (int) $p['id']], [$c['email'], $c['channels'], $c['source'], $c['detail'], (int) $c['prospect_id']]);
+        $contact = $db->one('SELECT * FROM contacts');
+        eq(['consent', 'Ewa Zielona', 'Sklep <b>Ogrodnik</b>'], [$contact['basis'], $contact['person'], $contact['company_name']]);
+        contains('Zgoda na stronie zgody z kodu QR firmy', $contact['basis_detail']);
+        eq('kod QR firmy', $db->val("SELECT detail FROM prospect_events WHERE kind = 'consent'"));
+        eq(1, App\Modules\Outreach\ProspectEvents::funnel($orgId)['other_consents']);
+        contains('na Twojej stronie zgody z kodu QR', (string) $db->val("SELECT body FROM outbox WHERE kind = 'consent'"));
+        contains('http://localhost/klienci/potencjalni/' . $p['id'], (string) $db->val("SELECT body FROM outbox WHERE kind = 'consent'"));
+        eq('biuro@ogrodnik.example', $db->val("SELECT recipient FROM outbox WHERE kind = 'consent_receipt'"));
+        eq(1, (int) $db->val("SELECT COUNT(*) FROM audit_log WHERE org_id = ? AND action = 'consent.given' AND user_id IS NULL AND entity_id = ?", [$orgId, (string) $p['id']]));
+        $card = http('GET', '/klienci/potencjalni/' . $p['id'])->body;
+        contains('źródło: kod QR firmy', $card);
+        contains('Wyślij ofertę e-mailem: masz zgodę', $card);
+        contains('Sklep &lt;b&gt;Ogrodnik&lt;/b&gt;', $card);
+        ok(!str_contains($card, '<b>Ogrodnik</b>'), 'nazwa wpisana przez gościa jako tekst');
+        eq('low', RiskPolicy::assess('consented', $contact)['level']);
+
+        // Powtórka z tym samym adresem nie tworzy drugiej firmy ani drugiego dowodu.
+        $guest(fn () => http('POST', '/z/' . $code, $ok));
+        eq([2, 1, 1], [(int) $db->val('SELECT COUNT(*) FROM prospects'), (int) $db->val('SELECT COUNT(*) FROM consents'), (int) $db->val('SELECT COUNT(*) FROM contacts')]);
+
+        // NIP firmy, która już jest na liście: zgoda trafia do tej firmy. Z NIP-em nowej firmy panel pobierze potem dane z rejestrów.
+        $guest(fn () => http('POST', '/z/' . $code, ['company' => 'Przykładowa', 'nip' => '123-456-32-18', 'email' => 'zakupy@przykladowa.example'] + $ok));
+        eq(2, (int) $db->val('SELECT COUNT(*) FROM prospects'), 'firma z listy nie dubluje się');
+        eq(['picked', 'zakupy@przykladowa.example'], [$db->val('SELECT status FROM prospects WHERE id = ?', [$id]), Prospects::facts($db->one('SELECT * FROM prospects WHERE id = ?', [$id]))['consent']['email']]);
+        $guest(fn () => http('POST', '/z/' . $code, ['company' => 'Nowa z NIP-em', 'nip' => '5252344078', 'email' => 'biuro@nowa.example'] + $ok));
+        $new = $db->one("SELECT * FROM prospects WHERE nip = '5252344078'");
+        eq(['qr', null], [$new['source'], $new['enriched_at']], 'firma z NIP-em czeka na dane z rejestrów');
+
+        // Firma ze sprzeciwem: zgłoszenie z otwartej strony nie cofa odmowy. Powstaje osobny wpis bez NIP-u, z notatką.
+        Prospects::object($orgId, $db->one('SELECT * FROM prospects WHERE id = ?', [(int) $new['id']]));
+        $guest(fn () => http('POST', '/z/' . $code, ['company' => 'Nowa z NIP-em', 'nip' => '5252344078', 'email' => 'inna.osoba@nowa.example'] + $ok));
+        eq('objected', $db->val('SELECT status FROM prospects WHERE id = ?', [(int) $new['id']]));
+        $extra = $db->one('SELECT * FROM prospects ORDER BY id DESC');
+        eq([null, 'picked', 'qr'], [$extra['nip'], $extra['status'], $extra['source']]);
+        contains('ma na liście zapisany sprzeciw', (string) $extra['notes']);
+        // Adres, który się wypisał, nie wróci przez otwartą stronę.
+        $back = $guest(fn () => http('POST', '/z/' . $code, ['company' => 'Nowa z NIP-em', 'email' => 'biuro@nowa.example'] + $ok));
+        eq(422, $back->status);
+        contains('Ten adres jest na liście rezygnacji.', $back->body);
+
+        // Dzienny limit zgłoszeń chroni listę przed automatem.
+        App\Core\Kv::set('consent-open:' . $orgId . ':' . gmdate('Ymd'), Consents::OPEN_DAILY_LIMIT, 86400);
+        $n = (int) $db->val('SELECT COUNT(*) FROM consents');
+        $over = $guest(fn () => http('POST', '/z/' . $code, ['company' => 'Po limicie', 'email' => 'po@limicie.example'] + $ok));
+        eq(422, $over->status);
+        contains('Dziś nie przyjmujemy już zgłoszeń.', $over->body);
+        eq($n, (int) $db->val('SELECT COUNT(*) FROM consents'));
+
+        // Nowy kod: stary adres przestaje działać. Druga firma w panelu ma własny kod i własną listę.
+        eq(303, http('POST', '/klienci/potencjalni/kod-qr')->status);
+        $code2 = (string) $db->val('SELECT consent_code FROM organizations WHERE id = ?', [$orgId]);
+        ok($code2 !== $code && preg_match('/^[a-z2-9]{10}$/', $code2) === 1, 'nowy kod');
+        eq(404, $guest(fn () => http('GET', '/z/' . $code))->status);
+        eq(200, $guest(fn () => http('GET', '/z/' . $code2))->status);
+        [$org2] = $setup('druga@example.com', 'Druga Firma sp. z o.o.');
+        http('GET', '/klienci/potencjalni');
+        $other = (string) $db->val('SELECT consent_code FROM organizations WHERE id = ?', [$org2]);
+        ok($other !== '' && $other !== $code2, 'każda firma w panelu ma własny kod');
+        contains('Oferta od firmy Druga Firma sp. z o.o.', $guest(fn () => http('GET', '/z/' . $other))->body);
+        App\Core\Kv::forget('consent-open:' . $org2 . ':' . gmdate('Ymd'));
+        $guest(fn () => http('POST', '/z/' . $other, ['company' => 'Klient drugiej', 'email' => 'klient@drugiej.example', 'agree' => '1']));
+        eq($org2, (int) $db->val("SELECT org_id FROM prospects WHERE name = 'Klient drugiej'"));
+        eq(0, (int) $db->val("SELECT COUNT(*) FROM contacts WHERE org_id = ? AND email = 'klient@drugiej.example'", [$orgId]));
+    },
 ];
