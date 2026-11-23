@@ -22,8 +22,8 @@ final class RiskPolicy
             'note' => 'Odbiorca zgodził się na informacje handlowe e-mailem albo jest Twoim klientem i o to prosił.',
         ],
         'consent_request' => [
-            'title' => 'Prośba o zgodę na przesłanie oferty',
-            'note' => 'Krótka wiadomość bez treści reklamowej z pytaniem, czy możesz przesłać ofertę.',
+            'title' => 'Pytanie, czy i gdzie firma przyjmuje oferty',
+            'note' => 'Samo pytanie o zgodę albo adres do ofert, bez nazwy usługi i bez zachęt. Oferta idzie dopiero po odpowiedzi.',
         ],
         'cold_offer' => [
             'title' => 'Oferta bez zgody odbiorcy',
@@ -112,8 +112,11 @@ final class RiskPolicy
                     $law = array_merge(self::pkeLaw(), [
                         'Ministerstwo Cyfryzacji, odpowiedź z 13.10.2025 na interpelację nr 12337: „Nie jest również dozwolony kontakt wykonywany na potrzeby uzyskania zgody”. Pismo powołuje się na decyzje Prezesa UKE i Prezesa UOKiK.',
                         'Sąd Apelacyjny w Warszawie (wyrok z 12.12.2019, VII AGa 1567/18) uznał SMS z prośbą o zgodę za informację handlową, bo pośrednio promował nadawcę. Wyrok zapadł na gruncie poprzednich przepisów.',
+                        'W drugą stronę poszedł Sąd Okręgowy Warszawa-Praga (IV Ca 1873/16, opisany w 2019 r.): dopuścił pierwszy telefon z samym pytaniem o zgodę, bez słowa o ofercie. To pojedynczy wyrok na gruncie poprzednich przepisów, a UKE i UOKiK się z nim nie zgadzały.',
                         'Nie znamy wyroku sądu, który ocenia taką wiadomość już pod nowymi przepisami.',
                     ]);
+                    $reasons[] = 'Ryzyko dotyczy tej jednej wiadomości. Jeśli firma odpowie i poda adres do ofert, zapisz zgodę z opisem odpowiedzi: kolejne oferty będą miały podstawę.';
+                    $reasons[] = 'Żeby ryzyko było jak najmniejsze, zostaw samo pytanie: bez nazwy usługi, cen, linków i zachęt. Nie pytaj drugi raz, jeśli firma nie odpowie.';
                     $reasons[] = 'Bez zgody możesz wysłać list pocztą albo odpowiedzieć na zapytanie ofertowe firmy. Te drogi nie wymagają zgody na kontakt elektroniczny.';
                     $reasons[] = 'Zgodę zbierzesz bez ryzyka listem: panel drukuje w nim adres strony zgody, na której firma sama wpisuje e-mail i zaznacza zgodę. Znajdziesz to w zakładce „Potencjalni klienci”.';
                 }

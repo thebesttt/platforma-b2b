@@ -110,9 +110,10 @@ final class Outreach
                     . ($about ?: '[Krótki opis oferty dopasowany do firmy odbiorcy]') . "\n\nCzy możemy umówić krótką rozmowę w przyszłym tygodniu?\n\nZ poważaniem\n" . $sig . $optOut,
             ],
             'consent_request' => [
-                'subject' => 'Czy możemy przesłać ofertę?',
-                'body' => $greet . "\n\nczy wyrażają Państwo zgodę na przesłanie na ten adres e-mail jednej wiadomości z ofertą firmy " . ($org['name'] ?? '') . "?\n\n"
-                    . "Wystarczy odpowiedzieć „tak”. Jeśli nie odpowiedzą Państwo, nie będziemy pisać ponownie.\n\nZ poważaniem\n" . $sig,
+                // Samo pytanie o politykę firmy: bez nazwy usługi, korzyści i linków. Im mniej treści, tym mniej powodów, żeby uznać je za reklamę.
+                'subject' => 'Pytanie o adres do ofert',
+                'body' => $greet . "\n\nczy przyjmują Państwo oferty handlowe e-mailem, a jeśli tak, to na jaki adres? Na Państwa stronie nie znaleźliśmy tej informacji.\n\n"
+                    . "Jeśli nie odpowiedzą Państwo, nie napiszemy ponownie.\n\nZ poważaniem\n" . $sig,
             ],
             default => [
                 'subject' => 'Propozycja współpracy - ' . ($org['name'] ?? ''),
@@ -166,7 +167,7 @@ final class Outreach
     public static function aiDraft(string $kind, array $contact, array $org, ?array $user, string $hint): array
     {
         $rules = match ($kind) {
-            'consent_request' => 'Wiadomość to WYŁĄCZNIE prośba o zgodę na przesłanie oferty: bez opisu usług, cen, korzyści, linków ani zachęt. Maksymalnie 3 zdania.',
+            'consent_request' => 'Wiadomość to WYŁĄCZNIE pytanie, czy firma przyjmuje oferty handlowe e-mailem i na jaki adres: bez nazwy i opisu usług, cen, korzyści, linków ani zachęt. Maksymalnie 3 zdania, w tym zapowiedź, że bez odpowiedzi nie napiszemy ponownie.',
             'rfq_reply' => 'To odpowiedź na zapytanie ofertowe odbiorcy. Odnieś się do jego zapytania, zostaw miejsca [CENA], [TERMIN] do uzupełnienia.',
             default => 'Konkretna, krótka oferta B2B (do 120 słów), bez przesadnych obietnic, z prośbą o rozmowę i informacją o możliwości rezygnacji z wiadomości.',
         };

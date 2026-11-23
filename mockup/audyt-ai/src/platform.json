@@ -110,7 +110,7 @@
   "kinds": {
     "rfq_reply": ["Odpowiedź na zapytanie ofertowe", "Firma sama poprosiła o oferty i podała adres. Odpowiadasz na jej prośbę."],
     "consented": ["Oferta do firmy, która wyraziła zgodę", "Odbiorca zgodził się na informacje handlowe e-mailem albo jest Twoim klientem i o to prosił."],
-    "consent_request": ["Prośba o zgodę na przesłanie oferty", "Krótka wiadomość bez treści reklamowej z pytaniem, czy możesz przesłać ofertę."],
+    "consent_request": ["Pytanie, czy i gdzie firma przyjmuje oferty", "Samo pytanie o zgodę albo adres do ofert, bez nazwy usługi i bez zachęt. Oferta idzie dopiero po odpowiedzi."],
     "cold_offer": ["Oferta bez zgody odbiorcy", "Informacja handlowa wysłana bez wcześniejszej zgody."]
   },
   "law": {
@@ -122,6 +122,7 @@
     "consent_request": [
       "Ministerstwo Cyfryzacji, odpowiedź z 13.10.2025 na interpelację nr 12337: „Nie jest również dozwolony kontakt wykonywany na potrzeby uzyskania zgody”. Pismo powołuje się na decyzje Prezesa UKE i Prezesa UOKiK.",
       "Sąd Apelacyjny w Warszawie (wyrok z 12.12.2019, VII AGa 1567/18) uznał SMS z prośbą o zgodę za informację handlową, bo pośrednio promował nadawcę. Wyrok zapadł na gruncie poprzednich przepisów.",
+      "W drugą stronę poszedł Sąd Okręgowy Warszawa-Praga (IV Ca 1873/16, opisany w 2019 r.): dopuścił pierwszy telefon z samym pytaniem o zgodę, bez słowa o ofercie. To pojedynczy wyrok na gruncie poprzednich przepisów, a UKE i UOKiK się z nim nie zgadzały.",
       "Nie znamy wyroku sądu, który ocenia taką wiadomość już pod nowymi przepisami."
     ],
     "invite": "Art. 398 ust. 2 Prawa komunikacji elektronicznej: zgodę można wyrazić przez udostępnienie adresu elektronicznego w celu otrzymywania informacji handlowej.",

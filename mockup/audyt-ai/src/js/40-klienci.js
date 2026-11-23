@@ -26,7 +26,9 @@ function assessMessage(kind, c) {
     level = has('consent', 'client', 'rfq', 'invite') ? 'low' : 'very_high';
     lead = level === 'low' ? 'Masz już podstawę kontaktu. Zamiast prosić o zgodę możesz od razu odpowiedzieć albo wysłać ofertę.'
       : 'Prośba o zgodę wysłana e-mailem też jest kontaktem bez zgody. Ministerstwo Cyfryzacji uznaje taki kontakt za niedozwolony.';
-    if (level !== 'low') { law = pke.concat(PLAT.law.consent_request); reasons = ['Bez zgody możesz wysłać list pocztą albo odpowiedzieć na zapytanie ofertowe firmy. Te drogi nie wymagają zgody na kontakt elektroniczny.',
+    if (level !== 'low') { law = pke.concat(PLAT.law.consent_request); reasons = ['Ryzyko dotyczy tej jednej wiadomości. Jeśli firma odpowie i poda adres do ofert, zapisz zgodę z opisem odpowiedzi: kolejne oferty będą miały podstawę.',
+      'Żeby ryzyko było jak najmniejsze, zostaw samo pytanie: bez nazwy usługi, cen, linków i zachęt. Nie pytaj drugi raz, jeśli firma nie odpowie.',
+      'Bez zgody możesz wysłać list pocztą albo odpowiedzieć na zapytanie ofertowe firmy. Te drogi nie wymagają zgody na kontakt elektroniczny.',
       'Zgodę zbierzesz bez ryzyka listem: panel drukuje w nim adres strony zgody, na której firma sama wpisuje e-mail i zaznacza zgodę. Znajdziesz to w zakładce „Potencjalni klienci”.']; }
   } else if (has('invite')) {
     level = 'low'; lead = INVITE_LEAD; reasons = basis.concat(INVITE_NOTES); law = [PLAT.law.invite];
@@ -47,7 +49,7 @@ function draftMessage(kind, c) {
   const about = '[Krótki opis oferty dopasowany do firmy odbiorcy]';
   if (kind === 'rfq_reply') return ['Odpowiedź na zapytanie ofertowe', `${greet}\n\ndziękujemy za zapytanie ofertowe. W załączeniu przesyłamy ofertę.\n\nCena: [CENA] zł netto\nTermin realizacji: [TERMIN]\nWarunki płatności: [WARUNKI]\n\nChętnie odpowiemy na pytania i doprecyzujemy zakres.\n\nZ poważaniem\n${sig}`];
   if (kind === 'consented') return ['Oferta ' + PLAT.org.name, `${greet}\n\nzgodnie z Państwa zgodą przesyłamy informację o naszej ofercie.\n\n${about}\n\nCzy możemy umówić krótką rozmowę w przyszłym tygodniu?\n\nZ poważaniem\n${sig}${optOut}`];
-  if (kind === 'consent_request') return ['Czy możemy przesłać ofertę?', `${greet}\n\nczy wyrażają Państwo zgodę na przesłanie na ten adres e-mail jednej wiadomości z ofertą firmy ${PLAT.org.name}?\n\nWystarczy odpowiedzieć „tak”. Jeśli nie odpowiedzą Państwo, nie będziemy pisać ponownie.\n\nZ poważaniem\n${sig}`];
+  if (kind === 'consent_request') return ['Pytanie o adres do ofert', `${greet}\n\nczy przyjmują Państwo oferty handlowe e-mailem, a jeśli tak, to na jaki adres? Na Państwa stronie nie znaleźliśmy tej informacji.\n\nJeśli nie odpowiedzą Państwo, nie napiszemy ponownie.\n\nZ poważaniem\n${sig}`];
   return ['Propozycja współpracy: ' + PLAT.org.name, `${greet}\n\n${about}\n\nCzy możemy przesłać szczegóły?\n\nZ poważaniem\n${sig}${optOut}`];
 }
 

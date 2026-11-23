@@ -120,4 +120,42 @@ return [
         // Lista kontaktów prowadzi do wiadomości bez narzuconego rodzaju.
         contains('href="/klienci/' . $rfq . '/wiadomosc">Napisz</a>', http('GET', '/klienci')->body);
     },
+    'Pytanie o adres do ofert: samo pytanie bez oferty, opis ryzyka z obiema liniami orzeczeń i zgoda po odpowiedzi' => function () {
+        [$orgId, $uid] = make_org('wlasciciel@example.com', 'Agencja Testowa sp. z o.o.');
+        login_as($uid);
+        $db = App\Core\Db::get();
+        $orgRow = $db->one('SELECT * FROM organizations WHERE id = ?', [$orgId]);
+        $db->insert('library_items', ['org_id' => $orgId, 'kind' => 'text', 'title' => 'O firmie', 'body' => 'Prowadzimy kampanie Google Ads dla sklepów.', 'created_at' => now_utc(), 'updated_at' => now_utc()]);
+
+        // Szkic: jedno pytanie, bez nazwy usługi, opisu z biblioteki, linków i stopki z ofertą. Zapowiada, że nie będzie drugiej wiadomości.
+        $d = Outreach::draft('consent_request', ['person' => '', 'basis_detail' => ''], $orgRow, ['name' => 'Jan Testowy']);
+        eq('Pytanie o adres do ofert', $d['subject']);
+        contains('czy przyjmują Państwo oferty handlowe e-mailem, a jeśli tak, to na jaki adres?', $d['body']);
+        contains('Jeśli nie odpowiedzą Państwo, nie napiszemy ponownie.', $d['body']);
+        ok(!str_contains($d['body'], 'Google Ads') && !str_contains($d['body'], 'http') && !str_contains($d['body'], 'kampanie'), 'pytanie nie zawiera treści oferty');
+        eq(1, substr_count($d['body'], 'Agencja Testowa sp. z o.o.'), 'nazwa nadawcy tylko w podpisie');
+
+        // Ryzyko zostaje bardzo wysokie, ale opis jest uczciwy: stanowisko Ministerstwa, wyrok przeciw i wyrok za, a ryzyko dotyczy jednej wiadomości.
+        $a = RiskPolicy::assess('consent_request', ['basis' => 'none']);
+        eq(['very_high', true], [$a['level'], $a['needs_ack']]);
+        $law = implode(' ', $a['law']);
+        contains('Nie jest również dozwolony kontakt wykonywany na potrzeby uzyskania zgody', $law);
+        contains('VII AGa 1567/18', $law);
+        contains('IV Ca 1873/16', $law);
+        contains('Ryzyko dotyczy tej jednej wiadomości.', implode(' ', $a['reasons']));
+        contains('zostaw samo pytanie', implode(' ', $a['reasons']));
+        contains('list pocztą', implode(' ', $a['reasons']));
+        contains('Pytanie, czy i gdzie firma przyjmuje oferty', RiskPolicy::KINDS['consent_request']['title']);
+
+        // Gdy firma odpowie i poda adres, zgodę zapisuje się z tym sposobem. Od tej chwili oferta ma niskie ryzyko.
+        http('POST', '/klienci/potencjalni/lista', ['lines' => 'firma-pytana.example Firma Pytana']);
+        $id = (int) $db->val('SELECT id FROM prospects ORDER BY id DESC');
+        contains('Odpowiedź na nasze pytanie, czy i gdzie przyjmują oferty', http('GET', '/klienci/potencjalni/' . $id)->body);
+        http('POST', '/klienci/potencjalni/' . $id . '/zgoda', ['email' => 'oferty@firma-pytana.example', 'way' => 'question_reply',
+            'detail' => 'Sekretariat odpisał: oferty prosimy kierować na oferty@firma-pytana.example.', 'on' => today_pl(), 'confirm' => '1']);
+        $contact = $db->one("SELECT * FROM contacts WHERE email = 'oferty@firma-pytana.example'");
+        eq('consent', $contact['basis']);
+        eq('low', RiskPolicy::assess('consented', $contact)['level']);
+        contains('Odpowiedź na nasze pytanie, czy i gdzie przyjmują oferty (', (string) $db->val('SELECT wording FROM consents'));
+    },
 ];

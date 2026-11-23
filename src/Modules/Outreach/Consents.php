@@ -21,6 +21,7 @@ final class Consents
     /** Sposoby, w jakie firma mogła zgodzić się poza stroną zgody. Użytkownik zapisuje je ręcznie i musi umieć je wykazać. */
     public const MANUAL_WAYS = [
         'letter_reply' => 'Odpowiedź na nasz list',
+        'question_reply' => 'Odpowiedź na nasze pytanie, czy i gdzie przyjmują oferty',
         'in_person' => 'Rozmowa osobista, np. na targach albo spotkaniu',
         'their_request' => 'Firma sama zadzwoniła albo napisała z prośbą o ofertę',
         'other' => 'Inaczej',
