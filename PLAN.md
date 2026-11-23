@@ -6,19 +6,20 @@ Stan na 20.11.2026.
 
 Na perfectdata.pl nic nie zostało zainstalowane. Kod trafi na stronę dopiero po wyraźnej zgodzie właściciela.
 
-**Co się zmieniło 20.11.2026.** Etapy 1 i 2 oraz większość etapu 3 są zbudowane w silniku i przechodzą testy. Tego samego dnia doszło pięć funkcji z etapu 4: wyniki przetargów, praca zespołu nad ofertą, warunki naboru dotacji, przypomnienia z adresem wypisania i opis idealnego klienta. Do uruchomienia zostały kroki właściciela z etapu 0: hosting, baza, klucze usług i zgoda na kod widżetu. Lista na końcu, w części „Co jest potrzebne od właściciela”.
+**Co się zmieniło 20.11.2026.** Etapy 1 i 2 oraz większość etapu 3 są zbudowane w silniku i przechodzą testy. Tego samego dnia doszło pięć funkcji z etapu 4: wyniki przetargów, praca zespołu nad ofertą, warunki naboru dotacji, przypomnienia z adresem wypisania i opis idealnego klienta. Potem doszły cztery funkcje, których dane nie są dostępne dla programów: panel pokazuje, gdzie je znaleźć, i daje miejsce na wpisanie (szczegóły niżej, w części „Dane wpisywane ręcznie”). Do uruchomienia zostały kroki właściciela z etapu 0: hosting, baza, klucze usług i zgoda na kod widżetu. Lista na końcu, w części „Co jest potrzebne od właściciela”.
 
 ## Co jest gotowe
 
-- **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`, 137 testów na SQLite i PostgreSQL. Gotowa do uruchomienia w Render.
+- **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`, 146 testów na SQLite i PostgreSQL. Gotowa do uruchomienia w Render.
 - **Panel w wyglądzie PerfectData** (zmienna `APP_THEME=perfectdata` albo ustawienie firmy) z wyborem modułów w menu i pulpitem, który pokazuje tylko włączone moduły.
 - **Zapytania ze strony:** widżet do wklejenia jedną linią kodu, kwalifikator z jawną tabelą punktów, lista i karta zapytań, czat AI z bazy wiedzy, lejek i test dwóch wersji.
 - **Audyt AI:** 24 wskaźniki i 100 punktów z jednego pliku wytycznych, raport z linijką punktów i listą „Najpierw to”, „Przed i po”, strona wytycznych, raport dla klienta pod linkiem, audyt wielu stron z mapy witryny. Sprawdzony na prawdziwej stronie perfectdata.pl.
 - **Poczta z panelu:** powiadomienie o zapytaniu, reset hasła, zaproszenia do zespołu i poranny przegląd (przetargi, zapytania, alerty).
 - **Przetargi:** import i dopasowanie do profilu, karta przetargu, analiza SWZ oraz wyniki: kto wygrywa w branży i regionie, za ile i przy ilu ofertach. Alert, gdy zapisany przetarg zostanie rozstrzygnięty.
-- **Oferty i wnioski:** szkic z ogłoszenia i biblioteki, praca zespołu (sekcja przydzielona osobie, zapis nie nadpisuje cudzej zmiany), lista dokumentów do odhaczania, a we wniosku o dotację sprawdzenie warunków naboru z cytatami.
-- **Klienci i wiadomości:** ocena ryzyka prawnego przed wysyłką, przypomnienia po 4 i po 10 dniach z dziennym limitem, adres wypisania w stopce ofert, opis idealnego klienta ze strony firmy.
-- **Kontrahenci i audyt techniczny:** bez zmian, działają od początku.
+- **Oferty i wnioski:** szkic z ogłoszenia i biblioteki, praca zespołu (sekcja przydzielona osobie, zapis nie nadpisuje cudzej zmiany), lista dokumentów do odhaczania, a we wniosku o dotację sprawdzenie warunków naboru z cytatami. Lista obserwowanych naborów z przewodnikiem po pięciu oficjalnych serwisach, przypomnieniami o końcu naboru i wnioskiem zakładanym z naboru.
+- **Klienci i wiadomości:** ocena ryzyka prawnego przed wysyłką, przypomnienia po 4 i po 10 dniach z dziennym limitem, adres wypisania w stopce ofert, opis idealnego klienta ze strony firmy. Rejestr zapytań ofertowych z rynku: gdzie szukać, termin, kontakt z podstawą „zapytanie ofertowe” i odpowiedź jednym kliknięciem.
+- **Kontrahenci:** karta firmy z rejestrów publicznych, a do tego dwa sprawdzenia robione ręcznie: Krajowy Rejestr Zadłużonych i liczby ze sprawozdania finansowego, z których panel liczy, po ilu dniach firma płaci dostawcom.
+- **Audyt techniczny:** bez zmian, działa od początku.
 - **Mockup całego panelu:** `mockup/audyt-ai`, 9 modułów i 32 ekrany, z listą 60 funkcji i ich stanem. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip`.
 - **Wytyczne audytu:** `resources/audyt-ai-rules.json` (czyta je silnik) i dokument dla zespołu `mockup/audyt-ai/WYTYCZNE.md`.
 - **Plany modułów:** `PLAN-ZAPYTANIA.md` i `PLAN-AUDYT-AI.md`.
@@ -47,26 +48,39 @@ Mockup pokazuje 60 funkcji. Zakładka „Lista funkcji” na pulpicie podaje sta
 | Moduł | Działa w silniku | Do zbudowania | Czeka na zgodę Google i Meta |
 |---|---|---|---|
 | Zapytania | 5 | 0 | 0 |
-| Klienci | 8 | 3 | 0 |
+| Klienci | 9 | 2 | 0 |
 | Audyt AI | 6 | 1 | 0 |
 | SEO i strona | 3 | 2 | 0 |
 | Reklamy | 0 | 0 | 6 |
 | Przetargi | 9 | 0 | 0 |
-| Oferty i wnioski | 8 | 1 | 0 |
-| Kontrahenci | 5 | 3 | 0 |
-| Razem | 44 | 10 | 6 |
+| Oferty i wnioski | 9 | 0 | 0 |
+| Kontrahenci | 7 | 1 | 0 |
+| Razem | 48 | 6 | 6 |
 
 „Działa w silniku” znaczy, że kod jest w repozytorium i przechodzi testy. Silnik nie jest jeszcze uruchomiony online (etap 0).
 
-Dlaczego 10 funkcji nie jest zbudowanych:
+Dlaczego 6 funkcji nie jest zbudowanych: każda wymaga zgody albo konta u zewnętrznej firmy.
 
-- **Wymagają zgody albo konta u zewnętrznej firmy:**
-  - Search Console i wizytówka Google (logowanie Google klienta),
-  - wyszukiwarka firm (klucze do REGON i CEIDG). Firmy z wyników przetargów są już w module Przetargi,
-  - automatyczne wykrywanie odpowiedzi (połączenie ze skrzynką Gmail lub Microsoft 365). Wypisanie działa już przez adres w stopce, a odpowiedź zaznacza się ręcznie,
-  - wpis długu do BIG (umowa z biurem),
-  - test cytowań w AI (klucze OpenAI, Perplexity i Gemini oraz decyzja o koszcie).
-- **Nie mają źródła danych, które wolno pobierać programem:** Krajowy Rejestr Zadłużonych, sprawozdania finansowe z KRS, baza otwartych naborów dotacji, zbieranie zapytań ofertowych ze źródeł.
+- Search Console i wizytówka Google (logowanie Google klienta),
+- wyszukiwarka firm (klucze do REGON i CEIDG). Firmy z wyników przetargów są już w module Przetargi,
+- automatyczne wykrywanie odpowiedzi (połączenie ze skrzynką Gmail lub Microsoft 365). Wypisanie działa już przez adres w stopce, a odpowiedź zaznacza się ręcznie,
+- wpis długu do BIG (umowa z biurem),
+- test cytowań w AI (klucze OpenAI, Perplexity i Gemini oraz decyzja o koszcie).
+
+### Dane wpisywane ręcznie
+
+Cztery funkcje opierają się na źródłach, które nie udostępniają danych programom. Panel nie pobiera z nich niczego. Pokazuje, gdzie dane są, co z nich przepisać, i daje formularz. Od wpisania działa już sam: liczy, pilnuje terminów i przypomina.
+
+| Funkcja | Gdzie są dane | Gdzie się je wpisuje | Co robi panel |
+|---|---|---|---|
+| Upadłości i restrukturyzacje | krz.ms.gov.pl (bezpłatnie, bez konta) | Karta firmy, sekcja „Zadłużenie i płatności” | Zapisuje wynik z datą i osobą, pokazuje znacznik na karcie, co 90 dni przypomina o powtórce dla obserwowanych firm |
+| Czas płacenia dostawcom | ekrs.ms.gov.pl, Przeglądarka dokumentów finansowych | Ta sama sekcja karty firmy | Z dwóch liczb sprawozdania liczy dni (zobowiązania wobec dostawców / zakupy × 365), porównuje lata, dopisuje uwagę o stracie i ujemnym kapitale |
+| Zapytania ofertowe firm | Baza Konkurencyjności, platformazakupowa.pl, strony firm | Klienci → Zapytania z rynku | Pilnuje terminu, zakłada kontakt z podstawą „zapytanie ofertowe”, przygotowuje odpowiedź, zatrzymuje przypomnienia po terminie |
+| Nabory dotacji | funduszeunijne.gov.pl (wyszukiwarka i ogłoszenia), funduszeeuropejskie.gov.pl (przegląd i harmonogramy), parp.gov.pl | Oferty → Nabory dotacji | Przypomina 14, 7 i 3 dni przed końcem naboru, zakłada z naboru szkic wniosku |
+
+Wpisy widzi tylko firma, która je zrobiła. Sprawdzenia w KRZ i liczby ze sprawozdań nie zmieniają oceny ryzyka liczonej z danych publicznych.
+
+Czego ta wersja nie robi: nie przeszukuje źródeł sama i nie podpowie zapytania ani naboru, którego nie wpiszesz. Gdyby któreś źródło udostępniło dane programom albo zgodziło się na pobieranie, import można dopisać do tych samych tabel.
 
 Reklamy Google i Meta czekają na zgody platform. Wnioski warto złożyć już teraz, bo zgody trwają tygodnie.
 
@@ -182,10 +196,10 @@ Do sprawdzenia po wdrożeniu: czy rejestr decyzji UOKiK przyjmuje połączenia z
 ### 4d. Rozwój produktu (kolejność według wartości)
 
 1. **Wyniki przetargów z BZP:** zbudowane 20.11.2026. Kto wygrywa i za ile, zestawienie zwycięzców, historia zamawiającego na karcie przetargu, wygrane na karcie firmy.
-2. **Baza Konkurencyjności** jako trzecie źródło. To zamówienia firm z dotacjami, często małe i dobre dla MŚP.
+2. **Baza Konkurencyjności** jako trzecie źródło. To zamówienia firm z dotacjami, często małe i dobre dla MŚP. Od 20.11.2026 jest w rejestrze zapytań jako źródło przeglądane ręcznie. Automatyczny import wymaga zgody operatora Bazy albo oficjalnego dostępu do danych.
 3. **Ryzyko płatnicze:**
-   - szacunek, po ilu dniach firma płaci dostawcom, ze sprawozdań finansowych w KRS,
-   - postępowania upadłościowe i restrukturyzacyjne z Krajowego Rejestru Zadłużonych.
+   - szacunek, po ilu dniach firma płaci dostawcom, ze sprawozdań finansowych w KRS: zbudowane 20.11.2026, liczby przepisuje użytkownik,
+   - postępowania upadłościowe i restrukturyzacyjne z Krajowego Rejestru Zadłużonych: zbudowane 20.11.2026, wynik wpisuje użytkownik.
 4. **Reklamy Google i Meta.** Wnioski warto złożyć wcześnie, bo zależą od zewnętrznych zgód:
    - Google: poziom dostępu Basic dla projektu Google Cloud, z weryfikacją marki,
    - Meta: weryfikacja firmy i przegląd aplikacji (App Review) dla uprawnienia ads_management.
@@ -193,12 +207,12 @@ Do sprawdzenia po wdrożeniu: czy rejestr decyzji UOKiK przyjmuje połączenia z
 6. **Wysyłka z Gmaila i Microsoft 365** zamiast pliku .eml. Uprawnienie Gmaila do wysyłania wymaga weryfikacji aplikacji przez Google.
 7. **Serwer pośredniczący w Polsce** dla rejestru UOKiK, jeśli blokada adresów zagranicznych się potwierdzi.
 8. **Pozyskiwanie klientów:**
-   - zbieranie zapytań ofertowych firm ze źródeł (strony firm, Baza Konkurencyjności, platformy zakupowe),
+   - zapytania ofertowe firm (strony firm, Baza Konkurencyjności, platformy zakupowe): rejestr z przewodnikiem po źródłach zbudowany 20.11.2026, zapytania wpisuje użytkownik,
    - opis idealnego klienta z treści strony firmy: zbudowane 20.11.2026,
    - wyszukiwarka firm: branża, region, wielkość, wiek, kondycja, udział w przetargach,
    - sekwencje z przypomnieniami i dziennym limitem: zbudowane 20.11.2026 w wersji, w której wysyłasz ze swojej skrzynki, a panel pilnuje terminów. Automatyczna wysyłka wymaga połączenia ze skrzynką (punkt 6).
 9. **Widoczność w Google:** dane z Search Console klienta i ocena wizytówki Google.
-10. **Dotacje:** ocena warunków naboru na wgranym regulaminie jest zbudowana (20.11.2026). Do zrobienia: baza otwartych naborów.
+10. **Dotacje:** ocena warunków naboru na wgranym regulaminie jest zbudowana (20.11.2026). Lista obserwowanych naborów z przewodnikiem po oficjalnych serwisach i przypomnieniami też (20.11.2026), nabory wpisuje użytkownik.
 11. **Drobne uzupełnienia:** odhaczanie gotowych dokumentów w ofercie i podział sekcji między osoby są zbudowane (20.11.2026). Do zrobienia: szacowany czas pracy przy poprawkach z audytu technicznego.
 
 ## Co jest potrzebne od właściciela
@@ -238,6 +252,25 @@ Potrzebne przed etapem 4:
   - opinii o module wiadomości (art. 398 Prawa komunikacji elektronicznej) i o module należności (art. 15 i 15a ustawy o udostępnianiu informacji gospodarczych).
 
 ## Co zostało sprawdzone
+
+### Dane wpisywane ręcznie (20-23.11.2026)
+
+- **146 testów** na SQLite i PostgreSQL oraz test obrazu Docker (GitHub Actions). Dziewięć nowych obejmuje:
+  - zapis i walidację każdego formularza (błędna kwota, data, NIP, link, e-mail),
+  - progi skali płatności (60 i 90 dni) i odczyt kwot pisanych po polsku,
+  - kolejność według terminu, przypomnienia w wyznaczone dni i ciszę w pozostałe,
+  - kod HTML wpisany w pola (wyświetla się jako tekst),
+  - izolację między firmami: druga firma nie widzi, nie zmieni i nie usunie cudzych wpisów.
+- **Przeglądarka (Chromium), świeża baza, 1280 i 390 px:**
+  - karta firmy: wpis z KRZ, liczby ze sprawozdania, komunikat przy błędnej kwocie, kopiowanie NIP-u kliknięciem,
+  - rejestr zapytań: wpis, poprawka terminu, odpowiedź o niskim ryzyku, wysyłka i przejście do zamkniętych, pominięcie i usunięcie,
+  - nabory: wpis, wniosek z naboru, odrzucenie.
+- **Cały panel po zmianach:** 154 strony i 17 pobrań bez błędów, 141 stron w 5 szerokościach (320-1280 px) bez poziomego przewijania.
+- **Start z czystej kopii repozytorium (23.11.2026):** kroki z README (migracje, dane przykładowe, serwer), potem 140 stron panelu w 3 szerokościach (1280, 390 i 320 px) bez błędów, bez ostrzeżeń PHP w logu serwera i bez poziomego przewijania.
+- **Mockup:** 32 ekrany w 4 szerokościach bez błędów i bez poziomego przewijania, nowe formularze na ekranach „Zapytania ofertowe”, „Dotacje” i „Karta firmy” działają.
+- **Adresy źródeł** potwierdzone 20.11.2026 wyszukiwaniem i otwarciem stron.
+
+Czego nie dało się sprawdzić: wyglądu i nazw przycisków w samych rejestrach (panel podaje adres i opisuje, czego szukać, ale nie cytuje ich przycisków, bo serwisy je zmieniają). Wyszukiwanie w KRZ po NIP nie ma potwierdzenia w oficjalnej instrukcji, dlatego karta podaje też numer KRS.
 
 ### Funkcje z etapu 4 (20.11.2026, po południu)
 

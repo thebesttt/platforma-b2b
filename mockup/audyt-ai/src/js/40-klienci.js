@@ -80,16 +80,24 @@ function renderSearch() {
 
 function renderRfq() {
   const rows = PLAT.rfqs.map((r, i) => {
-    const d = daysTo(r.deadline.split('.').reverse().join('-'));
+    const d = r.deadline ? daysTo(r.deadline.split('.').reverse().join('-')) : null;
     return `<div class="item" style="--c1:250px">
       <div><b>${esc(r.company)}</b><p class="small muted">${esc(r.where)}</p></div>
-      <div><p>${esc(r.title)}</p><p>Opublikowano ${esc(r.published)}, oferty na adres ${esc(r.address)}</p></div>
-      <div class="end">${st(d <= 7 ? 'mid' : 'plain', 'do ' + r.deadline + ', ' + dni(d))}<button class="btn ghost sm" type="button" data-act="k-rfq" data-i="${i}">Odpowiedz</button></div></div>`;
+      <div><p>${esc(r.title)}</p><p>Opublikowano ${esc(r.published)}, ${r.address ? 'oferty na adres ' + esc(r.address) : 'ofertę składa się na stronie zapytania'}</p></div>
+      <div class="end">${d === null ? st('plain', 'bez terminu') : st(d <= 7 ? 'mid' : 'plain', 'do ' + r.deadline + ', ' + dni(d))}${r.address ? `<button class="btn ghost sm" type="button" data-act="k-rfq" data-i="${i}">Odpowiedz</button>` : ''}</div></div>`;
   }).join('');
-  put('rfq', stan('plan', 'Podstawa kontaktu „zapytanie ofertowe” działa w silniku. Zbieranie zapytań ze źródeł jest do zbudowania.') +
-    `<div class="sec">${secHead('Zapytania ofertowe firm', 'Firma, która publikuje zapytanie i adres do składania ofert, sama prosi o ofertę. To kanał o najniższym ryzyku prawnym.', PLAT.rfqs.length)}${rows}</div>
-    <div class="sec">${secHead('Źródła')}<ul class="list" style="padding-top:16px">
-      <li>Strony firm z zakładką zapytań ofertowych.</li><li>Baza Konkurencyjności: zamówienia firm z dotacjami.</li><li>Platformy zakupowe i biuletyny informacji publicznej.</li></ul></div>`);
+  const src = PLAT.rfq_sources.map(([name, url, link, what]) => `<div class="item" style="--c1:250px">
+      <div><b>${esc(name)}</b>${url ? `<p class="small"><a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(link)}</a></p>` : ''}</div><div><p>${esc(what)}</p></div><span></span></div>`).join('');
+  put('rfq', stan('silnik', 'Źródła zapytań nie udostępniają danych programom. Panel pokazuje, gdzie szukać, a znalezione zapytanie wpisujesz do rejestru.') +
+    `<div class="sec">${secHead('Zapytania do odpowiedzi', 'Firma, która publikuje zapytanie i adres do składania ofert, sama prosi o ofertę. To kanał o najniższym ryzyku prawnym.', PLAT.rfqs.length)}${rows}</div>
+    <div class="sec">${secHead('Gdzie szukać zapytań', 'Otwórz źródło, wpisz słowa opisujące Twoją ofertę i przepisz do panelu zapytania, na które chcesz odpowiedzieć.')}${src}</div>
+    <div class="sec">${secHead('Wpisz znalezione zapytanie', 'Z terminem panel przypomni o zapytaniu 3 dni wcześniej. Adres e-mail z ogłoszenia zakłada kontakt z podstawą „zapytanie ofertowe”.')}
+      <div class="form" style="padding-top:16px"><label class="field" for="rqCo">Firma<input id="rqCo" type="text" maxlength="120"></label>
+        <label class="field" for="rqTitle" style="flex:2 1 300px">Czego dotyczy zapytanie<input id="rqTitle" type="text" maxlength="200"></label>
+        <label class="field" for="rqDl" style="flex:0 1 190px">Termin składania ofert<input id="rqDl" type="date"></label>
+        <label class="field" for="rqMail">E-mail z ogłoszenia, opcjonalnie<input id="rqMail" type="email" maxlength="120"></label>
+        <button class="btn" type="button" data-act="k-rfq-add">Zapisz zapytanie</button></div>
+      <p class="note" id="rqNote" tabindex="-1" hidden style="margin-top:14px"></p></div>`);
 }
 
 function renderMessage() {
@@ -165,6 +173,15 @@ ACTIONS['k-rfq'] = (el) => {
   }
   state.k.contact = r.contact; state.k.kind = 'rfq_reply'; resetDecision();
   rerender('kontakty', 'wiadomosc'); go('wiadomosc');
+};
+ACTIONS['k-rfq-add'] = () => {
+  const val = (id) => document.getElementById(id).value.trim();
+  const [company, title, dl, mail] = ['rqCo', 'rqTitle', 'rqDl', 'rqMail'].map(val);
+  const say = (text) => { const n = document.getElementById('rqNote'); n.textContent = text; n.hidden = false; n.focus(); };
+  if (!company || !title) { say('Podaj firmę i temat zapytania.'); return; }
+  PLAT.rfqs.push({ contact: null, company, title, where: 'wpisane ręcznie', published: dpl(PLAT.today), deadline: dl ? dpl(dl) : '', address: mail });
+  rerender('rfq');
+  say(mail ? 'Zapisano zapytanie. Przycisk „Odpowiedz” założy kontakt z podstawą „zapytanie ofertowe” i przygotuje wiadomość.' : 'Zapisano zapytanie. Nie ma adresu e-mail, więc ofertę złożysz na stronie zapytania, a panel przypomni o terminie.');
 };
 ACTIONS['k-send'] = () => {
   const k = state.k, c = contactOf(k.contact), a = assessMessage(k.kind, c);

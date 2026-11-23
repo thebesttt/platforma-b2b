@@ -25,7 +25,7 @@
       ["Blokada po sprzeciwie odbiorcy", "wiadomosc", "silnik", "Jedyna twarda blokada."],
       ["Dziennik decyzji i wysłanych wiadomości", "wysylka", "silnik", ""],
       ["Wysyłka z własnej skrzynki", "wysylka", "silnik", "Dziś przez program pocztowy albo plik .eml. Gmail i Microsoft 365 są w planie."],
-      ["Zapytania ofertowe firm jako kanał o najniższym ryzyku", "rfq", "plan", "Podstawa „zapytanie ofertowe” już jest. Do zbudowania jest zbieranie zapytań ze źródeł."],
+      ["Zapytania ofertowe firm: gdzie szukać i rejestr z terminami", "rfq", "silnik", "Źródła nie udostępniają danych programom. Panel pokazuje, gdzie szukać, a znalezione zapytanie wpisujesz do rejestru: panel pilnuje terminu i przygotowuje odpowiedź."],
       ["Opis idealnego klienta ze strony firmy", "firmy", "silnik", "AI czyta stronę firmy i bibliotekę. Grupa klientów zostaje tylko z cytatem. Opis można poprawić ręcznie."],
       ["Wyszukiwanie firm: branża, region, wielkość, wiek, kondycja, przetargi", "firmy", "plan", "Firmy z wyników przetargów (branża, region, wygrane) są już w module Przetargi. Pełna baza wymaga kluczy do REGON i CEIDG."],
       ["Sekwencje z przypomnieniami i dziennymi limitami", "wysylka", "silnik", "Panel pilnuje terminów i przygotowuje treść kolejnych kroków. Wysyłasz ze swojej skrzynki."],
@@ -73,7 +73,7 @@
       ["Lista dokumentów do złożenia", "oferta", "silnik", "Z ogłoszenia i analizy SWZ. Zespół odhacza gotowe pozycje i dopisuje własne."],
       ["Eksport do .docx", "oferta", "silnik", ""],
       ["Wniosek o dotację według regulaminu naboru", "dotacje", "silnik", ""],
-      ["Baza otwartych naborów", "dotacje", "plan", "Dziś nabór wpisujesz ręcznie."],
+      ["Nabory dotacji: gdzie szukać i lista obserwowanych", "dotacje", "silnik", "Serwisy funduszy nie udostępniają danych programom. Panel pokazuje pięć oficjalnych serwisów, a wybrany nabór wpisujesz na listę: panel przypomina o końcu naboru i zakłada wniosek."],
       ["Ocena, czy firma kwalifikuje się do naboru", "dotacje", "silnik", "Warunki z wgranego regulaminu, każdy z cytatem. Ocena tylko z potwierdzeniem w danych firmy."],
       ["Praca kilku osób nad jedną ofertą", "oferta", "silnik", "Sekcję przydzielasz osobie z zespołu. Zapis nie nadpisuje cudzej zmiany."]
     ] },
@@ -83,8 +83,8 @@
       ["Decyzje UOKiK o zatorach płatniczych", "kontrahent", "silnik", ""],
       ["Obserwowane firmy i alerty o zmianach", "obserwowane", "silnik", ""],
       ["Należności: wezwanie do zapłaty i warunki wpisu do BIG", "naleznosci", "silnik", "Długi widzi tylko Twoja firma."],
-      ["Upadłości i restrukturyzacje z Krajowego Rejestru Zadłużonych", "kontrahent", "plan", "Rejestr nie udostępnia danych do pobierania przez program."],
-      ["Szacowany czas płacenia dostawcom ze sprawozdań", "kontrahent", "plan", "Rejestr nie udostępnia danych do pobierania przez program."],
+      ["Upadłości i restrukturyzacje z Krajowego Rejestru Zadłużonych", "kontrahent", "silnik", "Rejestr nie udostępnia danych programom. Karta firmy pokazuje, gdzie to sprawdzić, i zapisuje wynik. Obserwowane firmy przypominają o sprawdzeniu co 90 dni."],
+      ["Szacowany czas płacenia dostawcom ze sprawozdań", "kontrahent", "silnik", "Dwie liczby przepisujesz ze sprawozdania w przeglądarce dokumentów finansowych KRS, a panel liczy dni."],
       ["Wpis długu do BIG z platformy", "naleznosci", "plan", "Wymaga umowy z biurem."]
     ] }
   ],
@@ -136,6 +136,11 @@
     { "company": "Hotel Nad Stawem (przykład)", "pkd": "Hotele i gastronomia", "region": "mazowieckie", "size": "10-49 osób", "age": 12, "condition": "dobra", "tenders": false, "reason": "Rezerwacje tylko przez pośredników, własna strona bez systemu rezerwacji." },
     { "company": "Meble Dąb (przykład)", "pkd": "Sklepy internetowe", "region": "śląskie", "size": "10-49 osób", "age": 14, "condition": "dobra", "tenders": false, "reason": "Wypisał się z wiadomości 03.11.2026. Platforma nie pozwoli wysłać mu oferty." },
     { "company": "Budimpex S.A. (przykład)", "pkd": "Budownictwo i wykończenia", "region": "mazowieckie", "size": "50-249 osób", "age": 21, "condition": "podwyższone ryzyko", "tenders": true, "reason": "Decyzja UOKiK o opóźnianiu płatności. Sprawdź przed wyceną." }
+  ],
+  "rfq_sources": [
+    ["Baza Konkurencyjności", "https://bazakonkurencyjnosci.funduszeeuropejskie.gov.pl/", "bazakonkurencyjnosci.funduszeeuropejskie.gov.pl", "Zapytania firm i instytucji, które kupują w projektach z funduszy unijnych. Trafiają tu zamówienia powyżej 50 000 zł netto. Ofertę składa się w samej Bazie."],
+    ["Platforma zakupowa", "https://platformazakupowa.pl/all", "platformazakupowa.pl/all", "Bieżące postępowania zakupowe firm i urzędów. Ofertę składa się zwykle przez formularz na stronie postępowania."],
+    ["Strony firm", "", "", "Zakładki „Zapytania ofertowe”, „Przetargi”, „Zakupy” albo „Dla dostawców”. W zapytaniu jest adres e-mail do składania ofert."]
   ],
   "rfqs": [
     { "contact": 5, "company": "Hurtownia Elektryczna Volt (przykład)", "title": "Szukamy agencji do prowadzenia kampanii Google Ads", "where": "strona firmy, zakładka „Zapytania ofertowe”", "published": "17.11.2026", "deadline": "28.11.2026", "address": "oferty@volt.example" },
@@ -341,6 +346,13 @@
       ["Zespół", "Kierownik kampanii: Jan K., 6 lat doświadczenia w kampaniach płatnych. ⟦źródło: biblioteka: Jan K.⟧\nSpecjalista ds. treści: [imię i nazwisko]. ⟦sprawdź⟧"]
     ]
   },
+  "grant_sources": [
+    ["Wyszukiwarka dotacji", "https://www.funduszeunijne.gov.pl/wyszukiwarka/", "funduszeunijne.gov.pl/wyszukiwarka", "Kreator: wybierasz, kim jesteś i na co szukasz pieniędzy."],
+    ["Ogłoszenia o naborach", "https://www.funduszeunijne.gov.pl/strony/skorzystaj/nabory/", "funduszeunijne.gov.pl/strony/skorzystaj/nabory", "Lista ogłoszonych naborów z terminami i dokumentami."],
+    ["Przegląd aktualnych naborów", "https://funduszeeuropejskie.gov.pl/aktualne-nabory/", "funduszeeuropejskie.gov.pl/aktualne-nabory", "Zestawienie naborów publikowane co miesiąc."],
+    ["Harmonogramy programów", "https://funduszeeuropejskie.gov.pl/nabory/", "funduszeeuropejskie.gov.pl/nabory", "Plany naborów poszczególnych programów."],
+    ["Harmonogram naborów PARP", "https://www.parp.gov.pl/harmonogram-naborow", "parp.gov.pl/harmonogram-naborow", "Nabory dla firm prowadzone przez PARP."]
+  ],
   "grants": {
     "calls": [
       { "name": "Cyfryzacja małych firm, program regionalny (przykład naboru)", "until": "15.01.2027", "amount": "do 150 000 zł, dofinansowanie 50%",
@@ -398,6 +410,10 @@
       "uokik": [], "changes": []
     }
   ],
+  "checks": {
+    "b2": { "krz": ["none", "08.11.2026"], "fin": [2025, 2640000, 9800000] },
+    "b4": { "krz": null, "fin": null }
+  },
   "receivables": [
     { "company": "b2", "invoice": "FV/2026/09/014", "amount": 12300, "issued": "2026-09-16", "due": "2026-09-30", "demand": "2026-10-14", "bureau": "Biuro Przykładowe S.A., ul. Wzorcowa 1, Warszawa (przykład)" },
     { "company": "b3", "invoice": "FV/2026/10/031", "amount": 3690, "issued": "2026-10-14", "due": "2026-10-28", "demand": "2026-11-05", "bureau": "Biuro Przykładowe S.A., ul. Wzorcowa 1, Warszawa (przykład)" },

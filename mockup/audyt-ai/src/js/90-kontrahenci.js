@@ -37,6 +37,8 @@ function demandLetter(r) {
 
 function renderCompany() {
   const c = companyOf(state.co.id), r = companyRisk(c), mine = PLAT.receivables.filter((x) => x.company === c.id);
+  const ch = PLAT.checks[c.id] || (PLAT.checks[c.id] = { krz: null, fin: null });
+  const dpo = ch.fin && ch.fin[2] > 0 ? Math.round(ch.fin[1] / ch.fin[2] * 365) : null;
   put('kontrahent', stan('silnik', 'Wykaz VAT, KRS i decyzje UOKiK. Firmy w mockupie są zmyślone.') +
     `<div class="form"><label class="field" for="coPick" style="flex:0 1 460px">Firma<select id="coPick" data-on="co-pick">${PLAT.companies.map((x) => `<option value="${x.id}"${x.id === c.id ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select></label>
       <button class="btn ghost" type="button" data-act="co-watch" id="coWatch">${c.watched ? 'Przestań obserwować' : 'Obserwuj firmę'}</button></div>
@@ -54,7 +56,18 @@ function renderCompany() {
       <div class="sec">${secHead('Zmiany od początku obserwacji', '', c.changes.length)}${c.changes.length ? c.changes.map(([at, what]) => `<div class="item" style="--c1:96px"><span class="lead-col num">${esc(at)}</span><div><p>${esc(what)}</p></div><span></span></div>`).join('') : '<p class="muted" style="padding-top:14px">Bez zmian w rejestrach.</p>'}</div>
       <div class="sec">${secHead('Twoje należności od tej firmy', '', mine.length)}${mine.length ? mine.map((x) => `<div class="item" style="--c1:150px"><span class="lead-col">${esc(x.invoice)}</span><div><p><b>${zl(x.amount)}</b>, ${dni(overdue(x))} po terminie</p></div><div class="end"><a href="#naleznosci">Należności</a></div></div>`).join('') : '<p class="muted" style="padding-top:14px">Brak zapisanych należności.</p>'}</div>
     </div>
-    <p class="note">Do zbudowania: upadłości i restrukturyzacje z Krajowego Rejestru Zadłużonych oraz szacowany czas płacenia dostawcom ze sprawozdań finansowych. Rejestry nie udostępniają tych danych do pobierania przez program.</p>`);
+    <div class="sec">${secHead('Zadłużenie i płatności: sprawdź w rejestrach', 'Te dwa rejestry nie udostępniają danych programom, więc panel nie pobierze ich sam. Pokazuje, gdzie to sprawdzić, i zapisuje wynik. Wpisy widzi tylko Twoja firma i nie zmieniają one oceny ryzyka.')}
+      <div class="item" style="--c1:250px"><div><b>Krajowy Rejestr Zadłużonych</b><p class="small"><a href="https://krz.ms.gov.pl/" target="_blank" rel="noopener noreferrer">krz.ms.gov.pl</a></p></div>
+        <div><p>${ch.krz ? (ch.krz[0] === 'none' ? 'W rejestrze nie było wpisów o tej firmie.' : 'W rejestrze jest wpis o tej firmie.') + ' Sprawdzono ' + esc(ch.krz[1]) + '.' : 'Wyszukaj firmę po NIP i sprawdź postępowania upadłościowe i restrukturyzacyjne, umorzone egzekucje oraz zakazy prowadzenia działalności.'}</p>
+          <div class="acts" style="padding-top:10px"><button class="btn ghost sm" type="button" data-act="co-krz" data-r="none">Zapisz: brak wpisów</button><button class="btn ghost sm" type="button" data-act="co-krz" data-r="found">Zapisz: jest wpis</button></div></div>
+        <div class="end" id="coKrz" tabindex="-1">${ch.krz ? st(ch.krz[0] === 'none' ? 'good' : 'bad', ch.krz[0] === 'none' ? 'brak wpisów' : 'jest wpis') : st('plain', 'nie sprawdzono')}</div></div>
+      <div class="item" style="--c1:250px"><div><b>Po ilu dniach firma płaci dostawcom</b><p class="small"><a href="https://ekrs.ms.gov.pl/" target="_blank" rel="noopener noreferrer">ekrs.ms.gov.pl</a>, Przeglądarka dokumentów finansowych</p></div>
+        <div><p>${dpo === null ? 'Z ostatniego sprawozdania przepisz dwie liczby: zobowiązania z tytułu dostaw i usług (bilans) oraz zakupy od dostawców w roku (rachunek zysków i strat).' : 'Sprawozdanie za ' + ch.fin[0] + ' r.: zobowiązania wobec dostawców ' + zl(ch.fin[1]) + ', zakupy w roku ' + zl(ch.fin[2]) + '. Szacunek: zobowiązania podzielone przez zakupy, razy 365.'}</p>
+          <div class="form" style="padding-top:10px"><label class="field" for="coPay">Zobowiązania wobec dostawców (zł)<input id="coPay" type="text" inputmode="numeric" value="${ch.fin ? num(ch.fin[1]) : ''}"></label>
+            <label class="field" for="coPur">Zakupy od dostawców w roku (zł)<input id="coPur" type="text" inputmode="numeric" value="${ch.fin ? num(ch.fin[2]) : ''}"></label>
+            <button class="btn ghost" type="button" data-act="co-fin">Policz</button></div></div>
+        <div class="end" id="coFin" tabindex="-1">${dpo === null ? st('plain', 'brak danych') : st(dpo > 90 ? 'bad' : dpo > 60 ? 'mid' : 'good', 'ok. ' + dni(dpo) + ', ' + (dpo > 90 ? 'bardzo długo' : dpo > 60 ? 'długo' : 'typowo'))}</div></div>
+    </div>`);
 }
 
 function renderWatch() {
@@ -88,6 +101,13 @@ function renderReceivables() {
 ACTIONS['co-open'] = (el) => { state.co.id = el.dataset.id; rerender('kontrahent'); };
 ACTIONS['co-watch'] = () => { const c = companyOf(state.co.id); c.watched = !c.watched; rerender('kontrahent', 'obserwowane', 'pulpit'); refocus('coWatch'); };
 ACTIONS['co-letter'] = (el) => { state.co.letter = Number(el.dataset.i); rerender('naleznosci'); const l = document.getElementById('letter'); if (l) l.scrollIntoView({ block: 'start' }); };
+ACTIONS['co-krz'] = (el) => { PLAT.checks[state.co.id].krz = [el.dataset.r, dpl(PLAT.today)]; rerender('kontrahent'); refocus('coKrz'); };
+ACTIONS['co-fin'] = () => {
+  const amount = (id) => Number(document.getElementById(id).value.replace(/[\s\u00a0]|zł/g, '').replace(',', '.'));
+  const pay = amount('coPay'), pur = amount('coPur');
+  PLAT.checks[state.co.id].fin = pay >= 0 && pur > 0 ? [Number(PLAT.today.slice(0, 4)) - 1, pay, pur] : null;
+  rerender('kontrahent'); refocus('coFin');
+};
 CHANGES['co-pick'] = (el) => { state.co.id = el.value; rerender('kontrahent'); refocus('coPick'); };
 
 MODS.push({ id: 'kontrahenci', order: 9, label: 'Kontrahenci', about: 'Karta firmy po NIP z oceną ryzyka płatniczego, obserwowanie zmian w rejestrach i należności z warunkami wpisu do BIG.',
