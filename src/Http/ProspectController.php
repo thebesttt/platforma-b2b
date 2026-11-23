@@ -11,6 +11,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Core\Session;
 use App\Core\View;
+use App\Modules\Ai\Claude;
 use App\Modules\Offers\Docx;
 use App\Modules\Outreach\Outreach;
 use App\Modules\Outreach\Prospects;
@@ -161,6 +162,38 @@ final class ProspectController extends Controller
         return $this->redirect('/klienci/potencjalni/' . $p['id'] . '#strona', 'Strona sprawdzona.' . (!empty($res['invite']) ? ' Jest na niej zdanie, które wygląda na zaproszenie do ofert: przeczytaj je poniżej.' : ''));
     }
 
+    /** Treść oferty: zapis poprawek, szkic AI albo powrót do treści ułożonej z faktów. */
+    public function pitch(Request $r): Response
+    {
+        $org = $this->orgId();
+        $p = Prospects::find($org, (int) $r->param('id'));
+        if (!$p) {
+            return $this->notFound();
+        }
+        $url = '/klienci/potencjalni/' . $p['id'] . '#oferta';
+        if ($r->str('action') === 'reset') {
+            Prospects::savePitch($p, '');
+            return $this->redirect($url, 'Treść oferty ułożona od nowa z faktów o firmie.');
+        }
+        if ($r->str('action') === 'ai') {
+            if ($err = TenderController::aiGuard()) {
+                return $this->redirect($url, $err, 'error');
+            }
+            $res = Prospects::aiPitch($p, Prospects::company($p), Auth::org() ?? []);
+            if (!$res['ok']) {
+                return $this->redirect($url, (string) $res['error'], 'error');
+            }
+            Prospects::savePitch($p, (string) $res['text'], 'ai');
+            AuditLog::add('prospect.pitch_ai', 'prospect', (int) $p['id'], [], $r->ip());
+            return $this->redirect($url, 'AI napisało treść oferty. Sprawdź fakty, zanim ją wyślesz.');
+        }
+        if (trim((string) $r->input('text', '')) === '') {
+            return $this->redirect($url, 'Treść oferty jest pusta. Wpisz ją albo ułóż od nowa z faktów.', 'error');
+        }
+        Prospects::savePitch($p, (string) $r->input('text', ''));
+        return $this->redirect($url, 'Zapisano treść oferty. Trafi do listu i do wiadomości e-mail.');
+    }
+
     /** Potwierdzenie znalezionego zaproszenia, wpisanie własnego albo jego usunięcie. */
     public function invite(Request $r): Response
     {
@@ -230,7 +263,7 @@ final class ProspectController extends Controller
             }
             AuditLog::add('prospect.letter', 'prospect', (int) $p['id'], [], $r->ip());
             $bin = Docx::build($letter['title'], [['title' => '', 'body' => $body]], false);
-            return Response::download($bin, 'list-' . (preg_replace('/[^a-z0-9]+/', '-', search_text((string) $p['name'])) ?: 'firma') . '.docx',
+            return Response::download($bin, 'list-' . (trim(mb_substr((string) preg_replace('/[^a-z0-9]+/', '-', search_text((string) $p['name'])), 0, 40), '-') ?: 'firma') . '.docx',
                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
         }
         return $this->view('outreach/prospect_letter', ['p' => $p, 'company' => $company, 'letter' => $letter, 'person' => Prospects::isPerson($company), 'title' => 'List do ' . $p['name']]);
@@ -245,6 +278,8 @@ final class ProspectController extends Controller
             'p' => $p, 'company' => $company, 'contact' => $contact, 'facts' => Prospects::facts($p), 'score' => json_in($p['score_json'] ?? null),
             'reasons' => Prospects::reasons($p, $company), 'paths' => Prospects::paths($org, $p, $company, $contact),
             'infoDays' => Prospects::infoDaysLeft($p, $company), 'criteria' => Prospects::criteria(Auth::org()), 'title' => (string) $p['name'],
+            'pitch' => Prospects::pitch($p, $company, Auth::org() ?? []), 'aiEnabled' => Claude::enabled(),
+            'hasLibrary' => (bool) $this->db()->val("SELECT 1 FROM library_items WHERE org_id = ? AND kind = 'text' LIMIT 1", [$org]),
         ]);
     }
 }

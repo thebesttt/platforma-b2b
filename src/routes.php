@@ -138,6 +138,7 @@ return static function (Router $r): void {
     $r->post('/klienci/potencjalni/{id}', [ProspectController::class, 'save'], $a);
     $r->post('/klienci/potencjalni/{id}/stan', [ProspectController::class, 'state'], $a);
     $r->post('/klienci/potencjalni/{id}/strona', [ProspectController::class, 'checkSite'], $a);
+    $r->post('/klienci/potencjalni/{id}/oferta', [ProspectController::class, 'pitch'], $a);
     $r->post('/klienci/potencjalni/{id}/zaproszenie', [ProspectController::class, 'invite'], $a);
     $r->post('/klienci/potencjalni/{id}/kontakt', [ProspectController::class, 'contact'], $a);
     $r->get('/klienci/potencjalni/{id}/list', [ProspectController::class, 'letter'], $a);

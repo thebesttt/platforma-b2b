@@ -113,6 +113,10 @@ return [
         . '<p>Nie obsługujemy spółek giełdowych ani firm zatrudniających ponad 50 osób.</p></main></body></html>'),
     '#^GET https://firma-uslugowa\.example/oferta\n#' => $page('<!doctype html><html lang="pl"><head><title>Oferta</title></head><body><main><h1>Oferta</h1>'
         . '<p>Pakiet dla firm usługowych na ryczałcie obejmuje ewidencję przychodów i rozliczenie roczne. Abonament zaczyna się od 300 zł miesięcznie.</p></main></body></html>'),
+    // Treść oferty dla potencjalnego klienta pisana przez AI.
+    '#^POST https://api\.anthropic\.com/v1/messages\n.*Piszesz treść oferty dla potencjalnego klienta#s' => $claude([
+        'pitch' => "Państwa firma zawarła niedawno umowę na remont drogi, więc w najbliższych miesiącach będzie potrzebować kruszywa.\n\nDostarczamy kruszywa na budowy dróg. Termin i cenę podamy po rozmowie: [CENA], [TERMIN].",
+    ]),
     // Strona potencjalnego klienta: strona główna bez opisu, podstrona kontaktowa i podstrona z zaproszeniem do ofert.
     '#^GET https://firma-zaprasza\.example/\n#' => $page('<!doctype html><html lang="pl"><head><title>Hurtownia materiałów budowlanych</title>'
         . '<meta name="viewport" content="width=device-width, initial-scale=1"></head><body><nav><a href="/oferta">Oferta</a> <a href="/kontakt">Kontakt</a> <a href="/dla-dostawcow">Dla dostawców</a>'

@@ -267,6 +267,90 @@ return [
         eq(false, $f['site']['ok']);
         contains('Nie udało się otworzyć strony strona-bez-odpowiedzi.example', http('GET', $url)->body);
     },
+    'Treść oferty: ułożona z faktów, poprawiona, napisana przez AI. Ta sama w liście i w wiadomości' => function () use ($win, $org) {
+        [$orgId, $uid] = $org();
+        $db = Db::get();
+        $db->insert('tender_results', $win());
+        http('POST', '/klienci/potencjalni/z-przetargow', ['nips' => ['1234563218']]);
+        Prospects::enrichPending($orgId);
+        $id = (int) $db->val('SELECT id FROM prospects');
+        $url = '/klienci/potencjalni/' . $id;
+        $orgRow = static fn (): array => (array) $db->one('SELECT * FROM organizations WHERE id = ?', [$orgId]);
+
+        // Bez biblioteki: powód kontaktu z faktów i miejsce do uzupełnienia w nawiasie. Karta podpowiada bibliotekę.
+        $card = http('GET', $url)->body;
+        contains('ułożona z faktów', $card);
+        contains("Piszemy, ponieważ Państwa firma zawarła niedawno umowę na zamówienie „Remont drogi gminnej w Testowie”.\n\n[W dwóch zdaniach: czym się zajmujecie", $card);
+        contains('Napisanie oferty nie wymaga zgody firmy', $card);
+        contains('href="/biblioteka">Bibliotece firmy</a>', $card);
+        contains('Szkic AI', $card);
+        // Bez klucza AI nie ma przycisku, a wywołanie wprost kończy się komunikatem.
+        with_config(['ANTHROPIC_API_KEY' => ''], function () use ($url) {
+            ok(!str_contains(http('GET', $url)->body, 'Szkic AI'), 'bez klucza AI nie ma przycisku');
+            http('POST', $url . '/oferta', ['action' => 'ai']);
+            contains('Funkcje AI są wyłączone', http('GET', $url)->body);
+        });
+        // Z biblioteką nawias znika.
+        $db->insert('library_items', ['org_id' => $orgId, 'kind' => 'text', 'title' => 'O firmie', 'body' => 'Dostarczamy kruszywa na budowy dróg.', 'created_at' => now_utc(), 'updated_at' => now_utc()]);
+        $p = Prospects::find($orgId, $id);
+        eq(['rules', null], [Prospects::pitch($p, Prospects::company($p), $orgRow())['by'], Prospects::pitch($p, Prospects::company($p), $orgRow())['at']]);
+        contains("zamówienie „Remont drogi gminnej w Testowie”.\n\nDostarczamy kruszywa na budowy dróg.", Prospects::pitch($p, Prospects::company($p), $orgRow())['text']);
+        // Firma bez wygranych, ze sprawdzoną stroną: powodem są rzeczy do poprawy. Bez żadnych faktów zostaje zdanie ogólne.
+        $site = ['id' => 0, 'org_id' => $orgId, 'name' => 'X', 'host' => 'x.example', 'facts_json' => json_out(['site' => ['findings' => ['Brak głównego nagłówka (H1).', 'Serwer odpowiada wolno: 2,4 s.']]])];
+        contains('Zajrzeliśmy na Państwa stronę x.example i zauważyliśmy 2 rzeczy do poprawy: brak głównego nagłówka (H1); serwer odpowiada wolno: 2,4 s.', Prospects::pitchFromFacts($site, null, $orgRow()));
+        contains('działa w branży, z którą pracujemy na co dzień', Prospects::pitchFromFacts(['facts_json' => null] + $site, null, $orgRow()));
+
+        // Poprawka użytkownika: zapisana treść ma pierwszeństwo, kod HTML jest tekstem, pusta treść nie kasuje zapisanej.
+        eq(303, http('POST', $url . '/oferta', ['action' => 'save', 'text' => "Nasza <b>poprawiona</b> treść oferty.\r\nDruga linia."])->status);
+        $card = http('GET', $url)->body;
+        contains('poprawiona przez Ciebie', $card);
+        contains("Nasza &lt;b&gt;poprawiona&lt;/b&gt; treść oferty.\nDruga linia.</textarea>", $card);
+        http('POST', $url . '/oferta', ['action' => 'save', 'text' => '   ']);
+        contains('Treść oferty jest pusta', http('GET', $url)->body);
+        eq("Nasza <b>poprawiona</b> treść oferty.\nDruga linia.", Prospects::facts(Prospects::find($orgId, $id))['pitch']['text']);
+        // Ta sama treść w liście i w wiadomości e-mail (ze stopką rezygnacji i bez zmiany wielkości liter cudzego tekstu).
+        contains("Szanowni Państwo,\n\nNasza &lt;b&gt;poprawiona&lt;/b&gt; treść oferty.\nDruga linia.\n\nJeśli temat jest dla Państwa ciekawy", http('GET', $url . '/list')->body);
+        http('POST', $url . '/kontakt', ['email' => 'biuro@przykladowa.example', 'person' => 'Anna Nowak']);
+        $cid = (int) $db->val('SELECT id FROM contacts');
+        $compose = http('GET', '/klienci/' . $cid . '/wiadomosc', [], ['kind' => 'cold_offer'])->body;
+        contains('value="Propozycja współpracy - Firma Testowa sp. z o.o."', $compose);
+        contains("Dzień dobry, Anna Nowak,\n\nNasza &lt;b&gt;poprawiona&lt;/b&gt; treść oferty.\nDruga linia.\n\nCzy możemy umówić krótką rozmowę w przyszłym tygodniu?", $compose);
+        contains('Jeśli nie chcą Państwo otrzymywać od nas wiadomości', $compose);
+        ok(!str_contains(http('GET', '/klienci/' . $cid . '/wiadomosc', [], ['kind' => 'consent_request'])->body, 'poprawiona'), 'prośba o zgodę nie zawiera oferty');
+
+        // Powrót do treści z faktów.
+        eq(303, http('POST', $url . '/oferta', ['action' => 'reset'])->status);
+        ok(empty(Prospects::facts(Prospects::find($orgId, $id))['pitch']), 'zapisana treść usunięta');
+        contains("Dzień dobry, Anna Nowak,\n\npiszemy, ponieważ Państwa firma zawarła niedawno umowę", http('GET', '/klienci/' . $cid . '/wiadomosc', [], ['kind' => 'cold_offer'])->body);
+
+        // Szkic AI: model dostaje fakty z karty i bibliotekę nadawcy, a wynik jest oznaczony do sprawdzenia.
+        (function () use ($url, $orgId, $id) {
+            App\Core\Http::$log = [];
+            eq(303, http('POST', $url . '/oferta', ['action' => 'ai'])->status);
+            $sent = '';
+            foreach (App\Core\Http::$log as $l) {
+                if (str_contains($l['url'], 'anthropic')) {
+                    $sent = (string) (json_decode((string) $l['body'], true)['messages'][0]['content'] ?? '');
+                }
+            }
+            contains('Fakty o odbiorcy:', $sent);
+            contains('W wynikach przetargów ma 1 wygrane zamówienie', $sent);
+            contains('[O firmie] Dostarczamy kruszywa na budowy dróg.', $sent);
+            $pitch = Prospects::facts(Prospects::find($orgId, $id))['pitch'];
+            eq('ai', $pitch['by']);
+            contains('będzie potrzebować kruszywa', $pitch['text']);
+            $card = http('GET', $url)->body;
+            contains('napisana przez AI: sprawdź fakty', $card);
+            contains('Ułóż od nowa z faktów', $card);
+        })();
+
+        // Po sprzeciwie karta nie proponuje już treści oferty.
+        http('POST', $url . '/stan', ['status' => 'objected']);
+        ok(!str_contains(http('GET', $url)->body, 'id="oferta"'), 'bez treści oferty po sprzeciwie');
+        // Druga firma nie zmieni cudzej treści.
+        $org('obca@example.com', 'Obca sp. z o.o.');
+        eq(404, http('POST', $url . '/oferta', ['action' => 'save', 'text' => 'Obca treść'])->status);
+    },
     'List pocztą, informacja RODO dla osoby prowadzącej działalność i sprzeciw firmy' => function () use ($win, $org) {
         [$orgId, $uid] = $org();
         $db = Db::get();
@@ -282,7 +366,7 @@ return [
         $page = http('GET', $url . '/list')->body;
         contains('PRZYKŁADOWA SPÓŁKA BUDOWLANA SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ', $page);
         contains('UL. PRZYKŁADOWA 1, 00-001 WARSZAWA', $page);
-        contains('zawarła niedawno umowę na zamówienie „Remont drogi gminnej w Testowie”. Dostarczamy kruszywa na budowy dróg', $page);
+        contains("Szanowni Państwo,\n\npiszemy, ponieważ Państwa firma zawarła niedawno umowę na zamówienie „Remont drogi gminnej w Testowie”.\n\nDostarczamy kruszywa na budowy dróg", $page);
         contains('o wskazanie adresu e-mail, na który możemy przesłać szczegóły', $page);
         contains('Jeśli nie chcą Państwo otrzymywać od nas korespondencji, prosimy o informację na adres wlasciciel@example.com. Nie napiszemy ponownie.', $page);
         contains('tel. 22 111 22 33', $page);

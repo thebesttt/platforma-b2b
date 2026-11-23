@@ -148,7 +148,17 @@
         body: '_csrf=' + encodeURIComponent(workToken)
       }).then(function (r) { return r.json(); }).then(function (j) {
         workFails = 0;
-        if (!j.left) { window.location.reload(); return; }
+        if (!j.left) {
+          // Komunikat po ostatniej akcji (np. o odrzuconych wierszach) zniknąłby przy odświeżeniu, więc wtedy zostawiamy link.
+          if (!document.querySelector('.flash') || !workNote) { window.location.reload(); return; }
+          workNote.textContent = 'Dane z rejestrów są dopisane. ';
+          var again = document.createElement('a');
+          again.href = window.location.pathname + window.location.search;
+          again.textContent = 'Odśwież listę';
+          workNote.appendChild(again);
+          workBox.removeAttribute('data-work-queue');
+          return;
+        }
         if (!j.done) {
           if (workNote) workNote.textContent = 'Rejestr teraz nie odpowiada. Pozostałe firmy (' + j.left + ') uzupełni zadanie dzienne.';
           return;

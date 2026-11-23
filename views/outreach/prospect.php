@@ -65,6 +65,27 @@ $objected = $p['status'] === 'objected';
       <?php endif ?>
     </section>
 
+    <?php if (!$objected): ?>
+    <section class="card" id="oferta" aria-labelledby="t-pitch">
+      <div class="between" style="align-items:flex-start;gap:8px 12px">
+        <h2 id="t-pitch">Treść oferty</h2>
+        <span class="chip <?= $pitch['by'] === 'ai' ? 'mid' : 'neutral' ?>"><?= ['rules' => 'ułożona z faktów', 'ai' => 'napisana przez AI: sprawdź fakty', 'user' => 'poprawiona przez Ciebie'][$pitch['by']] ?? 'zapisana' ?></span>
+      </div>
+      <p class="small muted" style="margin:4px 0 12px">Panel układa ją sam z faktów o firmie i z Twojej biblioteki. Napisanie oferty nie wymaga zgody firmy. Ta sama treść trafi do listu i do wiadomości e-mail.</p>
+      <form method="post" action="/klienci/potencjalni/<?= $id ?>/oferta">
+        <?= csrf_field() ?>
+        <label class="sr-only" for="pp-text">Treść oferty</label>
+        <textarea id="pp-text" name="text" rows="7" maxlength="3000" required><?= e($pitch['text']) ?></textarea>
+        <?php if (!$hasLibrary): ?><p class="small muted" style="margin:8px 0 0">Dodaj w <a href="/biblioteka">Bibliotece firmy</a> krótki opis tego, co robicie. Panel wstawi go do każdej oferty zamiast nawiasu kwadratowego.</p><?php endif ?>
+        <div class="row-flex" style="margin-top:12px">
+          <button class="btn ghost" type="submit" name="action" value="save">Zapisz treść</button>
+          <?php if ($aiEnabled): ?><button class="btn ghost" type="submit" name="action" value="ai" formnovalidate data-busy="AI pisze…">Szkic AI</button><?php endif ?>
+          <?php if ($pitch['by'] !== 'rules'): ?><button class="btn ghost" type="submit" name="action" value="reset" formnovalidate>Ułóż od nowa z faktów</button><?php endif ?>
+        </div>
+      </form>
+    </section>
+    <?php endif ?>
+
     <section class="card" id="kontakt" aria-labelledby="t-paths">
       <h2 id="t-paths">Jak możesz się odezwać</h2>
       <p class="small muted" style="margin:4px 0 0">Prowadzenie listy i napisanie oferty nie wymagają zgody firmy. Zgody wymaga wysłanie oferty e-mailem albo telefon z ofertą, także do firm. Poniżej są wszystkie drogi, od najmniej ryzykownej. Wysyłasz sam, ze swojej skrzynki albo pocztą.</p>
