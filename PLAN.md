@@ -1,6 +1,6 @@
 # Plan działania
 
-Stan na 20.11.2026.
+Stan na 23.11.2026.
 
 **Zmiana kierunku.** Pierwszym użytkownikiem narzędzia jest PerfectData (perfectdata.pl). Cel: więcej zapytań ze strony i audyt, którym agencja pracuje z klientami SEO i GEO. Platforma B2B (przetargi, oferty, kontrahenci) zostaje silnikiem pod spodem i osobnym produktem na później.
 
