@@ -20,6 +20,17 @@ $short = static function (?int $id) use ($team, $me): string {
 $docsDone = count(array_filter($checklist, static fn ($c) => (int) $c['done'] === 1));
 $docsKey = OfferController::DOCS_KEY;
 ?>
+<?php if (!empty($writing['queue'])): $left = count($writing['queue']); $total = $left + (int) $writing['written']; ?>
+<div class="notice info no-print" role="status" style="margin-bottom:16px">
+  <form method="post" action="<?= $base ?>/napisz" class="row-flex" data-auto-submit>
+    <?= csrf_field() ?>
+    <input type="hidden" name="kolejka" value="<?= e(implode(',', $writing['queue'])) ?>"><input type="hidden" name="napisane" value="<?= (int) $writing['written'] ?>">
+    <span><strong>AI pisze <?= $isGrant ? 'wniosek' : 'ofertę' ?>:</strong> gotowe <?= (int) $writing['written'] ?> z <?= $total ?> sekcji. Nie zamykaj tej strony.</span>
+    <button class="btn sm" type="submit" data-busy="AI pisze kolejną sekcję…">Pisz dalej</button>
+    <a class="btn ghost sm" href="<?= $base ?>">Zatrzymaj</a>
+  </form>
+</div>
+<?php endif ?>
 <header class="between page-head">
   <div class="stack-sm">
     <p class="crumbs"><a href="/oferty">Oferty i wnioski</a><?php if ($tender): ?> / <a href="/przetargi/<?= (int) $tender['id'] ?>"><?= e(truncate((string) $tender['title'], 50)) ?></a><?php endif ?> / Szkic</p>
@@ -32,7 +43,14 @@ $docsKey = OfferController::DOCS_KEY;
     <p class="muted small" style="margin:0">AI pisze tylko na podstawie <?= $isGrant ? 'regulaminu naboru' : 'ogłoszenia i SWZ' ?> oraz Twojej biblioteki. Zdania bez źródła są podświetlone na czerwono.</p>
   </div>
   <div class="row-flex no-print">
-    <a class="btn" href="<?= $base ?>/docx">Eksportuj do .docx</a>
+    <?php $openSections = count(array_filter($sections, static fn (array $s): bool => $s['status'] !== 'done')); ?>
+    <?php if ($openSections && empty($writing['queue'])): ?>
+    <form class="inline" method="post" action="<?= $base ?>/napisz" data-confirm="AI napisze od nowa <?= $openSections ?> <?= plural($openSections, 'sekcję', 'sekcje', 'sekcji') ?> (wszystkie, które nie są oznaczone jako gotowe) i zastąpi ich obecną treść. To <?= $openSections ?> <?= plural($openSections, 'użycie', 'użycia', 'użyć') ?> AI<?= $plan['limit'] !== null ? ' z ' . max(0, (int) $plan['limit'] - (int) $plan['used']) . ' pozostałych w tym miesiącu' : '' ?>. Kontynuować?">
+      <?= csrf_field() ?>
+      <button class="btn" type="submit" data-busy="AI pisze pierwszą sekcję…"<?= $aiEnabled ? '' : ' disabled title="Funkcje AI są wyłączone"' ?>><?= $isGrant ? 'Napisz cały wniosek' : 'Napisz całą ofertę' ?></button>
+    </form>
+    <?php endif ?>
+    <a class="btn<?= $openSections ? ' ghost' : '' ?>" href="<?= $base ?>/docx">Eksportuj do .docx</a>
     <form class="inline" method="post" action="<?= $base ?>">
       <?= csrf_field() ?>
       <label class="sr-only" for="o-status">Status</label>

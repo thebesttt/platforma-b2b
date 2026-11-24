@@ -31,6 +31,15 @@
     }
   });
 
+  // Dłuższa praca podzielona na kroki (AI pisze dokument sekcja po sekcji): formularz wysyła się sam po załadowaniu strony.
+  // Link „Zatrzymaj” obok prowadzi na tę samą stronę bez kolejki, więc przerwanie nie wymaga skryptu.
+  var auto = document.querySelector('form[data-auto-submit]');
+  if (auto) {
+    window.setTimeout(function () {
+      if (typeof auto.requestSubmit === 'function') auto.requestSubmit(); else auto.submit();
+    }, 600);
+  }
+
   // Przycisk „Potwierdź” aktywny dopiero po zaznaczeniu oświadczenia o ryzyku.
   document.querySelectorAll('[data-ack-for]').forEach(function (box) {
     var target = document.getElementById(box.getAttribute('data-ack-for'));

@@ -201,6 +201,22 @@ function demo_seed(): array
         'opens_at' => $plus(-30), 'closes_at' => $plus(6), 'amount_note' => 'do 150 000 zł', 'audience_note' => 'małe i średnie firmy', 'notes' => 'Wkład własny 15%. Sprawdzić, czy zakup oprogramowania się kwalifikuje.']);
     \App\Modules\Offers\GrantCalls::save($org, $uid, ['name' => 'Zielona transformacja przedsiębiorstw (przykład)', 'url' => 'https://example.com/nabory/zielona', 'opens_at' => $plus(21), 'closes_at' => $plus(80)]);
 
+    // Wyszukiwarka naborów: jedno wyszukiwanie i trzy propozycje do przejrzenia (jedna ze strony urzędowej, jedna bez terminu).
+    $searchId = $db->insert('grant_searches', ['org_id' => $org, 'query_json' => json_out(['what' => 'zakup sprzętu do robót drogowych i szkolenia operatorów', 'region' => 'mazowieckie', 'size' => 'mala']),
+        'auto' => 0, 'ok' => 1, 'found' => 3, 'searches' => 4, 'created_by' => $uid, 'created_at' => now_utc()]);
+    foreach ([
+        ['Kredyt ekologiczny (przykład)', 'Bank przykładowy', 'https://www.gov.pl/web/przyklad/kredyt-ekologiczny', 1, $plus(-10), $plus(45), 'premia do 80% kosztów kwalifikowanych', 'mikro, małe i średnie firmy oraz small mid-caps',
+            'Pasuje do wymiany maszyn na mniej energochłonne. Wymaga audytu energetycznego przed złożeniem wniosku.', 'Nabór wniosków trwa do wyczerpania środków, nie dłużej niż do wskazanego dnia.'],
+        ['Szkolenia i doradztwo dla firm budowlanych (przykład)', null, 'https://example.com/nabory/szkolenia-budowlane', 0, null, null, null, 'firmy z sektora budowlanego',
+            'Termin nie jest podany na stronie, trzeba go sprawdzić u operatora.', null],
+        ['Inwestycje w maszyny dla MŚP na Mazowszu (przykład)', 'Instytucja przykładowa', 'https://example.com/nabory/maszyny-msp', 0, $plus(14), $plus(60), 'do 1 000 000 zł, dofinansowanie do 40%', 'małe i średnie firmy z województwa mazowieckiego',
+            'Nabór dopiero się otworzy. Zakup rozściełacza mieści się w opisie kosztów kwalifikowanych.', null],
+    ] as [$name, $inst, $url, $official, $opens, $closes, $amount, $audience, $fit, $quote]) {
+        $db->insert('grant_finds', ['org_id' => $org, 'search_id' => $searchId, 'name' => $name, 'institution' => $inst, 'url' => $url, 'url_hash' => sha1($url), 'source_title' => $name,
+            'official' => $official, 'opens_at' => $opens ? substr($opens, 0, 10) : null, 'closes_at' => $closes ? substr($closes, 0, 10) : null, 'amount_note' => $amount, 'audience_note' => $audience,
+            'fit' => $fit, 'quote' => $quote, 'status' => 'new', 'created_at' => now_utc()]);
+    }
+
     // Zapytania ze strony: widżet dopuszczony na example.com i przykładowe zapytania przeprowadzone tą samą ścieżką co prawdziwe
     // (start rozmowy, odpowiedzi, formularz), więc ocena pochodzi z tabeli punktów, a nie z ręki.
     $w = Inbound::widget($org);

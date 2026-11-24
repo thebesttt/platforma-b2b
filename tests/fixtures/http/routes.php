@@ -202,6 +202,7 @@ return [
 
     // Widoczność: Google, Cloudflare i mapy witryn konkurentów.
     ...require __DIR__ . '/seo.php',
+    ...require __DIR__ . '/grants.php',
 
     // Resend: wysyłka e-maili platformy. Adres zaczynający się od „odrzucony” udaje błąd usługi.
     '#^POST https://api\.resend\.com/emails\n.*"to":\["odrzucony#s' => $json(['statusCode' => 422, 'name' => 'validation_error', 'message' => 'Domena nadawcy nie jest zweryfikowana.'], 422),

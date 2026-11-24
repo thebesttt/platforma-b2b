@@ -123,6 +123,12 @@ final class CronController
         } catch (\Throwable $e) {
             $out['seo'] = ['error' => $e->getMessage()];
         }
+        // Nabory dotacji: cotygodniowe wyszukiwanie dla firm z większym przydziałem AI.
+        try {
+            $out['grants'] = \App\Modules\Offers\GrantFinder::daily();
+        } catch (\Throwable $e) {
+            $out['grants'] = ['error' => $e->getMessage()];
+        }
         // Poranny przegląd e-mailem: po imporcie, dopasowaniu i odświeżeniu kontrahentów, żeby obejmował dzisiejsze nowości.
         try {
             $out['digest'] = Digest::run();

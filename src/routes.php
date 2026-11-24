@@ -103,6 +103,8 @@ return static function (Router $r): void {
     $r->post('/oferty', [OfferController::class, 'create'], $a);
     $r->get('/oferty/nabory', [GrantCallController::class, 'index'], $a);
     $r->post('/oferty/nabory', [GrantCallController::class, 'save'], $a);
+    $r->post('/oferty/nabory/szukaj', [GrantCallController::class, 'search'], $a);
+    $r->post('/oferty/nabory/znalezione/{id}', [GrantCallController::class, 'found'], $a);
     $r->post('/oferty/nabory/{id}', [GrantCallController::class, 'save'], $a);
     $r->post('/oferty/nabory/{id}/stan', [GrantCallController::class, 'state'], $a);
     $r->get('/oferty/{id}', [OfferController::class, 'show'], $a);
@@ -111,6 +113,7 @@ return static function (Router $r): void {
     $r->post('/oferty/{id}/sekcje/{key}/ai', [OfferController::class, 'aiSection'], $a);
     $r->post('/oferty/{id}/sekcje/{key}/osoba', [OfferController::class, 'assign'], $a);
     $r->post('/oferty/{id}/warunki', [OfferController::class, 'eligibility'], $a);
+    $r->post('/oferty/{id}/napisz', [OfferController::class, 'writeAll'], $a);
     $r->post('/oferty/{id}/lista', [OfferController::class, 'checkAdd'], $a);
     $r->post('/oferty/{id}/lista/{item}', [OfferController::class, 'checkUpdate'], $a);
     $r->post('/oferty/{id}/dokumenty', [OfferController::class, 'upload'], $a);

@@ -121,6 +121,12 @@ final class OfferController extends Controller
             'team' => Offers::team($org),
             'me' => Auth::id(),
             'checklist' => Offers::checklist($org, (int) $offer['id']),
+            // Pisanie całego dokumentu w toku: reszta kolejki i licznik z adresu (tylko istniejące, niegotowe sekcje).
+            'writing' => ($request = \App\Core\App::$request) && $request->str('pisz') !== ''
+                ? ['queue' => array_values(array_intersect(array_filter(explode(',', $request->str('pisz'))), array_column(array_filter($sections, static fn (array $s): bool => $s['status'] !== 'done'), 'key'))),
+                    'written' => max(0, min(50, $request->int('napisane')))]
+                : null,
+            'plan' => ['name' => \App\Core\Plans::name(Auth::org()), 'limit' => \App\Core\Plans::limit(Auth::org(), 'ai_ops'), 'used' => \App\Core\Plans::usage($org)['ai_ops']],
         ]);
         $resp->status = $status;
         return $resp;
@@ -258,6 +264,51 @@ final class OfferController extends Controller
         AuditLog::add('offer.ai_section', 'offer', (int) $offer['id'], ['section' => $section['key']], $r->ip());
         $n = substr_count($res['body'], '⟦sprawdź⟧');
         return $this->redirect($to, 'AI przygotowało nową wersję sekcji.' . ($n ? ' ' . $n . ' ' . plural($n, 'zdanie nie ma', 'zdania nie mają', 'zdań nie ma') . ' źródła - sprawdź je albo usuń.' : ''));
+    }
+
+    /**
+     * Pisanie całego wniosku albo oferty jednym przyciskiem: AI pisze po kolei sekcje, których nikt nie oznaczył jako gotowe.
+     * Jedno zapytanie pisze jedną sekcję, żeby zmieścić się w czasie odpowiedzi serwera. Strona sama wysyła następne,
+     * a bez JavaScriptu użytkownik klika „Pisz dalej”. Kolejkę ustalamy przy starcie i niesie ją formularz.
+     */
+    public function writeAll(Request $r): Response
+    {
+        $offer = Offers::find($this->orgId(), (int) $r->param('id'));
+        if (!$offer) {
+            return $this->notFound();
+        }
+        $base = '/oferty/' . $offer['id'];
+        $byKey = [];
+        foreach (Offers::sections((int) $offer['id']) as $s) {
+            $byKey[(string) $s['key']] = $s;
+        }
+        $open = array_keys(array_filter($byKey, static fn (array $s): bool => $s['status'] !== 'done'));
+        // Pierwsze zapytanie nie ma kolejki: bierzemy wszystkie sekcje, które nie są gotowe. Kolejne niosą resztę.
+        $queue = $r->input('kolejka') === null ? $open : array_values(array_intersect(array_filter(explode(',', $r->str('kolejka'))), $open));
+        $written = max(0, min(50, $r->int('napisane')));
+        if (!$queue) {
+            return $this->redirect($base, $written
+                ? 'AI napisało ' . $written . ' ' . plural($written, 'sekcję', 'sekcje', 'sekcji') . '. Przeczytaj je, popraw i oznacz jako gotowe. Zdania bez źródła są podświetlone.'
+                : 'Wszystkie sekcje są oznaczone jako gotowe, więc AI niczego nie zmieniło.');
+        }
+        $key = array_shift($queue);
+        $section = $byKey[$key];
+        $here = $base . '?sekcja=' . rawurlencode($key);
+        if ($err = TenderController::aiGuard()) {
+            return $this->redirect($here, $err . ($written ? ' Napisane sekcje: ' . $written . '.' : ''), 'error');
+        }
+        $res = Offers::aiSection($this->orgId(), $offer, $section);
+        if (!$res['ok']) {
+            return $this->redirect($here, 'Pisanie zatrzymane na sekcji „' . $section['title'] . '”. ' . $res['error'] . ($written ? ' Napisane sekcje: ' . $written . '.' : ''), 'error');
+        }
+        $this->db()->update('offer_sections', ['body' => $res['body'], 'status' => 'draft', 'updated_by' => Auth::id(), 'version' => (int) ($section['version'] ?? 1) + 1, 'updated_at' => now_utc()], 'id = ?', [(int) $section['id']]);
+        $this->db()->update('offers', ['updated_at' => now_utc()], 'id = ?', [(int) $offer['id']]);
+        AuditLog::add('offer.ai_section', 'offer', (int) $offer['id'], ['section' => $key, 'all' => true], $r->ip());
+        $written++;
+        if (!$queue) {
+            return $this->redirect($base, 'AI napisało ' . $written . ' ' . plural($written, 'sekcję', 'sekcje', 'sekcji') . '. Przeczytaj je, popraw i oznacz jako gotowe. Zdania bez źródła są podświetlone.');
+        }
+        return Response::redirect($here . '&pisz=' . rawurlencode(implode(',', $queue)) . '&napisane=' . $written);
     }
 
     public function upload(Request $r): Response

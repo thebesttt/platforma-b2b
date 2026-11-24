@@ -36,15 +36,64 @@ $title = static fn (array $g): string => $g['url']
   <div>
     <p class="crumbs"><a href="/oferty">Oferty i wnioski</a> / Nabory dotacji</p>
     <h1>Nabory dotacji</h1>
-    <p class="muted small">Serwisy z naborami nie udostępniają danych programom. Panel pokazuje, gdzie szukać, a po wpisaniu naboru pilnuje terminu i zakłada szkic wniosku.</p>
+    <p class="muted small">Opisz, na co szukasz pieniędzy, a wyszukiwarka znajdzie nabory i poda źródła. Dla obserwowanych naborów panel pilnuje terminu i pisze szkic wniosku.</p>
   </div>
   <div class="row-flex">
-    <a class="btn ghost" href="#zrodla">Gdzie szukać</a>
-    <a class="btn" href="#dodaj">Dodaj nabór</a>
+    <a class="btn" href="#szukaj">Szukaj naborów</a>
+    <a class="btn ghost" href="#dodaj">Dodaj ręcznie</a>
   </div>
 </header>
 
 <div class="stack">
+  <section class="card" id="szukaj" aria-labelledby="t-find">
+    <h2 id="t-find">Znajdź nabory dla firmy</h2>
+    <p class="muted small" style="margin:4px 0 14px">AI przeszukuje internet, wybiera nabory, które trwają albo są zapowiedziane, i przy każdym podaje stronę, na której go znalazła. To propozycje do sprawdzenia: termin i warunki potwierdź u instytucji.</p>
+    <?php if (!$aiEnabled): ?>
+      <div class="notice info">Wyszukiwarka korzysta z AI, a funkcje AI są w tym panelu wyłączone. Nabór możesz wpisać ręcznie niżej.</div>
+    <?php else: ?>
+    <form method="post" action="/oferty/nabory/szukaj" class="form-grid two">
+      <?= csrf_field() ?>
+      <div class="field" style="grid-column:1/-1"><label for="gf-what">Na co szukasz dofinansowania</label><textarea id="gf-what" name="what" rows="2" maxlength="600" required placeholder="np. wdrożenie systemu CRM i automatyzacja sprzedaży, szkolenia dla pracowników, wejście na rynek niemiecki"><?= e($query['what']) ?></textarea></div>
+      <div class="field"><label for="gf-region">Województwo</label><select id="gf-region" name="region"><option value="">cała Polska</option><?php foreach (App\Modules\Tenders\Regions::ALL as $slug => $name): ?><option value="<?= e($slug) ?>"<?= $query['region'] === $slug ? ' selected' : '' ?>><?= e(App\Modules\Tenders\Regions::name($slug)) ?></option><?php endforeach ?></select></div>
+      <div class="field"><label for="gf-size">Wielkość firmy</label><select id="gf-size" name="size"><option value="">nie podaję</option><?php foreach (App\Modules\Offers\GrantFinder::SIZES as $k => $label): ?><option value="<?= e($k) ?>"<?= $query['size'] === $k ? ' selected' : '' ?>><?= e($label) ?></option><?php endforeach ?></select></div>
+      <div class="field" style="grid-column:1/-1"><div class="row-flex"><button class="btn" type="submit" data-busy="Szukam naborów, to trwa do dwóch minut…">Szukaj naborów</button>
+        <span class="small muted"><?= $plan['limit'] === null ? 'Jedno wyszukiwanie to jedno użycie AI.' : 'Jedno wyszukiwanie to jedno użycie AI. W tym miesiącu: ' . (int) $plan['used'] . ' z ' . (int) $plan['limit'] . ' w pakiecie ' . e($plan['name']) . '.' ?></span></div></div>
+    </form>
+    <p class="small muted" style="margin:12px 0 0"><?php if ($lastSearch): ?>Ostatnie wyszukiwanie: <?= e(local_dt((string) $lastSearch['created_at'])) ?><?= (int) $lastSearch['auto'] === 1 ? ' (automatyczne)' : '' ?><?= $lastSearch['error'] ? ', nieudane' : ', nowych naborów: ' . (int) $lastSearch['found'] ?>. <?php endif ?><?= $plan['auto'] ? 'Panel powtarza to wyszukiwanie co tydzień i dopisuje nowe nabory.' : 'W pakiecie Rozszerzonym panel powtarza wyszukiwanie co tydzień sam.' ?></p>
+    <?php endif ?>
+  </section>
+
+  <?php if ($finds): ?>
+  <section class="card flush" id="znalezione" aria-labelledby="t-found">
+    <div class="card-head"><h2 id="t-found">Znalezione nabory</h2><span class="muted xs"><?= count($finds) ?> do przejrzenia, najbliższy koniec na górze</span></div>
+    <ul class="item-list">
+      <?php foreach ($finds as $f): $fid = (int) $f['id']; $host = preg_replace('/^www\./', '', (string) parse_url((string) $f['url'], PHP_URL_HOST)); ?>
+        <li id="z<?= $fid ?>">
+          <div class="item-head">
+            <div>
+              <a class="t-title" href="<?= e(safe_url($f['url'])) ?>" target="_blank" rel="noopener noreferrer"><?= e($f['name']) ?></a>
+              <div class="t-sub"><?= $f['institution'] ? e($f['institution']) . ', ' : '' ?>źródło: <?= e($host) ?> <?= (int) $f['official'] === 1 ? '<span class="chip low">strona urzędowa</span>' : '<span class="chip mid">inne źródło, sprawdź u instytucji</span>' ?></div>
+            </div>
+            <?= $window($f) ?>
+          </div>
+          <?php if ($f['fit']): ?><p class="small" style="margin:8px 0 0"><?= e($f['fit']) ?></p><?php endif ?>
+          <?php if ($f['amount_note'] || $f['audience_note']): ?>
+            <p class="small" style="margin:8px 0 0"><?php if ($f['amount_note']): ?><strong>Ile:</strong> <?= e($f['amount_note']) ?><?php endif ?><?= $f['amount_note'] && $f['audience_note'] ? '<br>' : '' ?><?php if ($f['audience_note']): ?><strong>Dla kogo:</strong> <?= e($f['audience_note']) ?><?php endif ?></p>
+          <?php endif ?>
+          <?php if ($f['quote']): ?><p class="small muted" style="margin:8px 0 0">Ze strony: „<?= e($f['quote']) ?>”</p><?php endif ?>
+          <div class="item-actions">
+            <?php foreach ([['wniosek', 'Pisz wniosek', 'btn sm'], ['obserwuj', 'Obserwuj', 'btn ghost sm'], ['odrzuc', 'Nie dla nas', 'btn ghost sm']] as [$akcja, $label, $class]): ?>
+              <form class="inline" method="post" action="/oferty/nabory/znalezione/<?= $fid ?>"><?= csrf_field() ?><input type="hidden" name="akcja" value="<?= $akcja ?>"><button class="<?= $class ?>" type="submit"><?= $label ?></button></form>
+            <?php endforeach ?>
+            <span class="xs muted">znaleziono <?= e(local_dt((string) $f['created_at'], 'd.m.Y')) ?></span>
+          </div>
+        </li>
+      <?php endforeach ?>
+    </ul>
+    <p class="sec-note" style="padding-top:12px">Listę przygotowała AI na podstawie wyszukiwarki internetowej. Może pominąć nabór albo źle odczytać datę, dlatego przed pisaniem wniosku otwórz stronę naboru i sprawdź termin oraz regulamin.</p>
+  </section>
+  <?php endif ?>
+
 <?php ob_start(); ?>
   <section class="card flush" aria-labelledby="t-cur">
     <div class="card-head"><h2 id="t-cur">Obserwowane nabory</h2><span class="muted xs"><?= count($current) ?> <?= plural(count($current), 'nabór', 'nabory', 'naborów') ?>, najbliższy koniec na górze</span></div>
@@ -77,13 +126,13 @@ $title = static fn (array $g): string => $g['url']
         <?php endforeach ?>
       </ul>
     <?php else: ?>
-      <div class="empty"><h3>Nie obserwujesz żadnego naboru</h3><p>Znajdź nabór w jednym z miejsc z listy „Gdzie szukać” i wpisz go w formularzu. Panel przypomni o końcu naboru i założy szkic wniosku.</p></div>
+      <div class="empty"><h3>Nie obserwujesz żadnego naboru</h3><p>Użyj wyszukiwarki na górze strony albo wpisz nabór ręcznie. Panel przypomni o końcu naboru i założy szkic wniosku.</p></div>
     <?php endif ?>
   </section>
 <?php $list = ob_get_clean(); ob_start(); ?>
   <section class="card" id="zrodla" aria-labelledby="t-src">
-    <h2 id="t-src">Gdzie szukać naborów</h2>
-    <p class="muted small" style="margin:4px 0 0">To oficjalne serwisy funduszy. Otwórz je, wybierz nabór dla swojej firmy i przepisz go do panelu.</p>
+    <h2 id="t-src">Oficjalne listy naborów</h2>
+    <p class="muted small" style="margin:4px 0 0">Pełne listy prowadzą serwisy funduszy. Są zabezpieczone przed automatami, więc panel ich nie pobiera: tu sprawdzisz termin i regulamin, a nabór spoza wyszukiwarki wpiszesz ręcznie.</p>
     <div class="src-grid">
       <?php foreach (GrantCalls::SOURCES as $s): ?>
         <div>
