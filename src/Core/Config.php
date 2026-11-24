@@ -24,6 +24,8 @@ final class Config
         'CEIDG_TOKEN' => '',          // hurtownia danych CEIDG (biznes.gov.pl): wyszukiwanie jednoosobowych działalności po PKD i regionie
         'CF_ACCOUNT_ID' => '',        // Cloudflare Browser Run: strona po uruchomieniu skryptów (wskaźniki A6 i E2 audytu treści)
         'CF_BROWSER_TOKEN' => '',     // token API z uprawnieniem „Browser Rendering - Edit”
+        'CF_ANALYTICS_TOKEN' => '',   // token API z uprawnieniem „Zone - Analytics - Read”: boty AI na witrynie. Bez niego używamy CF_BROWSER_TOKEN
+        'GOOGLE_SERVICE_ACCOUNT' => '', // klucz konta usługi Google (JSON albo base64): Search Console API i Google Analytics Data API, tylko odczyt
         'RESEND_API_KEY' => '',
         'MAIL_FROM' => '',
         'HTTP_FIXTURES' => '',

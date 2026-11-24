@@ -117,6 +117,12 @@ final class CronController
         } catch (\Throwable $e) {
             $out['content_audits'] = ['error' => $e->getMessage()];
         }
+        // Widoczność: Search Console, Analytics i Cloudflare dla połączonych witryn oraz mapy witryn konkurentów.
+        try {
+            $out['seo'] = \App\Modules\Seo\Sync::daily();
+        } catch (\Throwable $e) {
+            $out['seo'] = ['error' => $e->getMessage()];
+        }
         // Poranny przegląd e-mailem: po imporcie, dopasowaniu i odświeżeniu kontrahentów, żeby obejmował dzisiejsze nowości.
         try {
             $out['digest'] = Digest::run();

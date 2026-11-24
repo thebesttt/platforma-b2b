@@ -248,3 +248,33 @@ function form_date(string $s): ?string
     $s = trim($s);
     return preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $s, $m) && checkdate((int) $m[2], (int) $m[3], (int) $m[1]) ? $s : null;
 }
+
+/** Liczba z odstępem co trzy cyfry i przecinkiem dziesiętnym („12 345”, „7,1”). */
+function num_pl(int|float|null $n, int $decimals = 0): string
+{
+    return $n === null ? '-' : number_format((float) $n, $decimals, ',', "\u{a0}");
+}
+
+/** Ułamek jako procent („4,2%”). */
+function pct_pl(?float $ratio, int $decimals = 1): string
+{
+    return $ratio === null ? '-' : number_format(100 * $ratio, $decimals, ',', "\u{a0}") . '%';
+}
+
+/**
+ * Zmiana względem poprzedniego okresu jako znacznik HTML („+12%”, „-8%”). Znak plus albo minus niesie kierunek, kolor go tylko wzmacnia.
+ * $lowerIsBetter: dla pozycji w wynikach spadek liczby to poprawa.
+ */
+function delta_html(int|float|null $now, int|float|null $was, bool $lowerIsBetter = false, bool $absolute = false): string
+{
+    if ($now === null || $was === null || (!$absolute && (float) $was == 0.0)) {
+        return '';
+    }
+    $diff = (float) $now - (float) $was;
+    $text = $absolute
+        ? ($diff > 0 ? '+' : ($diff < 0 ? '-' : '')) . num_pl(abs($diff), 1)
+        : ($diff > 0 ? '+' : ($diff < 0 ? '-' : '')) . num_pl(abs(100 * $diff / (float) $was), abs($diff / (float) $was) < 0.1 ? 1 : 0) . '%';
+    $good = $lowerIsBetter ? $diff < 0 : $diff > 0;
+    $class = abs($diff) < 1e-9 ? 'flat' : ($good ? 'up' : 'down');
+    return '<span class="delta ' . $class . '">' . $text . '</span>';
+}

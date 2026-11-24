@@ -183,4 +183,41 @@
       window.setTimeout(function () { el.classList.remove('copied'); }, 1200);
     }).catch(function () {});
   });
+
+  // Wykres liniowy: wartość punktu pod kursorem, pod palcem i pod strzałkami z klawiatury. Te same liczby są w tabeli pod wykresem.
+  document.querySelectorAll('[data-chart]').forEach(function (chart) {
+    var plot = chart.querySelector('.chart-plot');
+    var hits = [].slice.call(chart.querySelectorAll('.chart-hit'));
+    var tip = chart.querySelector('.chart-tip');
+    var cross = chart.querySelector('.chart-cross');
+    var dot = chart.querySelector('.chart-dot');
+    if (!plot || !hits.length || !tip) return;
+    var current = -1;
+    var show = function (i) {
+      var h = hits[i];
+      if (!h) return;
+      current = i;
+      var x = parseFloat(h.getAttribute('data-x')), y = parseFloat(h.getAttribute('data-y'));
+      tip.textContent = h.getAttribute('data-tip');
+      tip.hidden = false; cross.hidden = false; dot.hidden = false;
+      cross.style.left = x + '%';
+      dot.style.left = x + '%'; dot.style.top = y + '%';
+      var w = plot.clientWidth, half = tip.offsetWidth / 2, px = w * x / 100;
+      tip.style.left = Math.max(half, Math.min(w - half, px)) + 'px';
+      tip.style.top = y + '%';
+    };
+    var hide = function () { current = -1; tip.hidden = true; cross.hidden = true; dot.hidden = true; };
+    hits.forEach(function (h, i) {
+      h.addEventListener('pointerenter', function () { show(i); });
+      h.addEventListener('pointerdown', function () { show(i); });
+    });
+    plot.addEventListener('pointerleave', hide);
+    plot.addEventListener('blur', hide);
+    plot.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      e.preventDefault();
+      var next = current < 0 ? hits.length - 1 : current + (e.key === 'ArrowRight' ? 1 : -1);
+      show(Math.max(0, Math.min(hits.length - 1, next)));
+    });
+  });
 })();

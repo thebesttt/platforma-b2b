@@ -200,6 +200,9 @@ return [
         'properties' => ['dc:title' => 'Lista firm', 'schema:provider' => 'CEIDG'],
     ]),
 
+    // Widoczność: Google, Cloudflare i mapy witryn konkurentów.
+    ...require __DIR__ . '/seo.php',
+
     // Resend: wysyłka e-maili platformy. Adres zaczynający się od „odrzucony” udaje błąd usługi.
     '#^POST https://api\.resend\.com/emails\n.*"to":\["odrzucony#s' => $json(['statusCode' => 422, 'name' => 'validation_error', 'message' => 'Domena nadawcy nie jest zweryfikowana.'], 422),
     '#^POST https://api\.resend\.com/emails#' => $json(['id' => 'test-wiadomosc']),

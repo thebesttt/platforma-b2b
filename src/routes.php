@@ -18,6 +18,7 @@ use App\Http\OfferController;
 use App\Http\OutreachController;
 use App\Http\ProspectController;
 use App\Http\RfqController;
+use App\Http\SeoController;
 use App\Http\SettingsController;
 use App\Http\TenderController;
 use App\Http\WidgetController;
@@ -192,6 +193,19 @@ return static function (Router $r): void {
     $r->post('/audyt/tresc/{id}/pytania', [ContentController::class, 'questions'], $a);
     $r->post('/audyt/tresc/{id}/link', [ContentController::class, 'share'], $a);
     $r->post('/audyt/tresc/{id}/usun', [ContentController::class, 'delete'], $a);
+    // Widoczność: Search Console, odpowiedzi AI i konkurencja (trasy muszą być przed /audyt/{id})
+    $r->get('/audyt/widocznosc', [SeoController::class, 'index'], $a);
+    $r->post('/audyt/widocznosc', [SeoController::class, 'add'], $a);
+    $r->get('/audyt/widocznosc/{id}', [SeoController::class, 'google'], $a);
+    $r->get('/audyt/widocznosc/{id}/ai', [SeoController::class, 'ai'], $a);
+    $r->get('/audyt/widocznosc/{id}/konkurencja', [SeoController::class, 'rivals'], $a);
+    $r->post('/audyt/widocznosc/{id}/konkurencja', [SeoController::class, 'saveRivals'], $a);
+    $r->get('/audyt/widocznosc/{id}/dane', [SeoController::class, 'data'], $a);
+    $r->post('/audyt/widocznosc/{id}/import', [SeoController::class, 'import'], $a);
+    $r->post('/audyt/widocznosc/{id}/wklej', [SeoController::class, 'paste'], $a);
+    $r->post('/audyt/widocznosc/{id}/ustawienia', [SeoController::class, 'settings'], $a);
+    $r->post('/audyt/widocznosc/{id}/pobierz', [SeoController::class, 'sync'], $a);
+    $r->post('/audyt/widocznosc/{id}/usun', [SeoController::class, 'delete'], $a);
     $r->get('/audyt/{id}', [AuditController::class, 'show'], $a);
     $r->get('/reklamy', [AuditController::class, 'ads'], $a);
 
