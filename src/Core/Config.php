@@ -39,6 +39,7 @@ final class Config
         'TERMS_URL' => '',             // adres regulaminu (link przy rejestracji)
         'PRIVACY_URL' => '',           // adres polityki prywatności
         'ADMIN_EMAILS' => '',          // e-maile administratorów platformy (po przecinku)
+        'CLIENT_IP_HEADER' => '',      // nagłówek z adresem odwiedzającego. Puste: X-Forwarded-For (Render). REMOTE_ADDR: bez proxy
         'AUDIT_ALLOW_PRIVATE' => '0', // tylko testy lokalne (działa wyłącznie przy APP_ENV=dev|test)
     ];
 

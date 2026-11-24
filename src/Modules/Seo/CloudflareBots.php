@@ -66,9 +66,9 @@ final class CloudflareBots
      */
     public static function sync(array $site): array
     {
-        $token = self::tokenValue();
+        $token = self::tokenFor((int) $site['org_id']);
         if ($token === '') {
-            return ['ok' => false, 'error' => 'Brak tokenu Cloudflare z uprawnieniem do odczytu statystyk (zmienna CF_ANALYTICS_TOKEN).'];
+            return ['ok' => false, 'error' => 'Brak tokenu Cloudflare z uprawnieniem do odczytu statystyk. Dodaj go w zakładce „Dane”.'];
         }
         $zone = (string) ($site['cf_zone'] ?? '');
         if ($zone === '') {
@@ -228,6 +228,27 @@ final class CloudflareBots
         $j = Http::getJson('https://api.cloudflare.com/client/v4/zones?name=' . rawurlencode($host), ['Authorization' => 'Bearer ' . $token]);
         $id = (string) ($j['result'][0]['id'] ?? '');
         return preg_match('/^[a-f0-9]{32}$/', $id) ? $id : null;
+    }
+
+    public const SECRET = 'cloudflare';
+
+    /**
+     * Token, którym panel czyta statystyki dla firmy: jej własny (zaszyfrowany w bazie) albo, w firmie prowadzącej panel, token platformy.
+     * Token platformy widzi domeny właściciela panelu, więc inne firmy nigdy go nie używają.
+     */
+    public static function tokenFor(int $orgId): string
+    {
+        $own = $orgId > 0 && \App\Core\Secret::ready() ? (string) \App\Core\Secret::get($orgId, self::SECRET) : '';
+        if ($own !== '') {
+            return $own;
+        }
+        return $orgId > 0 && \App\Core\Plans::isOperator($orgId) ? self::tokenValue() : '';
+    }
+
+    /** Token Cloudflare ma 40 znaków (litery, cyfry, łącznik, podkreślenie). Dopuszczamy zapas na zmianę formatu. */
+    public static function looksLikeToken(string $token): bool
+    {
+        return (bool) preg_match('/^[A-Za-z0-9_-]{30,120}$/', $token);
     }
 
     private static function tokenValue(): string

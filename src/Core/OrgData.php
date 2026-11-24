@@ -77,6 +77,14 @@ final class OrgData
     public static function delete(int $orgId): void
     {
         $db = Db::get();
+        // Dostęp do konta Google firmy cofamy po stronie Google, zanim zniknie z bazy. Brak odpowiedzi Google nie blokuje usunięcia.
+        try {
+            if (\App\Modules\Seo\GoogleOAuth::connected($orgId)) {
+                \App\Modules\Seo\GoogleOAuth::disconnect($orgId);
+            }
+        } catch (\Throwable $e) {
+            error_log('[org] cofnięcie dostępu Google dla firmy ' . $orgId . ': ' . $e->getMessage());
+        }
         $tables = self::tables();
         $db->transaction(static function (Db $db) use ($orgId, $tables): void {
             // Najpierw tabele zależne. Konta zostają na koniec, bo wskazują na nie inne wiersze firmy.

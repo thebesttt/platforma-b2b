@@ -52,8 +52,19 @@ final class Inbound
 
     public static function limits(?array $widget = null): array
     {
-        $l = $widget ? json_in($widget['limits_json'] ?? null) : [];
-        return array_map('intval', $l + self::LIMITS);
+        $l = array_map('intval', ($widget ? json_in($widget['limits_json'] ?? null) : []) + self::LIMITS);
+        // Pakiet firmy wyznacza górną granicę odpowiedzi czatu. Własny limit firmy może być tylko niższy.
+        $cap = $widget ? self::planCap((int) $widget['org_id']) : null;
+        if ($cap !== null) {
+            $l['ai_month'] = min($l['ai_month'], $cap);
+        }
+        return $l;
+    }
+
+    /** Ile odpowiedzi czatu w miesiącu daje pakiet firmy. Null oznacza brak limitu. */
+    public static function planCap(int $orgId): ?int
+    {
+        return \App\Core\Plans::limit(Db::get()->one('SELECT id, plan FROM organizations WHERE id = ?', [$orgId]), 'ai_chat');
     }
 
     public static function rules(array $widget): array

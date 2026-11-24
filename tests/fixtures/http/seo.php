@@ -2,7 +2,7 @@
 /**
  * Odpowiedzi usług używanych w części „Widoczność”: Google (token konta usługi, Search Console API, Analytics Data i Admin API),
  * Cloudflare GraphQL Analytics API oraz mapy witryn konkurentów. Formaty według dokumentacji tych usług.
- * Zmienna FIXTURE_SEO przełącza warianty: „bez-dostepu”, „api-wylaczone”, „ga4-wiele”, „cf-odmowa”, „mapa-2”.
+ * Zmienna FIXTURE_SEO przełącza warianty: „bez-dostepu”, „api-wylaczone”, „ga4-wiele”, „cf-odmowa”, „mapa-2”, „oauth-cofniety”.
  *
  * @var callable $json
  * @var callable $page
@@ -63,6 +63,19 @@ return [
         => $json(['error' => 'invalid_grant', 'error_description' => 'Invalid JWT Signature.'], 400),
     '#^POST https://oauth2\.googleapis\.com/token\n.*grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer#s'
         => $json(['access_token' => 'ya29.token-testowy', 'expires_in' => 3599, 'token_type' => 'Bearer']),
+
+    // Konto Google połączone przez firmę (OAuth): wymiana kodu z ekranu zgody, odświeżenie dostępu i cofnięcie.
+    '#^POST https://oauth2\.googleapis\.com/token\n.*grant_type=authorization_code&code=kod-bez-search-console#s'
+        => $json(['access_token' => 'ya29.oauth-tylko-analytics', 'expires_in' => 3599, 'refresh_token' => '1//tylko-analytics', 'scope' => 'https://www.googleapis.com/auth/analytics.readonly', 'token_type' => 'Bearer']),
+    '#^POST https://oauth2\.googleapis\.com/token\n.*grant_type=authorization_code&code=zly-kod#s'
+        => $json(['error' => 'invalid_grant', 'error_description' => 'Malformed auth code.'], 400),
+    '#^POST https://oauth2\.googleapis\.com/token\n.*grant_type=authorization_code#s'
+        => $json(['access_token' => 'ya29.oauth-pierwszy', 'expires_in' => 3599, 'refresh_token' => '1//staly-dostep-firmy',
+            'scope' => 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/analytics.readonly', 'token_type' => 'Bearer']),
+    '#^POST https://oauth2\.googleapis\.com/token\n.*grant_type=refresh_token#s' => $variant === 'oauth-cofniety'
+        ? $json(['error' => 'invalid_grant', 'error_description' => 'Token has been expired or revoked.'], 400)
+        : $json(['access_token' => 'ya29.oauth-odswiezony', 'expires_in' => 3599, 'scope' => 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/analytics.readonly', 'token_type' => 'Bearer']),
+    '#^POST https://oauth2\.googleapis\.com/revoke\n#' => $json([]),
 
     // Search Console: lista usług konta.
     '#^GET https://www\.googleapis\.com/webmasters/v3/sites\n#' => $variant === 'api-wylaczone'

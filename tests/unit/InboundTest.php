@@ -383,7 +383,11 @@ return [
         eq(2, (int) $w2['rules_version'], 'zmiana zasad podnosi wersję');
         eq("perfectdata.pl\nsklep.perfectdata.pl", $w2['origins'], 'adresy sprowadzone do domen');
         eq('Bezpłatna wycena', Inbound::texts($w2)['button']);
-        eq(['messages' => 8, 'daily' => 400, 'ai_month' => 900], Inbound::limits($w2));
+        eq(['messages' => 8, 'daily' => 400, 'ai_month' => 100], Inbound::limits($w2), 'odpowiedzi czatu ogranicza pakiet Podstawowy: 100 w miesiącu');
+        contains('Pakiet Podstawowy obejmuje najwyżej 100 w miesiącu', http('GET', '/zapytania/ustawienia')->body);
+        Db::get()->update('organizations', ['plan' => 'extended'], 'id = ?', [$org]);
+        http('POST', '/zapytania/ustawienia', $base + ['rules' => $rules]);
+        eq(['messages' => 8, 'daily' => 400, 'ai_month' => 900], Inbound::limits(Inbound::widget($org)), 'w pakiecie Rozszerzonym własny limit firmy zostaje');
         eq(2, count(Inbound::rules($w2)['questions']));
         http('POST', '/zapytania/ustawienia', $base + ['rules' => $rules, 'button' => 'Zapytaj']);
         eq(2, (int) Inbound::widget($org)['rules_version'], 'zmiana samego napisu nie podnosi wersji zasad');

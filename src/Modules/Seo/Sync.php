@@ -19,12 +19,24 @@ final class Sync
      * Czy firma może korzystać z kluczy platformy (konto usługi Google, token Cloudflare).
      *
      * Klucz jest jeden na cały panel i widzi wszystko, do czego ktokolwiek dał mu dostęp. Gdyby korzystała z niego każda firma,
-     * jedna mogłaby dopisać cudzą domenę i przeczytać jej dane. Dlatego stałe połączenia działają tylko w firmie administratora
-     * platformy. Pozostałe firmy wgrywają pliki z eksportu, czyli własne dane.
+     * jedna mogłaby dopisać cudzą domenę i przeczytać jej dane. Dlatego klucze platformy działają tylko w firmie administratora.
+     * Pozostałe firmy łączą własne konto Google i własny token Cloudflare albo wgrywają pliki z eksportu.
      */
     public static function allowed(int $orgId): bool
     {
         return \App\Core\Plans::isOperator($orgId);
+    }
+
+    /** Czy panel może pobierać dane z Google dla tej firmy: z jej połączonego konta albo, w firmie prowadzącej panel, kluczem platformy. */
+    public static function googleOn(int $orgId): bool
+    {
+        return Google::mode($orgId) !== null;
+    }
+
+    /** Czy panel może pobierać dane z Cloudflare dla tej firmy: jej własnym tokenem albo, w firmie prowadzącej panel, tokenem platformy. */
+    public static function cloudflareOn(int $orgId): bool
+    {
+        return CloudflareBots::tokenFor($orgId) !== '';
     }
 
     /**
@@ -44,7 +56,7 @@ final class Sync
             $errors[] = (string) $gsc['error'];
         }
         // Analytics pobieramy także wtedy, gdy Search Console się nie udał: to osobne uprawnienie.
-        if (Google::token()['ok']) {
+        if (Google::tokenFor((int) $site['org_id'])['ok']) {
             $fresh = Sites::find((int) $site['org_id'], (int) $site['id']) ?? $site;
             $ga = Google::syncGa4($fresh);
             Sites::markSync($site, 'ga4', $ga['ok'], $ga['ok'] ? $ga['sessions'] . ' sesji z asystentów AI' : (string) $ga['error']);
@@ -72,17 +84,18 @@ final class Sync
     public static function daily(): array
     {
         $out = ['sites' => 0, 'google' => 0, 'cloudflare' => 0, 'maps' => 0, 'errors' => 0];
-        $googleOn = Google::enabled();
-        $cfOn = CloudflareBots::enabled();
+        $on = [];
         foreach (Db::get()->all('SELECT * FROM seo_sites ORDER BY id LIMIT ' . self::DAILY_SITES) as $site) {
             $out['sites']++;
-            $keys = self::allowed((int) $site['org_id']);
+            $org = (int) $site['org_id'];
+            // Każda firma ma własne połączenia, więc sprawdzamy je raz na firmę.
+            $on[$org] ??= ['google' => self::googleOn($org), 'cloudflare' => self::cloudflareOn($org)];
             try {
-                if ($keys && $googleOn && (Sites::lastSync($site, 'google')['ok'] ?? false)) {
+                if ($on[$org]['google'] && (Sites::lastSync($site, 'google')['ok'] ?? false)) {
                     $res = self::google($site);
                     $out[$res['ok'] ? 'google' : 'errors']++;
                 }
-                if ($keys && $cfOn && (Sites::lastSync($site, 'cloudflare')['ok'] ?? false)) {
+                if ($on[$org]['cloudflare'] && (Sites::lastSync($site, 'cloudflare')['ok'] ?? false)) {
                     $res = self::cloudflare($site);
                     $out[$res['ok'] ? 'cloudflare' : 'errors']++;
                 }

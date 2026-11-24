@@ -70,7 +70,7 @@ $embed = '<script async src="' . $scriptUrl . '"></script>';
       <p class="small muted" style="margin:0">Asystent odpowiada tylko z <a href="/zapytania/wiedza">bazy wiedzy</a> Twojej firmy. Gdy czegoś w niej nie ma, mówi to wprost i proponuje kontakt. Pod czatem zawsze jest informacja, że odpowiada AI.</p>
       <?php if (!$aiEnabled): ?><div class="notice mid">Czat nie działa, bo na serwerze nie ma klucza ANTHROPIC_API_KEY. Pytania i formularz działają bez niego.</div><?php endif ?>
       <div class="field"><label for="limit_messages">Pytań do czatu w jednej rozmowie</label><input id="limit_messages" name="limit_messages" type="text" inputmode="numeric" value="<?= (int) $f['limits']['messages'] ?>"<?= $dis ?>></div>
-      <div class="field"><label for="limit_ai_month">Odpowiedzi czatu w miesiącu</label><input id="limit_ai_month" name="limit_ai_month" type="text" inputmode="numeric" value="<?= (int) $f['limits']['ai_month'] ?>" aria-describedby="aim-h"<?= $dis ?>><span class="hint" id="aim-h">Po wyczerpaniu limitu czat proponuje zostawienie kontaktu. To górna granica kosztu AI.</span></div>
+      <div class="field"><label for="limit_ai_month">Odpowiedzi czatu w miesiącu</label><input id="limit_ai_month" name="limit_ai_month" type="text" inputmode="numeric" value="<?= (int) $f['limits']['ai_month'] ?>" aria-describedby="aim-h"<?= $dis ?>><span class="hint" id="aim-h">Po wyczerpaniu limitu czat proponuje zostawienie kontaktu.<?= ($chatCap ?? null) !== null ? ' Pakiet ' . e($planName) . ' obejmuje najwyżej ' . (int) $chatCap . ' w miesiącu.' : ' To górna granica kosztu AI.' ?></span></div>
     </section>
 
     <section class="card stack-sm" aria-labelledby="u-test">

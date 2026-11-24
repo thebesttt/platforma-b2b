@@ -197,6 +197,16 @@ final class Sites
         $db->update('seo_sites', ['synced_json' => json_out($all)], 'id = ?', [(int) $site['id']]);
     }
 
+    /** Po odłączeniu źródła: usuwa jego stan ze wszystkich witryn firmy, żeby panel nie pokazywał połączenia, którego już nie ma. */
+    public static function clearSync(int $orgId, array $sources): void
+    {
+        $db = Db::get();
+        foreach ($db->all('SELECT id, synced_json FROM seo_sites WHERE org_id = ?', [$orgId]) as $row) {
+            $all = array_diff_key(json_in((string) $row['synced_json']), array_flip($sources));
+            $db->update('seo_sites', ['synced_json' => json_out($all)], 'id = ?', [(int) $row['id']]);
+        }
+    }
+
     public static function lastSync(array $site, string $source): ?array
     {
         $all = json_in((string) ($site['synced_json'] ?? ''));

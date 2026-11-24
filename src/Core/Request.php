@@ -77,12 +77,18 @@ final class Request
 
     public function ip(): string
     {
-        // Za proxy hostingu (Render) adres klienta jest pierwszy w X-Forwarded-For.
-        $xff = $this->server['HTTP_X_FORWARDED_FOR'] ?? '';
-        if ($xff !== '') {
-            return trim(explode(',', $xff)[0]);
+        // Za proxy hostingu (Render) adres klienta jest pierwszy w X-Forwarded-For: ustawia go hosting, nie odwiedzający.
+        // Na innym hostingu wskaż nagłówek, który ustawia tamtejsze proxy (CLIENT_IP_HEADER, np. CF-Connecting-IP),
+        // albo wpisz REMOTE_ADDR, gdy przed aplikacją nie ma proxy. Inaczej limity prób dałoby się obejść zmyślonym nagłówkiem.
+        $remote = (string) ($this->server['REMOTE_ADDR'] ?? '');
+        $header = strtoupper(str_replace('-', '_', trim((string) Config::get('CLIENT_IP_HEADER'))));
+        if ($header === 'REMOTE_ADDR') {
+            return $remote;
         }
-        return (string) ($this->server['REMOTE_ADDR'] ?? '');
+        $raw = (string) ($this->server['HTTP_' . ($header !== '' ? $header : 'X_FORWARDED_FOR')] ?? '');
+        $ip = trim(explode(',', $raw)[0]);
+        // Wartość, która nie jest adresem IP, nie trafia do limitów ani do dziennika.
+        return $ip !== '' && filter_var($ip, FILTER_VALIDATE_IP) !== false ? $ip : $remote;
     }
 
     public function isHttps(): bool

@@ -9,7 +9,8 @@ use App\Core\Http;
 use App\Core\Kv;
 
 /**
- * Dane z Google przez konto usługi (service account): Search Console API i Google Analytics Data API.
+ * Dane z Google: Search Console API i Google Analytics Data API. Dostęp pochodzi z konta Google połączonego przez firmę
+ * (patrz GoogleOAuth) albo, w firmie prowadzącej panel, z konta usługi (service account).
  *
  * Konto usługi to „robot” z własnym adresem e-mail. Właściciel witryny dodaje ten adres jako użytkownika w Search Console
  * (i jako przeglądającego w GA4), a panel czyta dane bez logowania Google i bez weryfikacji aplikacji przez Google.
@@ -34,9 +35,42 @@ final class Google
 
     public const WINDOW = 28;
 
+    /** Skąd pochodził ostatnio użyty dostęp: „oauth” (konto połączone przez firmę) albo „service” (klucz platformy). Do komunikatów. */
+    private static string $via = 'service';
+
+    /** Firma, dla której ostatnio pobrano token (żeby po odrzuceniu tokenu odświeżyć jej dostęp). */
+    private static int $viaOrg = 0;
+
     public static function enabled(): bool
     {
         return self::account() !== null;
+    }
+
+    /**
+     * Skąd firma ma dostęp do Google: własne połączone konto („oauth”), klucz platformy („service”) albo nic (null).
+     *
+     * Klucz platformy widzi wszystko, do czego ktokolwiek dał mu dostęp, więc działa tylko w firmie, która prowadzi panel.
+     * Pozostałe firmy łączą własne konto Google i widzą wyłącznie swoje dane.
+     */
+    public static function mode(int $orgId): ?string
+    {
+        if ($orgId > 0 && GoogleOAuth::enabled() && GoogleOAuth::connected($orgId)) {
+            return 'oauth';
+        }
+        return $orgId > 0 && self::enabled() && \App\Core\Plans::isOperator($orgId) ? 'service' : null;
+    }
+
+    /** @return array{ok: bool, token?: string, error?: string} */
+    public static function tokenFor(int $orgId): array
+    {
+        $mode = self::mode($orgId);
+        self::$via = $mode ?? 'service';
+        self::$viaOrg = $orgId;
+        return match ($mode) {
+            'oauth' => GoogleOAuth::token($orgId),
+            'service' => self::token(),
+            default => ['ok' => false, 'error' => 'Witryna nie ma połączenia z Google. Połącz konto Google w zakładce „Dane” albo wgraj plik z eksportu.'],
+        };
     }
 
     /** Adres e-mail konta usługi: ten adres właściciel dodaje w Search Console i GA4. */
@@ -112,9 +146,13 @@ final class Google
      * Usługi Search Console, do których konto usługi ma dostęp.
      * @return array{ok: bool, sites?: array<int, array{url: string, level: string}>, error?: string}
      */
-    public static function properties(): array
+    public static function properties(?int $orgId = null): array
     {
-        $t = self::token();
+        // Bez firmy: test klucza platformy z Ustawień administratora.
+        if ($orgId === null) {
+            self::$via = 'service';
+        }
+        $t = $orgId === null ? self::token() : self::tokenFor($orgId);
         if (!$t['ok']) {
             return $t;
         }
@@ -151,20 +189,22 @@ final class Google
      */
     public static function syncGsc(array $site): array
     {
-        $t = self::token();
+        $t = self::tokenFor((int) $site['org_id']);
         if (!$t['ok']) {
             return $t;
         }
         $property = trim((string) ($site['gsc_property'] ?? ''));
         if ($property === '') {
-            $props = self::properties();
+            $props = self::properties((int) $site['org_id']);
             if (!$props['ok']) {
                 return $props;
             }
             $property = (string) self::propertyFor((string) $site['host'], $props['sites']);
             if ($property === '') {
-                return ['ok' => false, 'error' => 'Konto usługi nie widzi witryny ' . $site['host'] . ' w Search Console. Dodaj adres ' . self::email()
-                    . ' jako użytkownika tej usługi (Ustawienia → Użytkownicy i uprawnienia), a potem spróbuj ponownie.'];
+                return ['ok' => false, 'error' => self::$via === 'oauth'
+                    ? 'Połączone konto Google nie widzi witryny ' . $site['host'] . ' w Search Console. Połącz konto, które ma do niej dostęp, albo poproś właściciela witryny o dodanie Twojego konta w Search Console.'
+                    : 'Konto usługi nie widzi witryny ' . $site['host'] . ' w Search Console. Dodaj adres ' . self::email()
+                        . ' jako użytkownika tej usługi (Ustawienia → Użytkownicy i uprawnienia), a potem spróbuj ponownie.'];
             }
             \App\Core\Db::get()->update('seo_sites', ['gsc_property' => $property], 'id = ?', [(int) $site['id']]);
         }
@@ -217,7 +257,7 @@ final class Google
      */
     public static function syncGa4(array $site): array
     {
-        $t = self::token();
+        $t = self::tokenFor((int) $site['org_id']);
         if (!$t['ok']) {
             return $t;
         }
@@ -312,7 +352,9 @@ final class Google
             }
         }
         if (!$props) {
-            return ['ok' => false, 'error' => 'Konto usługi nie widzi żadnej usługi Google Analytics. Dodaj adres ' . self::email() . ' w GA4 (Administracja → Zarządzanie dostępem do usługi) z rolą „Wyświetlający”.'];
+            return ['ok' => false, 'error' => self::$via === 'oauth'
+                ? 'Połączone konto Google nie widzi żadnej usługi Google Analytics. Jeśli na ekranie Google nie zaznaczono dostępu do Analytics, połącz konto jeszcze raz.'
+                : 'Konto usługi nie widzi żadnej usługi Google Analytics. Dodaj adres ' . self::email() . ' w GA4 (Administracja → Zarządzanie dostępem do usługi) z rolą „Wyświetlający”.'];
         }
         // Jedna usługa to oczywisty wybór. Przy kilku sprawdzamy adresy strumieni danych (najwyżej 25 usług).
         if (count($props) === 1) {
@@ -326,7 +368,9 @@ final class Google
                 }
             }
         }
-        return ['ok' => false, 'error' => 'Konto usługi widzi ' . count($props) . ' usługi Google Analytics, ale żadna nie ma strumienia danych dla ' . $host . '. Dodaj adres ' . self::email() . ' we właściwej usłudze GA4 albo wpisz jej numer w ustawieniach zaawansowanych.'];
+        return ['ok' => false, 'error' => self::$via === 'oauth'
+            ? 'Połączone konto Google widzi ' . count($props) . ' usługi Google Analytics, ale żadna nie ma strumienia danych dla ' . $host . '. Wpisz numer właściwej usługi w ustawieniach zaawansowanych witryny.'
+            : 'Konto usługi widzi ' . count($props) . ' usługi Google Analytics, ale żadna nie ma strumienia danych dla ' . $host . '. Dodaj adres ' . self::email() . ' we właściwej usłudze GA4 albo wpisz jej numer w ustawieniach zaawansowanych.'];
     }
 
     /** @return array{ok: bool, rows?: array, error?: string} */
@@ -357,11 +401,22 @@ final class Google
         if ($status === 0) {
             return 'Brak połączenia z Google (' . ($r['error'] ?? 'nieznany błąd') . '). Spróbuj ponownie za chwilę.';
         }
+        $oauth = self::$via === 'oauth';
+        if ($status === 401 && $oauth) {
+            // Token odrzucony przed czasem (np. dostęp cofnięty w koncie Google): przy kolejnej próbie panel odświeży dostęp.
+            GoogleOAuth::dropCached(self::$viaOrg);
+            return 'Google odrzucił dostęp połączonego konta. Spróbuj ponownie, a jeśli to nie pomoże, połącz konto Google jeszcze raz w zakładce „Dane”.';
+        }
         if ($status === 403 && preg_match('/has not been used in project|is disabled|accessNotConfigured/i', $msg . (string) $r['body'])) {
-            return 'W projekcie Google Cloud, z którego pochodzi klucz, nie jest włączony interfejs ' . ($service === 'Search Console' ? 'Google Search Console API' : 'Google Analytics Data API') . '. Włącz go w Google Cloud (Interfejsy API i usługi) i spróbuj ponownie.';
+            $api = $service === 'Search Console' ? 'Google Search Console API' : 'Google Analytics Data API';
+            return $oauth
+                ? 'W projekcie Google Cloud tego panelu nie jest włączony interfejs ' . $api . '. Włącza go administrator panelu.'
+                : 'W projekcie Google Cloud, z którego pochodzi klucz, nie jest włączony interfejs ' . $api . '. Włącz go w Google Cloud (Interfejsy API i usługi) i spróbuj ponownie.';
         }
         if ($status === 403 || $status === 404) {
-            return 'Konto usługi nie ma dostępu do tych danych w ' . $service . '. Dodaj adres ' . self::email() . ' jako użytkownika z prawem odczytu i sprawdź identyfikator usługi w ustawieniach witryny.';
+            return $oauth
+                ? 'Połączone konto Google nie ma dostępu do tych danych w ' . $service . '. Połącz konto, które widzi tę witrynę, i sprawdź identyfikator usługi w ustawieniach witryny.'
+                : 'Konto usługi nie ma dostępu do tych danych w ' . $service . '. Dodaj adres ' . self::email() . ' jako użytkownika z prawem odczytu i sprawdź identyfikator usługi w ustawieniach witryny.';
         }
         if ($status === 429) {
             return $service . ' chwilowo ogranicza liczbę zapytań. Spróbuj ponownie za kilka minut.';

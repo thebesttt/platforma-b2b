@@ -20,8 +20,8 @@ final class Http
     public static function request(string $method, string $url, ?string $body = null, array $headers = [], int $timeout = 20): array
     {
         $fixtures = (string) Config::get('HTTP_FIXTURES');
-        // W testach zapisujemy także treść zapytania, żeby dało się sprawdzić, co wysyłamy do API.
-        self::$log[] = ['method' => $method, 'url' => $url] + ($fixtures !== '' ? ['body' => (string) $body] : []);
+        // W testach zapisujemy także treść i nagłówki zapytania, żeby dało się sprawdzić, co i czyim kluczem wysyłamy do API.
+        self::$log[] = ['method' => $method, 'url' => $url] + ($fixtures !== '' ? ['body' => (string) $body, 'headers' => $headers] : []);
         if ($fixtures !== '') {
             return self::fromFixture($fixtures, $method, $url, (string) $body);
         }

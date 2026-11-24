@@ -18,7 +18,7 @@ $line = static function (?array $sync): string {
 ?>
 <section class="card" aria-labelledby="sd-google">
   <h2 id="sd-google" style="margin-bottom:16px">Google Search Console</h2>
-  <?= View::partial('partials/seo_start', ['site' => $site, 'googleOn' => $googleOn, 'googleEmail' => $googleEmail, 'syncGoogle' => $sync['google'], 'ai' => true]) ?>
+  <?= View::partial('partials/seo_start', ['site' => $site, 'conn' => $conn, 'googleEmail' => $googleEmail, 'syncGoogle' => $sync['google'], 'ai' => true]) ?>
   <details style="margin-top:18px">
     <summary class="small">Plik bez tabeli dat albo pojedynczy CSV? Podaj okres</summary>
     <form method="post" action="<?= e($base) ?>/import" enctype="multipart/form-data" class="form-grid" style="margin-top:12px">
@@ -36,7 +36,7 @@ $line = static function (?array $sync): string {
   <div class="table-wrap"><table>
     <thead><tr><th scope="col">Źródło</th><th scope="col">Stan</th><th scope="col">Okresy w panelu</th></tr></thead>
     <tbody>
-      <tr><td><b>Search Console</b><br><span class="small muted">zapytania, strony, pozycje</span></td><td><?= $has['gsc'] && !$sync['google'] ? '<span class="state s-good">dane z pliku</span>' : $line($sync['google']) ?></td>
+      <tr><td><b>Search Console</b><br><span class="small muted">zapytania, strony, pozycje</span></td><td><?= $has['gsc'] && !$sync['google'] ? '<span class="state s-good">dane z pliku</span>' : $line($sync['google']) ?><?= $conn['mode'] === 'oauth' ? '<br><span class="small muted">konto Google połączone' . (!empty($conn['google']['by']) ? ' przez: ' . e((string) $conn['google']['by']) : '') . '</span>' : '' ?></td>
         <td class="small"><?= isset($periods['gsc']) ? e(implode(', ', array_map(static fn (array $p): string => Sync::range($p['start'], $p['end']), array_slice($periods['gsc'], 0, 4)))) : '<span class="muted">brak</span>' ?></td></tr>
       <tr><td><b>Odpowiedzi AI Google</b><br><span class="small muted">raport o generatywnej AI, tylko z pliku</span></td><td><?= $has['gsc_ai'] ? '<span class="state s-good">dane z pliku</span>' : '<span class="muted">brak danych</span>' ?></td>
         <td class="small"><?= isset($periods['gsc_ai']) ? e(implode(', ', array_map(static fn (array $p): string => Sync::range($p['start'], $p['end']), array_slice($periods['gsc_ai'], 0, 4)))) : '<span class="muted">brak</span>' ?></td></tr>
@@ -45,10 +45,42 @@ $line = static function (?array $sync): string {
       <tr><td><b>Google Analytics</b><br><span class="small muted">wejścia z asystentów AI</span></td><td><?= $has['ga4_ai'] && !$sync['ga4'] ? '<span class="state s-good">dane wklejone</span>' : $line($sync['ga4']) ?></td>
         <td class="small"><?= isset($periods['ga4_ai']) ? e(implode(', ', array_map(static fn (array $p): string => Sync::range($p['start'], $p['end']), array_slice($periods['ga4_ai'], 0, 4)))) : '<span class="muted">brak</span>' ?></td></tr>
       <tr><td><b>Cloudflare</b><br><span class="small muted">boty AI na stronie</span></td><td><?= $line($sync['cloudflare']) ?></td>
-        <td><?php if ($cfOn): ?><form method="post" action="<?= e($base) ?>/pobierz"><?= csrf_field() ?><input type="hidden" name="zrodlo" value="cloudflare"><button class="btn ghost sm" type="submit" data-busy="Pobieram…"><?= $sync['cloudflare'] && $sync['cloudflare']['ok'] ? 'Pobierz teraz' : 'Połącz' ?></button></form><?php else: ?><span class="small muted">włącza administrator (CF_ANALYTICS_TOKEN)</span><?php endif ?></td></tr>
+        <td><?php if ($cfOn): ?><form method="post" action="<?= e($base) ?>/pobierz"><?= csrf_field() ?><input type="hidden" name="zrodlo" value="cloudflare"><button class="btn ghost sm" type="submit" data-busy="Pobieram…"><?= $sync['cloudflare'] && $sync['cloudflare']['ok'] ? 'Pobierz teraz' : 'Połącz' ?></button></form><?php else: ?><a class="small" href="#cloudflare">dodaj token</a><?php endif ?></td></tr>
     </tbody>
   </table></div>
   <p class="sec-note" style="padding-top:12px">Połączone źródła panel odświeża raz dziennie. Trzymamy <?= App\Modules\Seo\Stats::KEEP_PERIODS ?> ostatnich okresów każdego raportu i dane dzienne z 16 miesięcy.</p>
+</section>
+
+<section class="card" id="cloudflare" aria-labelledby="sd-cf-h">
+  <h2 id="sd-cf-h" style="margin-bottom:6px">Boty AI z Cloudflare</h2>
+  <p class="small muted" style="margin:0 0 14px">Dla witryn, które działają za Cloudflare. Panel pokaże, które boty AI pobierają strony, ile razy i które adresy.</p>
+  <?php if ($conn['cloudflare']): ?>
+    <p style="margin:0 0 12px">Token firmy jest w panelu od <?= e(local_dt((string) $conn['cloudflare']['created_at'], 'd.m.Y')) ?><?= !empty($conn['cloudflare']['label']) ? ' (końcówka ' . e((string) $conn['cloudflare']['label']) . ')' : '' ?>. Panel przechowuje go zaszyfrowany i nigdzie nie pokazuje.</p>
+    <?php if ($conn['owner']): ?>
+    <form method="post" action="/audyt/widocznosc/cloudflare">
+      <?= csrf_field() ?><input type="hidden" name="witryna" value="<?= (int) $site['id'] ?>"><input type="hidden" name="usun" value="1">
+      <button class="btn ghost sm" type="submit">Usuń token z panelu</button>
+    </form>
+    <?php endif ?>
+  <?php elseif ($cfOn): ?>
+    <p class="small" style="margin:0">Panel korzysta z tokenu ustawionego na serwerze. Dane pobierzesz przyciskiem w tabeli wyżej.</p>
+  <?php elseif (!$conn['secrets']): ?>
+    <p class="small muted" style="margin:0"><?= $conn['admin'] ? 'Żeby firmy mogły dodawać własne tokeny, ustaw na serwerze zmienną APP_SECRET (co najmniej 16 znaków). Panel szyfruje nią tokeny.' : 'Dodawanie tokenu nie jest jeszcze włączone w tym panelu.' ?></p>
+  <?php elseif ($conn['owner']): ?>
+    <ol class="law" style="margin:0 0 14px">
+      <li>W Cloudflare utwórz token API tylko do odczytu, z uprawnieniami Zone → Analytics → Read i Zone → Zone → Read dla tej domeny.</li>
+      <li>Skopiuj token od razu po utworzeniu. Cloudflare pokazuje go tylko raz.</li>
+      <li>Wklej go tutaj. Panel sam znajdzie domenę i od tej pory pobiera dane codziennie.</li>
+    </ol>
+    <form method="post" action="/audyt/widocznosc/cloudflare" class="form-grid" autocomplete="off">
+      <?= csrf_field() ?><input type="hidden" name="witryna" value="<?= (int) $site['id'] ?>">
+      <div class="field span-2"><label for="sd-cf-token">Token API Cloudflare</label><input id="sd-cf-token" type="password" name="token" required maxlength="120" autocomplete="off" spellcheck="false">
+        <span class="hint">Token z samym odczytem statystyk niczego nie zmieni na Twoim koncie. Panel zapisuje go zaszyfrowany, a usuniesz go tu jednym kliknięciem.</span></div>
+      <div class="field" style="justify-content:flex-end"><button class="btn" type="submit" data-busy="Sprawdzam token…">Zapisz i pobierz dane</button></div>
+    </form>
+  <?php else: ?>
+    <p class="small muted" style="margin:0">Token Cloudflare dodaje właściciel konta firmy w tym panelu.</p>
+  <?php endif ?>
 </section>
 
 <section class="card" id="wklej" aria-labelledby="sd-paste">

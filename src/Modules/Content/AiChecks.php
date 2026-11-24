@@ -47,6 +47,14 @@ final class AiChecks
         return $pos === false ? null : Text::count(mb_substr($t, 0, $pos)) + 1;
     }
 
+    /** Brak oceny: model nie odpowiedział albo firma wyczerpała przydział AI w pakiecie. Wskaźnik dostaje „brak pomiaru”, a audyt idzie dalej. */
+    private static function noAnswer(array $rule, array $res): array
+    {
+        return !empty($res['limit'])
+            ? Checks::result($rule, 'none', 'Ocena AI poza przydziałem pakietu w tym miesiącu', (string) $res['error'])
+            : Checks::result($rule, 'none', 'Model AI nie zwrócił oceny', (string) ($res['error'] ?? 'Odpowiedź modelu nie miała oczekiwanego formatu.'));
+    }
+
     /** D1: czy początek strony od razu odpowiada na pytanie z frazy. */
     public static function d1(string $phrase, string $lead): array
     {
@@ -67,7 +75,7 @@ final class AiChecks
         );
         $j = $res['ok'] ? Claude::json((string) $res['text']) : null;
         if (!$res['ok'] || !is_array($j) || !array_key_exists('answer', $j)) {
-            return Checks::result($rule, 'none', 'Model AI nie zwrócił oceny', (string) ($res['error'] ?? 'Odpowiedź modelu nie miała oczekiwanego formatu.'));
+            return self::noAnswer($rule, $res);
         }
         if ($j['answer'] === null || trim(to_text($j['answer'])) === '') {
             return Checks::result($rule, 'bad', 'Brak bezpośredniej odpowiedzi w pierwszych 300 słowach');
@@ -108,7 +116,7 @@ final class AiChecks
         );
         $j = $res['ok'] ? Claude::json((string) $res['text']) : null;
         if (!$res['ok'] || !is_array($j) || !is_array($j['answers'] ?? null)) {
-            return Checks::result($rule, 'none', 'Model AI nie zwrócił oceny', (string) ($res['error'] ?? 'Odpowiedź modelu nie miała oczekiwanego formatu.'));
+            return self::noAnswer($rule, $res);
         }
         $byN = [];
         foreach ($j['answers'] as $a) {

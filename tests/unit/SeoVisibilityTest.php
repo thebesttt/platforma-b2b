@@ -77,14 +77,16 @@ return [
         eq(303, http('GET', '/audyt/widocznosc')->status, 'przy jednej witrynie od razu jej ekran');
         $base = '/audyt/widocznosc/' . $siteId;
 
-        // Ekran startu: dwie drogi. Bez klucza Google panel mówi, kto włącza stałe połączenie, i nie pokazuje pustego adresu.
-        with_config(['GOOGLE_SERVICE_ACCOUNT' => ''], function () use ($base) {
+        // Ekran startu: dwie drogi. Bez połączenia z Google panel mówi to zwykłymi słowami, bez nazw zmiennych i pustego adresu.
+        with_config(['GOOGLE_SERVICE_ACCOUNT' => '', 'GOOGLE_OAUTH_CLIENT_ID' => ''], function () use ($base) {
             $page = http('GET', $base)->body;
             contains('Wgraj plik z Search Console', $page);
             contains('name="files[]"', $page);
             contains('Nie rozpakowuj jej', $page);
-            contains('włącza administrator panelu', $page);
-            ok(!str_contains($page, 'value="google"'), 'bez klucza nie ma przycisku „Połącz”');
+            contains('Stałe połączenie z Google nie jest jeszcze włączone w tym panelu', $page);
+            ok(!str_contains($page, 'value="google"') && !str_contains($page, 'GOOGLE_'), 'bez klucza nie ma przycisku „Połącz” ani nazw zmiennych');
+            // Administrator panelu widzi, co ustawić.
+            with_config(['ADMIN_EMAILS' => 'wlasciciel@example.com'], fn () => contains('GOOGLE_OAUTH_CLIENT_ID', http('GET', $base)->body));
         });
 
         // Paczka z polskimi nagłówkami, taka jak z przycisku „Eksportuj”. Okres panel bierze z tabeli dat.
@@ -405,7 +407,7 @@ return [
             }
             eq([], Http::$log, 'żadnego zapytania do Google ani Cloudflare');
             ok(!Stats::has($foreign, 'gsc') && !Stats::has($foreign, 'cf_bot'), 'cudze dane nie trafiły do drugiej firmy');
-            contains('Stałe połączenie jest dostępne w firmie, która prowadzi ten panel', http('GET', '/audyt/widocznosc/' . $foreign . '/dane')->body);
+            contains('Najpierw dodaj token Cloudflare w tej zakładce', http('GET', '/audyt/widocznosc/' . $foreign . '/dane')->body);
             Sites::delete($org2, $foreign);
             login_as($uid);
         });
@@ -461,10 +463,12 @@ return [
         contains('zones(filter: { zoneTag: "abcdef0123456789abcdef0123456789" })', $q);
         contains('httpRequestsAdaptiveGroups(filter: { datetime_geq: "2026-11-01T00:00:00Z" datetime_lt: "2026-11-08T00:00:00Z" requestSource: "eyeball" OR: [{ userAgent_like: "%gptbot%" } { userAgent_like: "%chatgpt-user%" }] }', $q);
 
-        // Bez tokenu ekran mówi, kto to włącza. Z tokenem jeden przycisk, bez wpisywania identyfikatora strefy.
+        // Bez tokenu ekran prowadzi do miejsca, w którym firma dodaje własny. Z tokenem jeden przycisk, bez wpisywania identyfikatora strefy.
         with_config(['CF_ANALYTICS_TOKEN' => '', 'CF_BROWSER_TOKEN' => ''], function () use ($base) {
             ok(!CloudflareBots::enabled());
-            contains('CF_ANALYTICS_TOKEN', http('GET', $base . '/ai')->body);
+            $page = http('GET', $base . '/ai')->body;
+            contains($base . '/dane#cloudflare', $page);
+            ok(!str_contains($page, 'CF_ANALYTICS_TOKEN'), 'bez nazw zmiennych serwera');
         });
         with_config(['ADMIN_EMAILS' => 'wlasciciel@example.com', 'CF_ANALYTICS_TOKEN' => 'token-cf'], function () use ($orgId, $siteId, $base, $db) {
             contains('Pobierz z Cloudflare', http('GET', $base . '/ai')->body);
@@ -503,7 +507,7 @@ return [
             contains('Zone → Analytics → Read', CloudflareBots::sync(Sites::find($orgId, $siteId))['error']);
         });
         $other = Sites::add($orgId, 'inna-witryna.example')['id'];
-        with_config(['CF_BROWSER_TOKEN' => 'token-przegladarki'], function () use ($orgId, $other) {
+        with_config(['ADMIN_EMAILS' => 'wlasciciel@example.com', 'CF_BROWSER_TOKEN' => 'token-przegladarki'], function () use ($orgId, $other) {
             ok(CloudflareBots::enabled(), 'jeden token Cloudflare może obsłużyć obie funkcje');
             contains('Wklej identyfikator strefy', CloudflareBots::sync(Sites::find($orgId, $other))['error']);
         });

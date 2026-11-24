@@ -11,7 +11,12 @@ use App\Core\Secret;
 use App\Core\Totp;
 use App\Modules\Ai\Claude;
 use App\Modules\Inbound\Inbound;
+use App\Modules\Seo\CloudflareBots;
+use App\Modules\Seo\Google;
+use App\Modules\Seo\GoogleOAuth;
 use App\Modules\Seo\Sites;
+use App\Modules\Seo\Stats;
+use App\Modules\Seo\Sync;
 
 /** Zapytania do modelu AI zapisane w dzienniku klienta HTTP. */
 function ai_calls(): array
@@ -486,5 +491,198 @@ return [
         eq(404, http('GET', '/oferty/' . (int) $offer['id'])->status);
         http('POST', '/przetargi/' . $a . '/do-ofert');
         eq([1, 1], [(int) $db->val('SELECT COUNT(*) FROM offers WHERE org_id = ? AND tender_id = ?', [$org2, $a]), (int) $db->val('SELECT COUNT(*) FROM offers WHERE org_id = ? AND tender_id = ?', [$orgId, $a])]);
+    },
+
+    'Widoczność: każda firma łączy własne konto Google i własny token Cloudflare, a cudzych połączeń nie użyje' => function () {
+        [$orgId, $uid] = make_org();
+        $db = Db::get();
+        $cfg = ['APP_SECRET' => 'sekret-testowy-0123456789', 'GOOGLE_OAUTH_CLIENT_ID' => 'klient-testowy.apps.googleusercontent.com', 'GOOGLE_OAUTH_CLIENT_SECRET' => 'sekret-klienta',
+            'GOOGLE_SERVICE_ACCOUNT' => '', 'CF_ANALYTICS_TOKEN' => '', 'CF_BROWSER_TOKEN' => ''];
+        with_config($cfg, function () use ($db, $orgId, $uid) {
+            login_as($uid);
+            $siteId = (int) Sites::add($orgId, 'sklep-przykladowy.example')['id'];
+            $base = '/audyt/widocznosc/' . $siteId;
+            $site = static fn (): array => Sites::find($orgId, $siteId);
+            $auth = static fn (string $host): array => array_values(array_unique(array_map(static fn (array $l): string => (string) ($l['headers']['Authorization'] ?? ''),
+                array_filter(Http::$log, static fn (array $l): bool => str_contains($l['url'], $host)))));
+            /** Przejście do Google: zwraca jednorazowy znacznik z adresu ekranu zgody. */
+            $start = static function () use ($siteId): array {
+                $r = http('GET', '/audyt/widocznosc/google/polacz', [], ['witryna' => $siteId]);
+                parse_str((string) parse_url((string) ($r->headers['Location'] ?? ''), PHP_URL_QUERY), $q);
+                return [$r, $q];
+            };
+
+            // Start: jeden przycisk. Panel prosi tylko o odczyt i nie pokazuje adresu konta usługi.
+            ok(GoogleOAuth::enabled() && Google::mode($orgId) === null && !Sync::googleOn($orgId));
+            $page = http('GET', $base)->body;
+            contains('href="/audyt/widocznosc/google/polacz?witryna=' . $siteId . '"', $page);
+            contains('Panel prosi tylko o odczyt', $page);
+            [$r, $q] = $start();
+            eq(303, $r->status);
+            ok(str_starts_with((string) $r->headers['Location'], 'https://accounts.google.com/o/oauth2/v2/auth?'), 'ekran zgody Google');
+            eq(['klient-testowy.apps.googleusercontent.com', 'code', 'offline', 'consent', 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/analytics.readonly'],
+                [$q['client_id'], $q['response_type'], $q['access_type'], $q['prompt'], $q['scope']]);
+            ok(str_ends_with((string) $q['redirect_uri'], '/audyt/widocznosc/google/powrot') && strlen((string) $q['state']) === 48, 'adres powrotu i jednorazowy znacznik');
+            ok(!str_contains((string) $r->headers['Location'], 'sekret-klienta'), 'tajny klucz klienta nie trafia do przeglądarki');
+
+            // Powrót z podrobionym znacznikiem: nic nie wychodzi do Google i nic się nie zapisuje. Znacznik jest jednorazowy.
+            Http::$log = [];
+            http('GET', '/audyt/widocznosc/google/powrot', [], ['state' => 'podrobiony', 'code' => 'kod-testowy']);
+            eq([[], false], [Http::$log, GoogleOAuth::connected($orgId)]);
+            contains('Łączenie z Google wygasło albo zaczęło się w innym oknie', http('GET', $base . '/dane')->body);
+            http('GET', '/audyt/widocznosc/google/powrot', [], ['state' => $q['state'], 'code' => 'kod-testowy']);
+            eq([[], false], [Http::$log, GoogleOAuth::connected($orgId)], 'po nieudanej próbie stary znacznik już nie działa');
+            // Przerwanie na ekranie Google, odrzucony kod, zgoda bez Search Console.
+            [, $q] = $start();
+            http('GET', '/audyt/widocznosc/google/powrot', [], ['state' => $q['state'], 'error' => 'access_denied']);
+            contains('Łączenie przerwane na ekranie Google. Nic się nie zmieniło.', http('GET', $base . '/dane')->body);
+            [, $q] = $start();
+            http('GET', '/audyt/widocznosc/google/powrot', [], ['state' => $q['state'], 'code' => 'zly-kod']);
+            contains('Google nie potwierdził połączenia', http('GET', $base . '/dane')->body);
+            [, $q] = $start();
+            http('GET', '/audyt/widocznosc/google/powrot', [], ['state' => $q['state'], 'code' => 'kod-bez-search-console']);
+            contains('nie zaznaczono dostępu do Search Console', http('GET', $base . '/dane')->body);
+            // Znacznik po terminie.
+            [, $q] = $start();
+            $_SESSION['google_oauth']['at'] = time() - 3600;
+            http('GET', '/audyt/widocznosc/google/powrot', [], ['state' => $q['state'], 'code' => 'kod-testowy']);
+            ok(!GoogleOAuth::connected($orgId), 'znacznik po terminie');
+            // Znacznik innej firmy: osoba z drugiej firmy nie dokończy cudzego łączenia.
+            [$org2, $uid2] = make_org('obcy@example.com', 'Obca Firma sp. z o.o.');
+            [, $q] = $start();
+            $pending = $_SESSION['google_oauth'];
+            login_as($uid2);
+            $_SESSION['google_oauth'] = $pending;
+            http('GET', '/audyt/widocznosc/google/powrot', [], ['state' => $q['state'], 'code' => 'kod-testowy']);
+            ok(!GoogleOAuth::connected($orgId) && !GoogleOAuth::connected($org2), 'znacznik jest przypisany do firmy');
+            login_as($uid);
+
+            // Udane połączenie: stały dostęp zaszyfrowany w bazie, a dane pobrane od razu tokenem tej firmy.
+            [, $q] = $start();
+            Http::$log = [];
+            $r = http('GET', '/audyt/widocznosc/google/powrot', [], ['state' => $q['state'], 'code' => 'kod-testowy']);
+            eq([303, $base], [$r->status, $r->headers['Location'] ?? '']);
+            ok(GoogleOAuth::connected($orgId) && Google::mode($orgId) === 'oauth' && Sync::googleOn($orgId));
+            $stored = (string) $db->val("SELECT value_enc FROM org_secrets WHERE org_id = ? AND name = 'google'", [$orgId]);
+            ok(str_starts_with($stored, 'v1:') && !str_contains($stored, 'staly-dostep'), 'stały dostęp jest zaszyfrowany');
+            eq('1//staly-dostep-firmy', Secret::get($orgId, 'google'));
+            ok(!str_contains((string) json_encode($db->all("SELECT v FROM kv WHERE k LIKE 'google:oauth:%'")), 'ya29.'), 'token dostępu w pamięci podręcznej też jest zaszyfrowany');
+            $exchange = Http::$log[0];
+            eq('https://oauth2.googleapis.com/token', $exchange['url']);
+            foreach (['grant_type=authorization_code', 'code=kod-testowy', 'client_secret=sekret-klienta', 'redirect_uri=' . rawurlencode((string) $q['redirect_uri'])] as $part) {
+                contains($part, $exchange['body']);
+            }
+            eq(['Bearer ya29.oauth-pierwszy'], $auth('googleapis.com/webmasters'), 'Search Console pytamy tokenem połączonego konta');
+            eq(['Bearer ya29.oauth-pierwszy'], $auth('analytics'), 'Analytics też');
+            ok(Stats::has($siteId, 'gsc') && Stats::has($siteId, 'ga4_ai'), 'dane są w panelu zaraz po powrocie z Google');
+            eq('sc-domain:sklep-przykladowy.example', $site()['gsc_property'], 'usługę panel znalazł sam');
+            $page = http('GET', $base . '/dane')->body;
+            contains('Połączenie z Google działa', $page);
+            contains('konto Google połączone przez: Jan Test', $page);
+            contains('Odłącz konto Google', $page);
+            ok(!str_contains($page, 'staly-dostep') && !str_contains($page, 'ya29.'), 'tokenów nie ma na stronie');
+            eq(1, (int) $db->val("SELECT COUNT(*) FROM audit_log WHERE action = 'seo.google_connected' AND org_id = ?", [$orgId]));
+
+            // Po godzinie panel odnawia dostęp sam. Zadanie dzienne pobiera dane tej firmy jej tokenem.
+            Kv::forget('google:oauth:' . $orgId);
+            Http::$log = [];
+            eq(['sites' => 1, 'google' => 1, 'cloudflare' => 0, 'maps' => 0, 'errors' => 0], Sync::daily());
+            contains('grant_type=refresh_token&refresh_token=' . rawurlencode('1//staly-dostep-firmy'), Http::$log[0]['body']);
+            eq(['Bearer ya29.oauth-odswiezony'], $auth('googleapis.com/webmasters'));
+
+            // Druga firma z tą samą domeną: nie ma połączenia i nie użyje cudzego.
+            $foreign = (int) Sites::add($org2, 'sklep-przykladowy.example')['id'];
+            eq([null, false], [Google::mode($org2), Sync::googleOn($org2)]);
+            login_as($uid2);
+            Http::$log = [];
+            http('POST', '/audyt/widocznosc/' . $foreign . '/pobierz', ['zrodlo' => 'google']);
+            eq([], Http::$log, 'żadnego zapytania do Google');
+            ok(!Stats::has($foreign, 'gsc'), 'cudze dane nie trafiły do drugiej firmy');
+            contains('Najpierw połącz konto Google', http('GET', '/audyt/widocznosc/' . $foreign . '/dane')->body);
+            // Odłączenie cudzej witryny albo cudzego konta nie działa: druga firma odłącza najwyżej siebie.
+            http('POST', '/audyt/widocznosc/google/odlacz', ['witryna' => $siteId]);
+            ok(GoogleOAuth::connected($orgId), 'połączenie pierwszej firmy zostaje');
+            login_as($uid);
+
+            // Członek zespołu widzi stan, ale nie łączy i nie odłącza.
+            $member = $db->insert('users', ['org_id' => $orgId, 'email' => 'czlonek@example.com', 'name' => 'Członek', 'password_hash' => 'x', 'role' => 'member', 'created_at' => now_utc()]);
+            login_as($member);
+            ok(!str_contains(http('GET', $base . '/dane')->body, 'Odłącz konto Google'));
+            http('POST', '/audyt/widocznosc/google/odlacz', ['witryna' => $siteId]);
+            http('POST', '/audyt/widocznosc/cloudflare', ['witryna' => $siteId, 'token' => 'cfut_' . str_repeat('a1B2', 9)]);
+            ok(GoogleOAuth::connected($orgId) && Secret::get($orgId, 'cloudflare') === null, 'tylko właściciel zmienia połączenia');
+            $r = http('GET', '/audyt/widocznosc/google/polacz', [], ['witryna' => $siteId]);
+            eq($base . '/dane', $r->headers['Location'] ?? '');
+            login_as($uid);
+
+            // Dostęp cofnięty w koncie Google: panel mówi, co zrobić, i nie trzyma nieważnego tokenu.
+            Kv::forget('google:oauth:' . $orgId);
+            with_config(['FIXTURE_SEO' => 'oauth-cofniety'], function () use ($orgId, $site) {
+                $res = Sync::google($site());
+                eq(false, $res['ok']);
+                contains('Połączenie z Google wygasło albo zostało cofnięte', $res['errors'][0]);
+                ok(!GoogleOAuth::connected($orgId), 'nieważny dostęp usunięty');
+            });
+            ok(Stats::has($siteId, 'gsc'), 'wczytane dane zostają');
+
+            // Ponowne połączenie i odłączenie przez właściciela: cofnięcie po stronie Google, czysty stan w panelu.
+            [, $q] = $start();
+            http('GET', '/audyt/widocznosc/google/powrot', [], ['state' => $q['state'], 'code' => 'kod-testowy']);
+            ok(GoogleOAuth::connected($orgId) && (Sites::lastSync($site(), 'google')['ok'] ?? false));
+            Http::$log = [];
+            http('POST', '/audyt/widocznosc/google/odlacz', ['witryna' => $siteId]);
+            eq(['https://oauth2.googleapis.com/revoke', 'token=' . rawurlencode('1//staly-dostep-firmy')], [Http::$log[0]['url'], Http::$log[0]['body']]);
+            eq([false, null, null, null], [GoogleOAuth::connected($orgId), Secret::get($orgId, 'google'), Sites::lastSync($site(), 'google'), Kv::get('google:oauth:' . $orgId)]);
+            $page = http('GET', $base . '/dane')->body;
+            contains('Połącz z Google', $page);
+            ok(!str_contains($page, 'Połączenie z Google działa'), 'panel nie pokazuje połączenia, którego już nie ma');
+            ok(Stats::has($siteId, 'gsc'), 'dane wczytane wcześniej zostają');
+
+            // Cloudflare: firma wkleja własny token. Zły format niczego nie zapisuje.
+            contains('name="token"', $page);
+            http('POST', '/audyt/widocznosc/cloudflare', ['witryna' => $siteId, 'token' => 'za krótki']);
+            eq([null, false], [Secret::get($orgId, 'cloudflare'), Sync::cloudflareOn($orgId)]);
+            $token = 'cfut_' . str_repeat('a1B2', 9);
+            Http::$log = [];
+            $r = http('POST', '/audyt/widocznosc/cloudflare', ['witryna' => $siteId, 'token' => ' ' . $token . ' ']);
+            eq($base . '/ai', $r->headers['Location'] ?? '');
+            eq(['Bearer ' . $token], $auth('api.cloudflare.com'), 'statystyki pobrane tokenem firmy');
+            ok(Stats::has($siteId, 'cf_bot') && Sync::cloudflareOn($orgId));
+            $stored = (string) $db->val("SELECT value_enc FROM org_secrets WHERE org_id = ? AND name = 'cloudflare'", [$orgId]);
+            ok(str_starts_with($stored, 'v1:') && !str_contains($stored, $token), 'token w bazie jest zaszyfrowany');
+            $page = http('GET', $base . '/dane')->body;
+            contains('końcówka …' . substr($token, -4), $page);
+            ok(!str_contains($page, $token) && !str_contains($page, 'name="token"'), 'tokenu nie ma na stronie');
+            eq(['', false], [CloudflareBots::tokenFor($org2), Sync::cloudflareOn($org2)], 'druga firma nie korzysta z cudzego tokenu');
+            eq(1, Sync::daily()['cloudflare'], 'zadanie dzienne odświeża dane tokenem firmy');
+            // Token odrzucony przez Cloudflare: zapisany, ale panel mówi, jakiego uprawnienia brakuje.
+            with_config(['FIXTURE_SEO' => 'cf-odmowa'], function () use ($siteId, $base, $token) {
+                $r = http('POST', '/audyt/widocznosc/cloudflare', ['witryna' => $siteId, 'token' => $token]);
+                eq($base . '/dane#cloudflare', $r->headers['Location'] ?? '');
+                contains('Zone → Analytics → Read', http('GET', $base . '/dane')->body);
+            });
+            http('POST', '/audyt/widocznosc/cloudflare', ['witryna' => $siteId, 'usun' => '1']);
+            eq(['', null], [CloudflareBots::tokenFor($orgId), Sites::lastSync($site(), 'cloudflare')]);
+            ok(Stats::has($siteId, 'cf_bot'), 'dane wczytane wcześniej zostają');
+
+            // Eksport danych firmy nie zawiera połączeń, a usunięcie firmy cofa dostęp w Google.
+            [, $q] = $start();
+            http('GET', '/audyt/widocznosc/google/powrot', [], ['state' => $q['state'], 'code' => 'kod-testowy']);
+            ok(!str_contains(http('GET', '/ustawienia/dane-firmy.zip')->body, 'staly-dostep'));
+            Http::$log = [];
+            http('POST', '/ustawienia/usun-firme', ['current' => 'haslo-testowe-1', 'confirm' => 'Firma Testowa sp. z o.o.']);
+            eq(0, (int) $db->val('SELECT COUNT(*) FROM organizations WHERE id = ?', [$orgId]));
+            ok(in_array('https://oauth2.googleapis.com/revoke', array_column(Http::$log, 'url'), true), 'przy usunięciu firmy panel cofa dostęp do jej konta Google');
+        });
+
+        // Bez klienta OAuth nie ma przycisku ani przejścia do Google.
+        [$org3, $uid3] = make_org('trzecia@example.com', 'Trzecia Firma sp. z o.o.');
+        with_config(['APP_SECRET' => 'sekret-testowy-0123456789', 'GOOGLE_OAUTH_CLIENT_ID' => '', 'GOOGLE_SERVICE_ACCOUNT' => ''], function () use ($org3, $uid3) {
+            login_as($uid3);
+            $id = (int) Sites::add($org3, 'trzecia.example')['id'];
+            ok(!GoogleOAuth::enabled() && !str_contains(http('GET', '/audyt/widocznosc/' . $id)->body, 'google/polacz'));
+            $r = http('GET', '/audyt/widocznosc/google/polacz', [], ['witryna' => $id]);
+            eq('/audyt/widocznosc/' . $id . '/dane', $r->headers['Location'] ?? '');
+        });
     },
 ];

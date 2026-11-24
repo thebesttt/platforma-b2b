@@ -200,6 +200,10 @@ return static function (Router $r): void {
     // Widoczność: Search Console, odpowiedzi AI i konkurencja (trasy muszą być przed /audyt/{id})
     $r->get('/audyt/widocznosc', [SeoController::class, 'index'], $a);
     $r->post('/audyt/widocznosc', [SeoController::class, 'add'], $a);
+    $r->get('/audyt/widocznosc/google/polacz', [SeoController::class, 'googleConnect'], $a);
+    $r->get('/audyt/widocznosc/google/powrot', [SeoController::class, 'googleReturn'], $a);
+    $r->post('/audyt/widocznosc/google/odlacz', [SeoController::class, 'googleDisconnect'], $a);
+    $r->post('/audyt/widocznosc/cloudflare', [SeoController::class, 'cloudflareToken'], $a);
     $r->get('/audyt/widocznosc/{id}', [SeoController::class, 'google'], $a);
     $r->get('/audyt/widocznosc/{id}/ai', [SeoController::class, 'ai'], $a);
     $r->get('/audyt/widocznosc/{id}/konkurencja', [SeoController::class, 'rivals'], $a);

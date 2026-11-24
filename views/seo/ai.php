@@ -126,11 +126,15 @@ echo View::partial('partials/seo_nav', ['site' => $site, 'tab' => $tab, 'sites' 
     <div class="card-body">
       <p class="small" style="margin:0 0 12px">Ile osób kliknęło link do Twojej strony w ChatGPT, Perplexity, Copilocie, Gemini albo Claude. Dane są w Google Analytics.</p>
       <?php if ($googleOn): ?>
+        <?php if ($conn['mode'] === 'oauth'): ?>
+        <p class="small" style="margin:0">Kliknij „Pobierz”. Panel użyje połączonego konta Google i sam znajdzie usługę Analytics tej witryny.</p>
+        <?php else: ?>
         <ol class="law">
           <li>Skopiuj adres: <code class="copy wrap" title="Kliknij, żeby skopiować"><?= e($googleEmail) ?></code></li>
           <li>W Google Analytics wejdź w Administracja, potem „Zarządzanie dostępem do usługi”, i dodaj ten adres z rolą „Wyświetlający”.</li>
           <li>Kliknij „Pobierz”. Panel sam znajdzie usługę tej witryny.</li>
         </ol>
+        <?php endif ?>
         <?php if ($sync['ga4'] && !$sync['ga4']['ok']): ?><p class="notice mid" style="margin:12px 0"><?= e((string) $sync['ga4']['note']) ?></p><?php endif ?>
         <form method="post" action="<?= e($base) ?>/pobierz" style="margin-top:12px"><?= csrf_field() ?><input type="hidden" name="zrodlo" value="google"><button class="btn" type="submit" data-busy="Pobieram dane…">Pobierz</button></form>
       <?php else: ?>
@@ -165,7 +169,7 @@ echo View::partial('partials/seo_nav', ['site' => $site, 'tab' => $tab, 'sites' 
         <form method="post" action="<?= e($base) ?>/pobierz"><?= csrf_field() ?><input type="hidden" name="zrodlo" value="cloudflare"><button class="btn" type="submit" data-busy="Pobieram dane…">Pobierz z Cloudflare</button></form>
         <p class="small muted" style="margin:8px 0 0">Panel sam znajdzie domenę na koncie Cloudflare. Potem pobiera dane codziennie.</p>
       <?php else: ?>
-        <p class="small muted" style="margin:0">Włącza to administrator panelu tokenem Cloudflare z prawem odczytu statystyk (zmienna <code>CF_ANALYTICS_TOKEN</code>).</p>
+        <p class="small muted" style="margin:0">Wystarczy token Cloudflare z prawem odczytu statystyk. Dodasz go w zakładce <a href="<?= e($base) ?>/dane#cloudflare">Dane i połączenia</a>.</p>
       <?php endif ?>
     </div>
   <?php else:

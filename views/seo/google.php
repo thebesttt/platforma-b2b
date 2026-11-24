@@ -16,7 +16,7 @@ echo View::partial('partials/seo_nav', ['site' => $site, 'tab' => $tab, 'sites' 
 <section class="card" aria-labelledby="sg-start">
   <h2 id="sg-start" style="margin-bottom:6px">Podłącz dane z Search Console</h2>
   <p class="small muted" style="margin:0 0 18px">Są dwie drogi. Plik działa od razu i nie wymaga niczego poza dostępem do Search Console.</p>
-  <?= View::partial('partials/seo_start', ['site' => $site, 'googleOn' => $googleOn, 'googleEmail' => $googleEmail, 'syncGoogle' => $sync['google'], 'ai' => false]) ?>
+  <?= View::partial('partials/seo_start', ['site' => $site, 'conn' => $conn, 'googleEmail' => $googleEmail, 'syncGoogle' => $sync['google'], 'ai' => false]) ?>
 </section>
 <?php else:
     $t = $d['totals'];

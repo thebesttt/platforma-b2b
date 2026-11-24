@@ -143,6 +143,11 @@ final class InboundController extends Controller
             'daily' => $r->int('limit_daily', Inbound::LIMITS['daily']),
             'ai_month' => $r->int('limit_ai_month', Inbound::LIMITS['ai_month']),
         ];
+        // Górną granicę odpowiedzi czatu wyznacza pakiet firmy: wyższą wartość obniżamy do tej granicy, bez błędu w formularzu.
+        $chatCap = Inbound::planCap($org);
+        if ($chatCap !== null) {
+            $limits['ai_month'] = min($limits['ai_month'], $chatCap);
+        }
         foreach (['messages' => [1, 50, 'Pytań do czatu w jednej rozmowie'], 'daily' => [10, 100000, 'Rozmów dziennie'], 'ai_month' => [0, 1000000, 'Odpowiedzi czatu w miesiącu']] as $k => [$min, $max, $label]) {
             if ($limits[$k] < $min || $limits[$k] > $max) {
                 $errors[] = $label . ': od ' . $min . ' do ' . $max . '.';
@@ -197,6 +202,7 @@ final class InboundController extends Controller
         return $this->view('inbound/settings', [
             'w' => $w, 'f' => $form, 'errors' => $errors, 'canEdit' => Auth::isOwner(), 'aiEnabled' => Claude::enabled(),
             'scriptUrl' => $base . '/w/' . $w['public_id'] . '.js', 'title' => 'Ustawienia widżetu',
+            'chatCap' => Inbound::planCap((int) $w['org_id']), 'planName' => \App\Core\Plans::name(Auth::org()),
         ]);
     }
 
