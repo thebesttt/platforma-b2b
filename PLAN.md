@@ -86,7 +86,7 @@ Cztery funkcje opierają się na źródłach, które nie udostępniają danych p
 
 Wpisy widzi tylko firma, która je zrobiła. Sprawdzenia w KRZ i liczby ze sprawozdań nie zmieniają oceny ryzyka liczonej z danych publicznych.
 
-Czego ta wersja nie robi: nie przeszukuje źródeł sama i nie podpowie zapytania ani naboru, którego nie wpiszesz. Gdyby któreś źródło udostępniło dane programom albo zgodziło się na pobieranie, import można dopisać do tych samych tabel.
+Czego ta wersja nie robi: nie pobiera danych z tych źródeł i nie podpowie zapytania ofertowego, którego nie wpiszesz. Nabory od 24.11.2026 podpowiada wyszukiwarka naborów (część „Nabory dotacji: wyszukiwarka i pisanie wniosku”), a ręczne wpisanie zostaje dla naborów, których nie znalazła. Gdyby któreś źródło udostępniło dane programom albo zgodziło się na pobieranie, import można dopisać do tych samych tabel.
 
 ### Potencjalni klienci i wysyłka
 
@@ -262,7 +262,7 @@ Progi są jawne i opisane na ekranie w części „Skąd te liczby”. Odniesien
 
 Konto usługi ma tylko odczyt. Jeśli Google Cloud odmówi utworzenia klucza (reguła organizacji Google Workspace), projekt trzeba założyć na prywatnym koncie Google.
 
-**Ograniczenie przed sprzedażą platformy innym firmom.** Klucz Google i token Cloudflare są jedne na cały panel i widzą wszystko, do czego ktokolwiek dał im dostęp. Dlatego stałe połączenia działają tylko w firmie administratora panelu (adresy z `ADMIN_EMAILS`). Inne firmy korzystają z wgrywania plików. Zanim platforma trafi do wielu firm, każda musi dostać własny klucz albo panel musi sprawdzać, że firma ma prawo do domeny.
+**Klucze platformy a inne firmy.** Klucz konta usługi Google i token Cloudflare z serwera są jedne na cały panel i widzą wszystko, do czego ktokolwiek dał im dostęp. Dlatego działają tylko w firmie administratora panelu (adresy z `ADMIN_EMAILS`). Inne firmy łączą własne konto Google i własny token Cloudflare albo wgrywają pliki (część „Platforma dla wielu firm”).
 
 Źródła: [raport o generatywnej AI w pomocy Search Console](https://support.google.com/webmasters/answer/16984139), [zapowiedź raportu AI Performance w Bing Webmaster Tools](https://blogs.bing.com/webmaster/February-2026/Introducing-AI-Performance-in-Bing-Webmaster-Tools-Public-Preview), [Search Console API: zapytanie o dane](https://developers.google.com/webmaster-tools/v1/searchanalytics/query), [Cloudflare AI Crawl Control: GraphQL API](https://developers.cloudflare.com/ai-crawl-control/reference/graphql-api/) i [lista botów](https://developers.cloudflare.com/ai-crawl-control/reference/bots/).
 
@@ -396,7 +396,7 @@ Do sprawdzenia po wdrożeniu: czy rejestr decyzji UOKiK przyjmuje połączenia z
    - lista potencjalnych klientów z treścią oferty i drogami kontaktu: zbudowana 23.11.2026, razem z listami, stroną zgody, lejkiem i wyszukiwaniem w CEIDG (po wpisaniu tokenu),
    - sekwencje z przypomnieniami i dziennym limitem: zbudowane 20.11.2026 w wersji, w której wysyłasz ze swojej skrzynki, a panel pilnuje terminów. Automatyczna wysyłka wymaga połączenia ze skrzynką (punkt 6).
 9. **Widoczność w Google i w AI:** dane z Search Console, sygnały z odpowiedzi AI i konkurencja z map witryn zbudowane 24.11.2026. Do zrobienia: ocena wizytówki Google (wymaga zgody Google), pozycje konkurentów w wynikach (wymaga płatnej usługi z wynikami wyszukiwania) i test cytowań w AI.
-10. **Dotacje:** ocena warunków naboru na wgranym regulaminie jest zbudowana (20.11.2026). Lista obserwowanych naborów z przewodnikiem po oficjalnych serwisach i przypomnieniami też (20.11.2026), nabory wpisuje użytkownik.
+10. **Dotacje:** ocena warunków naboru na wgranym regulaminie i lista obserwowanych naborów z przypomnieniami są zbudowane (20.11.2026). Wyszukiwarka naborów i pisanie całego wniosku jednym przyciskiem doszły 24.11.2026.
 11. **Drobne uzupełnienia:** odhaczanie gotowych dokumentów w ofercie i podział sekcji między osoby są zbudowane (20.11.2026). Do zrobienia: szacowany czas pracy przy poprawkach z audytu technicznego.
 
 ## Co jest potrzebne od właściciela
