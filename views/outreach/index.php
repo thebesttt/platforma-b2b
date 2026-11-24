@@ -35,7 +35,17 @@
         <tbody>
         <?php foreach ($contacts as $c): ?>
           <tr>
-            <td><a class="t-title" href="/klienci/<?= (int) $c['id'] ?>"><?= e($c['company_name']) ?></a><div class="t-sub"><?= e(trim(($c['person'] ? $c['person'] . ' · ' : '') . $c['email'])) ?></div></td>
+            <td><a class="t-title" href="/klienci/<?= (int) $c['id'] ?>"><?= e($c['company_name']) ?></a><div class="t-sub"><?= e(trim(($c['person'] ? $c['person'] . ' · ' : '') . $c['email'])) ?></div>
+              <?php if (!empty($voice[(int) $c['id']])): $items = $voice[(int) $c['id']]; ?>
+              <details class="voice in-table">
+                <summary>Co napisał klient<?= count($items) > 1 ? ' (' . count($items) . ')' : '' ?> <span class="muted">· <?= e(local_dt($items[0]['at'], 'd.m.Y')) ?></span></summary>
+                <?php foreach (array_slice($items, 0, 3) as $v): ?>
+                  <p class="xs muted" style="margin:8px 0 2px"><?= e($v['source']) ?>, <?= e(local_dt($v['at'], 'd.m.Y')) ?></p>
+                  <div class="voice-body"><?= nl2br(e(mb_strlen($v['text']) > 700 ? mb_substr($v['text'], 0, 700) . '…' : $v['text'])) ?></div>
+                <?php endforeach ?>
+                <p class="xs" style="margin:8px 0 0"><a href="/klienci/<?= (int) $c['id'] ?>#glos"><?= count($items) > 3 || mb_strlen($items[0]['text']) > 700 ? 'Wszystko na karcie klienta' : 'Karta klienta' ?></a></p>
+              </details>
+              <?php endif ?></td>
             <td><?php if ($c['unsubscribed_at']): ?><span class="chip high">wypisany</span><?php else: ?><span class="chip <?= $c['basis'] === 'none' ? 'neutral' : 'low' ?>"><?= e(['none' => 'brak', 'rfq' => 'zapytanie ofertowe', 'consent' => 'zgoda', 'client' => 'klient'][$c['basis']] ?? $c['basis']) ?></span><?php endif ?></td>
             <td class="small muted nowrap"><?= $c['last_message_at'] ? e(local_dt($c['last_message_at'], 'd.m.Y')) : '-' ?></td>
             <td class="n"><a class="btn ghost sm" href="/klienci/<?= (int) $c['id'] ?>/wiadomosc">Napisz</a></td>

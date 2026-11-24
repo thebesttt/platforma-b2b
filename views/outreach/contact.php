@@ -7,6 +7,24 @@
   </div>
   <?php if ($c['id']): ?><a class="btn" href="/klienci/<?= (int) $c['id'] ?>/wiadomosc">Napisz wiadomość</a><?php endif ?>
 </header>
+<?php if (!empty($voice)): ?>
+<section class="card" id="glos" aria-labelledby="t-voice" style="margin-bottom:16px">
+  <h2 id="t-voice" style="margin-bottom:4px">Co napisał klient</h2>
+  <p class="small muted" style="margin:0 0 10px">Własne słowa klienta: zapytanie ze strony, zapytania ofertowe i odpowiedzi, które wkleiłeś z poczty.</p>
+  <?php foreach ($voice as $i => $v): ?>
+    <details class="voice"<?= $i === 0 ? ' open' : '' ?>>
+      <summary><b><?= e($v['source']) ?></b> <span class="muted">· <?= e(local_dt($v['at'], 'd.m.Y')) ?></span> <span class="voice-peek"><?= e(truncate(preg_replace('/\s+/u', ' ', $v['text']), 90)) ?></span></summary>
+      <div class="voice-body"><?= nl2br(e($v['text'])) ?></div>
+      <div class="row-flex" style="margin-top:8px">
+        <?php if ($v['link']): ?><a class="small" href="<?= e($v['link']) ?>"><?= $v['kind'] === 'lead' ? 'Otwórz zapytanie' : 'Otwórz w zapytaniach z rynku' ?></a><?php endif ?>
+        <?php if ($v['kind'] === 'reply'): ?>
+          <form class="inline" method="post" action="/klienci/<?= (int) $c['id'] ?>/odpowiedz" data-confirm="Usunąć tę wklejoną odpowiedź?"><?= csrf_field() ?><input type="hidden" name="usun_odpowiedz" value="<?= (int) $v['id'] ?>"><button class="btn ghost sm" type="submit">Usuń</button></form>
+        <?php endif ?>
+      </div>
+    </details>
+  <?php endforeach ?>
+</section>
+<?php endif ?>
 <div class="cols">
   <form method="post" action="<?= $c['id'] ? '/klienci/' . (int) $c['id'] : '/klienci' ?>" class="card main stack-sm">
     <?= csrf_field() ?>
@@ -56,7 +74,13 @@
         <?php elseif (!empty($sequence)): ?>Przypomnienia w toku: kolejny krok <?= e(local_dt($sequence['next_at'], 'd.m.Y')) ?>. <a href="/klienci/przypomnienia">Zobacz listę</a>
         <?php else: ?>Gdy firma odpisze, zaznacz to tutaj. Zatrzyma to zaplanowane przypomnienia.<?php endif ?>
       </p>
-      <button class="btn ghost sm" type="submit"><?= empty($c['replied_at']) ? 'Firma odpisała' : 'Usuń oznaczenie odpowiedzi' ?></button>
+      <div class="field"><label for="rp-body">Co napisał klient (opcjonalnie)</label><textarea id="rp-body" name="tresc" rows="3" maxlength="20000" placeholder="Wklej treść odpowiedzi z poczty"></textarea>
+        <span class="hint">Panel nie czyta Twojej skrzynki. Wklejona odpowiedź zostaje przy kontakcie i widać ją na liście klientów.</span></div>
+      <div class="field"><label for="rp-date">Kiedy napisał (opcjonalnie)</label><input id="rp-date" type="date" name="data" max="<?= e(gmdate('Y-m-d')) ?>"></div>
+      <div class="row-flex">
+        <button class="btn sm" type="submit" name="zapisz" value="1"><?= empty($c['replied_at']) ? 'Firma odpisała' : 'Dodaj odpowiedź' ?></button>
+        <?php if (!empty($c['replied_at'])): ?><button class="btn ghost sm" type="submit" name="cofnij" value="1" formnovalidate>Usuń oznaczenie odpowiedzi</button><?php endif ?>
+      </div>
     </form>
     <form method="post" action="/klienci/<?= (int) $c['id'] ?>/wypisz" class="card stack-sm" <?= empty($c['unsubscribed_at']) ? 'data-confirm="Zapisać sprzeciw tej firmy wobec dalszych wiadomości?"' : '' ?>>
       <?= csrf_field() ?>

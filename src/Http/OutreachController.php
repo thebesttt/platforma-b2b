@@ -42,7 +42,8 @@ final class OutreachController extends Controller
         $rfqOpen = Rfqs::openCount($org);
         $prospects = Prospects::counts($org);
         $rfqSoon = Rfqs::dueSoon($org);
-        return $this->view('outreach/index', compact('contacts', 'messages', 'q', 'due', 'rfqOpen', 'rfqSoon', 'prospects') + ['title' => 'Klienci i wiadomości']);
+        $voice = \App\Modules\Outreach\ClientVoice::forContacts($org, array_column($contacts, 'id'));
+        return $this->view('outreach/index', compact('contacts', 'messages', 'q', 'due', 'rfqOpen', 'rfqSoon', 'prospects', 'voice') + ['title' => 'Klienci i wiadomości']);
     }
 
     public function contactForm(Request $r): Response
@@ -60,7 +61,8 @@ final class OutreachController extends Controller
         $messages = $id ? $this->db()->all('SELECT * FROM messages WHERE org_id = ? AND contact_id = ? ORDER BY id DESC', [$this->orgId(), $id]) : [];
         $company = !empty($c['nip']) ? Companies::byNip((string) $c['nip']) : null;
         $sequence = $id ? Sequences::activeFor($this->orgId(), $id) : null;
-        return $this->view('outreach/contact', compact('c', 'messages', 'company', 'sequence') + ['title' => $id ? (string) $c['company_name'] : 'Nowy kontakt']);
+        $voice = $id ? (\App\Modules\Outreach\ClientVoice::forContacts($this->orgId(), [$id])[$id] ?? []) : [];
+        return $this->view('outreach/contact', compact('c', 'messages', 'company', 'sequence', 'voice') + ['title' => $id ? (string) $c['company_name'] : 'Nowy kontakt']);
     }
 
     public function contactSave(Request $r): Response
@@ -140,13 +142,38 @@ final class OutreachController extends Controller
         if (!$c) {
             return $this->notFound();
         }
-        $on = empty($c['replied_at']);
+        $back = $r->str('back') === 'sekwencje' ? '/klienci/przypomnienia' : '/klienci/' . $c['id'];
+        // Usunięcie jednej wklejonej odpowiedzi.
+        if ($r->int('usun_odpowiedz')) {
+            \App\Modules\Outreach\ClientVoice::deleteReply($this->orgId(), (int) $c['id'], $r->int('usun_odpowiedz'));
+            return $this->redirect('/klienci/' . $c['id'] . '#glos', 'Usunięto wklejoną odpowiedź.');
+        }
+        // Wklejona treść odpowiedzi: zapisujemy ją i oznaczamy, że firma odpisała (jeśli jeszcze nie jest oznaczona).
+        $pasted = (string) $r->input('tresc', '');
+        if ($r->str('cofnij') !== '1' && is_string($pasted) && trim($pasted) !== '') {
+            $saved = \App\Modules\Outreach\ClientVoice::addReply($this->orgId(), (int) $c['id'], (int) Auth::id(), $pasted, $r->str('data'));
+            if (!$saved['ok']) {
+                return $this->redirect('/klienci/' . $c['id'] . '#glos', $saved['error'], 'error');
+            }
+            $stopped = 0;
+            if (empty($c['replied_at'])) {
+                $this->db()->update('contacts', ['replied_at' => now_utc()], 'id = ?', [(int) $c['id']]);
+                $stopped = Sequences::stopForContact($this->orgId(), (int) $c['id'], 'replied');
+                ProspectEvents::forContact($this->orgId(), (int) $c['id'], 'reply', (int) Auth::id());
+            }
+            AuditLog::add('contact.reply_saved', 'contact', (int) $c['id'], [], $r->ip());
+            return $this->redirect('/klienci/' . $c['id'] . '#glos', 'Zapisano odpowiedź klienta' . ($stopped ? '. Przypomnienia dla tej firmy są zatrzymane.' : '.'));
+        }
+        // Karta kontaktu ma dwa przyciski (zapisz i cofnij). Lista przypomnień wysyła samo przełączenie.
+        if ($r->str('zapisz') === '1' && !empty($c['replied_at'])) {
+            return $this->redirect('/klienci/' . $c['id'] . '#glos', 'Wklej treść odpowiedzi klienta, żeby ją dodać.', 'error');
+        }
+        $on = $r->str('cofnij') === '1' ? false : ($r->str('zapisz') === '1' ? true : empty($c['replied_at']));
         $this->db()->update('contacts', ['replied_at' => $on ? now_utc() : null], 'id = ?', [(int) $c['id']]);
         $stopped = $on ? Sequences::stopForContact($this->orgId(), (int) $c['id'], 'replied') : 0;
         // Firma z listy potencjalnych klientów: odpowiedź trafia do lejka listów.
         $on ? ProspectEvents::forContact($this->orgId(), (int) $c['id'], 'reply', (int) Auth::id()) : ProspectEvents::dropForContact($this->orgId(), (int) $c['id'], 'reply');
         AuditLog::add($on ? 'contact.replied' : 'contact.replied_undo', 'contact', (int) $c['id'], [], $r->ip());
-        $back = $r->str('back') === 'sekwencje' ? '/klienci/przypomnienia' : '/klienci/' . $c['id'];
         return $this->redirect($back, $on ? 'Zapisano odpowiedź' . ($stopped ? '. Przypomnienia dla tej firmy są zatrzymane.' : '.') : 'Usunięto oznaczenie odpowiedzi.');
     }
 

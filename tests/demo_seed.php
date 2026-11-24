@@ -201,6 +201,12 @@ function demo_seed(): array
         'opens_at' => $plus(-30), 'closes_at' => $plus(6), 'amount_note' => 'do 150 000 zł', 'audience_note' => 'małe i średnie firmy', 'notes' => 'Wkład własny 15%. Sprawdzić, czy zakup oprogramowania się kwalifikuje.']);
     \App\Modules\Offers\GrantCalls::save($org, $uid, ['name' => 'Zielona transformacja przedsiębiorstw (przykład)', 'url' => 'https://example.com/nabory/zielona', 'opens_at' => $plus(21), 'closes_at' => $plus(80)]);
 
+    // Odpowiedź klienta wklejona z poczty: widać ją w „Co napisał klient” na karcie i na liście kontaktów.
+    $firstContact = (int) $db->val('SELECT id FROM contacts WHERE org_id = ? ORDER BY id LIMIT 1', [$org]);
+    if ($firstContact) {
+        \App\Modules\Outreach\ClientVoice::addReply($org, $firstContact, $uid, "Dzień dobry,\ndziękujemy za ofertę. Interesuje nas remont placu jeszcze w tym roku.\nProszę o termin wizji lokalnej i wycenę wariantu z kostką 8 cm.\n\nPozdrawiam\nJan Przykładowy", substr($plus(-2), 0, 10));
+    }
+
     // Wyszukiwarka naborów: jedno wyszukiwanie i trzy propozycje do przejrzenia (jedna ze strony urzędowej, jedna bez terminu).
     $searchId = $db->insert('grant_searches', ['org_id' => $org, 'query_json' => json_out(['what' => 'zakup sprzętu do robót drogowych i szkolenia operatorów', 'region' => 'mazowieckie', 'size' => 'mala']),
         'auto' => 0, 'ok' => 1, 'found' => 3, 'searches' => 4, 'created_by' => $uid, 'created_at' => now_utc()]);
