@@ -38,9 +38,9 @@ $answer = static fn (array $payload): array => [
     // Wyszukiwanie, które przekroczyło limit: w treści jest obiekt błędu zamiast listy wyników.
     ['type' => 'server_tool_use', 'id' => 'srvtoolu_02Test', 'name' => 'web_search', 'input' => ['query' => 'nabory PARP grudzień 2026']],
     ['type' => 'web_search_tool_result', 'tool_use_id' => 'srvtoolu_02Test', 'content' => ['type' => 'web_search_tool_result_error', 'error_code' => 'max_uses_exceeded']],
-    ['type' => 'text', 'text' => 'Nabór trwa do końca wskazanego okresu – wnioski składa się przez generator.', 'citations' => [[
+    ['type' => 'text', 'text' => 'Nabór trwa do końca wskazanego okresu ' . "\u{2013}" . ' wnioski składa się przez generator.', 'citations' => [[
         'type' => 'web_search_result_location', 'url' => 'https://www.parp.gov.pl/component/grants/grants/granty-na-eurogranty', 'title' => 'Granty na Eurogranty - PARP',
-        'encrypted_index' => 'Eo8BCioIAhgB', 'cited_text' => 'Koniec przyjmowania wniosków – 31 marca 2027. O grant mogą ubiegać się MŚP.']]],
+        'encrypted_index' => 'Eo8BCioIAhgB', 'cited_text' => 'Koniec przyjmowania wniosków ' . "\u{2013}" . ' 31 marca 2027. O grant mogą ubiegać się MŚP.']]],
     ['type' => 'text', 'text' => "\n```json\n" . json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n```"],
 ];
 $message = static fn (array $content, string $stop = 'end_turn', int $searches = 2) => $json([

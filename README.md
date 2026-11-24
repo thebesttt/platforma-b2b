@@ -114,7 +114,11 @@ Darmowa baza PostgreSQL na Render wygasa po 30 dniach. Przed pierwszymi klientam
 | `SIGNUP_OPEN`, `SIGNUP_CODE` | `SIGNUP_OPEN=0` (domyślnie): konto tylko z linku `/rejestracja?kod=<SIGNUP_CODE>`. `SIGNUP_OPEN=1`: rejestracja otwarta. |
 | `TERMS_URL`, `PRIVACY_URL` | Adresy regulaminu i polityki prywatności, linkowane przy rejestracji. |
 | `UPLOAD_MAX_MB` | Limit rozmiaru dokumentu, domyślnie 15. |
-| `ADMIN_EMAILS` | E-maile administratorów platformy, rozdzielone przecinkami. Dają dostęp do ręcznej aktualizacji decyzji UOKiK. |
+| `ADMIN_EMAILS` | E-maile administratorów platformy, rozdzielone przecinkami. Dają dostęp do ekranu Administracja (firmy, zaproszenia, pakiety, blokada) i do ręcznej aktualizacji decyzji UOKiK. Firma administratora nie ma limitów pakietu. |
+| `AI_MODEL_BASIC` | Tańszy model dla firm w pakiecie Podstawowym. Puste: ten sam co `AI_MODEL`. |
+| `SALES_EMAIL` | Adres, na który firmy piszą w sprawie zmiany pakietu. Pokazany w Ustawieniach firmy. |
+| `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | Klient OAuth z Google Cloud: każda firma łączy własne konto Google w zakładce Widoczność (tylko odczyt). Adres powrotu do wpisania w Google Cloud: `<adres panelu>/audyt/widocznosc/google/powrot`. Wymaga `APP_SECRET`. |
+| `CLIENT_IP_HEADER` | Nagłówek z adresem odwiedzającego na hostingu innym niż Render (np. `CF-Connecting-IP`), albo `REMOTE_ADDR`, gdy przed aplikacją nie ma proxy. Puste: `X-Forwarded-For`. |
 
 ## Zadania cykliczne
 
@@ -142,7 +146,7 @@ Docelowym rozwiązaniem może być mały serwer pośredniczący w Polsce.
 ## Testy
 
 ```bash
-php tests/run.php                                           # 172 testy, SQLite, bez sieci
+php tests/run.php                                           # 182 testy, SQLite, bez sieci
 TEST_DATABASE_URL=postgres://… php tests/run.php            # te same testy na PostgreSQL
 php tests/live_contract.php                                 # prawdziwe API: BZP, TED, VAT, KRS, UOKiK
 sh tests/smoke.sh http://localhost:10000                    # test dymny działającej instancji

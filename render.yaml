@@ -50,4 +50,7 @@ services:
 # CF_ACCOUNT_ID i CF_BROWSER_TOKEN (Cloudflare Browser Run: wskaźniki A6 i E2 audytu AI),
 # GOOGLE_SERVICE_ACCOUNT (klucz konta usługi Google: stałe połączenie z Search Console i Google Analytics w zakładce Widoczność),
 # CF_ANALYTICS_TOKEN (token Cloudflare z odczytem statystyk: boty AI na stronie),
-# TERMS_URL i PRIVACY_URL (adresy regulaminu i polityki prywatności), APP_URL (własna domena).
+# TERMS_URL i PRIVACY_URL (adresy regulaminu i polityki prywatności), APP_URL (własna domena),
+# GOOGLE_OAUTH_CLIENT_ID i GOOGLE_OAUTH_CLIENT_SECRET (firmy klientów łączą własne konto Google w zakładce Widoczność),
+# AI_MODEL_BASIC (tańszy model dla pakietu Podstawowego), SALES_EMAIL (adres do zmiany pakietu).
+# APP_SECRET szyfruje sekrety firm i logowanie dwuetapowe: po starcie go nie zmieniaj.

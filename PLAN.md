@@ -10,7 +10,7 @@ Na perfectdata.pl nic nie zostało zainstalowane. Kod trafi na stronę dopiero p
 
 ## Co jest gotowe
 
-- **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`, 172 testy na SQLite i PostgreSQL. Gotowa do uruchomienia w Render.
+- **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`, 182 testy na SQLite i PostgreSQL. Gotowa do uruchomienia w Render.
 - **Panel w wyglądzie PerfectData** (zmienna `APP_THEME=perfectdata` albo ustawienie firmy) z wyborem modułów w menu i pulpitem, który pokazuje tylko włączone moduły.
 - **Zapytania ze strony:** widżet do wklejenia jedną linią kodu, kwalifikator z jawną tabelą punktów, lista i karta zapytań, czat AI z bazy wiedzy, lejek i test dwóch wersji.
 - **Audyt AI:** 24 wskaźniki i 100 punktów z jednego pliku wytycznych, raport z linijką punktów i listą „Najpierw to”, „Przed i po”, strona wytycznych, raport dla klienta pod linkiem, audyt wielu stron z mapy witryny. Sprawdzony na prawdziwej stronie perfectdata.pl.
@@ -20,6 +20,8 @@ Na perfectdata.pl nic nie zostało zainstalowane. Kod trafi na stronę dopiero p
 - **Klienci i wiadomości:** ocena ryzyka prawnego przed wysyłką, przypomnienia po 4 i po 10 dniach z dziennym limitem, adres wypisania w stopce ofert, opis idealnego klienta ze strony firmy. Rejestr zapytań ofertowych z rynku: gdzie szukać, termin, kontakt z podstawą „zapytanie ofertowe” i odpowiedź jednym kliknięciem. Lista potencjalnych klientów: firmy z wyników przetargów i z listy użytkownika, dane z rejestrów, punkty dopasowania, treść oferty układana automatycznie i drogi kontaktu z oceną ryzyka. Zgoda na ofertę e-mailem zbierana listem: w liście jest adres strony zgody i kod QR, firma sama zostawia e-mail, a panel zapisuje dowód. Do tego audyt strony jako zachęta, lejek listów z kosztem jednej zgody, listy seryjnie, drugi list po 21 dniach, kod QR na wizytówkę, pytanie o zainteresowania i wyszukiwanie firm w CEIDG (po wpisaniu tokenu). Przycisk „Napisz” przy kontakcie sam dobiera rodzaj wiadomości do podstawy kontaktu.
 - **Kontrahenci:** karta firmy z rejestrów publicznych, a do tego dwa sprawdzenia robione ręcznie: Krajowy Rejestr Zadłużonych i liczby ze sprawozdania finansowego, z których panel liczy, po ilu dniach firma płaci dostawcom.
 - **Audyt techniczny:** bez zmian, działa od początku.
+- **Platforma dla wielu firm:** pakiety Podstawowy i Rozszerzony z miesięcznym przydziałem AI, ekran administratora (firmy, zaproszenia, blokada, limity), logowanie dwuetapowe, eksport i usunięcie danych firmy, własne połączenia każdej firmy w Widoczności.
+- **Nabory dotacji:** wyszukiwarka naborów (AI szuka w internecie i podaje źródła) oraz przycisk, który pisze cały wniosek.
 - **Widoczność:** zakładka w module Audyt. Użytkownik wpisuje adres witryny i wgrywa paczkę z przycisku „Eksportuj” w Search Console albo dodaje jeden adres e-mail jako użytkownika i klika „Połącz”. Panel pokazuje, co poprawić najpierw w Google, gdzie stronę widać w odpowiedziach AI i co publikuje konkurencja.
 - **Mockup całego panelu:** `mockup/audyt-ai`, 9 modułów i 34 ekrany, z listą 72 funkcji i ich stanem. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip`.
 - **Wytyczne audytu:** `resources/audyt-ai-rules.json` (czyta je silnik) i dokument dla zespołu `mockup/audyt-ai/WYTYCZNE.md`.
@@ -58,12 +60,14 @@ Mockup pokazuje 72 funkcje. Zakładka „Lista funkcji” na pulpicie podaje sta
 | Kontrahenci | 7 | 1 | 0 |
 | Razem | 62 | 4 | 6 |
 
+Funkcje dodane 24.11.2026 po południu (opisane niżej: pakiety i administracja, nabory, „Co napisał klient”, przetarg jednym kliknięciem w ofertach) są w silniku, ale nie ma ich jeszcze w mockupie ani w tej tabeli.
+
 „Działa w silniku” znaczy, że kod jest w repozytorium i przechodzi testy. Silnik nie jest jeszcze uruchomiony online (etap 0).
 
 Dlaczego 4 funkcje nie są zbudowane: każda wymaga zgody albo konta u zewnętrznej firmy.
 
 - wizytówka Google (zgoda Google na dostęp aplikacji do wizytówek),
-- automatyczne wykrywanie odpowiedzi (połączenie ze skrzynką Gmail lub Microsoft 365). Wypisanie działa już przez adres w stopce, a odpowiedź zaznacza się ręcznie,
+- automatyczne wykrywanie odpowiedzi (połączenie ze skrzynką Gmail lub Microsoft 365). Wypisanie działa już przez adres w stopce, a odpowiedź zaznacza się ręcznie i można wkleić jej treść,
 - wpis długu do BIG (umowa z biurem),
 - test cytowań w AI (klucze OpenAI, Perplexity i Gemini oraz decyzja o koszcie).
 
@@ -140,6 +144,72 @@ Inne legalne drogi do e-maila, które panel już obsługuje: odpowiedź na zapyt
 Do tego poprawka z uwagi właściciela: przycisk „Napisz” przy kontakcie sam dobiera rodzaj wiadomości. Zapytanie ofertowe daje odpowiedź na zapytanie, zgoda i klient ofertę za zgodą, a brak podstawy ofertę bez zgody z ekranem ryzyka. Prośba o zgodę nie jest domyślna, bo sama wymaga zgody.
 
 Źródła: [art. 398 Prawa komunikacji elektronicznej](https://lexlege.pl/komunik-elektr/art-398/), [odpowiedź Ministerstwa Cyfryzacji na interpelację nr 12337](https://api.sejm.gov.pl/sejm/term10/interpellations/attachment/ATTDMGHNP/i12337-o1.pdf), [Grant Thornton o marketingu pocztą tradycyjną](https://grantthornton.pl/publikacja/marketing-rodo-i-wysylka-kartek-swiatecznych/). To opis przepisów, a nie porada prawna. Opinia prawnika o module wiadomości jest na liście rzeczy potrzebnych przed sprzedażą platformy.
+
+### Platforma dla wielu firm: pakiety, administracja, zabezpieczenia
+
+Panel jest przygotowany do tego, żeby korzystały z niego inne firmy, a każda widziała tylko swoje dane.
+
+**Pakiety.** Dwa pakiety dla firm klientów i trzeci, wewnętrzny, dla firmy, która prowadzi panel (jej adresy są w `ADMIN_EMAILS`, nie ma limitów).
+
+| Limit miesięczny | Podstawowy | Rozszerzony |
+|---|---|---|
+| Użycia AI w panelu (analiza, szkice, wyszukiwanie naborów, sekcje wniosku) | 30 | 400 |
+| Odpowiedzi czatu AI na stronie firmy | 100 | 1500 |
+| Osoby w zespole | 3 | 15 |
+| Witryny w Widoczności | 2 | 20 |
+| Cotygodniowe wyszukiwanie naborów bez klikania | nie | tak |
+
+- Liczby zmienia administrator na ekranie **Administracja → Limity pakietów**, bez wdrożenia.
+- Po wyczerpaniu przydziału panel nie wysyła zapytania do modelu, mówi to wprost i podaje dzień odnowienia. Wszystko, co działa bez AI (analiza regułowa, szablony, audyt bez oceny AI), działa dalej.
+- Firma widzi licznik w **Ustawienia → Pakiet**. Zmienna `AI_MODEL_BASIC` pozwala dać pakietowi Podstawowemu tańszy model.
+- Płatności panel nie obsługuje: pakiet zmienia administrator po opłaceniu faktury.
+
+**Administracja (tylko adresy z `ADMIN_EMAILS`).** Lista firm z liczbą osób i zużyciem AI, zaproszenie firmy (jednorazowy link na 14 dni, przypisany do adresu e-mail i pakietu), zmiana pakietu, blokada firmy (kończy sesje, wyłącza widżet, dane zostają) i wyłączenie logowania dwuetapowego osobie, która straciła telefon. Administrator widzi liczby, nie dane firm.
+
+**Jak wpuścić nową firmę:** Administracja → wpisz adres e-mail osoby z firmy i wybierz pakiet → wyślij jej link. Rejestracja otwarta dla wszystkich (`SIGNUP_OPEN=1`) nie jest do tego potrzebna.
+
+**Zabezpieczenia.**
+
+- Logowanie dwuetapowe kodem z aplikacji (TOTP, kody zapasowe, kod działa raz, sześć błędów kończy próbę). Klucz leży w bazie zaszyfrowany.
+- Zmiana hasła, nowe hasło z linku i przycisk „Wyloguj wszędzie” unieważniają pozostałe sesje.
+- Sekrety firm (dostęp do konta Google, token Cloudflare, klucz logowania dwuetapowego) są szyfrowane kluczem z `APP_SECRET`. Sama kopia bazy nie wystarcza, żeby je odczytać.
+- Izolacja firm ma test na całym panelu: przechodzi po danych przykładowych jako jedna firma, a potem otwiera każdy adres z identyfikatorem jako druga. Żaden nie może się otworzyć.
+- Eksport danych firmy (ZIP, jeden plik na tabelę, bez haseł i sekretów) i usunięcie konta firmy ze wszystkimi danymi (hasło i przepisanie nazwy firmy).
+- Adres odwiedzającego do limitów prób bierzemy z nagłówka, który ustawia hosting. Na hostingu innym niż Render wskazuje go `CLIENT_IP_HEADER`.
+
+**Widoczność: połączenia każdej firmy.** Klucz konta usługi Google i token Cloudflare z serwera działają tylko w firmie, która prowadzi panel, bo widzą jej dane. Pozostałe firmy:
+
+- łączą własne konto Google przyciskiem „Połącz z Google” (OAuth, tylko odczyt Search Console i Analytics). Wymaga to jednorazowo klienta OAuth w Google Cloud (`GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, adres powrotu `<adres panelu>/audyt/widocznosc/google/powrot`),
+- wklejają własny token Cloudflare z prawem odczytu statystyk,
+- albo wgrywają plik z eksportu, jak dotąd.
+
+Ograniczenie po stronie Google: dopóki aplikacja OAuth nie przejdzie weryfikacji Google, ekran zgody pokazuje ostrzeżenie, limit to 100 kont, a w trybie testowym dostęp wygasa po 7 dniach. Weryfikację zgłasza właściciel projektu w Google Cloud.
+
+### Nabory dotacji: wyszukiwarka i pisanie wniosku
+
+**Wyszukiwarka (Oferty → Nabory dotacji).** Użytkownik opisuje jednym zdaniem, na co szuka pieniędzy, wybiera województwo i wielkość firmy. AI przeszukuje internet (narzędzie web search u dostawcy modelu) i zwraca nabory, które trwają albo są zapowiedziane. Zasady:
+
+- na listę trafia tylko nabór, którego adres był w wynikach wyszukiwarki. Linku wymyślonego przez model panel nie pokaże,
+- data, której nie było na stronie, zostaje pusta, a nabory zakończone odpadają,
+- każda pozycja ma link do źródła, oznaczenie „strona urzędowa” albo „inne źródło, sprawdź u instytucji” i przypomnienie, żeby termin i regulamin potwierdzić u instytucji,
+- „Obserwuj” przenosi nabór na listę z przypomnieniami o terminie, „Pisz wniosek” zakłada szkic wniosku,
+- jedno wyszukiwanie to jedno użycie AI z pakietu i najwyżej 6 zapytań do wyszukiwarki (u dostawcy płatne osobno, 10 USD za 1000 zapytań),
+- w pakiecie Rozszerzonym panel powtarza ostatnie wyszukiwanie co tydzień.
+
+**Dlaczego nie pobieramy oficjalnych list.** Sprawdzone 24.11.2026 w przeglądarce: lista naborów na funduszeunijne.gov.pl wymaga tokenu reCAPTCHA przy każdym pobraniu, a strona PARP stoi za ochroną przed automatami (Incapsula). Nowy portal funduszeeuropejskie.gov.pl nie udostępnia naborów przez interfejs WordPressa. Panel takich zabezpieczeń nie obchodzi, więc lista naborów nie będzie kompletna: wyszukiwarka znajduje to, co te serwisy udostępniają wyszukiwarkom.
+
+**Napisz cały wniosek.** Na ekranie wniosku (i oferty przetargowej) jeden przycisk uruchamia pisanie wszystkich sekcji, których nikt nie oznaczył jako gotowe. AI pisze sekcję po sekcji, strona pokazuje postęp i sama prowadzi kolejne kroki, a „Zatrzymaj” przerywa. Każda sekcja to jedno użycie AI. Zasady pisania zostają: tylko z regulaminu naboru i biblioteki firmy, zdania bez źródła są podświetlone. Regulamin i kryteria użytkownik wgrywa sam, bo panel nie pobiera plików z zabezpieczonych stron.
+
+**Przetargi: do ofert jednym kliknięciem.** Na listach przetargów przycisk „Do ofert” zakłada szkic oferty i zapisuje przetarg. Drugie kliknięcie nie tworzy duplikatu, tylko pokazuje znacznik „w ofertach”. „Zapisz” na karcie przetargu robi to samo.
+
+### Klienci: co napisał klient
+
+Na liście klientów i na karcie klienta jest rozwijane „Co napisał klient”. Pokazuje własne słowa klienta z trzech miejsc: zapytanie ze strony (wiadomość, odpowiedzi na pytania, pytania do czatu), zapytania ofertowe i odpowiedzi e-mail wklejone przez użytkownika przy „Firma odpisała”.
+
+Panel nie czyta skrzynki pocztowej: wiadomości wychodzą z programu pocztowego użytkownika, więc odpowiedzi trafiają tylko do niego. Automatyczne wciąganie odpowiedzi wymaga podłączenia skrzynki. Dwie drogi, obie do decyzji właściciela:
+
+1. dostęp do Gmaila albo Microsoft 365 (Google wymaga dla odczytu poczty płatnej oceny bezpieczeństwa aplikacji),
+2. adres w panelu, na który użytkownik przekazuje odpowiedzi (wymaga odbierania poczty w domenie panelu, np. Resend Inbound, i rekordów MX).
 
 ### Widoczność w Google, w AI i u konkurencji
 
@@ -279,8 +349,8 @@ Przetargi, oferty, kontrahenci, kontakty i wiadomości działają w silniku od r
 ### 4a. Braki przed pilotażem
 
 1. **E-maile:** zbudowane (poranny przegląd z przetargami, zapytaniami i alertami, reset hasła, zaproszenia).
-2. **Konto i zespół:** zaproszenia e-mailem są. Do zrobienia: potwierdzenie adresu e-mail przy rejestracji, usunięcie konta i eksport danych (RODO).
-3. **AI:** czat w widżecie ma miesięczny limit odpowiedzi. Do zrobienia: limit wydatków na AI dla pozostałych funkcji. Zużycie tokenów jest zapisywane w dzienniku.
+2. **Konto i zespół:** zaproszenia e-mailem, logowanie dwuetapowe, eksport danych firmy i usunięcie konta firmy są. Do zrobienia: potwierdzenie adresu e-mail przy rejestracji otwartej dla wszystkich (przy zaproszeniach adres jest potwierdzony linkiem).
+3. **AI:** każdy pakiet ma miesięczny przydział użyć AI i osobny przydział odpowiedzi czatu. Zużycie tokenów jest zapisywane w dzienniku i na ekranie administratora.
 4. **Kopie i awarie:** kopie zapasowe bazy. Powiadomienie o nieudanym imporcie już działa (GitHub wysyła e-mail).
 5. **Firmy spoza wykazu VAT:** firmy dodane z wyszukiwania w CEIDG mają już nazwę, adres i formę prawną z CEIDG, także gdy nie ma ich w wykazie VAT. Do zrobienia: sprawdzenie pojedynczej firmy w CEIDG po NIP-ie z karty kontrahenta.
 
@@ -336,7 +406,11 @@ Bez tego panel nie ruszy albo nie zrobi części pracy. Tych rzeczy nie da się 
 | Co | Do czego | Skąd |
 |---|---|---|
 | Konto Render i baza | uruchomienie panelu | render.com (albo Neon dla bazy) |
-| `ANTHROPIC_API_KEY` | czat, ocena AI, szkice | console.anthropic.com |
+| `ANTHROPIC_API_KEY` | czat, ocena AI, szkice, wyszukiwarka naborów (web search musi być włączony w ustawieniach konta, domyślnie jest) | console.anthropic.com |
+| `APP_SECRET` | szyfrowanie sekretów firm i logowania dwuetapowego. Render generuje go sam. Nie zmieniaj go po starcie: zaszyfrowanych danych nie da się wtedy odczytać | Render (automatycznie) |
+| `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | przycisk „Połącz z Google” dla firm klientów. Adres powrotu: `<adres panelu>/audyt/widocznosc/google/powrot`. Do pracy z wieloma firmami potrzebna weryfikacja aplikacji przez Google | console.cloud.google.com |
+| Ceny i limity pakietów | Podstawowy i Rozszerzony mają limity startowe (30 i 400 użyć AI). Do decyzji: ceny, ostateczne limity, sposób płatności | decyzja właściciela |
+| `SALES_EMAIL` | adres, na który firmy piszą o zmianie pakietu (pokazany w Ustawieniach) | własny adres |
 | `RESEND_API_KEY`, `MAIL_FROM` i rekordy DNS | powiadomienia, reset hasła, poranny przegląd | resend.com |
 | `PSI_KEY` | szybkość strony w audytach | Google Cloud, interfejs PageSpeed Insights |
 | `CF_ACCOUNT_ID`, `CF_BROWSER_TOKEN` | wskaźniki A6 i E2 | Cloudflare, Browser Run |
@@ -377,6 +451,21 @@ Potrzebne przed etapem 4:
   - opinii o zbieraniu zgód: treść zgody i prośby o raport, raport jako zachęta, drugi list, wykorzystanie danych z CEIDG do listów i pytanie e-mailem o adres do ofert.
 
 ## Co zostało sprawdzone
+
+### Platforma dla wielu firm, nabory, słowa klienta (24.11.2026, po południu)
+
+- **182 testy** na SQLite i PostgreSQL oraz test obrazu Docker (GitHub Actions). Dziesięć nowych obejmuje:
+  - pakiety: wyczerpany przydział nie wysyła zapytania do modelu, czat liczony osobno, limity osób i witryn, firma prowadząca panel bez limitów, tańszy model tylko w Podstawowym,
+  - administrację: zwykła firma dostaje 404 na każdym adresie, zaproszenie z linkiem pokazanym raz i skrótem w bazie, adres z zaproszenia nie do podmiany, blokada kończy sesję i wyłącza widżet,
+  - zabezpieczenia: kody TOTP zgodne z RFC 6238, kod i kod zapasowy działają raz, sześć błędów kończy próbę, unieważnianie sesji, szyfrowanie sekretów innym kluczem nie do odczytania,
+  - dane firmy: eksport bez haseł i sekretów, usunięcie wszystkich tabel firmy bez naruszenia drugiej,
+  - izolację firm na całym panelu,
+  - własne konto Google firmy (znacznik jednorazowy, podrobiony i cudzy znacznik, odmowa na ekranie Google, zgoda bez Search Console, odświeżanie dostępu, cofnięty dostęp, odłączenie) i własny token Cloudflare,
+  - wyszukiwarkę naborów (zapytanie według dokumentacji narzędzia, odrzucenie wymyślonego adresu, zakończonego naboru i złej daty, wstrzymane wyszukiwanie, brak duplikatów, cotygodniowe uruchomienie tylko w Rozszerzonym),
+  - pisanie całego wniosku (gotowa sekcja nietknięta, podmieniona kolejka, zatrzymanie po wyczerpaniu przydziału),
+  - „Co napisał klient” i przetarg jednym kliknięciem w ofertach.
+- **W przeglądarce** na danych przykładowych: przejście po 181 stronach w trzech szerokościach (1280, 390, 320) bez błędów i bez poziomego przewijania. Osobno: zaproszenie firmy z administracji, rejestracja z linku w drugiej przeglądarce, pakiet Podstawowy na nowym koncie, brak dostępu do administracji, przycisk „Połącz z Google” i przekierowanie na ekran zgody Google, pole tokenu Cloudflare, lista naborów, przycisk „Napisz cały wniosek”, rozwinięcie „Co napisał klient”.
+- **Nie sprawdzono na prawdziwych usługach:** logowania Google (potrzebny klient OAuth), tokenu Cloudflare innej firmy, wyszukiwarki naborów na prawdziwym modelu (potrzebny klucz API z włączonym web search) ani jakości wniosku pisanego w całości. Te części są napisane według dokumentacji i sprawdzone na odpowiedziach w jej formacie.
 
 ### Widoczność w Google, w AI i u konkurencji (24.11.2026)
 
