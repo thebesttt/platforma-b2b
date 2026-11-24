@@ -22,8 +22,8 @@ $gsc = 'https://www\.googleapis\.com/webmasters/v3/sites/sc-domain%3Asklep-przyk
 $row = static fn (array $keys, int $clicks, int $impr, float $pos): array => ['keys' => $keys, 'clicks' => $clicks, 'impressions' => $impr, 'ctr' => $impr ? $clicks / $impr : 0, 'position' => $pos];
 $daily = [];
 for ($i = 179; $i >= 0; $i--) {
-    // Lekki wzrost w czasie, żeby tygodnie na wykresie się różniły.
-    $daily[] = $row([$gscDay($i)], 20 + intdiv(179 - $i, 9), 600 + (179 - $i) * 2, 8.4);
+    // Powolny wzrost: z 12 do 21 kliknięć dziennie. Ostatnie 28 dni dają razem 578 kliknięć i 13 034 wyświetlenia, a 28 dni wcześniej 538 i 12 250.
+    $daily[] = $row([$gscDay($i)], 12 + intdiv(179 - $i, 18), 300 + (179 - $i), 5.8);
 }
 $ga = static fn (array $rows): array => [
     'dimensionHeaders' => [], 'metricHeaders' => [['name' => 'sessions', 'type' => 'TYPE_INTEGER']],
@@ -35,6 +35,26 @@ $hour = static fn (int $daysBack, int $h = 10): string => gmdate('Y-m-d', time()
 $bot = static fn (int $n, int $daysBack, string $ua, int $status): array => ['count' => $n, 'dimensions' => ['datetimeHour' => $hour($daysBack), 'userAgent' => $ua, 'edgeResponseStatus' => $status]];
 $sitemap = static fn (array $urls): string => '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
     . implode('', array_map(static fn (array $u): string => '<url><loc>' . htmlspecialchars($u[0], ENT_XML1) . '</loc>' . (isset($u[1]) ? '<lastmod>' . $u[1] . '</lastmod>' : '') . '</url>', $urls)) . '</urlset>';
+$uaChat = 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot';
+$uaPplx = 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)';
+$uaSearch = 'Mozilla/5.0 (compatible; OAI-SearchBot/1.0; +https://openai.com/searchbot)';
+// Wiersze z jednego dnia (ile dni temu). ChatGPT-User przychodzi codziennie i coraz częściej, reszta w wybrane dni.
+$cfDays = static function (int $d) use ($bot, $uaChat, $uaPplx, $uaSearch): array {
+    $rows = [$bot(8 - intdiv($d, 5), $d, $uaChat, 200)];
+    $extra = [
+        2 => [$bot(4, 2, 'Mozilla/5.0 (compatible; Claude-User/1.0; +Claude-User@anthropic.com)', 200), $bot(999, 2, 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', 200)],
+        3 => [$bot(60, 3, $uaPplx, 403), $bot(2, 3, $uaPplx, 200)],
+        4 => [$bot(60, 4, 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; GPTBot/1.2; +https://openai.com/gptbot)', 403)],
+        5 => [$bot(7, 5, $uaSearch, 404)],
+        6 => [$bot(21, 6, $uaSearch, 200)],
+        9 => [$bot(3, 9, 'Mozilla/5.0 (compatible; Claude-User/1.0; +Claude-User@anthropic.com)', 200)],
+        10 => [$bot(58, 10, $uaPplx, 403)],
+        12 => [$bot(35, 12, 'Mozilla/5.0 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)', 200)],
+        13 => [$bot(18, 13, $uaSearch, 200)],
+        16 => [$bot(2, 16, 'Mozilla/5.0 (compatible; Claude-User/1.0; +Claude-User@anthropic.com)', 200)],
+    ];
+    return array_merge($rows, $extra[$d] ?? []);
+};
 $recent = gmdate('Y-m-d', time() - 5 * 86400);
 
 return [
@@ -62,30 +82,57 @@ return [
     ], 'responseAggregationType' => 'byPage']),
     '#^POST ' . $gsc . '\n.*"startDate":"' . $curStart . '".*"dimensions":\["query"\]#s' => $json(['rows' => [
         $row(['sklep przykładowy'], 150, 400, 1.0),
-        $row(['ekspres kolbowy ranking'], 12, 1100, 2.2),
+        $row(['jaki ekspres ciśnieniowy do domu'], 96, 1500, 3.2),
+        $row(['ekspres kolbowy czy automatyczny'], 61, 980, 2.8),
+        $row(['ekspres ciśnieniowy do 1000 zł'], 44, 520, 1.6),
+        $row(['sklep przykładowy opinie'], 38, 120, 1.2),
         $row(['odkamienianie ekspresu'], 30, 940, 6.2),
-        $row(['jak wybrać ekspres ciśnieniowy do domu'], 22, 800, 4.4),
+        $row(['jak odkamienić ekspres kolbowy krok po kroku'], 22, 800, 4.4),
+        $row(['ile kawy na espresso'], 18, 300, 2.1),
+        $row(['ekspres do małej kuchni'], 14, 620, 8.6),
+        $row(['ekspres kolbowy ranking'], 12, 1100, 2.2),
+        $row(['kawa do ekspresu ciśnieniowego'], 9, 1300, 11.8),
+        $row(['czy ekspres kolbowy jest trudny w obsłudze'], 7, 260, 5.1),
+        $row(['młynek do kawy żarnowy'], 4, 700, 13.9),
+        $row(['ekspres przelewowy'], 3, 90, 18.0),
         $row(['<script>alert(1)</script> ekspres'], 1, 60, 9.0),
     ], 'responseAggregationType' => 'byProperty']),
     '#^POST ' . $gsc . '\n.*"startDate":"' . $prevStart . '".*"dimensions":\["query"\]#s' => $json(['rows' => [
         $row(['sklep przykładowy'], 140, 380, 1.0),
+        $row(['jaki ekspres ciśnieniowy do domu'], 80, 1400, 3.6),
+        $row(['ekspres kolbowy czy automatyczny'], 66, 990, 2.7),
         $row(['ekspres kolbowy ranking'], 40, 1000, 2.0),
+        $row(['sklep przykładowy opinie'], 35, 110, 1.2),
+        $row(['ekspres ciśnieniowy do 1000 zł'], 21, 400, 3.4),
+        $row(['ile kawy na espresso'], 20, 310, 2.0),
         $row(['odkamienianie ekspresu'], 18, 700, 8.9),
+        $row(['kawa do ekspresu ciśnieniowego'], 16, 1250, 9.1),
+        $row(['ekspres do małej kuchni'], 15, 600, 8.4),
+        $row(['jak odkamienić ekspres kolbowy krok po kroku'], 10, 500, 6.0),
         $row(['młynek do kawy'], 9, 300, 5.0),
+        $row(['ekspres przelewowy'], 3, 85, 17.0),
     ]]),
     '#^POST ' . $gsc . '\n.*"startDate":"' . $curStart . '".*"dimensions":\["page"\]#s' => $json(['rows' => [
-        $row(['https://sklep-przykladowy.example/'], 150, 500, 1.4),
+        $row(['https://sklep-przykladowy.example/'], 190, 560, 1.3),
+        $row(['https://sklep-przykladowy.example/poradnik/ekspres-cisnieniowy-do-domu'], 157, 2480, 3.0),
+        $row(['https://sklep-przykladowy.example/poradnik/odkamienianie'], 52, 1740, 5.4),
+        $row(['https://sklep-przykladowy.example/ekspresy-kolbowe'], 48, 900, 3.0),
+        $row(['https://sklep-przykladowy.example/poradnik/ekspres-do-malej-kuchni'], 14, 620, 8.6),
         $row(['https://sklep-przykladowy.example/ranking-ekspresow'], 12, 1200, 2.3),
-        $row(['https://sklep-przykladowy.example/poradnik/odkamienianie'], 30, 940, 6.2),
+        $row(['https://sklep-przykladowy.example/kawa'], 9, 1300, 11.8),
     ]]),
     '#^POST ' . $gsc . '\n.*"startDate":"' . $prevStart . '".*"dimensions":\["page"\]#s' => $json(['rows' => [
-        $row(['https://sklep-przykladowy.example/'], 140, 480, 1.4),
+        $row(['https://sklep-przykladowy.example/'], 175, 500, 1.3),
+        $row(['https://sklep-przykladowy.example/poradnik/ekspres-cisnieniowy-do-domu'], 146, 2390, 3.2),
+        $row(['https://sklep-przykladowy.example/ekspresy-kolbowe'], 50, 880, 2.9),
         $row(['https://sklep-przykladowy.example/ranking-ekspresow'], 41, 1100, 2.0),
+        $row(['https://sklep-przykladowy.example/poradnik/odkamienianie'], 28, 1200, 7.7),
+        $row(['https://sklep-przykladowy.example/kawa'], 16, 1250, 9.1),
     ]]),
-    '#^POST ' . $gsc . '\n.*"dimensions":\["device"\]#s' => $json(['rows' => [$row(['MOBILE'], 140, 2100, 5.1), $row(['DESKTOP'], 75, 1200, 4.2)]]),
+    '#^POST ' . $gsc . '\n.*"dimensions":\["device"\]#s' => $json(['rows' => [$row(['MOBILE'], 372, 8900, 5.1), $row(['DESKTOP'], 198, 4000, 4.2), $row(['TABLET'], 8, 134, 6.0)]]),
     '#^POST ' . $gsc . '\n.*"dimensions":\["date"\]#s' => $json(['rows' => $daily]),
-    '#^POST ' . $gsc . '\n.*"startDate":"' . $curStart . '"#s' => $json(['rows' => [$row([], 215, 3300, 4.8)]]),
-    '#^POST ' . $gsc . '\n.*"startDate":"' . $prevStart . '"#s' => $json(['rows' => [$row([], 207, 2380, 5.3)]]),
+    '#^POST ' . $gsc . '\n.*"startDate":"' . $curStart . '"#s' => $json(['rows' => [$row([], 578, 13034, 5.6)]]),
+    '#^POST ' . $gsc . '\n.*"startDate":"' . $prevStart . '"#s' => $json(['rows' => [$row([], 538, 12250, 6.0)]]),
     // Usługa, do której konto nie ma dostępu.
     '#^POST https://www\.googleapis\.com/webmasters/v3/sites/[^/]+/searchAnalytics/query#' => $json(['error' => ['code' => 403, 'message' => "User does not have sufficient permission for site 'x'.", 'status' => 'PERMISSION_DENIED']], 403),
 
@@ -126,18 +173,13 @@ return [
         ['count' => 30, 'dimensions' => ['userAgent' => 'Mozilla/5.0 (compatible; OAI-SearchBot/1.0; +https://openai.com/searchbot)', 'clientRequestPath' => '/robots.txt']],
         ['count' => 5, 'dimensions' => ['userAgent' => 'Mozilla/5.0 (compatible; OAI-SearchBot/1.0)', 'clientRequestPath' => '/assets/app.css']],
     ]),
-    '#^POST https://api\.cloudflare\.com/client/v4/graphql\n#' => $variant === 'cf-odmowa'
-        ? $json(['data' => null, 'errors' => [['message' => 'not authorized for that account', 'path' => null, 'extensions' => ['code' => 'authz']]]])
-        : $cf([
-            $bot(30, 2, 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot', 200),
-            $bot(10, 9, 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot', 200),
-            $bot(4, 2, 'Mozilla/5.0 (compatible; Claude-User/1.0; +Claude-User@anthropic.com)', 200),
-            $bot(118, 3, 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)', 403),
-            $bot(2, 3, 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)', 200),
-            $bot(60, 4, 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; GPTBot/1.2; +https://openai.com/gptbot)', 403),
-            $bot(7, 5, 'Mozilla/5.0 (compatible; OAI-SearchBot/1.0; +https://openai.com/searchbot)', 404),
-            $bot(999, 2, 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', 200),
-        ]),
+    ...($variant === 'cf-odmowa' ? ['#^POST https://api\.cloudflare\.com/client/v4/graphql\n.*viewer#s' => $json(['data' => null, 'errors' => [['message' => 'not authorized for that account', 'path' => null, 'extensions' => ['code' => 'authz']]]])] : []),
+    // Cztery zapytania po 7 dni: każde dostaje wiersze ze swojego tygodnia.
+    ...array_merge(...array_map(static function (int $back) use ($cf, $cfDays): array {
+        $from = gmdate('Y-m-d', strtotime(gmdate('Y-m-d') . ' UTC') - $back * 86400) . 'T00:00:00Z';
+        return ['#^POST https://api\.cloudflare\.com/client/v4/graphql\n.*datetime_geq: \\\\"' . $from . '#s' => $cf(array_merge(...array_map($cfDays, range($back, $back - 6))))];
+    }, [28, 21, 14, 7])),
+    '#^POST https://api\.cloudflare\.com/client/v4/graphql\n#' => $cf([]),
 
     // Mapy witryn konkurentów. Wariant „mapa-2” to drugie pobranie: doszła jedna strona, jedna zniknęła.
     '#^GET https://konkurent-a\.example/robots\.txt\n#' => $page("User-agent: *\nDisallow:\nSitemap: https://konkurent-a.example/sitemap_index.xml\nSitemap: https://obca-domena.example/sitemap.xml\n"),

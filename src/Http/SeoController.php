@@ -60,7 +60,7 @@ final class SeoController extends Controller
         $data = Insights::google($site);
         $daily = Stats::daily((int) $site['id'], 'gsc', 'date');
         return $this->view('seo/google', $this->common($site, 'google') + [
-            'd' => $data, 'daily' => $daily,
+            'd' => $data, 'daily' => $daily, 'recent' => Insights::recent($daily),
             'weeklyClicks' => Insights::weekly($daily, 'clicks'), 'weeklyImpressions' => Insights::weekly($daily, 'impressions'),
             'title' => 'Widoczność w Google: ' . $site['host'],
         ]);
@@ -141,7 +141,7 @@ final class SeoController extends Controller
         $to = form_date($r->str('do'));
         $done = [];
         $errors = [];
-        $target = '';
+        $search = false;
         foreach (array_slice($files, 0, 6) as $f) {
             $name = mb_substr((string) $f['name'], 0, 80);
             if ((int) $f['error'] !== UPLOAD_ERR_OK || (PHP_SAPI !== 'cli' && !is_uploaded_file((string) $f['tmp_name']))) {
@@ -156,10 +156,10 @@ final class SeoController extends Controller
             }
             $parts = [];
             foreach ($res['saved'] as $dim => $n) {
-                $parts[] = $n . ' ' . (GscFile::DIMS[$dim] ?? $dim);
+                $parts[] = $n . ' ' . plural((int) $n, ...GscFile::DIMS[$dim]);
             }
             $done[] = ($res['report'] === 'ai' ? 'Funkcje generatywnej AI' : 'Skuteczność w wyszukiwarce') . ', ' . Sync::range($res['start'], $res['end']) . ': ' . implode(', ', $parts) . '.';
-            $target = $target ?: ($res['report'] === 'ai' ? '/ai' : '');
+            $search = $search || $res['report'] !== 'ai';
             AuditLog::add('seo.import', 'seo_site', (int) $site['id'], ['report' => $res['report'], 'start' => $res['start'], 'end' => $res['end']], $r->ip());
         }
         if ($errors) {
@@ -168,7 +168,8 @@ final class SeoController extends Controller
         if (!$done) {
             return $this->redirect($base . '/dane');
         }
-        return $this->redirect($base . $target, 'Wczytane: ' . implode(' ', $done));
+        // Po raporcie „Skuteczność” pokazujemy ekran Google. Gdy wgrano sam raport o odpowiedziach AI, jego ekran.
+        return $this->redirect($base . ($search ? '' : '/ai'), 'Wczytane: ' . implode(' ', $done));
     }
 
     /** Dane wklejone z raportów bez API (Google: funkcje AI, Bing: AI Performance) albo z Google Analytics. */
@@ -209,6 +210,9 @@ final class SeoController extends Controller
         $source = $r->str('zrodlo');
         if (!in_array($source, ['google', 'cloudflare'], true)) {
             return $this->redirect($base . '/dane');
+        }
+        if (!Sync::allowed($this->orgId())) {
+            return $this->redirect($base . '/dane', 'Stałe połączenie jest dostępne w firmie, która prowadzi ten panel. Wgraj plik z eksportu: działa tak samo.', 'error');
         }
         if (Kv::hit('seo-sync:' . $this->orgId() . ':' . gmdate('YmdH'), 3600) > self::HOURLY) {
             return $this->redirect($base . '/dane', 'Za dużo pobrań w tej godzinie. Spróbuj później.', 'error');
@@ -282,7 +286,8 @@ final class SeoController extends Controller
         $id = (int) $site['id'];
         return [
             'site' => $site, 'tab' => $tab, 'sites' => Sites::all($this->orgId()),
-            'googleOn' => Google::enabled(), 'googleEmail' => Google::email(), 'cfOn' => CloudflareBots::enabled(),
+            // Klucze platformy działają tylko w firmie administratora (patrz Sync::allowed). Inne firmy wgrywają pliki.
+            'googleOn' => Google::enabled() && Sync::allowed($this->orgId()), 'googleEmail' => Google::email(), 'cfOn' => CloudflareBots::enabled() && Sync::allowed($this->orgId()),
             'sync' => ['google' => Sites::lastSync($site, 'google'), 'ga4' => Sites::lastSync($site, 'ga4'), 'cloudflare' => Sites::lastSync($site, 'cloudflare')],
             'has' => ['gsc' => Stats::has($id, 'gsc'), 'gsc_ai' => Stats::has($id, 'gsc_ai'), 'bing_ai' => Stats::has($id, 'bing_ai'),
                 'ga4_ai' => Stats::has($id, 'ga4_ai'), 'cf_bot' => Stats::has($id, 'cf_bot')],

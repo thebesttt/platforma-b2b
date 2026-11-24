@@ -23,7 +23,10 @@ final class GscFile
     private const MAX_FILES = 20;
 
     /** Wymiary, które zapisujemy. Pozostałe tabele z paczki (filtry, wygląd w wyszukiwarce) pomijamy. */
-    public const DIMS = ['query' => 'zapytania', 'page' => 'strony', 'date' => 'dni', 'country' => 'kraje', 'device' => 'urządzenia'];
+    public const DIMS = [
+        'query' => ['zapytanie', 'zapytania', 'zapytań'], 'page' => ['strona', 'strony', 'stron'], 'date' => ['dzień', 'dni', 'dni'],
+        'country' => ['kraj', 'kraje', 'krajów'], 'device' => ['urządzenie', 'urządzenia', 'urządzeń'],
+    ];
 
     /**
      * Czyta plik z dysku (ZIP albo CSV).
@@ -42,12 +45,15 @@ final class GscFile
             if ($zip->open($path) !== true) {
                 return ['ok' => false, 'error' => 'Nie udało się otworzyć paczki ZIP. Pobierz eksport jeszcze raz.'];
             }
+            $total = 0;
             for ($i = 0; $i < min($zip->numFiles, self::MAX_FILES); $i++) {
                 $st = $zip->statIndex($i);
-                if (!$st || !preg_match('/\.csv$/i', (string) $st['name']) || (int) $st['size'] > self::MAX_CSV) {
+                // Rozmiar po rozpakowaniu sprawdzamy przed czytaniem: pojedynczy plik do 8 MB, cała paczka do 24 MB.
+                if (!$st || !preg_match('/\.csv$/i', (string) $st['name']) || (int) $st['size'] > self::MAX_CSV || $total + (int) $st['size'] > 3 * self::MAX_CSV) {
                     continue;
                 }
-                $files[basename((string) $st['name'])] = (string) $zip->getFromIndex($i);
+                $total += (int) $st['size'];
+                $files[basename((string) $st['name'])] = (string) $zip->getFromIndex($i, self::MAX_CSV);
             }
             $zip->close();
             if (!$files) {

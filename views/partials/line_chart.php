@@ -24,6 +24,10 @@ $poly = implode(' ', array_map(static fn (int $i): string => $x($i) . ',' . $y($
 $fmt = static fn (float $v): string => num_pl($v, 0);
 $short = static fn (string $l): string => preg_match('/^\d{4}-\d{2}-\d{2}$/', $l) ? date('d.m', strtotime($l)) : $l;
 $last = $n - 1;
+// Pole dotyku każdego punktu sięga do połowy odstępu od sąsiadów i nie wychodzi poza wykres.
+$half = 50 / ($n - 1);
+$hitL = static fn (int $i): float => round(max(0, $x($i) - $half), 3);
+$hitR = static fn (int $i): float => round(min(100, $x($i) + $half), 3);
 $marks = array_values(array_unique([0, intdiv($last, 2), $last]));
 ?>
 <div class="chart" data-chart role="img" aria-label="<?= e($name . ': od ' . $fmt($values[0]) . ' (' . $short((string) $labels[0]) . ') do ' . $fmt($values[$last]) . ' (' . $short((string) $labels[$last]) . '), najwięcej ' . $fmt($max)) ?>">
@@ -37,7 +41,7 @@ $marks = array_values(array_unique([0, intdiv($last, 2), $last]));
       <i class="chart-cross" hidden></i><i class="chart-dot" hidden></i>
       <i class="chart-end" style="left:<?= $x($last) ?>%;top:<?= $y($values[$last]) ?>%"></i>
       <span class="chart-endlabel" style="top:<?= $y($values[$last]) ?>%"><?= e($fmt($values[$last])) ?></span>
-      <?php foreach ($values as $i => $v): ?><span class="chart-hit" style="left:<?= max(0, $x($i) - 50 / max(1, $n - 1)) ?>%;width:<?= round(100 / max(1, $n - 1), 3) ?>%" data-x="<?= $x($i) ?>" data-y="<?= $y($v) ?>" data-tip="<?= e(($prefix ?? '') . $short((string) $labels[$i]) . ': ' . $fmt($v) . (($unit ?? '') !== '' ? ' ' . $unit : '')) ?>"></span><?php endforeach ?>
+      <?php foreach ($values as $i => $v): ?><span class="chart-hit" style="left:<?= $hitL($i) ?>%;width:<?= round($hitR($i) - $hitL($i), 3) ?>%" data-x="<?= $x($i) ?>" data-y="<?= $y($v) ?>" data-tip="<?= e(($prefix ?? '') . $short((string) $labels[$i]) . ': ' . $fmt($v) . (($unit ?? '') !== '' ? ' ' . $unit : '')) ?>"></span><?php endforeach ?>
       <div class="chart-tip" hidden></div>
     </div>
   </div>

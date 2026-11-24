@@ -1,10 +1,10 @@
 # Mockup panelu PerfectData
 
-Klikalny mockup całego panelu: 9 modułów, 32 ekrany. Pokazuje każdą funkcję z opisu produktu na przykładowych danych. Nic nie jest mierzone ani wysyłane.
+Klikalny mockup całego panelu: 9 modułów, 34 ekrany. Pokazuje każdą funkcję z opisu produktu na przykładowych danych. Nic nie jest mierzone ani wysyłane.
 
 | Moduł | Ekrany |
 |---|---|
-| Pulpit | Dziś, Lista funkcji (69 funkcji ze stanem: działa w silniku, do zbudowania, czeka na zgodę Google i Meta) |
+| Pulpit | Dziś, Lista funkcji (72 funkcji ze stanem: działa w silniku, do zbudowania, czeka na zgodę Google i Meta) |
 | Zapytania | Zapytania, Zasady kwalifikacji, Podgląd widżetu, Wyniki |
 | Klienci | Kontakty, Wiadomość z ekranem ryzyka i decyzją, Zapytania ofertowe, Potencjalni klienci (lista firm, treść oferty, drogi kontaktu z ryzykiem), Wysyłka i dziennik |
 | Audyt AI | Raport, Wytyczne wskaźników, Przed i po, Cytowania w AI, Strony witryny |

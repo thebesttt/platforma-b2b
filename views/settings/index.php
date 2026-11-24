@@ -69,6 +69,7 @@
       <a href="/ustawienia/uokik">Decyzje UOKiK - aktualizacja ręczna</a>
       <form method="post" action="/ustawienia/test-ai"><?= csrf_field() ?><button class="btn ghost sm" type="submit" data-busy="Sprawdzam…">Sprawdź połączenie z AI</button></form>
       <form method="post" action="/ustawienia/test-ceidg"><?= csrf_field() ?><button class="btn ghost sm" type="submit" data-busy="Sprawdzam…">Sprawdź połączenie z CEIDG</button></form>
+      <form method="post" action="/ustawienia/test-google"><?= csrf_field() ?><button class="btn ghost sm" type="submit" data-busy="Sprawdzam…">Sprawdź połączenie z Google</button></form>
     </section>
     <?php endif ?>
     <section class="card stack-sm" id="poczta">

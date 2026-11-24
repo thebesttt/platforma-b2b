@@ -53,8 +53,11 @@
       ["Audyt techniczny: bezpieczeństwo, platforma, szybkość, SEO, analityka i RODO", "technika", "silnik", "Ten sam silnik co w PrestaCheck."],
       ["Lista poprawek z priorytetem", "technika", "silnik", "Szacowany czas pracy jest do dodania."],
       ["Porównanie z konkurentami", "konkurenci", "silnik", ""],
-      ["Widoczność w Google z Search Console klienta", "google", "plan", "Wymaga podłączenia konta klienta."],
-      ["Wizytówka Google: oceny i kompletność", "google", "plan", ""]
+      ["Widoczność w Google z Search Console: plik z eksportu albo połączenie jednym adresem e-mail", "google", "silnik", "Stałe połączenie wymaga jednego klucza Google po stronie administratora panelu."],
+      ["Co poprawić najpierw: zapytania tuż za czołówką, słabe tytuły, spadki, dwie strony na jedno zapytanie", "google", "silnik", ""],
+      ["Widoczność w odpowiedziach AI: Google, Copilot, wejścia z asystentów i boty AI", "ai", "silnik", "Raporty Google i Binga wgrywa się albo wkleja, bo nie mają API."],
+      ["Konkurencja z map witryn: co publikują i jakich tematów brakuje", "konkurenci", "silnik", ""],
+      ["Wizytówka Google: oceny i kompletność", "wizytowka", "plan", "Wymaga zgody Google na dostęp do wizytówek."]
     ] },
     { "module": "Reklamy", "items": [
       ["Podłączenie kont Google Ads i Meta", "reklamy", "zgoda", "Google: dostęp Basic do API. Meta: weryfikacja firmy i przegląd aplikacji."],
@@ -206,17 +209,89 @@
     ]
   },
   "gsc": {
-    "weeks": ["21.09", "28.09", "05.10", "12.10", "19.10", "26.10", "02.11", "09.11"],
-    "clicks": [412, 430, 455, 448, 470, 502, 530, 561],
-    "impressions": 48200,
-    "position": "14,2",
+    "period": "25.10-21.11.2026",
+    "prev_period": "27.09-24.10.2026",
+    "brand": ["sklep przykładowy"],
+    "weeks": ["28.09", "05.10", "12.10", "19.10", "26.10", "02.11", "09.11", "16.11"],
+    "clicks": [130, 133, 136, 139, 140, 143, 146, 149],
+    "impressions": [12250, 13034],
+    "position": [6.0, 5.6],
     "queries": [
-      ["jaki ekspres ciśnieniowy do domu", 318, 6400, "7,1"],
-      ["ekspres kolbowy czy automatyczny", 244, 5100, "8,4"],
-      ["odkamienianie ekspresu", 201, 7900, "11,8"],
-      ["ekspres do małej kuchni", 148, 3300, "9,6"],
-      ["kawa do ekspresu ciśnieniowego", 97, 6100, "18,3"]
+      ["sklep przykładowy", 150, 400, 1.0],
+      ["jaki ekspres ciśnieniowy do domu", 96, 1500, 3.2],
+      ["ekspres kolbowy czy automatyczny", 61, 980, 2.8],
+      ["ekspres ciśnieniowy do 1000 zł", 44, 520, 1.6],
+      ["sklep przykładowy opinie", 38, 120, 1.2],
+      ["odkamienianie ekspresu", 30, 940, 6.2],
+      ["jak odkamienić ekspres kolbowy krok po kroku", 22, 800, 4.4],
+      ["ile kawy na espresso", 18, 300, 2.1],
+      ["ekspres do małej kuchni", 14, 620, 8.6],
+      ["ekspres kolbowy ranking", 12, 1100, 2.2],
+      ["kawa do ekspresu ciśnieniowego", 9, 1300, 11.8],
+      ["czy ekspres kolbowy jest trudny w obsłudze", 7, 260, 5.1],
+      ["młynek do kawy żarnowy", 4, 700, 13.9],
+      ["ekspres przelewowy", 3, 90, 18.0]
     ],
+    "prev": [
+      ["sklep przykładowy", 140, 380, 1.0],
+      ["jaki ekspres ciśnieniowy do domu", 80, 1400, 3.6],
+      ["ekspres kolbowy czy automatyczny", 66, 990, 2.7],
+      ["ekspres kolbowy ranking", 40, 1000, 2.0],
+      ["sklep przykładowy opinie", 35, 110, 1.2],
+      ["ekspres ciśnieniowy do 1000 zł", 21, 400, 3.4],
+      ["ile kawy na espresso", 20, 310, 2.0],
+      ["odkamienianie ekspresu", 18, 700, 8.9],
+      ["kawa do ekspresu ciśnieniowego", 16, 1250, 9.1],
+      ["ekspres do małej kuchni", 15, 600, 8.4],
+      ["jak odkamienić ekspres kolbowy krok po kroku", 10, 500, 6.0],
+      ["młynek do kawy", 9, 300, 5.0],
+      ["ekspres przelewowy", 3, 85, 17.0]
+    ],
+    "pages": [
+      ["/", 190],
+      ["/poradnik/ekspres-cisnieniowy-do-domu", 157],
+      ["/poradnik/odkamienianie", 52],
+      ["/ekspresy-kolbowe", 48],
+      ["/poradnik/ekspres-do-malej-kuchni", 14],
+      ["/ranking-ekspresow", 12],
+      ["/kawa", 9]
+    ],
+    "cannibal": ["ekspres kolbowy ranking", [["/ranking-ekspresow", 700, 2.1], ["/ekspresy-kolbowe", 400, 4.9]]],
+    "ai": {
+      "google": [["/poradnik/odkamienianie", 340], ["/poradnik/ekspres-cisnieniowy-do-domu", 212], ["/ranking-ekspresow", 95]],
+      "google_total": 1203,
+      "copilot_total": 412,
+      "copilot_pages": [["/poradnik/odkamienianie", 310], ["/poradnik/ekspres-cisnieniowy-do-domu", 74], ["/ranking-ekspresow", 28]],
+      "copilot_queries": [["jak odkamienić ekspres kolbowy", 140], ["odkamieniacz do ekspresu czym zastąpić", 61], ["ekspres ciśnieniowy do domu jaki wybrać", 52], ["ranking ekspresów kolbowych", 19]],
+      "visits": [["ChatGPT", 40, 20], ["Perplexity", 11, 12], ["Copilot", 3, null]],
+      "sessions": 2700,
+      "bots": [
+        ["ChatGPT-User", "OpenAI", "asystent", 154, 154, 0],
+        ["Claude-User", "Anthropic", "asystent", 9, 9, 0],
+        ["PerplexityBot", "Perplexity", "wyszukiwarka", 120, 2, 118],
+        ["OAI-SearchBot", "OpenAI", "wyszukiwarka", 46, 39, 0],
+        ["GPTBot", "OpenAI", "trening", 60, 0, 60],
+        ["ClaudeBot", "Anthropic", "trening", 35, 35, 0]
+      ]
+    },
+    "maps": {
+      "sites": [
+        ["kawowy-swiat.example", 214, 6, 11],
+        ["ekspresy-online.example", 96, 1, 3],
+        ["dom-baristy.example", 148, 4, 9]
+      ],
+      "recent": [
+        ["/blog/spieniacz-do-mleka-jak-wybrac", "kawowy-swiat.example", true, "22.11.2026"],
+        ["/poradniki/kawa-bezkofeinowa-do-ekspresu", "dom-baristy.example", true, "20.11.2026"],
+        ["/blog/mlynek-zarnowy-czy-nozowy", "kawowy-swiat.example", false, "19.11.2026"],
+        ["/oferta/serwis-ekspresow", "ekspresy-online.example", true, "14.11.2026"]
+      ],
+      "topics": [
+        ["spieniacz", 7, "kawowy-swiat.example, dom-baristy.example", "/blog/spieniacz-do-mleka-jak-wybrac"],
+        ["bezkofeinowa", 4, "dom-baristy.example, kawowy-swiat.example", "/poradniki/kawa-bezkofeinowa-do-ekspresu"],
+        ["serwis", 3, "ekspresy-online.example", "/oferta/serwis-ekspresow"]
+      ]
+    },
     "profile": {
       "rating": "4,6",
       "reviews": 87,

@@ -127,6 +127,22 @@ final class SettingsController extends Controller
             : $this->redirect('/ustawienia', 'Test CEIDG nieudany. ' . $res['error'], 'error');
     }
 
+    /** Zapytanie kontrolne do Google: sprawdza klucz konta usługi i pokazuje, które witryny w Search Console konto widzi. Tylko administrator platformy. */
+    public function testGoogle(Request $r): Response
+    {
+        if (!Auth::isAdmin()) {
+            return $this->notFound();
+        }
+        $res = \App\Modules\Seo\Google::properties();
+        if (!$res['ok']) {
+            return $this->redirect('/ustawienia', 'Test Google nieudany. ' . $res['error'], 'error');
+        }
+        $n = count($res['sites']);
+        $list = implode(', ', array_slice(array_column($res['sites'], 'url'), 0, 5));
+        return $this->redirect('/ustawienia', 'Google działa: klucz przyjęty. Konto usługi ' . \App\Modules\Seo\Google::email() . ' widzi w Search Console '
+            . $n . ' ' . plural($n, 'witrynę', 'witryny', 'witryn') . ($n ? ' (' . $list . ($n > 5 ? ' i kolejne' : '') . ')' : '. Dodaj ten adres jako użytkownika w Search Console witryny') . '.');
+    }
+
     /** Wygląd panelu i widoczne moduły. Ustawia właściciel konta. */
     public function appearance(Request $r): Response
     {

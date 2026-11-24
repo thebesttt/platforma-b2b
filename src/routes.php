@@ -216,6 +216,7 @@ return static function (Router $r): void {
     $r->post('/ustawienia/zespol', [SettingsController::class, 'invite'], $a);
     $r->post('/ustawienia/test-ai', [SettingsController::class, 'testAi'], $a);
     $r->post('/ustawienia/test-ceidg', [SettingsController::class, 'testCeidg'], $a);
+    $r->post('/ustawienia/test-google', [SettingsController::class, 'testGoogle'], $a);
     $r->post('/ustawienia/wyglad', [SettingsController::class, 'appearance'], $a);
     $r->post('/ustawienia/test-poczty', [SettingsController::class, 'testMail'], $a);
     $r->post('/ustawienia/przeglad', [SettingsController::class, 'digest'], $a);

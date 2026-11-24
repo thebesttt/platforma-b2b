@@ -27,6 +27,7 @@ echo View::partial('partials/seo_nav', ['site' => $site, 'tab' => $tab, 'sites' 
 <p class="small muted" style="margin:0">
   Okres <b><?= e(Sync::range($d['cur']['start'], $d['cur']['end'])) ?></b> (<?= (int) $d['cur']['days'] ?> dni).
   <?php if ($d['prev']): ?>Porównanie z okresem <?= e(Sync::range($d['prev']['start'], $d['prev']['end'])) ?><?= abs($scale - 1) > 0.02 ? ', przeliczonym na tę samą liczbę dni' : '' ?>.
+  <?php elseif ($recent): ?>Ostatnie 28 dni (<?= e(Sync::range($recent['from'], $recent['to'])) ?>): <b><?= num_pl($recent['clicks']) ?></b> <?= plural($recent['clicks'], 'kliknięcie', 'kliknięcia', 'kliknięć') ?> <?= delta_html($recent['clicks'], $recent['was']) ?> i <b><?= num_pl($recent['impressions']) ?></b> <?= plural($recent['impressions'], 'wyświetlenie', 'wyświetlenia', 'wyświetleń') ?> <?= delta_html($recent['impressions'], $recent['wasImpressions']) ?> wobec 28 dni wcześniej. Spadki i wzrosty pojedynczych zapytań pokaże <a href="<?= e($base) ?>/dane">eksport wcześniejszego okresu albo stałe połączenie</a>.
   <?php else: ?>Nie ma wcześniejszego okresu, więc panel nie pokaże jeszcze zmian. <a href="<?= e($base) ?>/dane">Wgraj eksport wcześniejszego okresu</a> albo połącz konto.<?php endif ?>
   <?php if ($sync['google'] && $sync['google']['ok']): ?>Dane pobrane <?= e(local_dt((string) $sync['google']['at'])) ?>.<?php endif ?>
 </p>
@@ -59,10 +60,10 @@ echo View::partial('partials/seo_nav', ['site' => $site, 'tab' => $tab, 'sites' 
   <p class="sec-note">Zapytania na pozycjach 4-15, które ludzie często widzą. Tu najłatwiej o dodatkowe kliknięcia: wystarczy rozbudować stronę albo podlinkować ją z innych.</p>
   <?php if ($d['near']): ?>
     <div class="table-wrap"><table>
-      <thead><tr><th scope="col">Zapytanie</th><th scope="col" class="n">Pozycja</th><th scope="col" class="n">Wyświetlenia</th><th scope="col" class="n">Kliknięcia</th><th scope="col" class="n">Do zyskania</th></tr></thead>
+      <thead><tr><th scope="col">Zapytanie</th><th scope="col" class="n">Do zyskania</th><th scope="col" class="n">Pozycja</th><th scope="col" class="n">Wyświetlenia</th><th scope="col" class="n">Kliknięcia</th></tr></thead>
       <tbody>
       <?php foreach ($d['near'] as $q): ?>
-        <tr><td><a href="<?= e($gsearch($q['k'])) ?>" target="_blank" rel="noopener noreferrer"><?= e($q['k']) ?></a></td><td class="n"><?= $pos($q['position']) ?></td><td class="n"><?= num_pl($q['impressions']) ?></td><td class="n"><?= num_pl($q['clicks']) ?></td><td class="n"><b>ok. <?= num_pl($q['gain']) ?></b></td></tr>
+        <tr><td><a href="<?= e($gsearch($q['k'])) ?>" target="_blank" rel="noopener noreferrer"><?= e($q['k']) ?></a></td><td class="n"><b>ok. <?= num_pl($q['gain']) ?></b></td><td class="n"><?= $pos($q['position']) ?></td><td class="n"><?= num_pl($q['impressions']) ?></td><td class="n"><?= num_pl($q['clicks']) ?></td></tr>
       <?php endforeach ?>
       </tbody>
     </table></div>
@@ -77,10 +78,10 @@ echo View::partial('partials/seo_nav', ['site' => $site, 'tab' => $tab, 'sites' 
   <p class="sec-note">Zapytania z pierwszej piątki, w które ludzie klikają ponad dwa razy rzadziej niż zwykle na tej pozycji. Najczęściej winny jest tytuł albo opis strony w wynikach. Bywa też, że odpowiedź pojawia się nad wynikami.</p>
   <?php if ($d['weak']): ?>
     <div class="table-wrap"><table>
-      <thead><tr><th scope="col">Zapytanie</th><th scope="col" class="n">Pozycja</th><th scope="col" class="n">Wyświetlenia</th><th scope="col" class="n">Klikalność</th><th scope="col" class="n">Zwykle na tej pozycji</th></tr></thead>
+      <thead><tr><th scope="col">Zapytanie</th><th scope="col" class="n">Klikalność</th><th scope="col" class="n">Zwykle na tej pozycji</th><th scope="col" class="n">Pozycja</th><th scope="col" class="n">Wyświetlenia</th></tr></thead>
       <tbody>
       <?php foreach ($d['weak'] as $q): ?>
-        <tr><td><a href="<?= e($gsearch($q['k'])) ?>" target="_blank" rel="noopener noreferrer"><?= e($q['k']) ?></a></td><td class="n"><?= $pos($q['position']) ?></td><td class="n"><?= num_pl($q['impressions']) ?></td><td class="n"><b><?= pct_pl($q['ctr']) ?></b></td><td class="n"><?= pct_pl($q['expected']) ?><?= $q['own'] ? '' : ' <span class="muted">(umownie)</span>' ?></td></tr>
+        <tr><td><a href="<?= e($gsearch($q['k'])) ?>" target="_blank" rel="noopener noreferrer"><?= e($q['k']) ?></a></td><td class="n"><b><?= pct_pl($q['ctr']) ?></b></td><td class="n"><?= pct_pl($q['expected']) ?><?= $q['own'] ? '' : ' <span class="muted">(umownie)</span>' ?></td><td class="n"><?= $pos($q['position']) ?></td><td class="n"><?= num_pl($q['impressions']) ?></td></tr>
       <?php endforeach ?>
       </tbody>
     </table></div>

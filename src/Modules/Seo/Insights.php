@@ -294,6 +294,29 @@ final class Insights
         return $out;
     }
 
+    /**
+     * Ostatnie 28 dni wobec 28 dni wcześniej, z samych danych dziennych. Pozwala pokazać zmianę po wgraniu jednego pliku
+     * z dłuższego okresu (domyślny eksport z Search Console obejmuje 3 miesiące).
+     * @return array{clicks: int, was: int, impressions: int, wasImpressions: int, from: string, to: string}|null
+     */
+    public static function recent(array $daily): ?array
+    {
+        if (count($daily) < 56) {
+            return null;
+        }
+        $last = array_slice($daily, -28);
+        $before = array_slice($daily, -56, 28);
+        // Dni muszą być ciągłe: 56 wierszy to dokładnie 56 kolejnych dni.
+        if (Stats::days($before[0]['day'], $last[27]['day']) !== 56) {
+            return null;
+        }
+        return [
+            'clicks' => (int) array_sum(array_column($last, 'clicks')), 'was' => (int) array_sum(array_column($before, 'clicks')),
+            'impressions' => (int) array_sum(array_column($last, 'impressions')), 'wasImpressions' => (int) array_sum(array_column($before, 'impressions')),
+            'from' => $last[0]['day'], 'to' => $last[27]['day'],
+        ];
+    }
+
     /** Dane dzienne zsumowane w tygodnie (od poniedziałku). Niepełny pierwszy i ostatni tydzień pomijamy. */
     public static function weekly(array $daily, string $field = 'clicks'): array
     {

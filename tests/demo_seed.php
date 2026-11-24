@@ -296,5 +296,41 @@ function demo_seed(): array
         \App\Core\Config::set($k, $v);
     }
 
+    // Widoczność: przykładowa witryna z danymi z Search Console i Analytics, raportem odpowiedzi AI, cytowaniami z Binga,
+    // botami AI z Cloudflare i dwoma konkurentami. Odpowiedzi usług pochodzą z plików testowych, więc na czas przykładu
+    // udajemy podłączone klucze. Drugie pobranie mapy konkurenta pokazuje nową stronę.
+    $seo = \App\Modules\Seo\Sites::add($org, 'sklep-przykladowy.example');
+    if ($seo['ok']) {
+        $saved = ['GOOGLE_SERVICE_ACCOUNT' => \App\Core\Config::get('GOOGLE_SERVICE_ACCOUNT'), 'CF_ANALYTICS_TOKEN' => \App\Core\Config::get('CF_ANALYTICS_TOKEN'), 'FIXTURE_SEO' => \App\Core\Config::get('FIXTURE_SEO')];
+        $pem = '';
+        openssl_pkey_export(openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA]), $pem);
+        \App\Core\Config::set('GOOGLE_SERVICE_ACCOUNT', (string) json_encode(['client_email' => 'panel@przyklad.iam.gserviceaccount.com', 'private_key' => $pem]));
+        \App\Core\Config::set('CF_ANALYTICS_TOKEN', 'przyklad');
+        $find = static fn (): array => \App\Modules\Seo\Sites::find($org, (int) $seo['id']);
+        \App\Modules\Seo\Sync::google($find());
+        \App\Modules\Seo\Sync::cloudflare($find());
+        $end = gmdate('Y-m-d', time() - 3 * 86400);
+        $from = gmdate('Y-m-d', time() - 30 * 86400);
+        $aiDays = "Date,Impressions\n";
+        for ($i = 55; $i >= 0; $i--) {
+            $aiDays .= gmdate('Y-m-d', strtotime($end . ' UTC') - $i * 86400) . ',' . (14 + intdiv(55 - $i, 4) + ($i % 3)) . "\n";
+        }
+        $aiSets = \App\Modules\Seo\GscFile::parseFiles([
+            'Pages.csv' => "Top pages,Impressions\nhttps://sklep-przykladowy.example/poradnik/odkamienianie,340\nhttps://sklep-przykladowy.example/poradnik/ekspres-cisnieniowy-do-domu,212\nhttps://sklep-przykladowy.example/ranking-ekspresow,95\n",
+            'Dates.csv' => $aiDays,
+        ]);
+        \App\Modules\Seo\GscFile::store($find(), $aiSets['sets']);
+        \App\Modules\Seo\AiSources::import($find(), 'bing_page', "https://sklep-przykladowy.example/poradnik/odkamienianie\t310\nhttps://sklep-przykladowy.example/poradnik/ekspres-cisnieniowy-do-domu\t74\nhttps://sklep-przykladowy.example/ranking-ekspresow\t28\n", $from, $end, 412);
+        \App\Modules\Seo\AiSources::import($find(), 'bing_query', "jak odkamienić ekspres kolbowy\t140\nodkamieniacz do ekspresu czym zastąpić\t61\nekspres ciśnieniowy do domu jaki wybrać\t52\nranking ekspresów kolbowych\t19\n", $from, $end);
+        \App\Modules\Seo\Sites::saveRivals($find(), "konkurent-a.example\nkonkurent-b.example");
+        \App\Modules\Seo\Rivals::refreshAll($find(), true);
+        $db->run('UPDATE seo_rival_pages SET first_seen = ? WHERE site_id = ?', [gmdate('Y-m-d H:i:s', time() - 9 * 86400), (int) $seo['id']]);
+        \App\Core\Config::set('FIXTURE_SEO', 'mapa-2');
+        \App\Modules\Seo\Rivals::refresh($find(), 'konkurent-a.example', true);
+        foreach ($saved as $k => $v) {
+            \App\Core\Config::set($k, $v);
+        }
+    }
+
     return ['ok' => true, 'org_id' => $org, 'login' => 'demo@example.com / demo-haslo-123'];
 }

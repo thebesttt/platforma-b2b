@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Seo;
 
+use App\Core\Config;
 use App\Core\Db;
 
 /**
@@ -14,6 +15,25 @@ final class Sync
 {
     /** Witryn na jedno uruchomienie zadania dziennego. */
     private const DAILY_SITES = 40;
+
+    /**
+     * Czy firma może korzystać z kluczy platformy (konto usługi Google, token Cloudflare).
+     *
+     * Klucz jest jeden na cały panel i widzi wszystko, do czego ktokolwiek dał mu dostęp. Gdyby korzystała z niego każda firma,
+     * jedna mogłaby dopisać cudzą domenę i przeczytać jej dane. Dlatego stałe połączenia działają tylko w firmie administratora
+     * platformy. Pozostałe firmy wgrywają pliki z eksportu, czyli własne dane.
+     */
+    public static function allowed(int $orgId): bool
+    {
+        $admins = array_values(array_filter(array_map(static fn ($e) => mb_strtolower(trim($e)), explode(',', (string) Config::get('ADMIN_EMAILS')))));
+        if (!$admins || $orgId <= 0) {
+            return false;
+        }
+        return (bool) Db::get()->val(
+            'SELECT 1 FROM users WHERE org_id = ? AND LOWER(email) IN (' . implode(', ', array_fill(0, count($admins), '?')) . ') LIMIT 1',
+            [$orgId, ...$admins]
+        );
+    }
 
     /**
      * Google: Search Console, a potem Google Analytics, jeśli konto usługi ma do niego dostęp.
@@ -64,12 +84,13 @@ final class Sync
         $cfOn = CloudflareBots::enabled();
         foreach (Db::get()->all('SELECT * FROM seo_sites ORDER BY id LIMIT ' . self::DAILY_SITES) as $site) {
             $out['sites']++;
+            $keys = self::allowed((int) $site['org_id']);
             try {
-                if ($googleOn && (Sites::lastSync($site, 'google')['ok'] ?? false)) {
+                if ($keys && $googleOn && (Sites::lastSync($site, 'google')['ok'] ?? false)) {
                     $res = self::google($site);
                     $out[$res['ok'] ? 'google' : 'errors']++;
                 }
-                if ($cfOn && (Sites::lastSync($site, 'cloudflare')['ok'] ?? false)) {
+                if ($keys && $cfOn && (Sites::lastSync($site, 'cloudflare')['ok'] ?? false)) {
                     $res = self::cloudflare($site);
                     $out[$res['ok'] ? 'cloudflare' : 'errors']++;
                 }

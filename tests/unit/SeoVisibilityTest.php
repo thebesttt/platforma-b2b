@@ -177,6 +177,16 @@ return [
         contains('Okres jest błędny', http('GET', $base . '/dane')->body);
         eq(3, count(Stats::periods($siteId, 'gsc', 'query')));
 
+        // Jeden plik z 3 miesięcy (domyślny eksport): zmiana ostatnich 28 dni wobec poprzednich liczy się z samych danych dziennych.
+        $days = [];
+        for ($i = 83; $i >= 0; $i--) {
+            $days[] = ['day' => gmdate('Y-m-d', strtotime($end . ' UTC') - $i * 86400), 'clicks' => $i < 28 ? 12 : 10, 'impressions' => 200];
+        }
+        eq(['clicks' => 336, 'was' => 280, 'impressions' => 5600, 'wasImpressions' => 5600, 'from' => $start, 'to' => $end], Insights::recent($days));
+        eq(null, Insights::recent(array_slice($days, -55)), 'za mało dni');
+        unset($days[40]);
+        eq(null, Insights::recent(array_values($days)), 'dziura w danych dziennych');
+
         // Druga firma nie widzi witryny ani jej danych i nie może niczego do niej wgrać.
         [$org2, $uid2] = make_org('obcy@example.com', 'Obca Firma sp. z o.o.');
         login_as($uid2);
@@ -292,7 +302,7 @@ return [
         with_config(['GOOGLE_SERVICE_ACCOUNT' => 'śmieci'], fn () => ok(!Google::enabled(), 'tekst, który nie jest kluczem'));
         with_config(['GOOGLE_SERVICE_ACCOUNT' => base64_encode($key)], fn () => eq('panel@projekt-testowy.iam.gserviceaccount.com', Google::email()));
 
-        with_config(['GOOGLE_SERVICE_ACCOUNT' => $key], function () use ($orgId, $siteId, $base, $db, $public, $calls) {
+        with_config(['ADMIN_EMAILS' => 'wlasciciel@example.com', 'GOOGLE_SERVICE_ACCOUNT' => $key], function () use ($orgId, $siteId, $base, $db, $public, $calls) {
             // Ekran startu: adres do skopiowania i jeden przycisk. Żadnych pól na identyfikatory.
             $page = http('GET', $base)->body;
             contains('<code class="copy wrap" title="Kliknij, żeby skopiować">panel@projekt-testowy.iam.gserviceaccount.com</code>', $page);
@@ -332,8 +342,8 @@ return [
             eq(180, (int) $db->val("SELECT COUNT(*) FROM seo_stats WHERE site_id = ? AND source = 'gsc' AND dim = 'date'", [$siteId]));
 
             $page = http('GET', $base)->body;
-            contains('<div class="stat-value">215</div>', $page);
-            contains('<span class="delta up">+3,9%</span>', $page, '215 kliknięć wobec 207');
+            contains('<div class="stat-value">578</div>', $page);
+            contains('<span class="delta up">+7,4%</span>', $page, '578 kliknięć wobec 538');
             contains('data-chart', $page);
             contains('Kliknięcia tygodniami', $page);
             // Kanibalizacja: dwie strony z co najmniej 20% wyświetleń zapytania. Trzecia strona (20 wyświetleń) i zapytanie z jedną stroną odpadają.
@@ -362,6 +372,14 @@ return [
             eq(2, count(Stats::periods($siteId, 'gsc', 'query')));
             eq(180, (int) $db->val("SELECT COUNT(*) FROM seo_stats WHERE site_id = ? AND source = 'gsc' AND dim = 'date'", [$siteId]));
 
+            // Test połączenia w Ustawieniach: tylko administrator platformy. Mówi, jakim adresem panel się przedstawia i które witryny widzi.
+            with_config(['ADMIN_EMAILS' => 'ktos-inny@example.com'], fn () => eq(404, http('POST', '/ustawienia/test-google')->status, 'zwykły użytkownik nie testuje kluczy platformy'));
+            http('POST', '/ustawienia/test-google');
+            $page = http('GET', '/ustawienia')->body;
+            contains('Google działa: klucz przyjęty. Konto usługi panel@projekt-testowy.iam.gserviceaccount.com widzi w Search Console 2 witryny', $page);
+            contains('sc-domain:sklep-przykladowy.example', $page);
+            ok(!str_contains($page, 'niezweryfikowana.example'), 'usługa bez weryfikacji nie liczy się jako dostęp');
+
             // Zadanie dzienne odświeża tylko witryny, które użytkownik już połączył.
             $other = Sites::add($orgId, 'inna-witryna.example')['id'];
             Http::$log = [];
@@ -370,9 +388,30 @@ return [
             ok(!Stats::has($other, 'gsc'), 'witryna bez połączenia zostaje nietknięta');
         });
 
+        // Klucz platformy widzi wszystko, do czego ktokolwiek dał mu dostęp, więc działa tylko w firmie administratora panelu.
+        // Inna firma nie dostaje przycisku, a zapytanie wysłane mimo to niczego nie pobiera, także dla tej samej domeny.
+        with_config(['ADMIN_EMAILS' => 'wlasciciel@example.com', 'GOOGLE_SERVICE_ACCOUNT' => $key, 'CF_ANALYTICS_TOKEN' => 'token-cf'], function () use ($uid) {
+            [$org2, $uid2] = make_org('obcy@example.com', 'Obca Firma sp. z o.o.');
+            ok(Sync::allowed(1) && !Sync::allowed($org2) && !Sync::allowed(0), 'kto może używać kluczy platformy');
+            login_as($uid2);
+            $foreign = Sites::add($org2, 'sklep-przykladowy.example')['id'];
+            $page = http('GET', '/audyt/widocznosc/' . $foreign)->body;
+            ok(!str_contains($page, 'value="google"') && !str_contains($page, 'gserviceaccount.com'), 'bez przycisku i bez adresu konta usługi');
+            contains('Wgraj plik z Search Console', $page);
+            Http::$log = [];
+            foreach (['google', 'cloudflare'] as $source) {
+                http('POST', '/audyt/widocznosc/' . $foreign . '/pobierz', ['zrodlo' => $source]);
+            }
+            eq([], Http::$log, 'żadnego zapytania do Google ani Cloudflare');
+            ok(!Stats::has($foreign, 'gsc') && !Stats::has($foreign, 'cf_bot'), 'cudze dane nie trafiły do drugiej firmy');
+            contains('Stałe połączenie jest dostępne w firmie, która prowadzi ten panel', http('GET', '/audyt/widocznosc/' . $foreign . '/dane')->body);
+            Sites::delete($org2, $foreign);
+            login_as($uid);
+        });
+
         // Kilka usług GA4 na koncie: wybiera tę, której strumień danych ma adres witryny (z „www” i ukośnikiem).
         Kv::forget('google:token:' . sha1('panel@projekt-testowy.iam.gserviceaccount.com'));
-        with_config(['GOOGLE_SERVICE_ACCOUNT' => $key, 'FIXTURE_SEO' => 'ga4-wiele'], function () use ($orgId, $siteId, $db) {
+        with_config(['ADMIN_EMAILS' => 'wlasciciel@example.com', 'GOOGLE_SERVICE_ACCOUNT' => $key, 'FIXTURE_SEO' => 'ga4-wiele'], function () use ($orgId, $siteId, $db) {
             $db->update('seo_sites', ['ga4_property' => ''], 'id = ?', [$siteId]);
             eq(true, Google::syncGa4(Sites::find($orgId, $siteId))['ok']);
             eq('123456789', Sites::find($orgId, $siteId)['ga4_property']);
@@ -381,7 +420,7 @@ return [
         // Błędy opisane po ludzku: konto nie dodane w Search Console, wyłączone API, usunięty klucz.
         $site2 = Sites::add($orgId, 'trzecia-witryna.example')['id'];
         $base2 = '/audyt/widocznosc/' . $site2;
-        with_config(['GOOGLE_SERVICE_ACCOUNT' => $key, 'FIXTURE_SEO' => 'bez-dostepu'], function () use ($base2) {
+        with_config(['ADMIN_EMAILS' => 'wlasciciel@example.com', 'GOOGLE_SERVICE_ACCOUNT' => $key, 'FIXTURE_SEO' => 'bez-dostepu'], function () use ($base2) {
             $r = http('POST', $base2 . '/pobierz', ['zrodlo' => 'google']);
             eq($base2 . '/dane', $r->headers['Location'] ?? '');
             $page = http('GET', $base2 . '/dane')->body;
@@ -389,16 +428,16 @@ return [
             contains('Dodaj adres panel@projekt-testowy.iam.gserviceaccount.com jako użytkownika', $page);
             contains('nie działa', $page);
         });
-        with_config(['GOOGLE_SERVICE_ACCOUNT' => $key, 'FIXTURE_SEO' => 'api-wylaczone'], function () use ($orgId, $site2) {
+        with_config(['ADMIN_EMAILS' => 'wlasciciel@example.com', 'GOOGLE_SERVICE_ACCOUNT' => $key, 'FIXTURE_SEO' => 'api-wylaczone'], function () use ($orgId, $site2) {
             contains('nie jest włączony interfejs Google Search Console API', Google::syncGsc(Sites::find($orgId, $site2))['error']);
         });
         [$bad] = seo_service_account('odrzucony@projekt-testowy.iam.gserviceaccount.com');
-        with_config(['GOOGLE_SERVICE_ACCOUNT' => $bad], function () use ($orgId, $site2) {
+        with_config(['ADMIN_EMAILS' => 'wlasciciel@example.com', 'GOOGLE_SERVICE_ACCOUNT' => $bad], function () use ($orgId, $site2) {
             $res = Google::syncGsc(Sites::find($orgId, $site2));
             contains('Google odrzucił klucz konta usługi (Invalid JWT Signature.)', $res['error']);
         });
         // Usługa wpisana ręcznie, do której konto nie ma dostępu.
-        with_config(['GOOGLE_SERVICE_ACCOUNT' => $key], function () use ($orgId, $site2, $db) {
+        with_config(['ADMIN_EMAILS' => 'wlasciciel@example.com', 'GOOGLE_SERVICE_ACCOUNT' => $key], function () use ($orgId, $site2, $db) {
             eq([], Sites::saveSettings(Sites::find($orgId, $site2), ['gsc_property' => 'https://trzecia-witryna.example/', 'brand_terms' => 'Trzecia, Trzecia Witryna, ab']));
             eq('Trzecia, Trzecia Witryna', Sites::find($orgId, $site2)['brand_terms'], 'za krótka nazwa marki odrzucona');
             contains('Konto usługi nie ma dostępu do tych danych w Search Console', Google::syncGsc(Sites::find($orgId, $site2))['error']);
@@ -426,7 +465,7 @@ return [
             ok(!CloudflareBots::enabled());
             contains('CF_ANALYTICS_TOKEN', http('GET', $base . '/ai')->body);
         });
-        with_config(['CF_ANALYTICS_TOKEN' => 'token-cf'], function () use ($orgId, $siteId, $base, $db) {
+        with_config(['ADMIN_EMAILS' => 'wlasciciel@example.com', 'CF_ANALYTICS_TOKEN' => 'token-cf'], function () use ($orgId, $siteId, $base, $db) {
             contains('Pobierz z Cloudflare', http('GET', $base . '/ai')->body);
             Http::$log = [];
             $r = http('POST', $base . '/pobierz', ['zrodlo' => 'cloudflare']);
@@ -438,16 +477,17 @@ return [
 
             $s = CloudflareBots::summary(Sites::find($orgId, $siteId));
             $by = array_column($s['bots'], null, 'name');
-            // Każdy z czterech tygodni zwraca w teście te same wiersze, więc liczby to czterokrotność.
-            eq([160, 160, 0], [$by['ChatGPT-User']['requests'], $by['ChatGPT-User']['served'], $by['ChatGPT-User']['blocked']]);
-            eq([480, 8, 472], [$by['PerplexityBot']['requests'], $by['PerplexityBot']['served'], $by['PerplexityBot']['blocked']]);
-            eq([28, 0, 0], [$by['OAI-SearchBot']['requests'], $by['OAI-SearchBot']['served'], $by['OAI-SearchBot']['blocked']], 'kod 404 to ani podanie, ani blokada');
+            // Godziny z czterech tygodni sumują się w dni: ChatGPT-User codziennie, PerplexityBot prawie zawsze z odmową.
+            eq([154, 154, 0], [$by['ChatGPT-User']['requests'], $by['ChatGPT-User']['served'], $by['ChatGPT-User']['blocked']]);
+            eq([120, 2, 118], [$by['PerplexityBot']['requests'], $by['PerplexityBot']['served'], $by['PerplexityBot']['blocked']]);
+            eq([46, 39, 0], [$by['OAI-SearchBot']['requests'], $by['OAI-SearchBot']['served'], $by['OAI-SearchBot']['blocked']], 'kod 404 to ani podanie, ani blokada');
             ok(!isset($by['Googlebot']), 'zwykła wyszukiwarka nie jest botem AI');
-            eq(['assistant' => 176, 'search' => 508, 'training' => 240], $s['byCategory']);
+            eq(['assistant' => 163, 'search' => 166, 'training' => 95], $s['byCategory']);
+            eq(28, (int) $db->val("SELECT COUNT(*) FROM seo_stats WHERE site_id = ? AND source = 'cf_bot' AND dim = 'bot' AND k = 'ChatGPT-User'", [$siteId]), 'wiersz na każdy dzień');
             eq('ChatGPT-User', $s['bots'][0]['name'], 'asystenci na górze listy');
 
             $page = http('GET', $base . '/ai')->body;
-            ok((bool) preg_match('#<b>PerplexityBot</b> dostał odmowę w 472 z 480 pobrań#', $page), 'ostrzeżenie o zablokowanym bocie, który linkuje do źródeł');
+            ok((bool) preg_match('#<b>PerplexityBot</b> dostał odmowę w 118 z 120 pobrań#', $page), 'ostrzeżenie o zablokowanym bocie, który linkuje do źródeł');
             ok(!preg_match('#<b>GPTBot</b> dostał odmowę#', $page), 'blokada bota treningowego nie jest ostrzeżeniem');
             ok((bool) preg_match('#/poradnik/odkamienianie</a> <span class="muted">\(52: ChatGPT-User, OAI-SearchBot\)#', $page), 'adresy pobierane przez asystentów');
             ok(!str_contains($page, '/robots.txt</a>') && !str_contains($page, 'app.css</a>'), 'pliki techniczne poza listą');
@@ -455,10 +495,10 @@ return [
 
             // Ponowne pobranie nie podwaja liczb.
             http('POST', $base . '/pobierz', ['zrodlo' => 'cloudflare']);
-            eq(160, array_column(CloudflareBots::summary(Sites::find($orgId, $siteId))['bots'], null, 'name')['ChatGPT-User']['requests']);
+            eq(154, array_column(CloudflareBots::summary(Sites::find($orgId, $siteId))['bots'], null, 'name')['ChatGPT-User']['requests']);
         });
         // Token bez uprawnienia i domena, której nie ma na koncie.
-        with_config(['CF_ANALYTICS_TOKEN' => 'token-cf', 'FIXTURE_SEO' => 'cf-odmowa'], function () use ($orgId, $siteId) {
+        with_config(['ADMIN_EMAILS' => 'wlasciciel@example.com', 'CF_ANALYTICS_TOKEN' => 'token-cf', 'FIXTURE_SEO' => 'cf-odmowa'], function () use ($orgId, $siteId) {
             contains('Zone → Analytics → Read', CloudflareBots::sync(Sites::find($orgId, $siteId))['error']);
         });
         $other = Sites::add($orgId, 'inna-witryna.example')['id'];
