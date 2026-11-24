@@ -53,7 +53,13 @@ final class Sites
         if ($existing) {
             return ['ok' => true, 'id' => (int) $existing];
         }
-        if ((int) $db->val('SELECT COUNT(*) FROM seo_sites WHERE org_id = ?', [$orgId]) >= self::LIMIT) {
+        $count = (int) $db->val('SELECT COUNT(*) FROM seo_sites WHERE org_id = ?', [$orgId]);
+        $org = $db->one('SELECT id, plan FROM organizations WHERE id = ?', [$orgId]);
+        $planLimit = \App\Core\Plans::limit($org, 'sites');
+        if ($planLimit !== null && $count >= $planLimit) {
+            return ['ok' => false, 'error' => 'Pakiet ' . \App\Core\Plans::name($org) . ' obejmuje ' . $planLimit . ' ' . plural($planLimit, 'witrynę', 'witryny', 'witryn') . ' w zakładce Widoczność. Usuń którąś albo zmień pakiet.'];
+        }
+        if ($count >= self::LIMIT) {
             return ['ok' => false, 'error' => 'Możesz śledzić najwyżej ' . self::LIMIT . ' witryn. Usuń którąś, żeby dodać nową.'];
         }
         $id = $db->insert('seo_sites', [

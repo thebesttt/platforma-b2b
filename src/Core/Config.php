@@ -19,6 +19,10 @@ final class Config
         'ANTHROPIC_API_KEY' => '',
         'AI_MODEL' => 'claude-sonnet-5-5',
         'AI_MAX_INPUT_CHARS' => '300000', // ok. 100 tys. tokenów dokumentacji na jedno zapytanie
+        'AI_MODEL_BASIC' => '',        // tańszy model dla pakietu Podstawowego. Puste: ten sam co AI_MODEL
+        'GOOGLE_OAUTH_CLIENT_ID' => '',     // logowanie Google dla firm (zakładka Widoczność): identyfikator klienta OAuth
+        'GOOGLE_OAUTH_CLIENT_SECRET' => '', // tajny klucz klienta OAuth
+        'SALES_EMAIL' => '',           // adres, na który firmy piszą w sprawie zmiany pakietu
         'CRON_TOKEN' => '',
         'PSI_KEY' => '',
         'CEIDG_TOKEN' => '',          // hurtownia danych CEIDG (biznes.gov.pl): wyszukiwanie jednoosobowych działalności po PKD i regionie

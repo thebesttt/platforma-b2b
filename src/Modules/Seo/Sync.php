@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Modules\Seo;
 
-use App\Core\Config;
 use App\Core\Db;
 
 /**
@@ -25,14 +24,7 @@ final class Sync
      */
     public static function allowed(int $orgId): bool
     {
-        $admins = array_values(array_filter(array_map(static fn ($e) => mb_strtolower(trim($e)), explode(',', (string) Config::get('ADMIN_EMAILS')))));
-        if (!$admins || $orgId <= 0) {
-            return false;
-        }
-        return (bool) Db::get()->val(
-            'SELECT 1 FROM users WHERE org_id = ? AND LOWER(email) IN (' . implode(', ', array_fill(0, count($admins), '?')) . ') LIMIT 1',
-            [$orgId, ...$admins]
-        );
+        return \App\Core\Plans::isOperator($orgId);
     }
 
     /**

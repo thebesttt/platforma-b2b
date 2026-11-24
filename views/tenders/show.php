@@ -26,11 +26,12 @@ $lvl = ['high' => ['high', 'wysokie'], 'mid' => ['mid', 'średnie'], 'low' => ['
     <?= $tender['cpv_main'] ? ' · CPV ' . e($tender['cpv_main']) : '' ?>
   </p>
   <div class="row-flex no-print">
-    <form class="inline" method="post" action="/oferty"><?= csrf_field() ?><input type="hidden" name="tender_id" value="<?= (int) $tender['id'] ?>"><button class="btn" type="submit">Utwórz szkic oferty</button></form>
+    <?php if ($offers): ?><a class="btn" href="/oferty/<?= (int) $offers[0]['id'] ?>">Otwórz szkic oferty</a>
+    <?php else: ?><form class="inline" method="post" action="/oferty"><?= csrf_field() ?><input type="hidden" name="tender_id" value="<?= (int) $tender['id'] ?>"><button class="btn" type="submit">Utwórz szkic oferty</button></form><?php endif ?>
     <?php if ($tender['deadline_at']): ?><a class="btn ghost" href="/przetargi/<?= (int) $tender['id'] ?>/kalendarz">Dodaj terminy do kalendarza</a><?php endif ?>
     <?php if ($tender['url']): ?><a class="btn ghost" href="<?= e(safe_url($tender['url'])) ?>" target="_blank" rel="noopener">Ogłoszenie w <?= e(strtoupper((string) $tender['source'])) ?></a><?php endif ?>
     <?php if ($match): ?>
-      <?php if ($match['status'] !== 'saved'): ?><form class="inline" method="post" action="/przetargi/<?= (int) $tender['id'] ?>/status"><?= csrf_field() ?><input type="hidden" name="status" value="saved"><button class="btn ghost" type="submit">Zapisz</button></form><?php endif ?>
+      <?php if ($match['status'] !== 'saved'): ?><form class="inline" method="post" action="/przetargi/<?= (int) $tender['id'] ?>/status"><?= csrf_field() ?><input type="hidden" name="status" value="saved"><button class="btn ghost" type="submit"><?= $offers ? 'Zapisz' : 'Zapisz i dodaj do ofert' ?></button></form><?php endif ?>
       <?php if ($match['status'] !== 'dismissed'): ?><form class="inline" method="post" action="/przetargi/<?= (int) $tender['id'] ?>/status"><?= csrf_field() ?><input type="hidden" name="status" value="dismissed"><button class="btn ghost" type="submit">Nie interesuje mnie</button></form>
       <?php else: ?><form class="inline" method="post" action="/przetargi/<?= (int) $tender['id'] ?>/status"><?= csrf_field() ?><input type="hidden" name="status" value="new"><button class="btn ghost" type="submit">Przywróć</button></form><?php endif ?>
     <?php endif ?>

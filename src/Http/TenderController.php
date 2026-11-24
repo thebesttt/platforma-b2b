@@ -177,8 +177,36 @@ final class TenderController extends Controller
             return $this->back($r, '/przetargi');
         }
         $this->db()->update('tender_matches', ['status' => $status], 'org_id = ? AND tender_id = ?', [$this->orgId(), $id]);
+        // Zapisany przetarg od razu trafia do zakładki Oferty jako szkic. Szkic powstaje z ogłoszenia i biblioteki, bez AI.
+        if ($status === 'saved' && ($tender = Tenders::find($id))) {
+            $offer = \App\Modules\Offers\Offers::ensureForTender($this->orgId(), Auth::id(), $tender);
+            if ($offer['created']) {
+                AuditLog::add('offer.create', 'offer', $offer['id'], ['kind' => 'tender', 'tender_id' => $id, 'from' => 'saved'], $r->ip());
+            }
+            return $this->back($r, '/przetargi/' . $id, 'Zapisano przetarg. Szkic oferty ' . ($offer['created'] ? 'jest' : 'był już') . ' w zakładce Oferty.');
+        }
         $msg = ['saved' => 'Zapisano przetarg na liście obserwowanych.', 'dismissed' => 'Przetarg ukryty. Nie pokażemy go więcej na liście dopasowań.', 'new' => 'Przywrócono przetarg.'][$status];
         return $this->back($r, '/przetargi/' . $id, $msg);
+    }
+
+    /**
+     * Jeden klik na liście albo karcie: przetarg trafia do zakładki Oferty jako szkic i zostaje zapisany na liście obserwowanych.
+     * Użytkownik zostaje tam, gdzie był, żeby mógł dodać kolejne.
+     */
+    public function toOffers(Request $r): Response
+    {
+        $tender = Tenders::find((int) $r->param('id'));
+        if (!$tender) {
+            return $this->notFound();
+        }
+        $offer = \App\Modules\Offers\Offers::ensureForTender($this->orgId(), Auth::id(), $tender);
+        $this->db()->update('tender_matches', ['status' => 'saved'], 'org_id = ? AND tender_id = ?', [$this->orgId(), (int) $tender['id']]);
+        if ($offer['created']) {
+            AuditLog::add('offer.create', 'offer', $offer['id'], ['kind' => 'tender', 'tender_id' => (int) $tender['id'], 'from' => 'list'], $r->ip());
+        }
+        return $this->back($r, '/przetargi/' . (int) $tender['id'], $offer['created']
+            ? 'Dodano do zakładki Oferty: ' . truncate((string) $tender['title'], 90) . '.'
+            : 'Ten przetarg jest już w zakładce Oferty.');
     }
 
     public function upload(Request $r): Response

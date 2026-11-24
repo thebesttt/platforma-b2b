@@ -9,10 +9,11 @@ $privacy = (string) config('PRIVACY_URL');
   <form method="post" action="/rejestracja" class="stack-sm">
     <?= csrf_field() ?>
     <input type="hidden" name="kod" value="<?= e($kod ?? '') ?>">
+    <?php if (!empty($invite)): ?><input type="hidden" name="zaproszenie" value="<?= e($invite) ?>"><?php endif ?>
     <div class="field"><label for="company">Nazwa firmy</label><input id="company" name="company" type="text" required autocomplete="organization" value="<?= e($v['company'] ?? '') ?>"></div>
     <div class="field"><label for="nip">NIP firmy</label><input id="nip" name="nip" type="text" inputmode="numeric" autocomplete="off" value="<?= e($v['nip'] ?? '') ?>"><span class="hint">Potrzebny do formularzy ofert. Możesz dodać później.</span></div>
     <div class="field"><label for="name">Imię i nazwisko</label><input id="name" name="name" type="text" autocomplete="name" value="<?= e($v['name'] ?? '') ?>"></div>
-    <div class="field"><label for="email">E-mail służbowy</label><input id="email" name="email" type="email" required autocomplete="email" value="<?= e($v['email'] ?? '') ?>"></div>
+    <div class="field"><label for="email">E-mail służbowy</label><input id="email" name="email" type="email" required autocomplete="email" value="<?= e($v['email'] ?? '') ?>"<?= !empty($inviteEmail) ? ' readonly aria-describedby="email-h"' : '' ?>><?php if (!empty($inviteEmail)): ?><span class="hint" id="email-h">Adres z zaproszenia. Konto powstaje dla tego adresu.</span><?php endif ?></div>
     <div class="field"><label for="password">Hasło</label><input id="password" name="password" type="password" required minlength="10" autocomplete="new-password"><span class="hint">Co najmniej 10 znaków.</span></div>
     <label class="check"><input type="checkbox" name="terms" value="1" required>
       <span>

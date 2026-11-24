@@ -46,6 +46,12 @@ final class App
                 Session::flash('info', 'Zaloguj się, aby kontynuować.');
                 return Response::redirect('/logowanie?next=' . rawurlencode($request->path));
             }
+            // Firma zablokowana przez administratora platformy: sesja kończy się przy najbliższym zapytaniu.
+            if (($opts['auth'] ?? false) && Auth::blocked(Auth::org())) {
+                Auth::logout();
+                Session::flash('error', 'Konto firmy jest zablokowane. Skontaktuj się z administratorem platformy.');
+                return Response::redirect('/logowanie');
+            }
             // Gdy przesłane pliki przekraczają limit serwera, PHP odrzuca całe zapytanie (puste pola formularza).
             if ($request->method === 'POST' && !$request->post && (int) ($request->server['CONTENT_LENGTH'] ?? 0) > 0
                 && str_starts_with((string) ($request->server['CONTENT_TYPE'] ?? ''), 'multipart/form-data')) {

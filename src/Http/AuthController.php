@@ -39,7 +39,33 @@ final class AuthController extends Controller
                 'title' => 'Logowanie', 'email' => $email, 'error' => $res['error'], 'next' => $this->safeNext($r->str('next')),
             ], 'public'), 422);
         }
+        if (!empty($res['twofa'])) {
+            $next = $this->safeNext($r->str('next'));
+            return $this->redirect('/logowanie/kod' . ($next !== '' ? '?next=' . rawurlencode($next) : ''));
+        }
         AuditLog::add('auth.login', 'user', Auth::id(), [], $r->ip());
+        return $this->redirect($this->safeNext($r->str('next')) ?: '/pulpit');
+    }
+
+    /** Drugi krok logowania: kod z aplikacji albo kod zapasowy. */
+    public function codeForm(Request $r): Response
+    {
+        if (!Auth::pendingTwoFactor()) {
+            return $this->redirect('/logowanie');
+        }
+        return $this->view('auth/code', ['title' => 'Kod logowania', 'next' => $this->safeNext($r->str('next'))], 'public');
+    }
+
+    public function code(Request $r): Response
+    {
+        $res = Auth::finishTwoFactor($r->str('code'));
+        if (!$res['ok']) {
+            if (!empty($res['expired'])) {
+                return $this->redirect('/logowanie', $res['error'], 'error');
+            }
+            return Response::html(\App\Core\View::render('auth/code', ['title' => 'Kod logowania', 'error' => $res['error'], 'next' => $this->safeNext($r->str('next'))], 'public'), 422);
+        }
+        AuditLog::add('auth.login', 'user', Auth::id(), ['two_factor' => true], $r->ip());
         return $this->redirect($this->safeNext($r->str('next')) ?: '/pulpit');
     }
 
@@ -55,6 +81,14 @@ final class AuthController extends Controller
 
     public function registerForm(Request $r): Response
     {
+        // Zaproszenie firmy: jednorazowy link z adresem e-mail i pakietem ustawionym przez administratora platformy.
+        if ($r->str('zaproszenie') !== '') {
+            $inv = \App\Core\Invites::find($r->str('zaproszenie'));
+            if (!$inv) {
+                return Response::html(\App\Core\View::render('errors/message', ['title' => 'Zaproszenie nieważne', 'message' => 'Ten link wygasł albo został już użyty. Poproś administratora platformy o nowy.'], 'public'), 403);
+            }
+            return $this->view('auth/register', ['title' => 'Załóż konto', 'v' => ['company' => (string) $inv['company'], 'email' => (string) $inv['email']], 'kod' => '', 'invite' => $r->str('zaproszenie'), 'inviteEmail' => (string) $inv['email']], 'public');
+        }
         if (!self::signupAllowed($r->str('kod'))) {
             return Response::html(\App\Core\View::render('errors/message', ['title' => 'Rejestracja na zaproszenie', 'message' => 'Konto założysz z linku z zaproszeniem. Jeśli go nie masz, poproś o niego administratora platformy.'], 'public'), 403);
         }
@@ -64,24 +98,33 @@ final class AuthController extends Controller
     public function register(Request $r): Response
     {
         $kod = $r->str('kod');
-        if (!self::signupAllowed($kod)) {
+        $token = $r->str('zaproszenie');
+        $inv = $token !== '' ? \App\Core\Invites::find($token) : null;
+        if ($token !== '' && !$inv) {
+            return $this->redirect('/logowanie', 'Zaproszenie wygasło albo zostało już użyte. Poproś administratora platformy o nowe.', 'error');
+        }
+        if (!$inv && !self::signupAllowed($kod)) {
             return $this->redirect('/rejestracja');
         }
-        $v = ['company' => $r->str('company'), 'nip' => $r->str('nip'), 'name' => $r->str('name'), 'email' => $r->str('email')];
+        // Adres e-mail z zaproszenia jest stały: konto powstaje dla osoby, do której trafił link.
+        $v = ['company' => $r->str('company'), 'nip' => $r->str('nip'), 'name' => $r->str('name'), 'email' => $inv ? (string) $inv['email'] : $r->str('email')];
         if (Kv::hit('signup:' . hash('sha256', $r->ip()), 3600) > 10) {
             $error = 'Zbyt wiele prób rejestracji. Spróbuj za godzinę.';
         } elseif ($r->input('terms') !== '1') {
             $error = 'Zaakceptuj regulamin, aby założyć konto.';
         } else {
-            $res = Auth::register($v['company'], $v['nip'], $v['name'], $v['email'], (string) $r->input('password', ''));
+            $res = Auth::register($v['company'], $v['nip'], $v['name'], $v['email'], (string) $r->input('password', ''), $inv ? (string) $inv['plan'] : 'basic');
             if ($res['ok']) {
                 Auth::login((int) $res['user_id']);
-                AuditLog::add('auth.register', 'user', (int) $res['user_id'], ['terms_accepted_at' => now_utc(), 'invited' => (string) config('SIGNUP_OPEN') !== '1'], $r->ip());
+                if ($inv) {
+                    \App\Core\Invites::consume((int) $inv['id'], Auth::orgId());
+                }
+                AuditLog::add('auth.register', 'user', (int) $res['user_id'], ['terms_accepted_at' => now_utc(), 'invited' => (string) config('SIGNUP_OPEN') !== '1', 'invite_id' => $inv ? (int) $inv['id'] : null], $r->ip());
                 return $this->redirect('/pulpit', 'Konto gotowe. Zacznij od profilu przetargowego - na jego podstawie codziennie dobierzemy ogłoszenia.');
             }
             $error = $res['error'];
         }
-        return Response::html(\App\Core\View::render('auth/register', ['title' => 'Załóż konto', 'v' => $v, 'error' => $error, 'kod' => $kod], 'public'), 422);
+        return Response::html(\App\Core\View::render('auth/register', ['title' => 'Załóż konto', 'v' => $v, 'error' => $error, 'kod' => $kod, 'invite' => $inv ? $token : '', 'inviteEmail' => $inv ? (string) $inv['email'] : ''], 'public'), 422);
     }
 
     /** Jednorazowy link do ustawienia hasła. W bazie zostaje tylko skrót tokenu. */
@@ -144,6 +187,8 @@ final class AuthController extends Controller
             return Response::html(\App\Core\View::render('auth/reset', ['title' => 'Ustaw hasło', 'token' => $token, 'error' => 'Hasło musi mieć co najmniej 10 znaków.'], 'public'), 422);
         }
         $this->db()->update('users', ['password_hash' => Auth::hash($new)], 'id = ?', [(int) $u['id']]);
+        // Nowe hasło z linku kończy wszystkie otwarte sesje tej osoby: jeśli ktoś obcy był zalogowany, traci dostęp.
+        Auth::revokeSessions((int) $u['id']);
         Kv::forget('pwreset:' . hash('sha256', $token));
         AuditLog::add('auth.password_reset', 'user', (int) $u['id'], [], $r->ip());
         return $this->redirect('/logowanie', 'Hasło ustawione. Zaloguj się.');

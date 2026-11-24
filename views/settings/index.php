@@ -29,6 +29,35 @@
       <div><button class="btn ghost" type="submit">Zmień hasło</button></div>
     </form>
 
+    <section class="card stack-sm" id="bezpieczenstwo" aria-labelledby="bz-h">
+      <h2 id="bz-h">Bezpieczeństwo konta</h2>
+      <p class="small" style="margin:0">Logowanie dwuetapowe: <?= (int) $user['totp_on'] === 1 ? '<span class="chip low">włączone</span>' : '<span class="chip neutral">wyłączone</span>' ?>. Po haśle panel pyta o kod z aplikacji w telefonie, więc samo hasło nie wystarczy do wejścia na konto.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn ghost" href="/ustawienia/logowanie-dwuetapowe"><?= (int) $user['totp_on'] === 1 ? 'Kody zapasowe i wyłączenie' : 'Włącz logowanie dwuetapowe' ?></a>
+        <form method="post" action="/ustawienia/wyloguj-wszedzie"><?= csrf_field() ?><button class="btn ghost" type="submit">Wyloguj pozostałe urządzenia</button></form>
+      </div>
+    </section>
+
+    <?php if (App\Core\Auth::isOwner()): ?>
+    <section class="card stack-sm" id="dane" aria-labelledby="dn-h">
+      <h2 id="dn-h">Dane firmy</h2>
+      <p class="small muted" style="margin:0">Wszystko, co firma wpisała i wgrała do panelu, w jednej paczce: kontakty, wiadomości, oferty, zapytania, audyty, ustawienia. Bez haseł i kluczy.</p>
+      <div><a class="btn ghost" href="/ustawienia/dane-firmy.zip">Pobierz dane firmy</a></div>
+      <details>
+        <summary class="small">Usuń konto firmy</summary>
+        <form method="post" action="/ustawienia/usun-firme" class="stack-sm" style="margin-top:12px">
+          <?= csrf_field() ?>
+          <p class="small" style="margin:0">Usuwa firmę, wszystkie konta osób i wszystkie dane. Tego nie da się cofnąć, więc najpierw pobierz dane.</p>
+          <div class="form-grid">
+            <div class="field"><label for="d-name">Przepisz nazwę firmy</label><input id="d-name" name="confirm" type="text" required autocomplete="off" placeholder="<?= e($org['name']) ?>"></div>
+            <div class="field"><label for="d-pass">Twoje hasło</label><input id="d-pass" name="current" type="password" required autocomplete="current-password"></div>
+          </div>
+          <div><button class="btn danger" type="submit">Usuń firmę i wszystkie dane</button></div>
+        </form>
+      </details>
+    </section>
+    <?php endif ?>
+
     <?php if (App\Core\Auth::isOwner()): ?>
     <form method="post" action="/ustawienia/wyglad" class="card stack-sm" id="wyglad">
       <?= csrf_field() ?>
@@ -47,9 +76,27 @@
     <?php endif ?>
   </div>
   <div class="side stack">
+    <section class="card" id="pakiet" aria-labelledby="pk-h">
+      <h2 id="pk-h" style="margin-bottom:4px">Pakiet <?= e($plan['name']) ?></h2>
+      <p class="small muted" style="margin:0 0 8px"><?= $plan['key'] === 'internal' ? 'Firma prowadząca panel: bez limitów.' : 'Przydział AI odnawia się ' . e(date('d.m.Y', strtotime($plan['renews']))) . '. Funkcje bez AI nie mają limitu użyć.' ?></p>
+      <?php foreach ($plan['limits'] as $key => $l): $full = $l['limit'] !== null && $l['used'] >= $l['limit']; ?>
+        <div class="kv-row"><div>
+          <p class="k"><?= e($l['label']) ?></p>
+          <?php if ($l['limit'] !== null): ?><div class="bar" style="margin-top:6px" role="img" aria-label="<?= e($l['label'] . ': ' . $l['used'] . ' z ' . $l['limit']) ?>"><span style="width:<?= $l['limit'] > 0 ? min(100, round(100 * $l['used'] / $l['limit'])) : 100 ?>%"></span></div><?php endif ?>
+          <?php if ($full && str_starts_with($key, 'ai_')): ?><p class="xs" style="margin:6px 0 0">Przydział wyczerpany. <?= $key === 'ai_ops' ? 'Wersje bez AI działają dalej.' : 'Widżet zbiera kontakty bez czatu.' ?></p><?php endif ?>
+        </div><b class="nowrap"><?= num_pl($l['used']) ?><?= $l['limit'] !== null ? ' z ' . num_pl($l['limit']) : '' ?></b></div>
+      <?php endforeach ?>
+      <?php if ($plan['key'] === 'basic'): ?><p class="small muted" style="margin:10px 0 0">Więcej AI, osób i witryn jest w pakiecie Rozszerzonym.<?= $plan['sales'] !== '' ? ' Napisz: ' . e($plan['sales']) . '.' : ' Zmienia go administrator platformy.' ?></p><?php endif ?>
+    </section>
     <section class="card" id="zespol">
       <h2 style="margin-bottom:8px">Zespół</h2>
-      <ul class="list-plain"><?php foreach ($team as $t): ?><li class="small"><?= e($t['name'] ?: $t['email']) ?> <span class="chip neutral"><?= $t['role'] === 'owner' ? 'właściciel' : 'członek' ?></span><br><span class="xs muted"><?= e($t['email']) ?></span></li><?php endforeach ?></ul>
+      <ul class="list-plain"><?php foreach ($team as $t): ?><li class="small"><?= e($t['name'] ?: $t['email']) ?> <span class="chip neutral"><?= $t['role'] === 'owner' ? 'właściciel' : 'członek' ?></span><?= (int) $t['totp_on'] === 1 ? ' <span class="chip low">dwa etapy</span>' : '' ?><br><span class="xs muted"><?= e($t['email']) ?></span>
+        <?php if (App\Core\Auth::isOwner() && $t['role'] !== 'owner' && (int) $t['id'] !== (int) $user['id']): ?>
+          <span style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px">
+            <form method="post" action="/ustawienia/zespol/<?= (int) $t['id'] ?>/usun"><?= csrf_field() ?><button class="link-btn xs" type="submit">Usuń z zespołu</button></form>
+            <?php if ((int) $t['totp_on'] === 1): ?><form method="post" action="/ustawienia/zespol/<?= (int) $t['id'] ?>/kody"><?= csrf_field() ?><button class="link-btn xs" type="submit">Wyłącz logowanie dwuetapowe</button></form><?php endif ?>
+          </span>
+        <?php endif ?></li><?php endforeach ?></ul>
       <?php if (App\Core\Auth::isOwner()): ?>
       <form method="post" action="/ustawienia/zespol" class="stack-sm" style="margin-top:12px">
         <?= csrf_field() ?>
@@ -66,6 +113,7 @@
     </section>
     <?php if (App\Core\Auth::isAdmin()): ?>
     <section class="card stack-sm"><h2>Administracja</h2>
+      <a href="/administracja">Firmy, zaproszenia i pakiety</a>
       <a href="/ustawienia/uokik">Decyzje UOKiK - aktualizacja ręczna</a>
       <form method="post" action="/ustawienia/test-ai"><?= csrf_field() ?><button class="btn ghost sm" type="submit" data-busy="Sprawdzam…">Sprawdź połączenie z AI</button></form>
       <form method="post" action="/ustawienia/test-ceidg"><?= csrf_field() ?><button class="btn ghost sm" type="submit" data-busy="Sprawdzam…">Sprawdź połączenie z CEIDG</button></form>

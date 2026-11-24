@@ -19,7 +19,7 @@ $query = array_filter(['q' => $q ?: null, 'woj' => $region ?: null, 'rodzaj' => 
 <section class="card flush">
   <div class="card-head"><h2><?= $total ?> <?= plural($total, 'wynik', 'wyniki', 'wyników') ?></h2></div>
   <?php if ($rows): ?>
-    <?= App\Core\View::partial('partials/tender_table', ['rows' => $rows, 'withScore' => false]) ?>
+    <?= App\Core\View::partial('partials/tender_table', ['rows' => $rows, 'offers' => App\Modules\Offers\Offers::byTender(App\Core\Auth::orgId()), 'withScore' => false]) ?>
     <?= App\Core\View::partial('partials/pager', ['page' => $page, 'total' => $total, 'per' => App\Http\TenderController::PER_PAGE, 'query' => $query]) ?>
   <?php else: ?>
     <div class="empty"><h3>Nic nie znaleźliśmy</h3><p>Spróbuj krótszego słowa albo usuń filtr województwa.</p></div>

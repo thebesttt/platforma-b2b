@@ -38,7 +38,7 @@ $base = array_filter(['profil' => $profileId ?: null, 'q' => $q ?: null]);
     </form>
   </div>
   <?php if ($rows): ?>
-    <?= App\Core\View::partial('partials/tender_table', ['rows' => $rows, 'withScore' => true]) ?>
+    <?= App\Core\View::partial('partials/tender_table', ['rows' => $rows, 'offers' => App\Modules\Offers\Offers::byTender(App\Core\Auth::orgId()), 'withScore' => true]) ?>
     <?= App\Core\View::partial('partials/pager', ['page' => $page, 'total' => $total, 'per' => App\Http\TenderController::PER_PAGE, 'query' => $base + ($status !== 'active' ? ['status' => $status] : [])]) ?>
   <?php else: ?>
     <div class="empty"><h3>Brak ogłoszeń w tym widoku</h3><p>Zmień filtr albo poszerz profil o kolejne kody CPV i słowa kluczowe.</p></div>

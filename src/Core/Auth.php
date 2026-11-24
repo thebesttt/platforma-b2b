@@ -17,8 +17,10 @@ final class Auth
     {
         if (self::$user === null && !empty($_SESSION['uid'])) {
             self::$user = Db::get()->one('SELECT * FROM users WHERE id = ?', [(int) $_SESSION['uid']]);
-            if (!self::$user) {
-                unset($_SESSION['uid']);
+            // Sesja jest ważna, dopóki zgadza się numer sesji osoby. Zmiana hasła albo „wyloguj wszędzie” podnosi numer.
+            if (!self::$user || (int) ($_SESSION['ep'] ?? 0) !== (int) (self::$user['session_epoch'] ?? 0)) {
+                self::$user = null;
+                unset($_SESSION['uid'], $_SESSION['ep']);
             }
         }
         return self::$user;
@@ -74,6 +76,7 @@ final class Auth
         self::$user = null;
         self::$org = null;
         $_SESSION['uid'] = $userId;
+        $_SESSION['ep'] = (int) Db::get()->val('SELECT session_epoch FROM users WHERE id = ?', [$userId]);
     }
 
     public static function hash(string $password): string
@@ -84,7 +87,7 @@ final class Auth
     /**
      * @return array{ok: bool, error?: string, user_id?: int}
      */
-    public static function register(string $company, string $nip, string $name, string $email, string $password): array
+    public static function register(string $company, string $nip, string $name, string $email, string $password, string $plan = 'basic'): array
     {
         $email = mb_strtolower(trim($email));
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -107,11 +110,12 @@ final class Auth
         if ($db->val('SELECT 1 FROM users WHERE email = ?', [$email])) {
             return ['ok' => false, 'error' => 'Konto z tym adresem e-mail już istnieje. Zaloguj się.'];
         }
-        $uid = $db->transaction(static function (Db $db) use ($company, $nip, $name, $email, $password): int {
+        $plan = isset(Plans::PLANS[$plan]) ? $plan : 'basic';
+        $uid = $db->transaction(static function (Db $db) use ($company, $nip, $name, $email, $password, $plan): int {
             $orgId = $db->insert('organizations', [
                 'name' => trim($company),
                 'nip' => $nip ?: null,
-                'plan' => 'trial',
+                'plan' => $plan,
                 'created_at' => now_utc(),
             ]);
             return $db->insert('users', [
@@ -151,6 +155,17 @@ final class Auth
         }
         Kv::forget($key);
         Kv::forget($emailKey);
+        if (self::blocked(Db::get()->one('SELECT status FROM organizations WHERE id = ?', [(int) $u['org_id']]))) {
+            return ['ok' => false, 'error' => 'Konto firmy jest zablokowane. Skontaktuj się z administratorem platformy.'];
+        }
+        // Logowanie dwuetapowe: hasło się zgadza, ale sesja powstanie dopiero po kodzie z aplikacji. Na kod jest 10 minut.
+        if ((int) ($u['totp_on'] ?? 0) === 1) {
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_regenerate_id(true);
+            }
+            $_SESSION['2fa'] = ['uid' => (int) $u['id'], 'until' => time() + 600];
+            return ['ok' => true, 'twofa' => true];
+        }
         self::login((int) $u['id']);
         return ['ok' => true];
     }
@@ -161,9 +176,61 @@ final class Auth
             session_regenerate_id(true);
         }
         $_SESSION['uid'] = $userId;
+        $_SESSION['ep'] = (int) Db::get()->val('SELECT session_epoch FROM users WHERE id = ?', [$userId]);
+        unset($_SESSION['2fa']);
         self::$user = null;
         self::$org = null;
         Db::get()->update('users', ['last_login_at' => now_utc()], 'id = ?', [$userId]);
+    }
+
+    /**
+     * Wylogowuje wszystkie sesje osoby. $keepCurrent zostawia sesję, z której przyszło to zapytanie
+     * (np. po zmianie hasła: inne urządzenia tracą dostęp, a osoba pracuje dalej).
+     */
+    public static function revokeSessions(int $userId, bool $keepCurrent = false): void
+    {
+        $db = Db::get();
+        $db->run('UPDATE users SET session_epoch = session_epoch + 1 WHERE id = ?', [$userId]);
+        if ($keepCurrent && (int) ($_SESSION['uid'] ?? 0) === $userId) {
+            $_SESSION['ep'] = (int) $db->val('SELECT session_epoch FROM users WHERE id = ?', [$userId]);
+        }
+        self::$user = null;
+    }
+
+    /** Osoba, która podała hasło i czeka na kod z aplikacji. Null, gdy nikt nie czeka albo czas minął. */
+    public static function pendingTwoFactor(): ?array
+    {
+        $p = $_SESSION['2fa'] ?? null;
+        if (!is_array($p) || (int) ($p['until'] ?? 0) < time()) {
+            unset($_SESSION['2fa']);
+            return null;
+        }
+        return Db::get()->one('SELECT * FROM users WHERE id = ? AND totp_on = 1', [(int) $p['uid']]);
+    }
+
+    /** Drugi krok logowania. Po 6 błędnych kodach trzeba podać hasło od nowa. */
+    public static function finishTwoFactor(string $code): array
+    {
+        $u = self::pendingTwoFactor();
+        if (!$u) {
+            return ['ok' => false, 'expired' => true, 'error' => 'Czas na kod minął. Zaloguj się jeszcze raz.'];
+        }
+        if (Kv::hit('2fa:' . (int) $u['id'], 900) > 6) {
+            unset($_SESSION['2fa']);
+            return ['ok' => false, 'expired' => true, 'error' => 'Zbyt wiele błędnych kodów. Zaloguj się jeszcze raz za 15 minut.'];
+        }
+        if (!Totp::check($u, $code)) {
+            return ['ok' => false, 'error' => 'Kod jest nieprawidłowy. Wpisz aktualny kod z aplikacji albo kod zapasowy.'];
+        }
+        Kv::forget('2fa:' . (int) $u['id']);
+        self::login((int) $u['id']);
+        return ['ok' => true];
+    }
+
+    /** Czy firma jest zablokowana przez administratora platformy. */
+    public static function blocked(?array $org): bool
+    {
+        return $org !== null && ($org['status'] ?? 'active') === 'blocked';
     }
 
     public static function logout(): void

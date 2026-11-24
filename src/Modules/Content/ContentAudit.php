@@ -204,7 +204,8 @@ final class ContentAudit
         }
         $state = json_in($a['state_json']);
         try {
-            $state = Measure::step((string) $name, $state);
+            // Ocena AI (D1, D2) liczy się do przydziału firmy także wtedy, gdy audyt kończy zadanie dzienne, bez zalogowanej osoby.
+            $state = \App\Modules\Ai\Claude::as($orgId, 'ops', static fn () => Measure::step((string) $name, $state));
             $steps[$name] = 'done';
         } catch (\Throwable $e) {
             error_log('[content] audyt ' . $auditId . ', krok ' . $name . ': ' . $e->getMessage() . ' @ ' . basename($e->getFile()) . ':' . $e->getLine());

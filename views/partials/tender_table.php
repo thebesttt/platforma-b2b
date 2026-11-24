@@ -1,11 +1,12 @@
 <?php
 use App\Modules\Tenders\Regions;
 use App\Modules\Tenders\Tenders;
-/** @var array $rows @var bool $withScore */
+/** @var array $rows @var bool $withScore @var array<int, int> $offers przetarg => szkic oferty firmy */
+$offers ??= [];
 ?>
 <div class="table-wrap">
   <table>
-    <thead><tr><?php if ($withScore): ?><th scope="col">Ocena</th><?php endif ?><th scope="col">Przedmiot i zamawiający</th><th scope="col" class="n">Wartość szac.</th><th scope="col">Składanie ofert</th><th scope="col">Płatnik</th></tr></thead>
+    <thead><tr><?php if ($withScore): ?><th scope="col">Ocena</th><?php endif ?><th scope="col">Przedmiot i zamawiający</th><th scope="col" class="n">Wartość szac.</th><th scope="col">Składanie ofert</th><th scope="col">Płatnik</th><th scope="col">Oferta</th></tr></thead>
     <tbody>
     <?php foreach ($rows as $t): $days = days_until($t['deadline_at']); ?>
       <tr>
@@ -19,6 +20,7 @@ use App\Modules\Tenders\Tenders;
         <td class="n"><?= $t['value_estimated'] ? e(short_money($t['value_estimated'])) : '<span class="muted">-</span>' ?></td>
         <td class="nowrap"><?php if ($t['deadline_at']): ?><?= e(local_dt($t['deadline_at'], 'd.m.Y, H:i')) ?><div class="t-sub"><?= $days !== null && $days < 3 ? '<span class="chip high">za ' . max(0, $days) . ' ' . plural(max(0, $days), 'dzień', 'dni', 'dni') . '</span>' : 'za ' . (int) $days . ' ' . plural((int) $days, 'dzień', 'dni', 'dni') ?></div><?php else: ?><span class="muted">-</span><?php endif ?></td>
         <td><?= $t['buyer_risk'] !== null ? risk_chip((int) $t['buyer_risk']) : ($t['buyer_nip'] ? '<a class="chip neutral" href="/kontrahenci/' . e($t['buyer_nip']) . '">Sprawdź</a>' : '<span class="chip neutral">Brak NIP</span>') ?></td>
+        <td class="nowrap"><?php if (isset($offers[(int) $t['id']])): ?><a class="chip low" href="/oferty/<?= (int) $offers[(int) $t['id']] ?>">w ofertach</a><?php else: ?><form method="post" action="/przetargi/<?= (int) $t['id'] ?>/do-ofert"><?= csrf_field() ?><button class="btn ghost sm" type="submit" data-busy="Dodaję…">Do ofert</button></form><?php endif ?></td>
       </tr>
     <?php endforeach ?>
     </tbody>

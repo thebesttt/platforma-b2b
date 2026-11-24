@@ -15,9 +15,33 @@ final class Claude
 {
     public const URL = 'https://api.anthropic.com/v1/messages';
 
+    /** Firma i rodzaj użycia dla zapytań spoza zalogowanej sesji (czat w widżecie, zadania w tle). Null: bierzemy zalogowaną firmę. */
+    private static ?array $scope = null;
+
     public static function enabled(): bool
     {
         return (string) Config::get('ANTHROPIC_API_KEY') !== '';
+    }
+
+    /**
+     * Wykonuje funkcję z użyciami AI przypisanymi do podanej firmy. $kind: ops (funkcje panelu) albo chat (czat na stronie).
+     * Potrzebne tam, gdzie nikt nie jest zalogowany: widżet na stronie klienta i zadania dzienne.
+     */
+    public static function as(int $orgId, string $kind, callable $fn): mixed
+    {
+        $before = self::$scope;
+        self::$scope = [$orgId, $kind === 'chat' ? 'chat' : 'ops'];
+        try {
+            return $fn();
+        } finally {
+            self::$scope = $before;
+        }
+    }
+
+    /** @return array{0: int, 1: string} firma i rodzaj użycia dla bieżącego zapytania */
+    private static function scope(): array
+    {
+        return self::$scope ?? [\App\Core\Auth::orgId(), 'ops'];
     }
 
     /**
@@ -31,6 +55,12 @@ final class Claude
         if (!self::enabled()) {
             return ['ok' => false, 'error' => 'Funkcje AI są wyłączone: brak klucza ANTHROPIC_API_KEY.'];
         }
+        // Przydział AI z pakietu firmy. Zapytania bez firmy (test połączenia administratora, wiersz poleceń) nie są liczone.
+        [$orgId, $kind] = self::scope();
+        if ($orgId > 0 && !\App\Core\Plans::aiAllowed($orgId, $kind)) {
+            return ['ok' => false, 'limit' => true, 'error' => \App\Core\Plans::aiLimitMessage($orgId)];
+        }
+        $model = \App\Core\Plans::model($orgId);
         $content = $user;
         if ($cachedContext !== null && trim($cachedContext) !== '') {
             $content = [
@@ -39,7 +69,7 @@ final class Claude
             ];
         }
         $r = Http::postJson(self::URL, [
-            'model' => (string) Config::get('AI_MODEL'),
+            'model' => $model,
             'max_tokens' => $maxTokens,
             'system' => $system,
             'messages' => [['role' => 'user', 'content' => $content]],
@@ -59,10 +89,13 @@ final class Claude
             }
         }
         $usage = (array) ($j['usage'] ?? []);
-        // Zużycie zapisujemy w dzienniku - podstawa do kontroli kosztów na firmę.
+        // Zużycie: licznik pakietu (firma, miesiąc) i wpis w dzienniku z liczbą tokenów.
         try {
+            if ($orgId > 0) {
+                \App\Core\Plans::aiRecord($orgId, $kind, $usage);
+            }
             \App\Core\AuditLog::add('ai.call', null, null, [
-                'model' => (string) Config::get('AI_MODEL'),
+                'model' => $model, 'kind' => $kind,
                 'input' => (int) ($usage['input_tokens'] ?? 0),
                 'cache_write' => (int) ($usage['cache_creation_input_tokens'] ?? 0),
                 'cache_read' => (int) ($usage['cache_read_input_tokens'] ?? 0),

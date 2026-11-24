@@ -292,6 +292,7 @@ return [
         [$orgId, $uid] = make_org();
         $db = Db::get();
         login_as($uid);
+        $db->update('organizations', ['plan' => 'extended'], 'id = ?', [$orgId]);
         $siteId = Sites::add($orgId, 'sklep-przykladowy.example')['id'];
         $base = '/audyt/widocznosc/' . $siteId;
         [$key, $public] = seo_service_account();

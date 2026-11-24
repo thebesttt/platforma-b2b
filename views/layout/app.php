@@ -41,6 +41,7 @@ $has = static fn (string $m): bool => in_array($m, $mods, true);
       <div class="nav-sub">Konto</div>
       <a href="/biblioteka"<?= nav_on('/biblioteka') ?>>Biblioteka firmy</a>
       <a href="/ustawienia"<?= nav_on('/ustawienia') ?>>Ustawienia</a>
+      <?php if (Auth::isAdmin()): ?><a href="/administracja"<?= nav_on('/administracja') ?>>Administracja</a><?php endif ?>
     </nav>
     <div class="org-box">
       <div style="font-weight:600"><?= e($org['name'] ?? '') ?></div>

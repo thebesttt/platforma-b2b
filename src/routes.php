@@ -4,6 +4,7 @@
 declare(strict_types=1);
 
 use App\Core\Router;
+use App\Http\AdminController;
 use App\Http\AuditController;
 use App\Http\AuthController;
 use App\Http\CompanyController;
@@ -30,6 +31,8 @@ return static function (Router $r): void {
     $r->get('/', [AuthController::class, 'home']);
     $r->get('/logowanie', [AuthController::class, 'loginForm']);
     $r->post('/logowanie', [AuthController::class, 'login']);
+    $r->get('/logowanie/kod', [AuthController::class, 'codeForm']);
+    $r->post('/logowanie/kod', [AuthController::class, 'code']);
     $r->get('/rejestracja', [AuthController::class, 'registerForm']);
     $r->post('/rejestracja', [AuthController::class, 'register']);
     $r->post('/wyloguj', [AuthController::class, 'logout']);
@@ -82,6 +85,7 @@ return static function (Router $r): void {
     $r->get('/przetargi/wyniki', [TenderController::class, 'results'], $a);
     $r->get('/przetargi/{id}', [TenderController::class, 'show'], $a);
     $r->post('/przetargi/{id}/status', [TenderController::class, 'status'], $a);
+    $r->post('/przetargi/{id}/do-ofert', [TenderController::class, 'toOffers'], $a);
     $r->post('/przetargi/{id}/dokumenty', [TenderController::class, 'upload'], $a);
     $r->post('/przetargi/{id}/dokumenty/{doc}/usun', [TenderController::class, 'deleteDocument'], $a);
     $r->post('/przetargi/{id}/analiza', [TenderController::class, 'analyze'], $a);
@@ -210,10 +214,26 @@ return static function (Router $r): void {
     $r->get('/reklamy', [AuditController::class, 'ads'], $a);
 
     // Ustawienia
+    // Administracja platformy: tylko adresy z ADMIN_EMAILS (dla innych 404)
+    $r->get('/administracja', [AdminController::class, 'index'], $a);
+    $r->post('/administracja/firmy/{id}', [AdminController::class, 'firm'], $a);
+    $r->post('/administracja/zaproszenia', [AdminController::class, 'invite'], $a);
+    $r->post('/administracja/zaproszenia/{id}/usun', [AdminController::class, 'revokeInvite'], $a);
+    $r->post('/administracja/pakiety', [AdminController::class, 'limits'], $a);
+    $r->post('/administracja/kody', [AdminController::class, 'resetTwoFactor'], $a);
     $r->get('/ustawienia', [SettingsController::class, 'index'], $a);
     $r->post('/ustawienia', [SettingsController::class, 'save'], $a);
     $r->post('/ustawienia/haslo', [SettingsController::class, 'password'], $a);
     $r->post('/ustawienia/zespol', [SettingsController::class, 'invite'], $a);
+    $r->post('/ustawienia/zespol/{id}/usun', [SettingsController::class, 'removeMember'], $a);
+    $r->post('/ustawienia/zespol/{id}/kody', [SettingsController::class, 'resetMemberTwoFactor'], $a);
+    $r->post('/ustawienia/wyloguj-wszedzie', [SettingsController::class, 'logoutEverywhere'], $a);
+    $r->get('/ustawienia/logowanie-dwuetapowe', [SettingsController::class, 'twoFactor'], $a);
+    $r->post('/ustawienia/logowanie-dwuetapowe/start', [SettingsController::class, 'twoFactorStart'], $a);
+    $r->post('/ustawienia/logowanie-dwuetapowe/wlacz', [SettingsController::class, 'twoFactorEnable'], $a);
+    $r->post('/ustawienia/logowanie-dwuetapowe/wylacz', [SettingsController::class, 'twoFactorDisable'], $a);
+    $r->get('/ustawienia/dane-firmy.zip', [SettingsController::class, 'export'], $a);
+    $r->post('/ustawienia/usun-firme', [SettingsController::class, 'deleteOrg'], $a);
     $r->post('/ustawienia/test-ai', [SettingsController::class, 'testAi'], $a);
     $r->post('/ustawienia/test-ceidg', [SettingsController::class, 'testCeidg'], $a);
     $r->post('/ustawienia/test-google', [SettingsController::class, 'testGoogle'], $a);

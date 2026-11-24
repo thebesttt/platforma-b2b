@@ -45,6 +45,30 @@ final class Offers
         'text' => 'Gotowy opis (np. o firmie, metodyka)',
     ];
 
+    /**
+     * Szkic oferty dla przetargu: istniejący albo nowy. Jeden klik w przetargach dodaje go do zakładki Oferty
+     * i nie tworzy drugiego szkicu dla tego samego ogłoszenia.
+     * @return array{id: int, created: bool}
+     */
+    public static function ensureForTender(int $orgId, int $userId, array $tender): array
+    {
+        $existing = Db::get()->val('SELECT id FROM offers WHERE org_id = ? AND tender_id = ? ORDER BY id LIMIT 1', [$orgId, (int) $tender['id']]);
+        if ($existing) {
+            return ['id' => (int) $existing, 'created' => false];
+        }
+        return ['id' => self::create($orgId, $userId, $tender), 'created' => true];
+    }
+
+    /** @return array<int, int> przetarg => szkic oferty firmy (dla list przetargów) */
+    public static function byTender(int $orgId): array
+    {
+        $out = [];
+        foreach (Db::get()->all('SELECT tender_id, MIN(id) AS id FROM offers WHERE org_id = ? AND tender_id IS NOT NULL GROUP BY tender_id', [$orgId]) as $r) {
+            $out[(int) $r['tender_id']] = (int) $r['id'];
+        }
+        return $out;
+    }
+
     public static function create(int $orgId, int $userId, ?array $tender, string $kind = 'tender', array $call = []): int
     {
         $db = Db::get();
