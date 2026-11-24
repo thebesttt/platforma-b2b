@@ -110,6 +110,6 @@ ACTIONS['co-fin'] = () => {
 };
 CHANGES['co-pick'] = (el) => { state.co.id = el.value; rerender('kontrahent'); refocus('coPick'); };
 
-MODS.push({ id: 'kontrahenci', order: 9, label: 'Kontrahenci', about: 'Karta firmy po NIP z oceną ryzyka płatniczego, obserwowanie zmian w rejestrach i należności z warunkami wpisu do BIG.',
+MODS.push({ id: 'kontrahenci', group: 'firmy', order: 9, label: 'Kontrahenci', about: 'Karta firmy po NIP z oceną ryzyka płatniczego, obserwowanie zmian w rejestrach i należności z warunkami wpisu do BIG.',
   head: (v) => ({ crumbs: 'Wiarygodność kontrahentów', title: { kontrahent: 'Karta firmy', obserwowane: 'Obserwowane firmy', naleznosci: 'Należności' }[v.id] }),
   views: [{ id: 'kontrahent', label: 'Karta firmy', gap: 32, render: renderCompany }, { id: 'obserwowane', label: 'Obserwowane i alerty', render: renderWatch }, { id: 'naleznosci', label: 'Należności', gap: 32, render: renderReceivables }] });

@@ -23,7 +23,6 @@ function renderGrants() {
       <div><b>${esc(name)}</b><p class="small"><a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(link)}</a></p></div><div><p>${esc(what)}</p></div><span></span></div>`).join('');
   const when = (f) => f.opens && daysTo(f.opens) > 0 ? st('plain', 'start ' + dpl(f.opens)) : (f.until ? leftState(daysTo(f.until), 'do ' + dpl(f.until) + ', ' + dni(daysTo(f.until))) : st('plain', 'bez daty końca'));
   const finds = g.finds.filter((f) => !f.done);
-  const writing = g.writing || 0, left = unsourced(g.sections);
   put('dotacje', `<div class="sec">${secHead('Znajdź nabory dla firmy', 'Opisujesz, na co szukasz pieniędzy. AI przeszukuje internet, wybiera nabory, które trwają albo są zapowiedziane, i przy każdym podaje stronę, na której go znalazła.')}${stan('silnik', 'Wyszukiwarka naborów. Jedno wyszukiwanie to jedno użycie AI z pakietu. W pakiecie Rozszerzonym panel powtarza je co tydzień sam.')}
       <div class="form" style="padding-top:16px"><label class="field" for="gfWhat" style="flex:1 1 100%">Na co szukasz dofinansowania<input id="gfWhat" type="text" maxlength="300" value="${esc(q.what)}"></label>
         <label class="field" for="gfRegion" style="flex:0 1 220px">Województwo<input id="gfRegion" type="text" value="${esc(q.region)}"></label>
@@ -42,10 +41,6 @@ function renderGrants() {
       g.calls.map((c) => { const open = c.checks.filter((x) => !x[0]).length; return `<div style="padding:18px 0;border-bottom:1px solid var(--line)" class="stack">
         <div class="bar-row"><div><h3>${esc(c.name)}</h3><p class="small muted">${c.until ? 'Wnioski do ' + esc(c.until) : 'Bez daty końca'}${c.amount ? ', ' + esc(c.amount) : ''}</p></div>${c.checks.length ? st(open ? 'mid' : 'good', open ? 'do sprawdzenia: ' + open : 'warunki spełnione') : st('plain', 'obserwowany')}</div>
         ${c.checks.length ? checkList(c.checks, 'spełnione', 'do sprawdzenia') : '<p class="small muted">Warunki udziału panel sprawdzi po wgraniu regulaminu do wniosku.</p>'}</div>`; }).join('') + `</div>
-    <div class="sec" id="gcDoc">${secHead('Wniosek o dotację', 'Jeden przycisk pisze wszystkie sekcje, których nikt nie oznaczył jako gotowe. AI korzysta tylko z regulaminu naboru i biblioteki firmy.', 'do sprawdzenia: ' + left)}${stan('silnik', 'Wniosek z własnymi sekcjami i dokumentami naboru. Każda sekcja to jedno użycie AI.')}
-      <div class="acts" style="padding-top:16px"><button class="btn" type="button" data-act="o-write-all"${writing ? ' disabled' : ''}>${writing ? 'AI pisze sekcję ' + writing + ' z ' + g.sections.length + '…' : (g.wrote ? 'Napisz cały wniosek od nowa' : 'Napisz cały wniosek')}</button>
-        <span class="small muted">${g.wrote ? 'AI napisało ' + g.sections.length + ' sekcje. Przeczytaj je, popraw i oznacz jako gotowe.' : 'Sekcje: ' + g.sections.length + '. Regulamin i kryteria oceny wgrywasz sam, bo panel nie pobiera plików z zabezpieczonych stron.'}</span></div>
-      ${docOf(g.sections)}</div>
     <div class="sec">${secHead('Oficjalne listy naborów', 'Pełne listy prowadzą serwisy funduszy. Są zabezpieczone przed automatami, więc panel ich nie pobiera: tu sprawdzisz termin i regulamin.')}${src}</div>
     <div class="sec">${secHead('Wpisz nabór ręcznie', 'Dla naboru, którego wyszukiwarka nie znalazła. Wystarczy nazwa. Z datą końca panel przypomni o naborze.')}
       <div class="form" style="padding-top:16px"><label class="field" for="gcName" style="flex:2 1 300px">Nabór albo program<input id="gcName" type="text" maxlength="200"></label>
@@ -53,6 +48,15 @@ function renderGrants() {
         <label class="field" for="gcAmount">Kwota albo poziom dofinansowania, opcjonalnie<input id="gcAmount" type="text" maxlength="120"></label>
         <button class="btn" type="button" data-act="o-call-add">Zapisz nabór</button></div>
       <p class="note" id="gcNote" tabindex="-1" hidden style="margin-top:14px"></p></div>`);
+}
+
+function renderGrantDoc() {
+  const g = PLAT.grants, writing = g.writing || 0, left = unsourced(g.sections), call = g.calls[g.calls.length - 1];
+  put('wniosek', `<p class="note">Wniosek dla naboru: <b>${esc(call.name)}</b>. AI pisze szkic, człowiek zatwierdza i składa. Regulamin i kryteria oceny wgrywasz sam, bo panel nie pobiera plików z zabezpieczonych stron.</p>
+    <div class="sec" id="gcDoc">${secHead('Wniosek o dotację', 'Jeden przycisk pisze wszystkie sekcje, których nikt nie oznaczył jako gotowe. AI korzysta tylko z regulaminu naboru i biblioteki firmy.', 'do sprawdzenia: ' + left)}${stan('silnik', 'Wniosek z własnymi sekcjami i dokumentami naboru. Każda sekcja to jedno użycie AI.')}
+      <div class="acts" style="padding-top:16px"><button class="btn" type="button" data-act="o-write-all"${writing ? ' disabled' : ''}>${writing ? 'AI pisze sekcję ' + writing + ' z ' + g.sections.length + '…' : (g.wrote ? 'Napisz cały wniosek od nowa' : 'Napisz cały wniosek')}</button>
+        <span class="small muted">${g.wrote ? 'AI napisało ' + g.sections.length + ' sekcje. Przeczytaj je, popraw i oznacz jako gotowe.' : 'Sekcje: ' + g.sections.length + '. Regulamin i kryteria oceny wgrywasz sam, bo panel nie pobiera plików z zabezpieczonych stron.'}</span></div>
+      ${docOf(g.sections)}</div>`);
 }
 
 const sayIn = (id, text) => { const n = document.getElementById(id); if (!n) return; n.textContent = text; n.hidden = false; n.focus(); };
@@ -70,8 +74,8 @@ ACTIONS['o-find-go'] = (btn) => {
   const f = PLAT.grants.finds.find((x) => x.id === btn.dataset.id), how = btn.dataset.how;
   f.done = true;
   if (how !== 'skip') PLAT.grants.calls.push({ name: f.name, until: f.until ? dpl(f.until) : '', amount: f.amount, checks: [] });
-  rerender('dotacje');
-  if (how === 'write') { document.getElementById('gcDoc').scrollIntoView({ block: 'start' }); return; }
+  rerender('dotacje', 'wniosek', 'pulpit');
+  if (how === 'write') { rerender('wniosek'); location.hash = '#wniosek'; return; }
   sayIn('gfNote', how === 'skip' ? 'Nabór zdjęty z listy znalezionych.' : 'Nabór jest na liście obserwowanych. Panel przypomni o końcu naboru 14, 7 i 3 dni wcześniej.');
 };
 
@@ -80,9 +84,9 @@ ACTIONS['o-write-all'] = () => {
   const g = PLAT.grants;
   if (g.writing) return;
   const step = (i) => {
-    if (i >= g.sections.length) { g.writing = 0; g.wrote = true; rerender('dotacje'); return; }
+    if (i >= g.sections.length) { g.writing = 0; g.wrote = true; rerender('wniosek'); return; }
     g.writing = i + 1;
-    rerender('dotacje');
+    rerender('wniosek');
     window.setTimeout(() => { g.sections[i][1] = g.written[i]; step(i + 1); }, 900);
   };
   step(0);
@@ -105,8 +109,12 @@ function renderLibrary() {
       kinds.map((k) => PLAT.library.filter((i) => i[0] === k).map((i, n) => `<div class="item" style="--c1:250px"><span class="lead-col">${n ? '' : esc(k)}</span><div><p><b>${esc(i[1])}</b></p><p>${esc(i[2])}</p></div><span></span></div>`).join('')).join('') + `</div>`);
 }
 
-MODS.push({ id: 'oferty', order: 8, label: 'Oferty', about: 'Szkic oferty z ogłoszenia i biblioteki firmy, wyszukiwarka naborów, wniosek o dotację jednym przyciskiem i eksport do .docx.',
+MODS.push({ id: 'oferty', group: 'zamowienia', order: 8, label: 'Oferty', about: 'Szkic oferty z ogłoszenia i biblioteki firmy, lista dokumentów, cała oferta jednym przyciskiem i eksport do .docx.',
   head: (v) => v.id === 'oferta'
-    ? { crumbs: 'Oferty i wnioski', title: 'Oferta: ' + tenderOf(PLAT.offer.tender).title, facts: [['Zamawiający', tenderOf(PLAT.offer.tender).buyer], ['Składanie ofert', dpl(tenderOf(PLAT.offer.tender).deadline)]] }
-    : { crumbs: 'Oferty i wnioski', title: { dotacje: 'Nabory i wnioski o dotacje', biblioteka: 'Biblioteka firmy' }[v.id] },
-  views: [{ id: 'oferta', label: 'Oferta', render: renderOffer }, { id: 'dotacje', label: 'Dotacje', gap: 40, render: renderGrants }, { id: 'biblioteka', label: 'Biblioteka firmy', render: renderLibrary }] });
+    ? { crumbs: 'Oferty', title: 'Oferta: ' + tenderOf(PLAT.offer.tender).title, facts: [['Zamawiający', tenderOf(PLAT.offer.tender).buyer], ['Składanie ofert', dpl(tenderOf(PLAT.offer.tender).deadline)]] }
+    : { crumbs: 'Oferty', title: 'Biblioteka firmy' },
+  views: [{ id: 'oferta', label: 'Oferta', render: renderOffer }, { id: 'biblioteka', label: 'Biblioteka firmy', render: renderLibrary }] });
+
+MODS.push({ id: 'dotacje', group: 'zamowienia', order: 8.5, label: 'Dotacje', about: 'Wyszukiwarka naborów ze źródłami, obserwowane nabory z przypomnieniami i wniosek pisany jednym przyciskiem.',
+  head: (v) => ({ crumbs: 'Dotacje', title: { dotacje: 'Nabory dotacji', wniosek: 'Wniosek o dotację' }[v.id] }),
+  views: [{ id: 'dotacje', label: 'Nabory', gap: 40, render: renderGrants }, { id: 'wniosek', label: 'Wniosek', gap: 40, render: renderGrantDoc }] });

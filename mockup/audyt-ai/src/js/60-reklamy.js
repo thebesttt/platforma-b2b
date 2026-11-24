@@ -105,6 +105,6 @@ FORMS.adBudgetForm = () => {
   adLog(`${c.name}: budżet dzienny z ${num(old)} zł na ${num(v)} zł`);
 };
 
-MODS.push({ id: 'reklamy', order: 6, label: 'Reklamy', about: 'Wydatki, konwersje i koszt konwersji z Google Ads i Meta w jednym widoku, alerty i proste zarządzanie kampaniami.',
+MODS.push({ id: 'reklamy', group: 'marketing', order: 6, label: 'Reklamy', about: 'Wydatki, konwersje i koszt konwersji z Google Ads i Meta w jednym widoku, alerty i proste zarządzanie kampaniami.',
   head: (v) => ({ crumbs: 'Google Ads i Meta Ads', title: { reklamy: 'Wyniki reklam', kampanie: 'Kampanie', alerty: 'Alerty' }[v.id], facts: [['Klient', PLAT.ads.client], ['Okres', '19.10-15.11.2026'], ['Porównanie z', '21.09-18.10.2026']] }),
   views: [{ id: 'reklamy', label: 'Wyniki', render: renderAds }, { id: 'kampanie', label: 'Kampanie', render: renderCampaigns }, { id: 'alerty', label: 'Alerty', render: renderAlerts }] });

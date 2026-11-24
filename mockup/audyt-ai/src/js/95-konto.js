@@ -64,6 +64,6 @@ ACTIONS['a-invite'] = () => {
   say('Link do wysłania (panel pokazuje go tylko raz): panel.perfectdata.pl/rejestracja?zaproszenie=3f9c… W mockupie link jest przykładowy.');
 };
 
-MODS.push({ id: 'konto', order: 10, label: 'Konto', about: 'Pakiet firmy i przydział AI, logowanie dwuetapowe, dane firmy i administracja panelu dla wielu firm.',
+MODS.push({ id: 'konto', group: 'konto', order: 10, label: 'Konto', about: 'Pakiet firmy i przydział AI, logowanie dwuetapowe, dane firmy i administracja panelu dla wielu firm.',
   head: (v) => ({ crumbs: 'Konto i platforma', title: { pakiet: 'Pakiet i przydział AI', bezpieczenstwo: 'Bezpieczeństwo i dane firmy', administracja: 'Administracja panelu' }[v.id] }),
   views: [{ id: 'pakiet', label: 'Pakiet i AI', render: renderPlan }, { id: 'bezpieczenstwo', label: 'Bezpieczeństwo i dane', render: renderSecurity }, { id: 'administracja', label: 'Administracja', render: renderAdmin }] });

@@ -146,7 +146,7 @@ Docelowym rozwiązaniem może być mały serwer pośredniczący w Polsce.
 ## Testy
 
 ```bash
-php tests/run.php                                           # 182 testy, SQLite, bez sieci
+php tests/run.php                                           # 183 testy, SQLite, bez sieci
 TEST_DATABASE_URL=postgres://… php tests/run.php            # te same testy na PostgreSQL
 php tests/live_contract.php                                 # prawdziwe API: BZP, TED, VAT, KRS, UOKiK
 sh tests/smoke.sh http://localhost:10000                    # test dymny działającej instancji

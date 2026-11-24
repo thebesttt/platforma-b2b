@@ -41,10 +41,16 @@ ul, ol, dl, dd { margin: 0; padding: 0; }
 .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-weight: 700; font-size: 18px; letter-spacing: -0.02em; }
 .logo-mark { width: 30px; height: 30px; border: 1.5px solid var(--gold); border-radius: 7px; display: grid; place-items: center; font-size: 12px; letter-spacing: 0; color: var(--gold); }
 .logo b { color: var(--gold); font-weight: 700; }
-.mods { display: flex; gap: 20px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.mods { display: flex; gap: 26px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
 .mods::-webkit-scrollbar { display: none; }
 .mods a { flex: none; white-space: nowrap; color: var(--text); text-decoration: none; font-size: 14px; font-weight: 500; padding: 8px 0; border-bottom: 2px solid transparent; }
 .mods a.on { border-bottom-color: var(--gold); }
+.subnav { display: flex; gap: 24px; overflow-x: auto; scrollbar-width: none; border-top: 1px solid var(--line); }
+.subnav[hidden] { display: none; }
+.subnav::-webkit-scrollbar { display: none; }
+.subnav a { flex: none; white-space: nowrap; color: var(--muted); text-decoration: none; font-size: 13.5px; font-weight: 500; padding: 9px 0; border-bottom: 2px solid transparent; }
+.subnav a.on { color: var(--text); border-bottom-color: var(--gold); }
+.subnav a:hover { color: var(--gold-hi); }
 .mods a:hover { color: var(--gold-hi); }
 .back { font-size: 13.5px; color: var(--muted); }
 .page { display: flex; flex-direction: column; gap: 28px; padding-block: 36px 72px; }
@@ -303,7 +309,8 @@ details.more > summary:hover { color: var(--text); }
   <a class="logo" href="#pulpit" aria-label="PerfectData, pulpit"><span class="logo-mark" aria-hidden="true">PD</span><span>Perfect<b>Data</b></span></a>
   <nav class="mods agency-only" aria-label="Moduły" id="mods"></nav>
   <a class="back agency-only" href="https://perfectdata.pl" target="_blank" rel="noopener">perfectdata.pl</a>
-</div></header>
+</div>
+<div class="subnav-row agency-only"><nav class="wrap subnav" aria-label="Moduły w tej części" id="submods" hidden></nav></div></header>
 <main class="wrap page">
   <p class="note" id="clientNote" hidden>Widok klienta. Tak wygląda raport pod publicznym linkiem: tylko do odczytu, bez panelu agencji.</p>
   <header class="head">
@@ -698,11 +705,11 @@ function renderResults() {
 }
 
 /* ===== Moduły ===== */
-MODS.push({ id: 'zapytania', order: 2, label: 'Zapytania', about: 'Kwalifikator na stronie zamiast formularza: ocena zapytania z jawnych zasad, sprawdzenie firmy, czat AI i test na liczbach.',
+MODS.push({ id: 'zapytania', group: 'sprzedaz', order: 2, label: 'Zapytania', about: 'Kwalifikator na stronie zamiast formularza: ocena zapytania z jawnych zasad, sprawdzenie firmy, czat AI i test na liczbach.',
   head: () => ({ crumbs: 'Zapytania ze strony', title: 'Zapytania z perfectdata.pl', facts: [['Widżet działa na', LEADS.pages], ['Zasady kwalifikacji', 'wersja ' + LEADS.version]] }),
   views: [{ id: 'zapytania', label: 'Zapytania', gap: 32, render: renderLeads }, { id: 'kwalifikator', label: 'Zasady kwalifikacji', gap: 44, render: renderQualifier },
     { id: 'widzet', label: 'Podgląd widżetu', gap: 0, render: renderWidget }, { id: 'wyniki', label: 'Wyniki', gap: 44, render: renderResults }] });
-MODS.push({ id: 'audyt', order: 4, label: 'Audyt AI', client: true, about: 'Audyt treści pod wyszukiwarki i AI: 24 wskaźniki, 100 punktów, lista zadań, porównanie przed i po, raport dla klienta.',
+MODS.push({ id: 'audyt', group: 'marketing', order: 4, label: 'Audyt AI', client: true, about: 'Audyt treści pod wyszukiwarki i AI: 24 wskaźniki, 100 punktów, lista zadań, porównanie przed i po, raport dla klienta.',
   head: () => ({ crumbs: 'Audyt treści pod wyszukiwarki i AI', title: SAMPLE.title,
     facts: [['Klient', SAMPLE.client], ['Adres', SAMPLE.url], ['Fraza', SAMPLE.phrase], ['Audyt z', auditOf(state.audit).date], ['Wytyczne', 'wersja ' + RULES.version]] }),
   views: [{ id: 'raport', label: 'Raport', gap: 44, render: renderReport }, { id: 'wytyczne', label: 'Wytyczne wskaźników', gap: 44, render: renderGuide },
@@ -732,10 +739,13 @@ function show() {
   for (const x of allViews()) document.getElementById('v-' + x.v.id).hidden = x.v.id !== v.id;
   const nav = document.getElementById('mods');
   for (const a of nav.querySelectorAll('a')) {
-    const on = a.dataset.mod === m.id;
+    const on = a.dataset.group === m.group;
     a.classList.toggle('on', on);
     if (on) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
   }
+  const sub = document.getElementById('submods'), inGroup = groupMods(m.group);
+  sub.hidden = inGroup.length < 2;
+  sub.innerHTML = inGroup.map((x) => `<a href="#${x.views[0].id}" data-mod="${x.id}"${x.id === m.id ? ' class="on" aria-current="true"' : ''}>${esc(x.label)}</a>`).join('');
   const tabs = document.getElementById('tabs');
   tabs.hidden = m.views.length < 2;
   tabs.innerHTML = m.views.map((x) => `<a href="#${x.id}"${x.agency ? ' class="agency-only"' : ''}${x.id === v.id ? ' aria-current="page"' : ''}>${esc(x.label)}</a>`).join('');
@@ -755,7 +765,12 @@ function show() {
 function renderAll() { for (const { v } of allViews()) v.render(); show(); }
 function go(view) { if (location.hash === '#' + view) show(); else location.hash = '#' + view; }
 
-document.getElementById('mods').innerHTML = MODS.map((m) => `<a href="#${m.views[0].id}" data-mod="${m.id}">${esc(m.label)}</a>`).join('');
+/* Menu główne ma sześć pozycji w kolejności pracy: pulpit, sprzedaż, marketing, przetargi i dotacje, kontrahenci, konto.
+   Grupa z kilkoma modułami pokazuje je w drugim wierszu. Zakładki ekranu zostają pod tytułem strony. */
+const GROUPS = { start: 'Pulpit', sprzedaz: 'Sprzedaż', marketing: 'Marketing', zamowienia: 'Przetargi i dotacje', firmy: 'Kontrahenci', konto: 'Konto' };
+const GROUP_IDS = [...new Set(MODS.map((m) => m.group))];
+const groupMods = (g) => MODS.filter((m) => m.group === g);
+document.getElementById('mods').innerHTML = GROUP_IDS.map((g) => `<a href="#${groupMods(g)[0].views[0].id}" data-group="${g}">${esc(GROUPS[g])}</a>`).join('');
 document.getElementById('views').innerHTML = allViews().map(({ v }) => `<section id="v-${v.id}"${v.gap === 0 ? '' : ` class="stack" style="gap:${v.gap || 36}px"`} aria-label="${esc(v.label)}" hidden></section>`).join('');
 
 document.addEventListener('click', (e) => {

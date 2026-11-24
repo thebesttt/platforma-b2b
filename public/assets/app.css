@@ -57,6 +57,10 @@ code { font-size: 13px; background: var(--line-soft); padding: 1px 6px; border-r
 .nav a:hover { background: var(--line-soft); color: #101828; }
 .nav a.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
 .nav-sub { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; padding: 12px 12px 4px; }
+/* Menu w grupach. W pasku bocznym nazwa grupy jest podpisem nad jej pozycjami, a grupa z jedną pozycją pokazuje samą pozycję. */
+.nav-group, .nav-items { display: flex; flex-direction: column; gap: 2px; }
+.nav a.nav-top { min-height: 0; padding: 12px 12px 4px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; background: none; pointer-events: none; }
+.nav a.nav-top .chip, .nav-group.single .nav-top, .subnav { display: none; }
 .org-box { margin-top: auto; padding: 12px; border-radius: 10px; background: var(--bg); font-size: 13px; line-height: 1.5; }
 .org-box form { margin: 8px 0 0; }
 .content { flex: 999 1 560px; min-width: 0; padding: 32px clamp(16px, 3vw, 40px); }
@@ -69,7 +73,8 @@ code { font-size: 13px; background: var(--line-soft); padding: 1px 6px; border-r
   .sidebar { border-right: 0; border-bottom: 1px solid var(--line); padding: 12px 16px; gap: 12px; }
   .nav { flex-direction: row; flex-wrap: nowrap; overflow-x: auto; gap: 4px; padding-bottom: 4px; }
   .nav a { white-space: nowrap; }
-  .nav-sub { display: none; }
+  .nav-sub, .nav a.nav-top { display: none; }
+  .nav-group, .nav-items { display: contents; }
   .org-box { display: none; }
   .content { padding: 20px 16px; }
 }

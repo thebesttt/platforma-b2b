@@ -41,6 +41,18 @@ code { color: var(--text-2); }
 .nav a:hover { background: none; color: var(--gold-hi); }
 .nav a.on { background: none; color: var(--text); font-weight: 600; border-bottom-color: var(--gold); }
 .nav-sub { display: none; }
+/* Górny wiersz to grupy w kolejności pracy. Pozycje aktywnej grupy są w drugim wierszu (.subnav), więc menu mieści się w jednej linii. */
+.nav-group { display: contents; }
+.nav-items { display: none; }
+.nav a.nav-top, .nav-group.single a.nav-top { display: flex; min-height: 40px; padding: 0; font-size: inherit; font-weight: 500; color: var(--text); text-transform: none; letter-spacing: 0; pointer-events: auto; }
+.nav a.nav-top.on { font-weight: 600; }
+.nav a.nav-top .chip { display: inline-flex; }
+.subnav { order: 5; flex-basis: 100%; display: flex; gap: 0 24px; overflow-x: auto; scrollbar-width: none; margin: 6px calc(-1 * clamp(16px, 3vw, 40px)) 0; padding: 0 clamp(16px, 3vw, 40px); border-top: 1px solid var(--line); }
+.subnav::-webkit-scrollbar { display: none; }
+.subnav a { flex: none; display: flex; align-items: center; gap: 8px; white-space: nowrap; min-height: 38px; color: var(--muted); text-decoration: none; font-size: 13.5px; font-weight: 500; border-bottom: 2px solid transparent; }
+.subnav a:hover { color: var(--gold-hi); }
+.subnav a.on { color: var(--text); font-weight: 600; border-bottom-color: var(--gold); }
+.sidebar:has(.subnav) { padding-bottom: 0; }
 .org-box { display: flex; align-items: center; gap: 14px; margin: 0; padding: 0; background: none; font-size: 13px; white-space: nowrap; }
 .org-box .muted { display: none; }
 .org-box form { margin: 0; }

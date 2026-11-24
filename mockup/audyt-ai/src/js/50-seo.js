@@ -153,7 +153,7 @@ function renderGbp() {
       <p style="padding:14px 0 12px">Ocena <b>${esc(p.rating)}</b> z ${p.reviews} opinii.</p>${checkList(p.checks, 'jest', 'brak')}</div>`);
 }
 
-MODS.push({ id: 'seo', order: 5, label: 'SEO i strona', about: 'Audyt techniczny, widoczność w Google i w odpowiedziach AI, konkurencja i wizytówka Google.',
+MODS.push({ id: 'seo', group: 'marketing', order: 5, label: 'SEO i strona', about: 'Audyt techniczny, widoczność w Google i w odpowiedziach AI, konkurencja i wizytówka Google.',
   head: (v) => ({ crumbs: 'Audyt widoczności, SEO i konkurencji', title: { technika: 'Audyt techniczny strony', konkurenci: 'Konkurenci', google: 'Widoczność w Google', ai: 'Widoczność w odpowiedziach AI', wizytowka: 'Wizytówka Google' }[v.id], facts: [['Klient', SAMPLE.client], ['Strona', PLAT.tech.site]] }),
   views: [{ id: 'technika', label: 'Audyt techniczny', render: renderTech }, { id: 'konkurenci', label: 'Konkurenci', gap: 24, render: renderRivals }, { id: 'google', label: 'Google', gap: 32, render: renderGoogle },
     { id: 'ai', label: 'Odpowiedzi AI', gap: 32, render: renderAi }, { id: 'wizytowka', label: 'Wizytówka', gap: 32, render: renderGbp }] });

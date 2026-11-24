@@ -294,7 +294,7 @@ CHANGES['k-kind'] = (el) => { state.k.kind = el.value; resetDecision(); rerender
 CHANGES['k-ack'] = (el) => { state.k.ack = el.checked; rerender('wiadomosc'); refocus('kAck'); };
 CHANGES['k-filter'] = (el) => { state.k.f[el.dataset.key] = el.value; rerender('firmy'); refocus(el.id); };
 
-MODS.push({ id: 'klienci', order: 3, label: 'Klienci', about: 'Kontakty z podstawą kontaktu, wiadomości z ekranem ryzyka, zapytania ofertowe firm i lista potencjalnych klientów.',
+MODS.push({ id: 'klienci', group: 'sprzedaz', order: 3, label: 'Klienci', about: 'Kontakty z podstawą kontaktu, wiadomości z ekranem ryzyka, zapytania ofertowe firm i lista potencjalnych klientów.',
   head: (v) => ({ crumbs: 'Klienci i wiadomości', title: { kontakty: 'Kontakty', firmy: 'Potencjalni klienci', rfq: 'Zapytania ofertowe firm', wiadomosc: 'Nowa wiadomość', wysylka: 'Wysyłka i dziennik' }[v.id] }),
   views: [{ id: 'kontakty', label: 'Kontakty', render: renderContacts }, { id: 'wiadomosc', label: 'Wiadomość', gap: 28, render: renderMessage }, { id: 'rfq', label: 'Zapytania ofertowe', render: renderRfq },
     { id: 'firmy', label: 'Potencjalni klienci', render: renderSearch }, { id: 'wysylka', label: 'Wysyłka i dziennik', gap: 40, render: renderSending }] });

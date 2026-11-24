@@ -96,19 +96,24 @@
       ]
     },
     {
-      "module": "Oferty i wnioski",
+      "module": "Oferty",
       "items": [
         ["Biblioteka firmy: referencje, osoby, certyfikaty, polisy, opisy", "biblioteka", "silnik", ""],
         ["Szkic oferty z ogłoszenia, SWZ i biblioteki", "oferta", "silnik", ""],
         ["Zdania bez źródła oznaczone do sprawdzenia", "oferta", "silnik", ""],
         ["Lista dokumentów do złożenia", "oferta", "silnik", "Z ogłoszenia i analizy SWZ. Zespół odhacza gotowe pozycje i dopisuje własne."],
         ["Eksport do .docx", "oferta", "silnik", ""],
-        ["Wniosek o dotację według regulaminu naboru", "dotacje", "silnik", ""],
+        ["Praca kilku osób nad jedną ofertą", "oferta", "silnik", "Sekcję przydzielasz osobie z zespołu. Zapis nie nadpisuje cudzej zmiany."]
+      ]
+    },
+    {
+      "module": "Dotacje",
+      "items": [
+        ["Wyszukiwarka naborów: AI szuka i podaje źródła", "dotacje", "silnik", "Opisujesz, na co szukasz pieniędzy. Na listę trafiają tylko nabory, których adres był w wynikach wyszukiwania. Oficjalnych list panel nie pobiera, bo są zabezpieczone przed automatami."],
         ["Obserwowane nabory z przypomnieniami o terminie", "dotacje", "silnik", "Panel przypomina 14, 7 i 3 dni przed końcem naboru i zakłada z naboru szkic wniosku. Nabór trafia tu z wyszukiwarki albo z ręcznego wpisu."],
         ["Ocena, czy firma kwalifikuje się do naboru", "dotacje", "silnik", "Warunki z wgranego regulaminu, każdy z cytatem. Ocena tylko z potwierdzeniem w danych firmy."],
-        ["Praca kilku osób nad jedną ofertą", "oferta", "silnik", "Sekcję przydzielasz osobie z zespołu. Zapis nie nadpisuje cudzej zmiany."],
-        ["Wyszukiwarka naborów: AI szuka i podaje źródła", "dotacje", "silnik", "Opisujesz, na co szukasz pieniędzy. Na listę trafiają tylko nabory, których adres był w wynikach wyszukiwania. Oficjalnych list panel nie pobiera, bo są zabezpieczone przed automatami."],
-        ["Cały wniosek albo oferta jednym przyciskiem", "dotacje", "silnik", "AI pisze po kolei wszystkie sekcje, których nikt nie oznaczył jako gotowe. Każda sekcja to jedno użycie AI z pakietu."]
+        ["Wniosek o dotację według regulaminu naboru", "wniosek", "silnik", ""],
+        ["Cały wniosek albo oferta jednym przyciskiem", "wniosek", "silnik", "AI pisze po kolei wszystkie sekcje, których nikt nie oznaczył jako gotowe. Każda sekcja to jedno użycie AI z pakietu."]
       ]
     },
     {

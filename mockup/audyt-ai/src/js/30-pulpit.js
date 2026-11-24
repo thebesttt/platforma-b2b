@@ -21,6 +21,8 @@ function todayItems() {
   const weak = SAMPLE.pages.filter((p) => p[2] < RULES.levels.mid).sort((a, b) => a[2] - b[2]);
   if (weak.length) items.push(['mid', 'Audyt AI', `Strony poniżej ${RULES.levels.mid} pkt: ${weak.length}`, `Najsłabsza: ${weak[0][0]}, ${weak[0][2]} pkt.`, 'strony']);
   for (const r of PLAT.sequence.running) if (r[2].startsWith('Przypomnienie')) items.push(['plain', 'Klienci', r[2], r[0] + '.', 'wysylka']);
+  const finds = PLAT.grants.finds.filter((f) => !f.done);
+  if (finds.length) items.push(['mid', 'Dotacje', 'Znalezione nabory do przejrzenia: ' + finds.length, 'Wyszukiwarka dopisała propozycje ze źródłami. Sprawdź termin i zdecyduj: obserwuj, pisz wniosek albo odrzuć.', 'dotacje']);
   const order = { bad: 0, mid: 1, plain: 2 };
   return items.sort((a, b) => order[a[0]] - order[b[0]]);
 }
@@ -30,7 +32,8 @@ function renderDesk() {
   put('pulpit', `<div class="sec">${secHead('Dziś', 'Lista powstaje z danych wszystkich modułów. Najpierw sprawy pilne.', items.length)}` +
     items.map(([cls, mod, title, detail, view]) => `<div class="item"><span class="lead-col">${esc(mod)}</span><div><p><b>${esc(title)}</b></p><p>${esc(detail)}</p></div><div class="end">${st(cls, label[cls])}<a href="#${view}">Otwórz</a></div></div>`).join('') + `</div>
     <div class="sec">${secHead('Moduły', 'Każdy moduł ma zakładki pod tytułem strony. Stan każdej funkcji jest w zakładce <a href="#funkcje">Lista funkcji</a>.', MODS.length - 1)}` +
-    MODS.filter((m) => m.id !== 'pulpit').map((m) => `<div class="item"><span style="font-weight:600">${esc(m.label)}</span><div><p>${esc(m.about)}</p></div><div class="end"><a href="#${m.views[0].id}">Otwórz</a></div></div>`).join('') + `</div>`);
+    MODS.filter((m) => m.id !== 'pulpit').map((m, i, all) => (i === 0 || (all[i - 1].group !== m.group && (groupMods(m.group).length > 1 || groupMods(all[i - 1].group).length > 1)) ? `<p class="small muted" style="padding:16px 0 2px"><b>${esc(groupMods(m.group).length > 1 ? GROUPS[m.group] : 'Pozostałe')}</b></p>` : '') +
+      `<div class="item"><span style="font-weight:600">${esc(m.label)}</span><div><p>${esc(m.about)}</p></div><div class="end"><a href="#${m.views[0].id}">Otwórz</a></div></div>`).join('') + `</div>`);
 }
 
 function renderFunctions() {
@@ -42,6 +45,6 @@ function renderFunctions() {
       g.items.map(([name, view, key, note]) => `<div class="item fn" style="--c1:minmax(0,1.25fr)"><a href="#${view}">${esc(name)}</a><span class="small muted">${esc(note)}</span><div class="end">${st(PLAT.states[key][0], PLAT.states[key][1])}</div></div>`).join('') + `</div>`).join(''));
 }
 
-MODS.push({ id: 'pulpit', order: 1, label: 'Pulpit', about: '',
+MODS.push({ id: 'pulpit', group: 'start', order: 1, label: 'Pulpit', about: '',
   head: (v) => v.id === 'pulpit' ? { crumbs: 'Panel PerfectData', title: 'Pulpit', facts: [['Dzień', dpl(PLAT.today)], ['Użytkownik', PLAT.org.user + ' (przykład)']] } : { crumbs: 'Panel PerfectData', title: 'Lista funkcji' },
   views: [{ id: 'pulpit', label: 'Dziś', gap: 40, render: renderDesk }, { id: 'funkcje', label: 'Lista funkcji', gap: 32, render: renderFunctions }] });

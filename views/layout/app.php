@@ -13,6 +13,59 @@ $theme = Brand::theme($org);
 $logo = Brand::logo();
 $mods = Brand::modules($org);
 $has = static fn (string $m): bool => in_array($m, $mods, true);
+
+// Menu główne w kolejności pracy: pulpit, sprzedaż, marketing, przetargi i dotacje, kontrahenci, konto.
+// Pozycja: [adres, nazwa, czy aktywna, znacznik z liczbą]. Wygląd PerfectData pokazuje grupy w górnym wierszu, a pozycje aktywnej grupy pod nim.
+$path = current_path();
+$on = static function (string ...$prefixes) use ($path): bool {
+    foreach ($prefixes as $p) {
+        if ($path === $p || str_starts_with($path, $p . '/')) {
+            return true;
+        }
+    }
+    return false;
+};
+$chip = static fn (int $n, string $class, string $text): string => $n ? ' <span class="chip ' . $class . '">' . e($text) . '</span>' : '';
+$calls = $on('/oferty/nabory');
+$groups = [['Pulpit', [['/pulpit', 'Pulpit', $on('/pulpit'), '']]]];
+$sales = [];
+if ($has('zapytania')) {
+    $sales[] = ['/zapytania', 'Zapytania', $on('/zapytania'), $chip((int) $counts['leads'], 'info', $counts['leads'] . ' ' . plural((int) $counts['leads'], 'nowe', 'nowe', 'nowych'))];
+}
+if ($has('klienci')) {
+    $sales[] = ['/klienci', 'Klienci', $on('/klienci', '/wiadomosci'), ''];
+}
+if ($sales) {
+    $groups[] = ['Sprzedaż', $sales];
+}
+if ($has('audyt')) {
+    $groups[] = ['Marketing', [['/audyt', 'Audyt i reklamy', $on('/audyt', '/reklamy'), '']]];
+}
+$bids = [];
+if ($has('przetargi')) {
+    $bids[] = ['/przetargi', 'Przetargi', $on('/przetargi', '/profile'), $chip((int) $counts['matches'], 'info', $counts['matches'] . ' ' . plural((int) $counts['matches'], 'nowy', 'nowe', 'nowych'))];
+}
+if ($has('oferty')) {
+    $bids[] = ['/oferty', 'Oferty', $on('/oferty') && !$calls, ''];
+    $bids[] = ['/oferty/nabory', 'Dotacje', $calls, ''];
+}
+$library = ['/biblioteka', 'Biblioteka firmy', $on('/biblioteka'), ''];
+if ($bids) {
+    $bids[] = $library;
+    $groups[] = ['Przetargi i dotacje', $bids];
+}
+if ($has('kontrahenci')) {
+    $groups[] = ['Kontrahenci', [['/kontrahenci', 'Kontrahenci', $on('/kontrahenci'), $chip((int) $counts['alerts'], 'high', (string) $counts['alerts'])]]];
+}
+$account = array_merge($bids ? [] : [$library], [['/ustawienia', 'Ustawienia', $on('/ustawienia'), '']], Auth::isAdmin() ? [['/administracja', 'Administracja', $on('/administracja'), '']] : []);
+$groups[] = ['Konto', $account];
+$activeLabel = '';
+$activeItems = [];
+foreach ($groups as [$groupLabel, $items]) {
+    if (array_filter($items, static fn (array $i): bool => $i[2])) {
+        [$activeLabel, $activeItems] = [$groupLabel, $items];
+    }
+}
 ?>
 <!doctype html>
 <html lang="pl">
@@ -31,23 +84,25 @@ $has = static fn (string $m): bool => in_array($m, $mods, true);
   <aside class="sidebar">
     <a class="brand" href="/pulpit"><?php if ($logo): ?><img src="<?= e($logo) ?>" alt="<?= e($appName) ?>"><?php else: ?><span class="brand-mark" aria-hidden="true"><?= $theme === 'perfectdata' ? 'PD' : '' ?></span><span class="brand-name"><?= $appName === 'PerfectData' ? 'Perfect<b>Data</b>' : e($appName) ?></span><?php endif ?></a>
     <nav class="nav" aria-label="Menu główne">
-      <a href="/pulpit"<?= nav_on('/pulpit') ?>>Pulpit</a>
-      <?php if ($has('zapytania')): ?><a href="/zapytania"<?= nav_on('/zapytania') ?>>Zapytania<?php if ($counts['leads']): ?> <span class="chip info"><?= $counts['leads'] ?> <?= plural($counts['leads'], 'nowe', 'nowe', 'nowych') ?></span><?php endif ?></a><?php endif ?>
-      <?php if ($has('klienci')): ?><a href="/klienci"<?= nav_on('/klienci') ?: nav_on('/wiadomosci') ?>>Klienci i wiadomości</a><?php endif ?>
-      <?php if ($has('audyt')): ?><a href="/audyt"<?= nav_on('/audyt') ?: nav_on('/reklamy') ?>>Audyt i reklamy</a><?php endif ?>
-      <?php if ($has('przetargi')): ?><a href="/przetargi"<?= nav_on('/przetargi') ?: nav_on('/profile') ?>>Przetargi<?php if ($counts['matches']): ?> <span class="chip info"><?= $counts['matches'] ?> <?= plural($counts['matches'], 'nowy', 'nowe', 'nowych') ?></span><?php endif ?></a><?php endif ?>
-      <?php if ($has('oferty')): ?><a href="/oferty"<?= nav_on('/oferty') ?>>Oferty i wnioski</a><?php endif ?>
-      <?php if ($has('kontrahenci')): ?><a href="/kontrahenci"<?= nav_on('/kontrahenci') ?>>Kontrahenci<?php if ($counts['alerts']): ?> <span class="chip high"><?= $counts['alerts'] ?></span><?php endif ?></a><?php endif ?>
-      <div class="nav-sub">Konto</div>
-      <a href="/biblioteka"<?= nav_on('/biblioteka') ?>>Biblioteka firmy</a>
-      <a href="/ustawienia"<?= nav_on('/ustawienia') ?>>Ustawienia</a>
-      <?php if (Auth::isAdmin()): ?><a href="/administracja"<?= nav_on('/administracja') ?>>Administracja</a><?php endif ?>
+      <?php foreach ($groups as [$groupLabel, $items]): $groupOn = (bool) array_filter($items, static fn (array $i): bool => $i[2]); $chips = implode('', array_column($items, 3)); ?>
+      <div class="nav-group<?= $groupOn ? ' on' : '' ?><?= count($items) === 1 && $items[0][1] === $groupLabel ? ' single' : '' ?>">
+        <a class="nav-top<?= $groupOn ? ' on' : '' ?>" href="<?= e($items[0][0]) ?>"<?= $groupOn ? ' aria-current="true"' : '' ?>><?= e($groupLabel) ?><?= $chips ?></a>
+        <div class="nav-items">
+          <?php foreach ($items as [$href, $name, $isOn, $chip]): ?><a href="<?= e($href) ?>"<?= $isOn ? ' class="on" aria-current="page"' : '' ?>><?= e($name) ?><?= $chip ?></a><?php endforeach ?>
+        </div>
+      </div>
+      <?php endforeach ?>
     </nav>
     <div class="org-box">
       <div style="font-weight:600"><?= e($org['name'] ?? '') ?></div>
       <div class="muted"><?= e($u['name'] ?: $u['email']) ?> · <?= $counts['profiles'] ?> <?= plural($counts['profiles'], 'profil przetargowy', 'profile przetargowe', 'profili przetargowych') ?></div>
       <form method="post" action="/wyloguj"><?= csrf_field() ?><button class="link-btn small" type="submit">Wyloguj</button></form>
     </div>
+    <?php if (count($activeItems) > 1): ?>
+    <nav class="subnav" aria-label="<?= e($activeLabel) ?>">
+      <?php foreach ($activeItems as [$href, $name, $isOn, $chip]): ?><a href="<?= e($href) ?>"<?= $isOn ? ' class="on" aria-current="page"' : '' ?>><?= e($name) ?><?= $chip ?></a><?php endforeach ?>
+    </nav>
+    <?php endif ?>
   </aside>
   <main class="content" id="tresc">
     <div class="container">

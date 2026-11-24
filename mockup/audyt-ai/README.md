@@ -1,6 +1,6 @@
 # Mockup panelu PerfectData
 
-Klikalny mockup całego panelu: 10 modułów, 37 ekranów. Pokazuje każdą funkcję z opisu produktu na przykładowych danych. Nic nie jest mierzone ani wysyłane.
+Klikalny mockup całego panelu: 11 modułów w sześciu grupach menu (Pulpit, Sprzedaż, Marketing, Przetargi i dotacje, Kontrahenci, Konto), 38 ekranów. Pokazuje każdą funkcję z opisu produktu na przykładowych danych. Nic nie jest mierzone ani wysyłane.
 
 | Moduł | Ekrany |
 |---|---|
@@ -11,7 +11,8 @@ Klikalny mockup całego panelu: 10 modułów, 37 ekranów. Pokazuje każdą funk
 | SEO i strona | Audyt techniczny, Konkurenci (audyty i mapy witryn), Google (Search Console), Odpowiedzi AI, Wizytówka |
 | Reklamy | Wyniki, Kampanie z potwierdzeniem zmian i dziennikiem, Alerty |
 | Przetargi | Dopasowane z przyciskiem „Do ofert”, Karta przetargu z analizą SWZ, Profil, Terminy |
-| Oferty | Oferta, Dotacje (wyszukiwarka naborów, obserwowane nabory, wniosek pisany jednym przyciskiem), Biblioteka firmy |
+| Oferty | Oferta, Biblioteka firmy |
+| Dotacje | Nabory (wyszukiwarka naborów, znalezione i obserwowane nabory), Wniosek pisany jednym przyciskiem |
 | Kontrahenci | Karta firmy, Obserwowane i alerty, Należności |
 | Konto | Pakiet i AI, Bezpieczeństwo i dane, Administracja (firmy, zaproszenia, blokada) |
 

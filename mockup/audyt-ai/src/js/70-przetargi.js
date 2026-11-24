@@ -108,7 +108,7 @@ FORMS.tenderAsk = () => { document.getElementById('tqNote').hidden = false; };
 /* Jeden klik zakłada szkic oferty i zapisuje przetarg. Drugi nie tworzy duplikatu: zamiast przycisku jest link do szkicu. */
 ACTIONS['p-offer'] = (btn) => { PLAT.tenders.find((t) => t.id === btn.dataset.id).inOffers = true; rerender('przetargi'); };
 
-MODS.push({ id: 'przetargi', order: 7, label: 'Przetargi', about: 'Codzienny import ogłoszeń z BZP i TED, dopasowanie do profilu, karta przetargu z analizą SWZ i kalendarz terminów.',
+MODS.push({ id: 'przetargi', group: 'zamowienia', order: 7, label: 'Przetargi', about: 'Codzienny import ogłoszeń z BZP i TED, dopasowanie do profilu, karta przetargu z analizą SWZ i kalendarz terminów.',
   head: (v) => {
     if (v.id !== 'przetarg') return { crumbs: 'Przetargi', title: { przetargi: 'Dopasowane przetargi', profil: 'Profil przetargowy', terminy: 'Kalendarz terminów' }[v.id] };
     const t = tenderOf(PLAT.tender_card.id);

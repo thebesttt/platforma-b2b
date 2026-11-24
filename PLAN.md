@@ -10,7 +10,7 @@ Na perfectdata.pl nic nie zostało zainstalowane. Kod trafi na stronę dopiero p
 
 ## Co jest gotowe
 
-- **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`, 182 testy na SQLite i PostgreSQL. Gotowa do uruchomienia w Render.
+- **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`, 183 testy na SQLite i PostgreSQL. Gotowa do uruchomienia w Render.
 - **Panel w wyglądzie PerfectData** (zmienna `APP_THEME=perfectdata` albo ustawienie firmy) z wyborem modułów w menu i pulpitem, który pokazuje tylko włączone moduły.
 - **Zapytania ze strony:** widżet do wklejenia jedną linią kodu, kwalifikator z jawną tabelą punktów, lista i karta zapytań, czat AI z bazy wiedzy, lejek i test dwóch wersji.
 - **Audyt AI:** 24 wskaźniki i 100 punktów z jednego pliku wytycznych, raport z linijką punktów i listą „Najpierw to”, „Przed i po”, strona wytycznych, raport dla klienta pod linkiem, audyt wielu stron z mapy witryny. Sprawdzony na prawdziwej stronie perfectdata.pl.
@@ -23,7 +23,7 @@ Na perfectdata.pl nic nie zostało zainstalowane. Kod trafi na stronę dopiero p
 - **Platforma dla wielu firm:** pakiety Podstawowy i Rozszerzony z miesięcznym przydziałem AI, ekran administratora (firmy, zaproszenia, blokada, limity), logowanie dwuetapowe, eksport i usunięcie danych firmy, własne połączenia każdej firmy w Widoczności.
 - **Nabory dotacji:** wyszukiwarka naborów (AI szuka w internecie i podaje źródła) oraz przycisk, który pisze cały wniosek.
 - **Widoczność:** zakładka w module Audyt. Użytkownik wpisuje adres witryny i wgrywa paczkę z przycisku „Eksportuj” w Search Console albo dodaje jeden adres e-mail jako użytkownika i klika „Połącz”. Panel pokazuje, co poprawić najpierw w Google, gdzie stronę widać w odpowiedziach AI i co publikuje konkurencja.
-- **Mockup całego panelu:** `mockup/audyt-ai`, 10 modułów i 37 ekranów, z listą 81 funkcji i ich stanem. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip`.
+- **Mockup całego panelu:** `mockup/audyt-ai`, 11 modułów w sześciu grupach menu i 38 ekranów, z listą 81 funkcji i ich stanem. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip`.
 - **Wytyczne audytu:** `resources/audyt-ai-rules.json` (czyta je silnik) i dokument dla zespołu `mockup/audyt-ai/WYTYCZNE.md`.
 - **Plany modułów:** `PLAN-ZAPYTANIA.md` i `PLAN-AUDYT-AI.md`.
 
@@ -34,7 +34,7 @@ Panel i raporty wyglądają jak perfectdata.pl, żeby klient agencji widział je
 - **Kolory ze strony** (odczytane ze stylów perfectdata.pl 19.11.2026): tło `#0a0e1a`, panel `#0f1524`, powierzchnia `#151c2e`, linie `#232d45`, złoto `#d4a94a` (jaśniejsze `#e8c97a`, ciemniejsze `#a87f2c`), tekst `#f2f3f7`, tekst pomocniczy `#9aa3b8`.
 - **Czcionka systemowa**, ta sama co na stronie. Panel nie pobiera żadnych czcionek ani skryptów z zewnątrz.
 - **Jeden ciemny motyw**, bo strona ma tylko ciemny.
-- **Układ:** nagłówek jak na stronie (logo, 10 modułów, link do perfectdata.pl), pod nim zakładki modułu. Bez bocznego menu platformy. Na telefonie pasek modułów przewija się w bok.
+- **Układ:** nagłówek jak na stronie (logo, menu, konto). Menu ma sześć pozycji w kolejności pracy: Pulpit, Sprzedaż, Marketing, Przetargi i dotacje, Kontrahenci, Konto. Pozycje aktywnej grupy są w drugim wierszu (np. Przetargi, Oferty, Dotacje, Biblioteka firmy), a zakładki ekranu pod tytułem strony. Bez bocznego menu platformy. Na telefonie pasek modułów przewija się w bok.
 - **Złoto ma jedno znaczenie:** zdobyte punkty, główny przycisk i aktywna pozycja menu. Nie służy do ozdoby.
 - **Linijka 100 punktów** w raporcie audytu. Każdy z 24 wskaźników to odcinek o szerokości równej jego wadze. Złote wypełnienie to zdobyte punkty, czerwona ramka to wskaźnik z zerem. Kliknięcie odcinka otwiera wskaźnik. Ta sama linijka pokazuje stan „przed” i „po”.
 - **Stany rozróżnia kształt i słowo, nie sam kolor:** pełne koło „Dobrze”, pół koła „Do poprawy”, pierścień „Źle”.
@@ -56,7 +56,8 @@ Mockup pokazuje 81 funkcji. Zakładka „Lista funkcji” na pulpicie podaje sta
 | SEO i strona | 8 | 1 | 0 |
 | Reklamy | 0 | 0 | 6 |
 | Przetargi | 10 | 0 | 0 |
-| Oferty i wnioski | 11 | 0 | 0 |
+| Oferty | 6 | 0 | 0 |
+| Dotacje | 5 | 0 | 0 |
 | Kontrahenci | 7 | 1 | 0 |
 | Konto i platforma | 4 | 0 | 0 |
 | Razem | 71 | 4 | 6 |
@@ -453,7 +454,7 @@ Potrzebne przed etapem 4:
 
 ### Platforma dla wielu firm, nabory, słowa klienta (24.11.2026, po południu)
 
-- **182 testy** na SQLite i PostgreSQL oraz test obrazu Docker (GitHub Actions). Dziesięć nowych obejmuje:
+- **183 testy** na SQLite i PostgreSQL oraz test obrazu Docker (GitHub Actions). Jedenaście nowych obejmuje:
   - pakiety: wyczerpany przydział nie wysyła zapytania do modelu, czat liczony osobno, limity osób i witryn, firma prowadząca panel bez limitów, tańszy model tylko w Podstawowym,
   - administrację: zwykła firma dostaje 404 na każdym adresie, zaproszenie z linkiem pokazanym raz i skrótem w bazie, adres z zaproszenia nie do podmiany, blokada kończy sesję i wyłącza widżet,
   - zabezpieczenia: kody TOTP zgodne z RFC 6238, kod i kod zapasowy działają raz, sześć błędów kończy próbę, unieważnianie sesji, szyfrowanie sekretów innym kluczem nie do odczytania,
@@ -462,9 +463,10 @@ Potrzebne przed etapem 4:
   - własne konto Google firmy (znacznik jednorazowy, podrobiony i cudzy znacznik, odmowa na ekranie Google, zgoda bez Search Console, odświeżanie dostępu, cofnięty dostęp, odłączenie) i własny token Cloudflare,
   - wyszukiwarkę naborów (zapytanie według dokumentacji narzędzia, odrzucenie wymyślonego adresu, zakończonego naboru i złej daty, wstrzymane wyszukiwanie, brak duplikatów, cotygodniowe uruchomienie tylko w Rozszerzonym),
   - pisanie całego wniosku (gotowa sekcja nietknięta, podmieniona kolejka, zatrzymanie po wyczerpaniu przydziału),
-  - „Co napisał klient” i przetarg jednym kliknięciem w ofertach.
+  - „Co napisał klient” i przetarg jednym kliknięciem w ofertach,
+  - menu główne w sześciu grupach: aktywna grupa i pozycja, Dotacje osobno od Ofert, drugi wiersz tylko przy kilku pozycjach, wyłączone moduły.
 - **W przeglądarce** na danych przykładowych: przejście po 181 stronach w trzech szerokościach (1280, 390, 320) bez błędów i bez poziomego przewijania. Osobno: zaproszenie firmy z administracji, rejestracja z linku w drugiej przeglądarce, pakiet Podstawowy na nowym koncie, brak dostępu do administracji, przycisk „Połącz z Google” i przekierowanie na ekran zgody Google, pole tokenu Cloudflare, lista naborów, przycisk „Napisz cały wniosek”, rozwinięcie „Co napisał klient”.
-- **Mockup po zmianach:** 37 ekranów w 4 szerokościach bez błędów i bez poziomego przewijania. Nowe ekrany przeklikane: wyszukiwarka naborów (szukaj, obserwuj, odrzuć), pisanie całego wniosku sekcja po sekcji, „Do ofert” na liście przetargów, rozwinięcie „Co napisał klient”, pakiet, logowanie dwuetapowe, administracja (zmiana pakietu, blokada, zaproszenie).
+- **Mockup po zmianach:** 38 ekranów w 4 szerokościach bez błędów i bez poziomego przewijania. Menu mieści się w jednym wierszu (wcześniej ostatnie pozycje wychodziły poza ekran). Nowe ekrany przeklikane: wyszukiwarka naborów (szukaj, obserwuj, odrzuć), pisanie całego wniosku sekcja po sekcji, „Do ofert” na liście przetargów, rozwinięcie „Co napisał klient”, pakiet, logowanie dwuetapowe, administracja (zmiana pakietu, blokada, zaproszenie).
 - **Nie sprawdzono na prawdziwych usługach:** logowania Google (potrzebny klient OAuth), tokenu Cloudflare innej firmy, wyszukiwarki naborów na prawdziwym modelu (potrzebny klucz API z włączonym web search) ani jakości wniosku pisanego w całości. Te części są napisane według dokumentacji i sprawdzone na odpowiedziach w jej formacie.
 
 ### Widoczność w Google, w AI i u konkurencji (24.11.2026)
