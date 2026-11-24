@@ -6,7 +6,7 @@ namespace App\Modules\Seo;
 
 /**
  * Widoczność w odpowiedziach AI z danych, które da się zdobyć bez płatnych narzędzi:
- *  - Search Console, raport „Funkcje generatywnej AI”: wyświetlenia linków do witryny w Przeglądach od AI i Trybie AI (same wyświetlenia),
+ *  - Search Console, raport o generatywnej AI: wyświetlenia linków do witryny w Przeglądach od AI i Trybie AI (same wyświetlenia),
  *  - Bing Webmaster Tools, raport „AI Performance”: cytowania w Copilocie i podsumowaniach Binga oraz frazy, którymi AI szukało treści,
  *  - Google Analytics: wejścia ze stron asystentów AI.
  * Dwa pierwsze raporty nie mają publicznego API, więc dane wkleja się albo wgrywa z eksportu.

@@ -158,7 +158,7 @@ final class SeoController extends Controller
             foreach ($res['saved'] as $dim => $n) {
                 $parts[] = $n . ' ' . plural((int) $n, ...GscFile::DIMS[$dim]);
             }
-            $done[] = ($res['report'] === 'ai' ? 'Funkcje generatywnej AI' : 'Skuteczność w wyszukiwarce') . ', ' . Sync::range($res['start'], $res['end']) . ': ' . implode(', ', $parts) . '.';
+            $done[] = ($res['report'] === 'ai' ? 'Raport o generatywnej AI' : 'Skuteczność w wyszukiwarce') . ', ' . Sync::range($res['start'], $res['end']) . ': ' . implode(', ', $parts) . '.';
             $search = $search || $res['report'] !== 'ai';
             AuditLog::add('seo.import', 'seo_site', (int) $site['id'], ['report' => $res['report'], 'start' => $res['start'], 'end' => $res['end']], $r->ip());
         }

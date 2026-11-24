@@ -17,7 +17,7 @@ echo View::partial('partials/seo_nav', ['site' => $site, 'tab' => $tab, 'sites' 
     <div class="card-body">
       <p class="small" style="margin:0 0 14px">Search Console ma osobny raport: ile razy link do Twojej strony pojawił się w odpowiedzi AI Google. Podaje same wyświetlenia, bez kliknięć i bez zapytań. Nie ma go w API, więc wgrywa się eksport.</p>
       <ol class="law">
-        <li>Otwórz raport <a href="https://search.google.com/search-console/performance/search-analytics/ai" target="_blank" rel="noopener noreferrer">Funkcje generatywnej AI</a> w Search Console.</li>
+        <li>Otwórz w Search Console <a href="https://search.google.com/search-console/performance/search-analytics/ai" target="_blank" rel="noopener noreferrer">raport o generatywnej AI</a>. Jest w grupie raportów skuteczności.</li>
         <li>Kliknij „Eksportuj” i „Pobierz plik CSV”.</li>
         <li>Wgraj paczkę tutaj. Panel sam rozpozna, że to ten raport.</li>
       </ol>
@@ -186,10 +186,10 @@ echo View::partial('partials/seo_nav', ['site' => $site, 'tab' => $tab, 'sites' 
       <?php endif ?>
     </div>
     <div class="table-wrap"><table>
-      <thead><tr><th scope="col">Bot</th><th scope="col">Rodzaj</th><th scope="col" class="n">Pobrania</th><th scope="col" class="n">Podane</th><th scope="col" class="n">Zablokowane</th></tr></thead>
+      <thead><tr><th scope="col">Bot</th><th scope="col" class="n">Pobrania</th><th scope="col" class="n">Zablokowane</th><th scope="col" class="n">Podane</th></tr></thead>
       <tbody>
       <?php foreach ($bots['bots'] as $b): ?>
-        <tr><td><b><?= e($b['name']) ?></b> <span class="small muted"><?= e($b['operator']) ?></span></td><td class="small"><?= e(CloudflareBots::CATEGORIES[$b['category']][0]) ?></td><td class="n"><?= num_pl($b['requests']) ?></td><td class="n"><?= num_pl($b['served']) ?></td><td class="n"><?= $b['blocked'] ? '<b>' . num_pl($b['blocked']) . '</b>' : '0' ?></td></tr>
+        <tr><td><b><?= e($b['name']) ?></b> <span class="small muted"><?= e($b['operator']) ?></span><br><span class="small muted"><?= e(CloudflareBots::CATEGORIES[$b['category']][0]) ?></span></td><td class="n"><?= num_pl($b['requests']) ?></td><td class="n"><?= $b['blocked'] ? '<b>' . num_pl($b['blocked']) . '</b>' : '0' ?></td><td class="n"><?= num_pl($b['served']) ?></td></tr>
       <?php endforeach ?>
       </tbody>
     </table></div>

@@ -5,7 +5,7 @@
  * @var bool $googleOn czy panel ma klucz konta usługi Google
  * @var string $googleEmail adres konta usługi
  * @var ?array $syncGoogle wynik ostatniego pobrania
- * @var bool $ai czy pokazać też raport „Funkcje generatywnej AI”
+ * @var bool $ai czy pokazać też raport o generatywnej AI
  */
 $base = '/audyt/widocznosc/' . (int) $site['id'];
 $connected = (bool) ($syncGoogle['ok'] ?? false);
@@ -14,7 +14,7 @@ $connected = (bool) ($syncGoogle['ok'] ?? false);
   <div>
     <h3>Wgraj plik z Search Console</h3>
     <ol>
-      <li>Otwórz w Search Console raport <a href="https://search.google.com/search-console/performance/search-analytics" target="_blank" rel="noopener noreferrer">Skuteczność</a><?php if (!empty($ai)): ?> albo <a href="https://search.google.com/search-console/performance/search-analytics/ai" target="_blank" rel="noopener noreferrer">Funkcje generatywnej AI</a><?php endif ?>.</li>
+      <li>Otwórz w Search Console raport <a href="https://search.google.com/search-console/performance/search-analytics" target="_blank" rel="noopener noreferrer">Skuteczność</a><?php if (!empty($ai)): ?> albo <a href="https://search.google.com/search-console/performance/search-analytics/ai" target="_blank" rel="noopener noreferrer">raport o generatywnej AI</a><?php endif ?>.</li>
       <li>Kliknij „Eksportuj” i wybierz „Pobierz plik CSV”.</li>
       <li>Wgraj pobraną paczkę tutaj. Nie rozpakowuj jej i nic w niej nie zmieniaj.</li>
     </ol>

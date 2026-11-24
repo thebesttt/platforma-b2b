@@ -8,7 +8,7 @@ Klikalny mockup całego panelu: 9 modułów, 34 ekrany. Pokazuje każdą funkcj�
 | Zapytania | Zapytania, Zasady kwalifikacji, Podgląd widżetu, Wyniki |
 | Klienci | Kontakty, Wiadomość z ekranem ryzyka i decyzją, Zapytania ofertowe, Potencjalni klienci (lista firm, treść oferty, drogi kontaktu z ryzykiem), Wysyłka i dziennik |
 | Audyt AI | Raport, Wytyczne wskaźników, Przed i po, Cytowania w AI, Strony witryny |
-| SEO i strona | Audyt techniczny, Konkurenci, Google (Search Console i wizytówka) |
+| SEO i strona | Audyt techniczny, Konkurenci (audyty i mapy witryn), Google (Search Console), Odpowiedzi AI, Wizytówka |
 | Reklamy | Wyniki, Kampanie z potwierdzeniem zmian i dziennikiem, Alerty |
 | Przetargi | Dopasowane, Karta przetargu z analizą SWZ, Profil, Terminy |
 | Oferty | Oferta, Dotacje, Biblioteka firmy |

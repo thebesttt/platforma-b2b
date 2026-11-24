@@ -1278,7 +1278,7 @@ function renderAi() {
   const byKind = (k) => a.bots.filter((b) => b[2] === k).reduce((s, b) => s + b[3], 0);
   const blocked = a.bots.filter((b) => b[2] !== 'trening' && b[5] >= 0.5 * b[3]);
   put('ai', stan('silnik', 'Każde źródło mierzy coś innego, więc liczb nie sumujemy. Tu dane przykładowe.') +
-    `<div class="sec">${secHead('Google: Przeglądy od AI i Tryb AI', 'Raport „Funkcje generatywnej AI” z Search Console. Same wyświetlenia linków, bez kliknięć i zapytań.')}
+    `<div class="sec">${secHead('Google: Przeglądy od AI i Tryb AI', 'Raport o generatywnej AI z Search Console. Same wyświetlenia linków, bez kliknięć i zapytań.')}
       <div class="counts" style="padding:18px 0 6px"><div><b>${num(a.google_total)}</b><span>wyświetleń linków do witryny w odpowiedziach AI</span></div></div>
       <div class="table-wrap"><table><thead><tr><th>Strona pokazywana w odpowiedziach AI</th><th class="n">Wyświetlenia w AI</th><th class="n">Kliknięcia z wyników</th></tr></thead><tbody>` +
       a.google.map((p) => `<tr><td>${esc(p[0])}</td><td class="n"><b>${num(p[1])}</b></td><td class="n">${num(clicksOf[p[0]] || 0)}</td></tr>`).join('') + `</tbody></table></div>

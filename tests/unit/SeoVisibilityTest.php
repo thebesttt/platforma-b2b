@@ -217,11 +217,11 @@ return [
 
         // Pusty ekran mówi przy każdym źródle, jak zdobyć dane.
         $page = http('GET', $base . '/ai')->body;
-        contains('Funkcje generatywnej AI', $page);
+        contains('raport o generatywnej AI', $page);
         contains('AI Performance', $page);
         contains('podłącz Search Console', $page);
 
-        // Raport „Funkcje generatywnej AI” ma same wyświetlenia: panel rozpoznaje go bez pytania użytkownika i prowadzi do zakładki AI.
+        // Raport o generatywnej AI ma same wyświetlenia: panel rozpoznaje go bez pytania użytkownika i prowadzi do zakładki AI.
         $aiZip = seo_zip([
             'Pages.csv' => "Top pages,Impressions\nhttps://sklep-przykladowy.example/poradnik/odkamienianie,340\nhttps://www.sklep-przykladowy.example/ranking-ekspresow/,95\n",
             'Dates.csv' => "Date,Impressions\n" . implode("\n", array_map(static fn (int $i): string => gmdate('Y-m-d', strtotime($end . ' UTC') - $i * 86400) . ',' . (10 + $i % 7), range(0, 27))) . "\n",

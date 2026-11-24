@@ -1,16 +1,16 @@
 # Plan działania
 
-Stan na 23.11.2026.
+Stan na 24.11.2026.
 
 **Zmiana kierunku.** Pierwszym użytkownikiem narzędzia jest PerfectData (perfectdata.pl). Cel: więcej zapytań ze strony i audyt, którym agencja pracuje z klientami SEO i GEO. Platforma B2B (przetargi, oferty, kontrahenci) zostaje silnikiem pod spodem i osobnym produktem na później.
 
 Na perfectdata.pl nic nie zostało zainstalowane. Kod trafi na stronę dopiero po wyraźnej zgodzie właściciela.
 
-**Co się zmieniło 20.11.2026.** Etapy 1 i 2 oraz większość etapu 3 są zbudowane w silniku i przechodzą testy. Tego samego dnia doszło pięć funkcji z etapu 4: wyniki przetargów, praca zespołu nad ofertą, warunki naboru dotacji, przypomnienia z adresem wypisania i opis idealnego klienta. Potem doszły cztery funkcje, których dane nie są dostępne dla programów: panel pokazuje, gdzie je znaleźć, i daje miejsce na wpisanie (szczegóły niżej, w części „Dane wpisywane ręcznie”). 23.11.2026 doszła lista potencjalnych klientów: panel proponuje firmy, układa treść oferty i pokazuje drogi kontaktu z oceną ryzyka (część „Potencjalni klienci i wysyłka”). Tego samego dnia doszła zgoda na ofertę e-mailem zbierana listem: strona zgody z kodem QR i zapisanym dowodem. Potem siedem dodatków do listów i zgód: audyt strony jako zachęta, lejek listów, listy seryjnie, kod QR na wizytówkę, pytanie o zainteresowania, wyszukiwanie w CEIDG i drugi list (część „Listy i zgody: siedem dodatków”). Do uruchomienia zostały kroki właściciela z etapu 0: hosting, baza, klucze usług i zgoda na kod widżetu. Lista na końcu, w części „Co jest potrzebne od właściciela”.
+**Co się zmieniło 20.11.2026.** Etapy 1 i 2 oraz większość etapu 3 są zbudowane w silniku i przechodzą testy. Tego samego dnia doszło pięć funkcji z etapu 4: wyniki przetargów, praca zespołu nad ofertą, warunki naboru dotacji, przypomnienia z adresem wypisania i opis idealnego klienta. Potem doszły cztery funkcje, których dane nie są dostępne dla programów: panel pokazuje, gdzie je znaleźć, i daje miejsce na wpisanie (szczegóły niżej, w części „Dane wpisywane ręcznie”). 23.11.2026 doszła lista potencjalnych klientów: panel proponuje firmy, układa treść oferty i pokazuje drogi kontaktu z oceną ryzyka (część „Potencjalni klienci i wysyłka”). Tego samego dnia doszła zgoda na ofertę e-mailem zbierana listem: strona zgody z kodem QR i zapisanym dowodem. Potem siedem dodatków do listów i zgód: audyt strony jako zachęta, lejek listów, listy seryjnie, kod QR na wizytówkę, pytanie o zainteresowania, wyszukiwanie w CEIDG i drugi list (część „Listy i zgody: siedem dodatków”). 24.11.2026 doszła widoczność: dane z Search Console, sygnały z odpowiedzi AI i konkurencja z map witryn (część „Widoczność w Google, w AI i u konkurencji”). Do uruchomienia zostały kroki właściciela z etapu 0: hosting, baza, klucze usług i zgoda na kod widżetu. Lista na końcu, w części „Co jest potrzebne od właściciela”.
 
 ## Co jest gotowe
 
-- **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`, 167 testów na SQLite i PostgreSQL. Gotowa do uruchomienia w Render.
+- **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`, 172 testy na SQLite i PostgreSQL. Gotowa do uruchomienia w Render.
 - **Panel w wyglądzie PerfectData** (zmienna `APP_THEME=perfectdata` albo ustawienie firmy) z wyborem modułów w menu i pulpitem, który pokazuje tylko włączone moduły.
 - **Zapytania ze strony:** widżet do wklejenia jedną linią kodu, kwalifikator z jawną tabelą punktów, lista i karta zapytań, czat AI z bazy wiedzy, lejek i test dwóch wersji.
 - **Audyt AI:** 24 wskaźniki i 100 punktów z jednego pliku wytycznych, raport z linijką punktów i listą „Najpierw to”, „Przed i po”, strona wytycznych, raport dla klienta pod linkiem, audyt wielu stron z mapy witryny. Sprawdzony na prawdziwej stronie perfectdata.pl.
@@ -20,7 +20,8 @@ Na perfectdata.pl nic nie zostało zainstalowane. Kod trafi na stronę dopiero p
 - **Klienci i wiadomości:** ocena ryzyka prawnego przed wysyłką, przypomnienia po 4 i po 10 dniach z dziennym limitem, adres wypisania w stopce ofert, opis idealnego klienta ze strony firmy. Rejestr zapytań ofertowych z rynku: gdzie szukać, termin, kontakt z podstawą „zapytanie ofertowe” i odpowiedź jednym kliknięciem. Lista potencjalnych klientów: firmy z wyników przetargów i z listy użytkownika, dane z rejestrów, punkty dopasowania, treść oferty układana automatycznie i drogi kontaktu z oceną ryzyka. Zgoda na ofertę e-mailem zbierana listem: w liście jest adres strony zgody i kod QR, firma sama zostawia e-mail, a panel zapisuje dowód. Do tego audyt strony jako zachęta, lejek listów z kosztem jednej zgody, listy seryjnie, drugi list po 21 dniach, kod QR na wizytówkę, pytanie o zainteresowania i wyszukiwanie firm w CEIDG (po wpisaniu tokenu). Przycisk „Napisz” przy kontakcie sam dobiera rodzaj wiadomości do podstawy kontaktu.
 - **Kontrahenci:** karta firmy z rejestrów publicznych, a do tego dwa sprawdzenia robione ręcznie: Krajowy Rejestr Zadłużonych i liczby ze sprawozdania finansowego, z których panel liczy, po ilu dniach firma płaci dostawcom.
 - **Audyt techniczny:** bez zmian, działa od początku.
-- **Mockup całego panelu:** `mockup/audyt-ai`, 9 modułów i 32 ekrany, z listą 69 funkcji i ich stanem. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip`.
+- **Widoczność:** zakładka w module Audyt. Użytkownik wpisuje adres witryny i wgrywa paczkę z przycisku „Eksportuj” w Search Console albo dodaje jeden adres e-mail jako użytkownika i klika „Połącz”. Panel pokazuje, co poprawić najpierw w Google, gdzie stronę widać w odpowiedziach AI i co publikuje konkurencja.
+- **Mockup całego panelu:** `mockup/audyt-ai`, 9 modułów i 34 ekrany, z listą 72 funkcji i ich stanem. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip`.
 - **Wytyczne audytu:** `resources/audyt-ai-rules.json` (czyta je silnik) i dokument dla zespołu `mockup/audyt-ai/WYTYCZNE.md`.
 - **Plany modułów:** `PLAN-ZAPYTANIA.md` i `PLAN-AUDYT-AI.md`.
 
@@ -43,25 +44,25 @@ W platformie wygląd i zestaw modułów będą ustawieniem organizacji (pole `se
 
 ## Funkcje i ich stan
 
-Mockup pokazuje 69 funkcji. Zakładka „Lista funkcji” na pulpicie podaje stan każdej z nich i prowadzi do ekranu.
+Mockup pokazuje 72 funkcje. Zakładka „Lista funkcji” na pulpicie podaje stan każdej z nich i prowadzi do ekranu.
 
 | Moduł | Działa w silniku | Do zbudowania | Czeka na zgodę Google i Meta |
 |---|---|---|---|
 | Zapytania | 5 | 0 | 0 |
 | Klienci | 19 | 1 | 0 |
 | Audyt AI | 6 | 1 | 0 |
-| SEO i strona | 3 | 2 | 0 |
+| SEO i strona | 7 | 1 | 0 |
 | Reklamy | 0 | 0 | 6 |
 | Przetargi | 9 | 0 | 0 |
 | Oferty i wnioski | 9 | 0 | 0 |
 | Kontrahenci | 7 | 1 | 0 |
-| Razem | 58 | 5 | 6 |
+| Razem | 62 | 4 | 6 |
 
 „Działa w silniku” znaczy, że kod jest w repozytorium i przechodzi testy. Silnik nie jest jeszcze uruchomiony online (etap 0).
 
-Dlaczego 5 funkcji nie jest zbudowanych: każda wymaga zgody albo konta u zewnętrznej firmy.
+Dlaczego 4 funkcje nie są zbudowane: każda wymaga zgody albo konta u zewnętrznej firmy.
 
-- Search Console i wizytówka Google (logowanie Google klienta),
+- wizytówka Google (zgoda Google na dostęp aplikacji do wizytówek),
 - automatyczne wykrywanie odpowiedzi (połączenie ze skrzynką Gmail lub Microsoft 365). Wypisanie działa już przez adres w stopce, a odpowiedź zaznacza się ręcznie,
 - wpis długu do BIG (umowa z biurem),
 - test cytowań w AI (klucze OpenAI, Perplexity i Gemini oraz decyzja o koszcie).
@@ -140,6 +141,61 @@ Do tego poprawka z uwagi właściciela: przycisk „Napisz” przy kontakcie sam
 
 Źródła: [art. 398 Prawa komunikacji elektronicznej](https://lexlege.pl/komunik-elektr/art-398/), [odpowiedź Ministerstwa Cyfryzacji na interpelację nr 12337](https://api.sejm.gov.pl/sejm/term10/interpellations/attachment/ATTDMGHNP/i12337-o1.pdf), [Grant Thornton o marketingu pocztą tradycyjną](https://grantthornton.pl/publikacja/marketing-rodo-i-wysylka-kartek-swiatecznych/). To opis przepisów, a nie porada prawna. Opinia prawnika o module wiadomości jest na liście rzeczy potrzebnych przed sprzedażą platformy.
 
+### Widoczność w Google, w AI i u konkurencji
+
+Zakładka „Widoczność” w module Audyt (24.11.2026). Odpowiada na trzy pytania: co poprawić najpierw w Google, czy stronę widać w odpowiedziach AI i co robi konkurencja.
+
+**Start dla użytkownika.** Trzy kroki, bez przepisywania identyfikatorów:
+
+1. Wpisuje adres witryny.
+2. Podłącza dane z Google jedną z dwóch dróg:
+   - **plik:** w Search Console klika „Eksportuj” i „Pobierz plik CSV”, a pobraną paczkę wgrywa bez rozpakowywania. Panel sam rozpoznaje raport (po nagłówkach, w języku polskim i angielskim) i okres (z tabeli dat). Można wgrać kilka plików naraz,
+   - **stałe połączenie:** kopiuje adres e-mail konta usługi, dodaje go w Search Console jako użytkownika z uprawnieniami „Ograniczone” i klika „Połącz”. Panel sam znajduje usługę po domenie i od tej pory pobiera dane codziennie. Ten sam adres dodany w Google Analytics (rola „Wyświetlający”) daje wejścia z asystentów AI.
+3. Opcjonalnie wpisuje do 5 domen konkurentów.
+
+Usługę Search Console, usługę GA4 i strefę Cloudflare panel wykrywa po domenie. Pola ręczne są schowane w ustawieniach zaawansowanych.
+
+**Skąd są dane.**
+
+| Źródło | Co daje | Jak trafia do panelu | Co jest potrzebne |
+|---|---|---|---|
+| Search Console, raport „Skuteczność” | zapytania, strony, kliknięcia, wyświetlenia, pozycje | plik z eksportu albo Search Console API | dostęp do Search Console. Do API: klucz `GOOGLE_SERVICE_ACCOUNT` |
+| Search Console, raport o generatywnej AI (od czerwca 2026) | wyświetlenia linków do witryny w Przeglądach od AI i Trybie AI, według stron i dni | tylko plik z eksportu | nic. Raport nie ma API i nie podaje kliknięć ani zapytań |
+| Bing Webmaster Tools, raport „AI Performance” (od lutego 2026) | cytowania w Copilocie i podsumowaniach Binga, frazy, którymi AI szukało treści | tabela wklejona z raportu | bezpłatne konto Bing Webmaster Tools. Raport nie ma API |
+| Google Analytics 4 | sesje z ChatGPT, Perplexity, Copilota, Gemini, Claude i innych asystentów, strony wejścia | Analytics Data API albo wklejona tabela źródeł | do API: ten sam klucz Google |
+| Cloudflare | które boty AI pobierają strony, ile razy, ile dostało odmowę | GraphQL Analytics API | token `CF_ANALYTICS_TOKEN`, tylko dla witryn za Cloudflare |
+| Mapy witryn konkurentów (sitemap.xml) | ile stron mają, co dodali i zmienili w 30 dni, jakie tematy opisują | panel pobiera publiczne pliki raz dziennie | nic |
+
+**Co pokazują ekrany.**
+
+- **Google:** sumy okresu ze zmianą do poprzedniego, wykres tygodniowy, zapytania tuż za czołówką (pozycje 4-15) z szacunkiem kliknięć do zyskania, zapytania z pierwszej piątki z klikalnością poniżej połowy zwykłej, spadki i wzrosty, dwie strony na jedno zapytanie (tylko ze stałego połączenia), podział kliknięć na zapytania z nazwą marki, pozostałe i ukryte przez Google.
+- **Odpowiedzi AI:** strony pokazywane w odpowiedziach AI Google obok ich kliknięć z wyników, strony z kliknięciami, których AI nie pokazuje, pytania i długie zapytania, zapytania z utrzymaną pozycją i klikalnością niższą o 40% lub więcej, cytowania z Copilota, wejścia z asystentów, boty AI z podziałem na asystentów, wyszukiwarki AI i trening modeli. Gdy bot, który buduje odpowiedzi z linkami, dostaje odmowę w ponad połowie pobrań, ekran to zgłasza.
+- **Konkurencja:** liczba stron w mapie, nowe i zmienione strony, lista ostatnich publikacji i tematy, których nie ma w adresach ani zapytaniach własnej witryny.
+- **Dane i połączenia:** stan każdego źródła po ludzku, wgrywanie, wklejanie, ustawienia.
+
+Progi są jawne i opisane na ekranie w części „Skąd te liczby”. Odniesieniem dla klikalności jest średnia tej samej witryny, a wartości umowne wchodzą dopiero przy zbyt małej liczbie danych i są oznaczone.
+
+**Czego to nie robi.**
+
+- Nie pokazuje pozycji konkurentów w Google ani ich ruchu. Tego nie ma w żadnym bezpłatnym źródle.
+- Nie mówi, czy ChatGPT, Claude albo Perplexity cytują stronę. Te firmy nie udostępniają raportu cytowań. Widać tylko ślady: wejścia z ich stron i wizyty ich botów.
+- Nie oddziela kliknięć z odpowiedzi AI Google od zwykłych: Google wlicza je do raportu „Skuteczność” bez osobnego filtra.
+- Tematy konkurencji porównuje po słowach z adresów stron, bez odmiany i bez czytania treści. To podpowiedź, nie pełna analiza.
+
+**Klucz Google dla stałego połączenia** (raz, około 10 minut, robi właściciel panelu):
+
+1. W [Google Cloud](https://console.cloud.google.com) utwórz projekt o dowolnej nazwie.
+2. W „Interfejsy API i usługi” włącz trzy interfejsy: Google Search Console API, Google Analytics Data API i Google Analytics Admin API.
+3. W „Administracja” → „Konta usługi” utwórz konto usługi (bez ról), wejdź w nie, zakładka „Klucze” → „Dodaj klucz” → JSON. Pobierze się plik.
+4. Treść pliku wklej w Render jako zmienną `GOOGLE_SERVICE_ACCOUNT` (całość, w jednej linii albo zakodowaną w base64).
+5. W Ustawieniach panelu kliknij „Sprawdź połączenie z Google”. Panel pokaże adres konta usługi i witryny, które widzi.
+
+Konto usługi ma tylko odczyt. Jeśli Google Cloud odmówi utworzenia klucza (reguła organizacji Google Workspace), projekt trzeba założyć na prywatnym koncie Google.
+
+**Ograniczenie przed sprzedażą platformy innym firmom.** Klucz Google i token Cloudflare są jedne na cały panel i widzą wszystko, do czego ktokolwiek dał im dostęp. Dlatego stałe połączenia działają tylko w firmie administratora panelu (adresy z `ADMIN_EMAILS`). Inne firmy korzystają z wgrywania plików. Zanim platforma trafi do wielu firm, każda musi dostać własny klucz albo panel musi sprawdzać, że firma ma prawo do domeny.
+
+Źródła: [raport o generatywnej AI w pomocy Search Console](https://support.google.com/webmasters/answer/16984139), [zapowiedź raportu AI Performance w Bing Webmaster Tools](https://blogs.bing.com/webmaster/February-2026/Introducing-AI-Performance-in-Bing-Webmaster-Tools-Public-Preview), [Search Console API: zapytanie o dane](https://developers.google.com/webmaster-tools/v1/searchanalytics/query), [Cloudflare AI Crawl Control: GraphQL API](https://developers.cloudflare.com/ai-crawl-control/reference/graphql-api/) i [lista botów](https://developers.cloudflare.com/ai-crawl-control/reference/bots/).
+
 Reklamy Google i Meta czekają na zgody platform. Wnioski warto złożyć już teraz, bo zgody trwają tygodnie.
 
 ## Etap 0. Uruchomienie silnika (ok. 2-3 godziny pracy właściciela)
@@ -214,7 +270,7 @@ Połączenie z zapytaniami: adres podany w widżecie dostaje audyt techniczny, w
 - **Render strony i ocena AI** (A6, E2, D1, D2): zbudowane. Wymagają tokenu Cloudflare i klucza Claude. Wywołanie Cloudflare jest napisane według dokumentacji i przetestowane na zapisanej odpowiedzi, bez prawdziwego tokenu.
 - **Lista stron z mapy witryny:** zbudowane.
 - **Test cytowań w ChatGPT, Perplexity i Gemini:** do zbudowania. Wymaga trzech kluczy i decyzji, jak często pytać, bo to jedyny koszt zależny od liczby audytów.
-- **Dane z kont klienta** (Search Console, Bing Webmaster Tools): do zbudowania. Wymagają logowania Google i Microsoft.
+- **Dane z kont klienta:** Search Console i Google Analytics zbudowane 24.11.2026 (plik z eksportu albo konto usługi Google, bez logowania Google i bez weryfikacji aplikacji). Raport „AI Performance” z Bing Webmaster Tools wkleja się ręcznie, bo nie ma API. Do zbudowania: dane o wyszukiwaniu z Binga (klucz API Bing Webmaster).
 
 ## Etap 4. Pozostałe moduły i sprzedaż platformy
 
@@ -269,7 +325,7 @@ Do sprawdzenia po wdrożeniu: czy rejestr decyzji UOKiK przyjmuje połączenia z
    - opis idealnego klienta z treści strony firmy: zbudowane 20.11.2026,
    - lista potencjalnych klientów z treścią oferty i drogami kontaktu: zbudowana 23.11.2026, razem z listami, stroną zgody, lejkiem i wyszukiwaniem w CEIDG (po wpisaniu tokenu),
    - sekwencje z przypomnieniami i dziennym limitem: zbudowane 20.11.2026 w wersji, w której wysyłasz ze swojej skrzynki, a panel pilnuje terminów. Automatyczna wysyłka wymaga połączenia ze skrzynką (punkt 6).
-9. **Widoczność w Google:** dane z Search Console klienta i ocena wizytówki Google.
+9. **Widoczność w Google i w AI:** dane z Search Console, sygnały z odpowiedzi AI i konkurencja z map witryn zbudowane 24.11.2026. Do zrobienia: ocena wizytówki Google (wymaga zgody Google), pozycje konkurentów w wynikach (wymaga płatnej usługi z wynikami wyszukiwania) i test cytowań w AI.
 10. **Dotacje:** ocena warunków naboru na wgranym regulaminie jest zbudowana (20.11.2026). Lista obserwowanych naborów z przewodnikiem po oficjalnych serwisach i przypomnieniami też (20.11.2026), nabory wpisuje użytkownik.
 11. **Drobne uzupełnienia:** odhaczanie gotowych dokumentów w ofercie i podział sekcji między osoby są zbudowane (20.11.2026). Do zrobienia: szacowany czas pracy przy poprawkach z audytu technicznego.
 
@@ -284,12 +340,14 @@ Bez tego panel nie ruszy albo nie zrobi części pracy. Tych rzeczy nie da się 
 | `RESEND_API_KEY`, `MAIL_FROM` i rekordy DNS | powiadomienia, reset hasła, poranny przegląd | resend.com |
 | `PSI_KEY` | szybkość strony w audytach | Google Cloud, interfejs PageSpeed Insights |
 | `CF_ACCOUNT_ID`, `CF_BROWSER_TOKEN` | wskaźniki A6 i E2 | Cloudflare, Browser Run |
+| `GOOGLE_SERVICE_ACCOUNT`, opcjonalnie | stałe połączenie z Search Console i Google Analytics (bez niego działa wgrywanie plików) | Google Cloud, około 10 minut, raz. Kroki są w części „Widoczność w Google, w AI i u konkurencji” |
+| `CF_ANALYTICS_TOKEN`, opcjonalnie | boty AI na witrynach za Cloudflare | Cloudflare → Mój profil → Tokeny API: uprawnienia „Zone → Analytics → Read” i „Zone → Zone → Read” dla domen, które panel ma widzieć. Ten sam token może mieć też uprawnienie Browser Rendering, wtedy wystarczy `CF_BROWSER_TOKEN` |
 | Zgoda na kod widżetu i wpis w polityce prywatności | zapytania z perfectdata.pl | decyzja właściciela |
 | Plik logo | nagłówek panelu i raporty | - |
 | Własny adres panelu, opcjonalnie | krótszy adres strony zgody w listach | domena w Render i zmienna `APP_URL` |
 | `CEIDG_TOKEN`, opcjonalnie | wyszukiwanie jednoosobowych działalności po branży i regionie | dane.biznes.gov.pl: logowanie profilem zaufanym i „Wniosek o dostęp do raportów CEIDG” na biznes.gov.pl. Token przychodzi e-mailem |
 | Wnioski do Google i Meta | moduł Reklamy | Google Ads API (dostęp Basic), Meta App Review |
-| Logowanie Google dla aplikacji | Search Console, wizytówka Google | Google Cloud, ekran zgody OAuth |
+| Logowanie Google dla aplikacji | wizytówka Google | Google Cloud, ekran zgody OAuth i zgoda Google na interfejs wizytówek |
 
 Decyzje:
 
@@ -303,6 +361,9 @@ Decyzje:
 8. **Potwierdzanie adresu na stronie zgody.** Teraz zgoda jest ważna od razu. Przy literówce potwierdzenie i oferta trafią do obcej osoby. Potwierdzanie linkiem z e-maila to wyklucza, ale część firm nie kliknie.
 9. **Koszt jednego listu** (druk, koperta, znaczek) do wpisania przy lejku. Bez niego panel nie liczy kosztu zgody.
 10. **Tematy na stronie zgody.** Do sześciu, np. usługi agencji. Puste pole oznacza samą wiadomość.
+11. **Źródło zapytania z asystenta AI w widżecie.** Widżet mógłby zapisać, że osoba przyszła z ChatGPT albo Perplexity. Bez pamięci przeglądarki działa to tylko wtedy, gdy ktoś otworzy widżet na pierwszej stronie wizyty. Pełne przypisanie wymaga zapisu w przeglądarce, a dziś widżet niczego w niej nie zapisuje. Do decyzji, czy warto to zmieniać.
+12. **Pozycje konkurentów w Google.** Search Console pokazuje tylko własną witrynę. Cudze pozycje dają płatne usługi z wynikami wyszukiwania (opłata za każde sprawdzone zapytanie). Do decyzji: czy i dla ilu zapytań.
+13. **Test cytowań w AI przez Claude.** Najprostsza wersja nie wymaga nowych kluczy: panel zadaje pytania klientów modelowi Claude z wyszukiwaniem w sieci i liczy, kogo cytuje. Koszt rośnie z liczbą pytań, więc potrzebny jest limit.
 
 Potrzebne przed etapem 4:
 
@@ -316,6 +377,28 @@ Potrzebne przed etapem 4:
   - opinii o zbieraniu zgód: treść zgody i prośby o raport, raport jako zachęta, drugi list, wykorzystanie danych z CEIDG do listów i pytanie e-mailem o adres do ofert.
 
 ## Co zostało sprawdzone
+
+### Widoczność w Google, w AI i u konkurencji (24.11.2026)
+
+- **172 testy** na SQLite i PostgreSQL oraz test obrazu Docker (GitHub Actions). Pięć nowych obejmuje:
+  - start: adres w dowolnej postaci staje się domeną, paczka z polskimi i angielskimi nagłówkami, liczby z odstępem i przecinkiem, okres z tabeli dat, pojedynczy CSV z okresem z formularza, eksport z porównaniem okresów (odmowa z instrukcją), plik, który nie jest eksportem,
+  - wnioski: zapytania tuż za czołówką, niska klikalność na wysokiej pozycji, spadki, zapytanie, które zniknęło, marka rozpoznana z domeny, pytania, zmiana z danych dziennych,
+  - raport o odpowiedziach AI rozpoznany bez pytania użytkownika, łączenie adresów mimo „www” i ukośnika, strony z ruchem, których AI nie pokazuje,
+  - wklejanie tabel: tabulatory, odstępy, CSV, separatory tysięcy, źródła spoza listy asystentów, cztery rodzaje błędów,
+  - konto usługi Google: podpis tokenu sprawdzony kluczem publicznym, tylko uprawnienia do odczytu, usługa znaleziona po domenie, treść każdego zapytania do Search Console i Analytics, drugie pobranie bez dublowania, zadanie dzienne tylko dla połączonych witryn, błędy opisane po ludzku (brak dostępu, wyłączony interfejs, usunięty klucz),
+  - Cloudflare: treść zapytania, rozróżnianie podobnych nazw botów, podział na dni, odmowy, pliki techniczne poza listą, token bez uprawnienia, domena spoza konta,
+  - konkurencja: mapa z robots.txt, indeks map, pierwsze pobranie jako punkt odniesienia, nowa i usunięta strona, tematy, zdjęcie konkurenta z listy,
+  - bezpieczeństwo: druga firma nie widzi witryny, nie wgra do niej pliku i nie użyje kluczy platformy, kod HTML z pliku, z API, z mapy witryny i z wklejonej tabeli wyświetla się jako tekst.
+- **Przeglądarka (Chromium), 1280, 390 i 320 px:** cała ścieżka na uruchomionym panelu: dodanie witryny, „Połącz” bez dostępu (komunikat z adresem do dodania), wgranie dwóch paczek naraz przez formularz, wklejenie tabeli, usunięcie witryny. Wykres: wartość pod kursorem, strzałki z klawiatury, dymek w granicach okna, tabela z liczbami. Bez błędów w konsoli i bez poziomego przewijania.
+- **Cały panel po zmianach:** 178 stron i 48 pobrań w 3 szerokościach bez błędów, bez ostrzeżeń PHP w logu serwera i bez poziomego przewijania. Mockup: 34 ekrany w 4 szerokościach.
+- **Stan usług** sprawdzony 24.11.2026 w źródłach podanych w części „Widoczność w Google, w AI i u konkurencji”: raport AI w Search Console jest dostępny dla wszystkich witryn od 31.08.2026 i ma tylko wyświetlenia, raport AI Performance w Bingu nie ma API, dane o żądaniach w Cloudflare są w każdym planie z historią 31 dni.
+
+Czego nie dało się sprawdzić:
+
+- prawdziwego pliku z eksportu Search Console. Nie mam do niego dostępu, więc nagłówki w testach odtworzyłem: angielskie są udokumentowane, polskich nie potwierdziłem. Dlatego panel rozpoznaje tabele po słowach w nagłówku (zapytania, strony, daty, kliknięcia, wyświetlenia, pozycja, po polsku i po angielsku), a nie po nazwie pliku ani dokładnym brzmieniu. Układ eksportu raportu o generatywnej AI znam tylko z opisu w pomocy Google. Do potwierdzenia przy pierwszym wgraniu: jeśli panel nie rozpozna pliku, powie to wprost,
+- prawdziwych zapytań do Google i Cloudflare (wymagają kluczy). Wywołania są napisane według dokumentacji i sprawdzone na odpowiedziach w jej formacie,
+- układu tabel w raporcie Binga. Dlatego panel przyjmuje dowolną tabelę: nazwa w pierwszej kolumnie, liczba w pierwszej kolumnie liczbowej,
+- map witryn prawdziwych konkurentów (testy używają map przykładowych) i zachowania na Render.
 
 ### Listy i zgody: siedem dodatków (23.11.2026)
 

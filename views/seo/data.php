@@ -6,7 +6,7 @@ use App\Modules\Seo\Sync;
 $base = '/audyt/widocznosc/' . (int) $site['id'];
 echo View::partial('partials/seo_nav', ['site' => $site, 'tab' => $tab, 'sites' => $sites, 'heading' => 'Dane i połączenia',
     'lead' => 'Skąd panel bierze dane o ' . $site['host'] . ' i jak dodać kolejne źródło.']);
-$names = ['gsc' => 'Search Console: Skuteczność', 'gsc_ai' => 'Search Console: Funkcje generatywnej AI', 'bing_ai' => 'Bing: AI Performance', 'ga4_ai' => 'Google Analytics: asystenci AI'];
+$names = ['gsc' => 'Search Console: Skuteczność', 'gsc_ai' => 'Search Console: raport o generatywnej AI', 'bing_ai' => 'Bing: AI Performance', 'ga4_ai' => 'Google Analytics: asystenci AI'];
 $line = static function (?array $sync): string {
     if (!$sync) {
         return '<span class="muted">nie połączono</span>';
@@ -38,7 +38,7 @@ $line = static function (?array $sync): string {
     <tbody>
       <tr><td><b>Search Console</b><br><span class="small muted">zapytania, strony, pozycje</span></td><td><?= $has['gsc'] && !$sync['google'] ? '<span class="state s-good">dane z pliku</span>' : $line($sync['google']) ?></td>
         <td class="small"><?= isset($periods['gsc']) ? e(implode(', ', array_map(static fn (array $p): string => Sync::range($p['start'], $p['end']), array_slice($periods['gsc'], 0, 4)))) : '<span class="muted">brak</span>' ?></td></tr>
-      <tr><td><b>Odpowiedzi AI Google</b><br><span class="small muted">raport „Funkcje generatywnej AI”, tylko z pliku</span></td><td><?= $has['gsc_ai'] ? '<span class="state s-good">dane z pliku</span>' : '<span class="muted">brak danych</span>' ?></td>
+      <tr><td><b>Odpowiedzi AI Google</b><br><span class="small muted">raport o generatywnej AI, tylko z pliku</span></td><td><?= $has['gsc_ai'] ? '<span class="state s-good">dane z pliku</span>' : '<span class="muted">brak danych</span>' ?></td>
         <td class="small"><?= isset($periods['gsc_ai']) ? e(implode(', ', array_map(static fn (array $p): string => Sync::range($p['start'], $p['end']), array_slice($periods['gsc_ai'], 0, 4)))) : '<span class="muted">brak</span>' ?></td></tr>
       <tr><td><b>Copilot i Bing</b><br><span class="small muted">raport „AI Performance”, wklejany</span></td><td><?= $has['bing_ai'] ? '<span class="state s-good">dane wklejone</span>' : '<span class="muted">brak danych</span>' ?></td>
         <td class="small"><?= isset($periods['bing_ai']) ? e(implode(', ', array_map(static fn (array $p): string => Sync::range($p['start'], $p['end']), array_slice($periods['bing_ai'], 0, 4)))) : '<span class="muted">brak</span>' ?></td></tr>

@@ -9,7 +9,7 @@ namespace App\Modules\Seo;
  *
  * Eksport to paczka ZIP z kilkoma plikami CSV (zapytania, strony, daty, kraje, urządzenia) albo pojedynczy CSV.
  * Nazwy plików i kolumn zależą od języka konta, dlatego rodzaj tabeli rozpoznajemy po nagłówkach, a nie po nazwie pliku.
- * Obsługujemy dwa raporty: „Skuteczność” (kliknięcia, wyświetlenia, pozycja) i „Funkcje generatywnej AI” (same wyświetlenia).
+ * Obsługujemy dwa raporty: „Skuteczność” (kliknięcia, wyświetlenia, pozycja) i raport o generatywnej AI (same wyświetlenia).
  * Użytkownik wgrywa plik tak, jak go pobrał. Raport i okres rozpoznajemy sami.
  */
 final class GscFile
@@ -97,7 +97,7 @@ final class GscFile
 
     /**
      * Zapisuje rozpoznane tabele. Raport rozpoznajemy sami: tabele z kliknięciami to „Skuteczność”,
-     * tabele z samymi wyświetleniami to „Funkcje generatywnej AI” (ten raport nie ma kliknięć).
+     * tabele z samymi wyświetleniami to raport o generatywnej AI (nie ma kliknięć).
      * @return array{ok: bool, error?: string, report?: string, start?: string, end?: string, saved?: array<string, int>}
      */
     public static function store(array $site, array $sets, ?string $from = null, ?string $to = null): array
