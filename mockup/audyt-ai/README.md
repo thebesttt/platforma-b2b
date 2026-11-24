@@ -1,18 +1,19 @@
 # Mockup panelu PerfectData
 
-Klikalny mockup całego panelu: 9 modułów, 34 ekrany. Pokazuje każdą funkcję z opisu produktu na przykładowych danych. Nic nie jest mierzone ani wysyłane.
+Klikalny mockup całego panelu: 10 modułów, 37 ekranów. Pokazuje każdą funkcję z opisu produktu na przykładowych danych. Nic nie jest mierzone ani wysyłane.
 
 | Moduł | Ekrany |
 |---|---|
-| Pulpit | Dziś, Lista funkcji (72 funkcji ze stanem: działa w silniku, do zbudowania, czeka na zgodę Google i Meta) |
+| Pulpit | Dziś, Lista funkcji (81 funkcji ze stanem: działa w silniku, do zbudowania, czeka na zgodę Google i Meta) |
 | Zapytania | Zapytania, Zasady kwalifikacji, Podgląd widżetu, Wyniki |
-| Klienci | Kontakty, Wiadomość z ekranem ryzyka i decyzją, Zapytania ofertowe, Potencjalni klienci (lista firm, treść oferty, drogi kontaktu z ryzykiem), Wysyłka i dziennik |
+| Klienci | Kontakty z rozwijanym „Co napisał klient”, Wiadomość z ekranem ryzyka i decyzją, Zapytania ofertowe, Potencjalni klienci (lista firm, treść oferty, drogi kontaktu z ryzykiem), Wysyłka i dziennik |
 | Audyt AI | Raport, Wytyczne wskaźników, Przed i po, Cytowania w AI, Strony witryny |
 | SEO i strona | Audyt techniczny, Konkurenci (audyty i mapy witryn), Google (Search Console), Odpowiedzi AI, Wizytówka |
 | Reklamy | Wyniki, Kampanie z potwierdzeniem zmian i dziennikiem, Alerty |
-| Przetargi | Dopasowane, Karta przetargu z analizą SWZ, Profil, Terminy |
-| Oferty | Oferta, Dotacje, Biblioteka firmy |
+| Przetargi | Dopasowane z przyciskiem „Do ofert”, Karta przetargu z analizą SWZ, Profil, Terminy |
+| Oferty | Oferta, Dotacje (wyszukiwarka naborów, obserwowane nabory, wniosek pisany jednym przyciskiem), Biblioteka firmy |
 | Kontrahenci | Karta firmy, Obserwowane i alerty, Należności |
+| Konto | Pakiet i AI, Bezpieczeństwo i dane, Administracja (firmy, zaproszenia, blokada) |
 
 ## Wygląd
 

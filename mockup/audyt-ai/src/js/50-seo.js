@@ -102,7 +102,7 @@ function renderGoogle() {
       `<div class="sec">${secHead(title, '', rows.length)}<div class="table-wrap"><table><thead><tr><th>Zapytanie</th><th class="n">Kliknięcia</th><th class="n">Było</th></tr></thead><tbody>` +
       rows.slice(0, 5).map((m) => `<tr><td>${esc(m.q)}${m.gone ? ' <span class="small muted">(zniknęło)</span>' : ''}</td><td class="n"><b>${num(m.now)}</b></td><td class="n">${num(m.was)}</td></tr>`).join('') + `</tbody></table></div></div>`).join('') + `</div>
     <p class="note" id="gscBrand"><b>Skąd są kliknięcia.</b> Z nazwą marki: ${num(x.brand[0])}. Pozostałe zapytania: ${num(x.brand[1])}. Ukryte przez Google (rzadkie zapytania): ${num(x.brand[2])}. Nowych klientów przyprowadzają pozostałe.</p>
-    <p class="small muted">Start: wpisujesz adres witryny, a potem wgrywasz paczkę z przycisku „Eksportuj” w Search Console albo dodajesz jeden adres e-mail jako użytkownika i klikasz „Połącz”. Panel sam rozpoznaje raport i okres.</p>`);
+    <p class="small muted">Start: wpisujesz adres witryny, a potem wgrywasz paczkę z przycisku „Eksportuj” w Search Console albo klikasz „Połącz z Google” i wybierasz swoje konto (tylko odczyt). Każda firma łączy własne konto, więc widzi wyłącznie swoje dane. Panel sam rozpoznaje raport i okres.</p>`);
 }
 
 function renderAi() {

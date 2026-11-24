@@ -56,10 +56,12 @@ function draftMessage(kind, c) {
 function renderContacts() {
   const rows = PLAT.contacts.map((c) => `<div class="item" style="--c1:250px">
       <div><b>${esc(c.company)}</b><p class="small muted">${esc((c.person ? c.person + ', ' : '') + c.email)}</p></div>
-      <div><p>${esc(basisLine(c))}</p>${c.unsub ? `<p class="warn">Wypisał się ${esc(c.unsub)}. Oferty i prośby o zgodę są zablokowane.</p>` : ''}</div>
+      <div><p>${esc(basisLine(c))}</p>${c.voice ? `<details class="more"><summary>Co napisał klient${c.voice.length > 1 ? ' (' + c.voice.length + ')' : ''}, ostatnio ${esc(c.voice[c.voice.length - 1].at)}</summary>` +
+        c.voice.slice().reverse().map((v) => `<p class="small muted" style="padding-top:8px">${esc(v.source)}, ${esc(v.at)}</p><p class="small">${esc(v.text).replace(/\n/g, '<br>')}</p>`).join('') + `</details>` : ''}${c.unsub ? `<p class="warn">Wypisał się ${esc(c.unsub)}. Oferty i prośby o zgodę są zablokowane.</p>` : ''}</div>
       <div class="end">${c.unsub ? st('bad', 'sprzeciw') : (c.basis === 'none' ? st('mid', 'brak podstawy') : st('good', 'jest podstawa'))}<button class="btn ghost sm" type="button" data-act="k-write" data-id="${c.id}">Napisz</button></div></div>`).join('');
   put('kontakty', stan('silnik', 'Kontakty, podstawy kontaktu i historia wiadomości.') +
-    `<div class="sec">${secHead('Kontakty', 'Przy każdym kontakcie zapisujesz, skąd masz adres i od kiedy. Od tej podstawy zależy ryzyko wiadomości.', PLAT.contacts.length)}${rows}</div>
+    `<div class="sec">${secHead('Kontakty', 'Przy każdym kontakcie zapisujesz, skąd masz adres i od kiedy. Od tej podstawy zależy ryzyko wiadomości.', PLAT.contacts.length)}${rows}
+      <p class="small muted" style="padding-top:14px">„Co napisał klient” zbiera jego własne słowa: zapytanie ze strony, zapytania ofertowe i odpowiedzi e-mail, które wklejasz przy „Firma odpisała”. Panel nie czyta skrzynki, bo wiadomości wychodzą z Twojego programu pocztowego.</p></div>
     <div class="sec">${secHead('Skąd biorą się kontakty')}<ul class="list" style="padding-top:16px">
       <li><b>Zapytania ze strony.</b> Każde zapytanie z widżetu zapisuje się z podstawą „zapytanie od tej firmy”. <a href="#zapytania">Zobacz zapytania</a></li>
       <li><b>Zapytania ofertowe firm.</b> Firma, która publikuje zapytanie i adres do ofert, sama prosi o kontakt. <a href="#rfq">Zobacz zapytania ofertowe</a></li>

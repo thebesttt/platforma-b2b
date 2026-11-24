@@ -1,113 +1,225 @@
 {
   "today": "2026-11-19",
-  "org": {
-    "name": "PerfectData",
-    "user": "Jan K.",
-    "site": "perfectdata.pl"
-  },
+  "org": {"name": "PerfectData", "user": "Jan K.", "site": "perfectdata.pl"},
   "states": {
     "silnik": ["good", "Działa w silniku"],
     "plan": ["plain", "Do zbudowania"],
     "zgoda": ["mid", "Czeka na zgodę Google i Meta"]
   },
   "functions": [
-    { "module": "Zapytania", "items": [
-      ["Kwalifikator zamiast formularza: pytania, punkty, progi", "kwalifikator", "silnik", "Pytania i punkty edytujesz jako tekst. Zmiana zasad tworzy nową wersję."],
-      ["Lista zapytań z oceną, sprawdzeniem firmy i podstawą kontaktu", "zapytania", "silnik", "Powiadomienie e-mail o każdym zapytaniu."],
-      ["Widżet na stronę z informacją o AI i klauzulą RODO", "widzet", "silnik", "Kod jest gotowy w ustawieniach widżetu. Na stronę trafi dopiero po Twojej zgodzie."],
-      ["Czat AI z bazy wiedzy firmy, z limitami", "kwalifikator", "silnik", "Wymaga klucza API. Bez niego działają same pytania."],
-      ["Lejek i test: formularz czy kwalifikator", "wyniki", "silnik", "Wynik testu z informacją, czy różnica jest już pewna."]
-    ] },
-    { "module": "Klienci", "items": [
-      ["Kontakty z zapisaną podstawą kontaktu", "kontakty", "silnik", ""],
-      ["Szkic wiadomości: regułowy albo AI z treści strony odbiorcy", "wiadomosc", "silnik", ""],
-      ["Ekran ryzyka prawnego przed wysyłką, decyzja należy do Ciebie", "wiadomosc", "silnik", "Potwierdzenie trafia do dziennika."],
-      ["Blokada po sprzeciwie odbiorcy", "wiadomosc", "silnik", "Jedyna twarda blokada."],
-      ["Dziennik decyzji i wysłanych wiadomości", "wysylka", "silnik", ""],
-      ["Wysyłka z własnej skrzynki", "wysylka", "silnik", "Dziś przez program pocztowy albo plik .eml. Gmail i Microsoft 365 są w planie."],
-      ["Zapytania ofertowe firm: gdzie szukać i rejestr z terminami", "rfq", "silnik", "Źródła nie udostępniają danych programom. Panel pokazuje, gdzie szukać, a znalezione zapytanie wpisujesz do rejestru: panel pilnuje terminu i przygotowuje odpowiedź."],
-      ["Opis idealnego klienta ze strony firmy", "firmy", "silnik", "AI czyta stronę firmy i bibliotekę. Grupa klientów zostaje tylko z cytatem. Opis można poprawić ręcznie."],
-      ["Lista potencjalnych klientów: firmy z wyników przetargów i z Twojej listy, dopasowanie i powód kontaktu", "firmy", "silnik", "Dane z wykazu VAT i KRS, punkty z jawnej tabeli. Adresów e-mail panel nie zbiera."],
-      ["Treść oferty układana automatycznie i drogi kontaktu z oceną ryzyka", "firmy", "silnik", "Odpowiedź na zapytanie, adres podany przez firmę do ofert, list pocztą albo e-mail bez zgody z ekranem ryzyka. Decyzja należy do Ciebie."],
-      ["Zgoda na ofertę e-mailem zbierana listem: strona zgody z kodem QR i dowodem", "firmy", "silnik", "Prośba o zgodę wysłana e-mailem sama wymaga zgody. Dlatego list ma adres strony, na której firma sama wpisuje e-mail i zaznacza zgodę. Panel zapisuje treść zgody, czas i źródło."],
-      ["Audyt strony jako zachęta: list obiecuje raport, firma dostaje go na własną prośbę", "firmy", "silnik", "Wynik trafia do treści oferty. Na stronie zgody prośba o raport i zgoda na ofertę to dwa osobne pola."],
-      ["Lejek listów: wejścia na stronę zgody, zgody, oferty, odpowiedzi i koszt jednej zgody", "firmy", "silnik", "Wejścia liczy serwer, bez plików cookie. Podgląd z panelu się nie liczy."],
-      ["Listy seryjnie: jeden plik do druku z kodami QR i adresy na koperty", "firmy", "silnik", "Każdy list od nowej strony, z adresem strony zgody tej firmy. Adresy w pliku dla arkusza."],
-      ["Przypomnienie po liście i drugi, krótszy list", "firmy", "silnik", "Po 21 dniach bez odpowiedzi. Drugi list zapowiada, że jest ostatni, a panel nie proponuje trzeciego."],
-      ["Kod QR na wizytówkę i stoisko: ogólna strona zgody", "firmy", "silnik", "Kto zeskanuje kod, sam wpisuje firmę i e-mail. Panel zakłada kontakt z podstawą „zgoda”."],
-      ["Pytanie na stronie zgody, co firmę interesuje", "firmy", "silnik", "Tematy ustawiasz w panelu. Szkic oferty nawiązuje do zaznaczonych."],
-      ["Wyszukiwanie firm w CEIDG: branża, region, data założenia", "firmy", "silnik", "Działa po wpisaniu bezpłatnego tokenu hurtowni danych CEIDG. Bez adresów e-mail i telefonów. Spółek z KRS tak szukać się nie da."],
-      ["Sekwencje z przypomnieniami i dziennymi limitami", "wysylka", "silnik", "Panel pilnuje terminów i przygotowuje treść kolejnych kroków. Wysyłasz ze swojej skrzynki."],
-      ["Wykrywanie odpowiedzi i wypisań", "wysylka", "plan", "Wypisanie działa: odbiorca klika adres w stopce oferty. Odpowiedź zaznaczasz ręcznie, bo automat wymaga połączenia ze skrzynką."]
-    ] },
-    { "module": "Audyt AI", "items": [
-      ["Wynik 0-100 z 24 wskaźników i jawnymi progami", "raport", "silnik", "Sprawdzony na prawdziwej stronie. 4 wskaźniki wymagają podłączenia usług (AI i renderowanie)."],
-      ["Lista zadań z punktami i warunkiem zaliczenia", "raport", "silnik", ""],
-      ["Wytyczne wskaźników ze źródłami", "wytyczne", "silnik", "Ten sam plik wytycznych czyta silnik i ta strona."],
-      ["Porównanie przed i po", "postep", "silnik", ""],
-      ["Cytowania w wyszukiwarkach AI", "cytowania", "plan", "Wymaga kluczy do OpenAI, Perplexity i Gemini oraz decyzji, jak często pytać."],
-      ["Audyt wielu stron z mapy witryny", "strony", "silnik", "Do 20 stron naraz, każda z własną frazą."],
-      ["Raport dla klienta pod publicznym linkiem", "raport", "silnik", "Link wygasa po 90 dniach i można go wyłączyć."]
-    ] },
-    { "module": "SEO i strona", "items": [
-      ["Audyt techniczny: bezpieczeństwo, platforma, szybkość, SEO, analityka i RODO", "technika", "silnik", "Ten sam silnik co w PrestaCheck."],
-      ["Lista poprawek z priorytetem", "technika", "silnik", "Szacowany czas pracy jest do dodania."],
-      ["Porównanie z konkurentami", "konkurenci", "silnik", ""],
-      ["Widoczność w Google z Search Console: plik z eksportu albo połączenie jednym adresem e-mail", "google", "silnik", "Stałe połączenie wymaga jednego klucza Google po stronie administratora panelu."],
-      ["Co poprawić najpierw: zapytania tuż za czołówką, słabe tytuły, spadki, dwie strony na jedno zapytanie", "google", "silnik", ""],
-      ["Widoczność w odpowiedziach AI: Google, Copilot, wejścia z asystentów i boty AI", "ai", "silnik", "Raporty Google i Binga wgrywa się albo wkleja, bo nie mają API."],
-      ["Konkurencja z map witryn: co publikują i jakich tematów brakuje", "konkurenci", "silnik", ""],
-      ["Wizytówka Google: oceny i kompletność", "wizytowka", "plan", "Wymaga zgody Google na dostęp do wizytówek."]
-    ] },
-    { "module": "Reklamy", "items": [
-      ["Podłączenie kont Google Ads i Meta", "reklamy", "zgoda", "Google: dostęp Basic do API. Meta: weryfikacja firmy i przegląd aplikacji."],
-      ["Wydatki, kliknięcia, konwersje i koszt konwersji w jednym widoku", "reklamy", "zgoda", ""],
-      ["Porównanie okresów", "reklamy", "zgoda", ""],
-      ["Alerty: budżet, wzrost kosztu konwersji o 30%, wstrzymana kampania", "alerty", "zgoda", ""],
-      ["Wstrzymanie i wznowienie kampanii, zmiana budżetu z potwierdzeniem", "kampanie", "zgoda", ""],
-      ["Dziennik zmian w kampaniach", "kampanie", "zgoda", ""]
-    ] },
-    { "module": "Przetargi", "items": [
-      ["Codzienny import ogłoszeń z BZP i TED", "przetargi", "silnik", "Sprawdzony na 2195 prawdziwych ogłoszeniach."],
-      ["Profil firmy: CPV, słowa kluczowe, województwa, wartość", "profil", "silnik", ""],
-      ["Dopasowanie 0-100 z uzasadnieniem", "przetargi", "silnik", ""],
-      ["Karta przetargu: wadium, kryteria, terminy, warunki ze wskazaniem źródła", "przetarg", "silnik", ""],
-      ["Analiza SWZ przez AI: warunki, kary, płatności, ryzyka", "przetarg", "silnik", "Wymaga klucza API."],
-      ["Pytania do dokumentacji", "przetarg", "silnik", ""],
-      ["Kalendarz terminów", "terminy", "silnik", "Plik .ics do własnego kalendarza."],
-      ["Poranny e-mail z nowymi przetargami", "profil", "silnik", "W jednym przeglądzie z zapytaniami i alertami. Wymaga klucza usługi wysyłkowej."],
-      ["Wyniki przetargów: kto wygrywa i za ile", "przetargi", "silnik", "Sprawdzone na 25 prawdziwych ogłoszeniach o wyniku. Alert, gdy zapisany przetarg zostanie rozstrzygnięty."]
-    ] },
-    { "module": "Oferty i wnioski", "items": [
-      ["Biblioteka firmy: referencje, osoby, certyfikaty, polisy, opisy", "biblioteka", "silnik", ""],
-      ["Szkic oferty z ogłoszenia, SWZ i biblioteki", "oferta", "silnik", ""],
-      ["Zdania bez źródła oznaczone do sprawdzenia", "oferta", "silnik", ""],
-      ["Lista dokumentów do złożenia", "oferta", "silnik", "Z ogłoszenia i analizy SWZ. Zespół odhacza gotowe pozycje i dopisuje własne."],
-      ["Eksport do .docx", "oferta", "silnik", ""],
-      ["Wniosek o dotację według regulaminu naboru", "dotacje", "silnik", ""],
-      ["Nabory dotacji: gdzie szukać i lista obserwowanych", "dotacje", "silnik", "Serwisy funduszy nie udostępniają danych programom. Panel pokazuje pięć oficjalnych serwisów, a wybrany nabór wpisujesz na listę: panel przypomina o końcu naboru i zakłada wniosek."],
-      ["Ocena, czy firma kwalifikuje się do naboru", "dotacje", "silnik", "Warunki z wgranego regulaminu, każdy z cytatem. Ocena tylko z potwierdzeniem w danych firmy."],
-      ["Praca kilku osób nad jedną ofertą", "oferta", "silnik", "Sekcję przydzielasz osobie z zespołu. Zapis nie nadpisuje cudzej zmiany."]
-    ] },
-    { "module": "Kontrahenci", "items": [
-      ["Karta firmy po NIP: wykaz VAT, rachunki, KRS, zarząd", "kontrahent", "silnik", ""],
-      ["Ocena ryzyka płatniczego 0-100 z listą sygnałów", "kontrahent", "silnik", "Tylko dane publiczne."],
-      ["Decyzje UOKiK o zatorach płatniczych", "kontrahent", "silnik", ""],
-      ["Obserwowane firmy i alerty o zmianach", "obserwowane", "silnik", ""],
-      ["Należności: wezwanie do zapłaty i warunki wpisu do BIG", "naleznosci", "silnik", "Długi widzi tylko Twoja firma."],
-      ["Upadłości i restrukturyzacje z Krajowego Rejestru Zadłużonych", "kontrahent", "silnik", "Rejestr nie udostępnia danych programom. Karta firmy pokazuje, gdzie to sprawdzić, i zapisuje wynik. Obserwowane firmy przypominają o sprawdzeniu co 90 dni."],
-      ["Szacowany czas płacenia dostawcom ze sprawozdań", "kontrahent", "silnik", "Dwie liczby przepisujesz ze sprawozdania w przeglądarce dokumentów finansowych KRS, a panel liczy dni."],
-      ["Wpis długu do BIG z platformy", "naleznosci", "plan", "Wymaga umowy z biurem."]
-    ] }
+    {
+      "module": "Zapytania",
+      "items": [
+        ["Kwalifikator zamiast formularza: pytania, punkty, progi", "kwalifikator", "silnik", "Pytania i punkty edytujesz jako tekst. Zmiana zasad tworzy nową wersję."],
+        ["Lista zapytań z oceną, sprawdzeniem firmy i podstawą kontaktu", "zapytania", "silnik", "Powiadomienie e-mail o każdym zapytaniu."],
+        ["Widżet na stronę z informacją o AI i klauzulą RODO", "widzet", "silnik", "Kod jest gotowy w ustawieniach widżetu. Na stronę trafi dopiero po Twojej zgodzie."],
+        ["Czat AI z bazy wiedzy firmy, z limitami", "kwalifikator", "silnik", "Wymaga klucza API. Bez niego działają same pytania."],
+        ["Lejek i test: formularz czy kwalifikator", "wyniki", "silnik", "Wynik testu z informacją, czy różnica jest już pewna."]
+      ]
+    },
+    {
+      "module": "Klienci",
+      "items": [
+        ["Kontakty z zapisaną podstawą kontaktu", "kontakty", "silnik", ""],
+        ["Szkic wiadomości: regułowy albo AI z treści strony odbiorcy", "wiadomosc", "silnik", ""],
+        ["Ekran ryzyka prawnego przed wysyłką, decyzja należy do Ciebie", "wiadomosc", "silnik", "Potwierdzenie trafia do dziennika."],
+        ["Blokada po sprzeciwie odbiorcy", "wiadomosc", "silnik", "Jedyna twarda blokada."],
+        ["Dziennik decyzji i wysłanych wiadomości", "wysylka", "silnik", ""],
+        ["Wysyłka z własnej skrzynki", "wysylka", "silnik", "Dziś przez program pocztowy albo plik .eml. Gmail i Microsoft 365 są w planie."],
+        ["Zapytania ofertowe firm: gdzie szukać i rejestr z terminami", "rfq", "silnik", "Źródła nie udostępniają danych programom. Panel pokazuje, gdzie szukać, a znalezione zapytanie wpisujesz do rejestru: panel pilnuje terminu i przygotowuje odpowiedź."],
+        ["Opis idealnego klienta ze strony firmy", "firmy", "silnik", "AI czyta stronę firmy i bibliotekę. Grupa klientów zostaje tylko z cytatem. Opis można poprawić ręcznie."],
+        ["Lista potencjalnych klientów: firmy z wyników przetargów i z Twojej listy, dopasowanie i powód kontaktu", "firmy", "silnik", "Dane z wykazu VAT i KRS, punkty z jawnej tabeli. Adresów e-mail panel nie zbiera."],
+        ["Treść oferty układana automatycznie i drogi kontaktu z oceną ryzyka", "firmy", "silnik", "Odpowiedź na zapytanie, adres podany przez firmę do ofert, list pocztą albo e-mail bez zgody z ekranem ryzyka. Decyzja należy do Ciebie."],
+        ["Zgoda na ofertę e-mailem zbierana listem: strona zgody z kodem QR i dowodem", "firmy", "silnik", "Prośba o zgodę wysłana e-mailem sama wymaga zgody. Dlatego list ma adres strony, na której firma sama wpisuje e-mail i zaznacza zgodę. Panel zapisuje treść zgody, czas i źródło."],
+        ["Audyt strony jako zachęta: list obiecuje raport, firma dostaje go na własną prośbę", "firmy", "silnik", "Wynik trafia do treści oferty. Na stronie zgody prośba o raport i zgoda na ofertę to dwa osobne pola."],
+        ["Lejek listów: wejścia na stronę zgody, zgody, oferty, odpowiedzi i koszt jednej zgody", "firmy", "silnik", "Wejścia liczy serwer, bez plików cookie. Podgląd z panelu się nie liczy."],
+        ["Listy seryjnie: jeden plik do druku z kodami QR i adresy na koperty", "firmy", "silnik", "Każdy list od nowej strony, z adresem strony zgody tej firmy. Adresy w pliku dla arkusza."],
+        ["Przypomnienie po liście i drugi, krótszy list", "firmy", "silnik", "Po 21 dniach bez odpowiedzi. Drugi list zapowiada, że jest ostatni, a panel nie proponuje trzeciego."],
+        ["Kod QR na wizytówkę i stoisko: ogólna strona zgody", "firmy", "silnik", "Kto zeskanuje kod, sam wpisuje firmę i e-mail. Panel zakłada kontakt z podstawą „zgoda”."],
+        ["Pytanie na stronie zgody, co firmę interesuje", "firmy", "silnik", "Tematy ustawiasz w panelu. Szkic oferty nawiązuje do zaznaczonych."],
+        ["Wyszukiwanie firm w CEIDG: branża, region, data założenia", "firmy", "silnik", "Działa po wpisaniu bezpłatnego tokenu hurtowni danych CEIDG. Bez adresów e-mail i telefonów. Spółek z KRS tak szukać się nie da."],
+        ["Sekwencje z przypomnieniami i dziennymi limitami", "wysylka", "silnik", "Panel pilnuje terminów i przygotowuje treść kolejnych kroków. Wysyłasz ze swojej skrzynki."],
+        ["Co napisał klient: zapytanie, zapytanie ofertowe, wklejona odpowiedź", "kontakty", "silnik", "Rozwijane przy kontakcie. Panel nie czyta skrzynki, więc odpowiedź e-mail wklejasz przy „Firma odpisała”."],
+        ["Wykrywanie odpowiedzi i wypisań", "wysylka", "plan", "Wypisanie działa: odbiorca klika adres w stopce oferty. Odpowiedź zaznaczasz ręcznie, bo automat wymaga połączenia ze skrzynką."]
+      ]
+    },
+    {
+      "module": "Audyt AI",
+      "items": [
+        ["Wynik 0-100 z 24 wskaźników i jawnymi progami", "raport", "silnik", "Sprawdzony na prawdziwej stronie. 4 wskaźniki wymagają podłączenia usług (AI i renderowanie)."],
+        ["Lista zadań z punktami i warunkiem zaliczenia", "raport", "silnik", ""],
+        ["Wytyczne wskaźników ze źródłami", "wytyczne", "silnik", "Ten sam plik wytycznych czyta silnik i ta strona."],
+        ["Porównanie przed i po", "postep", "silnik", ""],
+        ["Cytowania w wyszukiwarkach AI", "cytowania", "plan", "Wymaga kluczy do OpenAI, Perplexity i Gemini oraz decyzji, jak często pytać."],
+        ["Audyt wielu stron z mapy witryny", "strony", "silnik", "Do 20 stron naraz, każda z własną frazą."],
+        ["Raport dla klienta pod publicznym linkiem", "raport", "silnik", "Link wygasa po 90 dniach i można go wyłączyć."]
+      ]
+    },
+    {
+      "module": "SEO i strona",
+      "items": [
+        ["Audyt techniczny: bezpieczeństwo, platforma, szybkość, SEO, analityka i RODO", "technika", "silnik", "Ten sam silnik co w PrestaCheck."],
+        ["Lista poprawek z priorytetem", "technika", "silnik", "Szacowany czas pracy jest do dodania."],
+        ["Porównanie z konkurentami", "konkurenci", "silnik", ""],
+        ["Widoczność w Google z Search Console: plik z eksportu albo połączenie jednym adresem e-mail", "google", "silnik", "Stałe połączenie wymaga jednego klucza Google po stronie administratora panelu."],
+        ["Co poprawić najpierw: zapytania tuż za czołówką, słabe tytuły, spadki, dwie strony na jedno zapytanie", "google", "silnik", ""],
+        ["Widoczność w odpowiedziach AI: Google, Copilot, wejścia z asystentów i boty AI", "ai", "silnik", "Raporty Google i Binga wgrywa się albo wkleja, bo nie mają API."],
+        ["Konkurencja z map witryn: co publikują i jakich tematów brakuje", "konkurenci", "silnik", ""],
+        ["Własne konto Google i token Cloudflare każdej firmy", "google", "silnik", "Firma łączy swoje konto Google jednym przyciskiem (tylko odczyt) i widzi wyłącznie swoje dane. Wymaga klienta OAuth po stronie właściciela panelu."],
+        ["Wizytówka Google: oceny i kompletność", "wizytowka", "plan", "Wymaga zgody Google na dostęp do wizytówek."]
+      ]
+    },
+    {
+      "module": "Reklamy",
+      "items": [
+        ["Podłączenie kont Google Ads i Meta", "reklamy", "zgoda", "Google: dostęp Basic do API. Meta: weryfikacja firmy i przegląd aplikacji."],
+        ["Wydatki, kliknięcia, konwersje i koszt konwersji w jednym widoku", "reklamy", "zgoda", ""],
+        ["Porównanie okresów", "reklamy", "zgoda", ""],
+        ["Alerty: budżet, wzrost kosztu konwersji o 30%, wstrzymana kampania", "alerty", "zgoda", ""],
+        ["Wstrzymanie i wznowienie kampanii, zmiana budżetu z potwierdzeniem", "kampanie", "zgoda", ""],
+        ["Dziennik zmian w kampaniach", "kampanie", "zgoda", ""]
+      ]
+    },
+    {
+      "module": "Przetargi",
+      "items": [
+        ["Codzienny import ogłoszeń z BZP i TED", "przetargi", "silnik", "Sprawdzony na 2195 prawdziwych ogłoszeniach."],
+        ["Profil firmy: CPV, słowa kluczowe, województwa, wartość", "profil", "silnik", ""],
+        ["Dopasowanie 0-100 z uzasadnieniem", "przetargi", "silnik", ""],
+        ["Karta przetargu: wadium, kryteria, terminy, warunki ze wskazaniem źródła", "przetarg", "silnik", ""],
+        ["Analiza SWZ przez AI: warunki, kary, płatności, ryzyka", "przetarg", "silnik", "Wymaga klucza API."],
+        ["Pytania do dokumentacji", "przetarg", "silnik", ""],
+        ["Kalendarz terminów", "terminy", "silnik", "Plik .ics do własnego kalendarza."],
+        ["Poranny e-mail z nowymi przetargami", "profil", "silnik", "W jednym przeglądzie z zapytaniami i alertami. Wymaga klucza usługi wysyłkowej."],
+        ["Wyniki przetargów: kto wygrywa i za ile", "przetargi", "silnik", "Sprawdzone na 25 prawdziwych ogłoszeniach o wyniku. Alert, gdy zapisany przetarg zostanie rozstrzygnięty."],
+        ["Przetarg jednym kliknięciem w ofertach", "przetargi", "silnik", "Przycisk „Do ofert” zakłada szkic oferty i zapisuje przetarg. Drugi klik nie tworzy duplikatu."]
+      ]
+    },
+    {
+      "module": "Oferty i wnioski",
+      "items": [
+        ["Biblioteka firmy: referencje, osoby, certyfikaty, polisy, opisy", "biblioteka", "silnik", ""],
+        ["Szkic oferty z ogłoszenia, SWZ i biblioteki", "oferta", "silnik", ""],
+        ["Zdania bez źródła oznaczone do sprawdzenia", "oferta", "silnik", ""],
+        ["Lista dokumentów do złożenia", "oferta", "silnik", "Z ogłoszenia i analizy SWZ. Zespół odhacza gotowe pozycje i dopisuje własne."],
+        ["Eksport do .docx", "oferta", "silnik", ""],
+        ["Wniosek o dotację według regulaminu naboru", "dotacje", "silnik", ""],
+        ["Obserwowane nabory z przypomnieniami o terminie", "dotacje", "silnik", "Panel przypomina 14, 7 i 3 dni przed końcem naboru i zakłada z naboru szkic wniosku. Nabór trafia tu z wyszukiwarki albo z ręcznego wpisu."],
+        ["Ocena, czy firma kwalifikuje się do naboru", "dotacje", "silnik", "Warunki z wgranego regulaminu, każdy z cytatem. Ocena tylko z potwierdzeniem w danych firmy."],
+        ["Praca kilku osób nad jedną ofertą", "oferta", "silnik", "Sekcję przydzielasz osobie z zespołu. Zapis nie nadpisuje cudzej zmiany."],
+        ["Wyszukiwarka naborów: AI szuka i podaje źródła", "dotacje", "silnik", "Opisujesz, na co szukasz pieniędzy. Na listę trafiają tylko nabory, których adres był w wynikach wyszukiwania. Oficjalnych list panel nie pobiera, bo są zabezpieczone przed automatami."],
+        ["Cały wniosek albo oferta jednym przyciskiem", "dotacje", "silnik", "AI pisze po kolei wszystkie sekcje, których nikt nie oznaczył jako gotowe. Każda sekcja to jedno użycie AI z pakietu."]
+      ]
+    },
+    {
+      "module": "Kontrahenci",
+      "items": [
+        ["Karta firmy po NIP: wykaz VAT, rachunki, KRS, zarząd", "kontrahent", "silnik", ""],
+        ["Ocena ryzyka płatniczego 0-100 z listą sygnałów", "kontrahent", "silnik", "Tylko dane publiczne."],
+        ["Decyzje UOKiK o zatorach płatniczych", "kontrahent", "silnik", ""],
+        ["Obserwowane firmy i alerty o zmianach", "obserwowane", "silnik", ""],
+        ["Należności: wezwanie do zapłaty i warunki wpisu do BIG", "naleznosci", "silnik", "Długi widzi tylko Twoja firma."],
+        ["Upadłości i restrukturyzacje z Krajowego Rejestru Zadłużonych", "kontrahent", "silnik", "Rejestr nie udostępnia danych programom. Karta firmy pokazuje, gdzie to sprawdzić, i zapisuje wynik. Obserwowane firmy przypominają o sprawdzeniu co 90 dni."],
+        ["Szacowany czas płacenia dostawcom ze sprawozdań", "kontrahent", "silnik", "Dwie liczby przepisujesz ze sprawozdania w przeglądarce dokumentów finansowych KRS, a panel liczy dni."],
+        ["Wpis długu do BIG z platformy", "naleznosci", "plan", "Wymaga umowy z biurem."]
+      ]
+    },
+    {
+      "module": "Konto i platforma",
+      "items": [
+        ["Pakiety z miesięcznym przydziałem AI", "pakiet", "silnik", "Podstawowy i Rozszerzony. Po wyczerpaniu przydziału panel nie pyta modelu, a funkcje bez AI działają dalej."],
+        ["Administracja: firmy, zaproszenia, blokada, limity", "administracja", "silnik", "Tylko dla właściciela panelu. Widzi liczby o firmach, nie ich dane. Płatności panel nie obsługuje."],
+        ["Logowanie dwuetapowe i wylogowanie z innych urządzeń", "bezpieczenstwo", "silnik", "Kod z aplikacji, kody zapasowe, unieważnianie sesji po zmianie hasła."],
+        ["Eksport i usunięcie danych firmy", "bezpieczenstwo", "silnik", "Paczka ZIP bez haseł i sekretów. Usunięcie wymaga hasła i przepisania nazwy firmy."]
+      ]
+    }
   ],
-
   "contacts": [
-    { "id": 1, "company": "Hurtownia Narzędzi Stalmet (przykład)", "person": "Anna K.", "email": "anna@stalmet.example", "site": "stalmet.example", "basis": "rfq", "detail": "zapytanie z widżetu: SEO i GEO", "at": "19.11.2026", "unsub": null },
-    { "id": 2, "company": "Rowery Koło (przykład)", "person": "Marek W.", "email": "marek@rowery-kolo.example", "site": "rowery-kolo.example", "basis": "consent", "detail": "zgoda zaznaczona w widżecie", "at": "19.11.2026", "unsub": null },
-    { "id": 3, "company": "Biuro Rachunkowe Liczydło (przykład)", "person": "Zofia M.", "email": "biuro@liczydlo.example", "site": "liczydlo.example", "basis": "client", "detail": "kampania Google Ads od 03.2026", "at": "02.03.2026", "unsub": null },
-    { "id": 4, "company": "Auto Części 24 (przykład)", "person": "Tomasz R.", "email": "tomasz@auto-czesci-24.example", "site": "auto-czesci-24.example", "basis": "none", "detail": "", "at": "", "unsub": null },
-    { "id": 5, "company": "Hurtownia Elektryczna Volt (przykład)", "person": "", "email": "oferty@volt.example", "site": "volt.example", "basis": "rfq", "detail": "zapytanie ofertowe na stronie firmy: kampania Google Ads", "at": "17.11.2026", "unsub": null },
-    { "id": 6, "company": "Meble Dąb (przykład)", "person": "Piotr S.", "email": "piotr@meble-dab.example", "site": "meble-dab.example", "basis": "none", "detail": "", "at": "", "unsub": "03.11.2026" }
+    {
+      "id": 1,
+      "company": "Hurtownia Narzędzi Stalmet (przykład)",
+      "person": "Anna K.",
+      "email": "anna@stalmet.example",
+      "site": "stalmet.example",
+      "basis": "rfq",
+      "detail": "zapytanie z widżetu: SEO i GEO",
+      "at": "19.11.2026",
+      "unsub": null,
+      "voice": [
+        {
+          "source": "Zapytanie ze strony",
+          "at": "19.11.2026",
+          "text": "Szukamy agencji do sklepu z narzędziami.\nPotrzeba: SEO i GEO\nTermin: w ciągu miesiąca\nPytanie do czatu: Czy robicie też kampanie produktowe?"
+        },
+        {
+          "source": "Odpowiedź e-mail (wklejona)",
+          "at": "22.11.2026",
+          "text": "Dzień dobry,\ndziękujemy za ofertę. Prosimy o wycenę wariantu z kampanią produktową i termin startu.\n\nPozdrawiam\nAnna K."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "company": "Rowery Koło (przykład)",
+      "person": "Marek W.",
+      "email": "marek@rowery-kolo.example",
+      "site": "rowery-kolo.example",
+      "basis": "consent",
+      "detail": "zgoda zaznaczona w widżecie",
+      "at": "19.11.2026",
+      "unsub": null,
+      "voice": [
+        {
+          "source": "Zapytanie ze strony",
+          "at": "19.11.2026",
+          "text": "Chcemy zwiększyć sprzedaż rowerów elektrycznych przed sezonem.\nPotrzeba: Reklamy Google i Meta"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "company": "Biuro Rachunkowe Liczydło (przykład)",
+      "person": "Zofia M.",
+      "email": "biuro@liczydlo.example",
+      "site": "liczydlo.example",
+      "basis": "client",
+      "detail": "kampania Google Ads od 03.2026",
+      "at": "02.03.2026",
+      "unsub": null
+    },
+    {
+      "id": 4,
+      "company": "Auto Części 24 (przykład)",
+      "person": "Tomasz R.",
+      "email": "tomasz@auto-czesci-24.example",
+      "site": "auto-czesci-24.example",
+      "basis": "none",
+      "detail": "",
+      "at": "",
+      "unsub": null
+    },
+    {
+      "id": 5,
+      "company": "Hurtownia Elektryczna Volt (przykład)",
+      "person": "",
+      "email": "oferty@volt.example",
+      "site": "volt.example",
+      "basis": "rfq",
+      "detail": "zapytanie ofertowe na stronie firmy: kampania Google Ads",
+      "at": "17.11.2026",
+      "unsub": null
+    },
+    {
+      "id": 6,
+      "company": "Meble Dąb (przykład)",
+      "person": "Piotr S.",
+      "email": "piotr@meble-dab.example",
+      "site": "meble-dab.example",
+      "basis": "none",
+      "detail": "",
+      "at": "",
+      "unsub": "03.11.2026"
+    }
   ],
   "bases": {
     "none": "Brak podstawy, adres z publicznego źródła",
@@ -123,38 +235,137 @@
     "cold_offer": ["Oferta bez zgody odbiorcy", "Informacja handlowa wysłana bez wcześniejszej zgody."]
   },
   "law": {
-    "pke": [
-      "Art. 398 Prawa komunikacji elektronicznej: informacja handlowa wymaga uprzedniej zgody odbiorcy, także firmy.",
-      "Kara Prezesa UKE: do 3% przychodu z poprzedniego roku albo do 1 mln zł, zależnie od tego, która kwota jest wyższa (art. 444 ust. 1 pkt 81 i art. 446 ust. 5).",
-      "Dodatkowo wykroczenie zagrożone grzywną, ścigane na żądanie odbiorcy (art. 448), oraz roszczenia z tytułu czynu nieuczciwej konkurencji."
-    ],
-    "consent_request": [
-      "Ministerstwo Cyfryzacji, odpowiedź z 13.10.2025 na interpelację nr 12337: „Nie jest również dozwolony kontakt wykonywany na potrzeby uzyskania zgody”. Pismo powołuje się na decyzje Prezesa UKE i Prezesa UOKiK.",
-      "Sąd Apelacyjny w Warszawie (wyrok z 12.12.2019, VII AGa 1567/18) uznał SMS z prośbą o zgodę za informację handlową, bo pośrednio promował nadawcę. Wyrok zapadł na gruncie poprzednich przepisów.",
-      "W drugą stronę poszedł Sąd Okręgowy Warszawa-Praga (IV Ca 1873/16, opisany w 2019 r.): dopuścił pierwszy telefon z samym pytaniem o zgodę, bez słowa o ofercie. To pojedynczy wyrok na gruncie poprzednich przepisów, a UKE i UOKiK się z nim nie zgadzały.",
-      "Nie znamy wyroku sądu, który ocenia taką wiadomość już pod nowymi przepisami."
-    ],
+    "pke": ["Art. 398 Prawa komunikacji elektronicznej: informacja handlowa wymaga uprzedniej zgody odbiorcy, także firmy.", "Kara Prezesa UKE: do 3% przychodu z poprzedniego roku albo do 1 mln zł, zależnie od tego, która kwota jest wyższa (art. 444 ust. 1 pkt 81 i art. 446 ust. 5).", "Dodatkowo wykroczenie zagrożone grzywną, ścigane na żądanie odbiorcy (art. 448), oraz roszczenia z tytułu czynu nieuczciwej konkurencji."],
+    "consent_request": ["Ministerstwo Cyfryzacji, odpowiedź z 13.10.2025 na interpelację nr 12337: „Nie jest również dozwolony kontakt wykonywany na potrzeby uzyskania zgody”. Pismo powołuje się na decyzje Prezesa UKE i Prezesa UOKiK.", "Sąd Apelacyjny w Warszawie (wyrok z 12.12.2019, VII AGa 1567/18) uznał SMS z prośbą o zgodę za informację handlową, bo pośrednio promował nadawcę. Wyrok zapadł na gruncie poprzednich przepisów.", "W drugą stronę poszedł Sąd Okręgowy Warszawa-Praga (IV Ca 1873/16, opisany w 2019 r.): dopuścił pierwszy telefon z samym pytaniem o zgodę, bez słowa o ofercie. To pojedynczy wyrok na gruncie poprzednich przepisów, a UKE i UOKiK się z nim nie zgadzały.", "Nie znamy wyroku sądu, który ocenia taką wiadomość już pod nowymi przepisami."],
     "invite": "Art. 398 ust. 2 Prawa komunikacji elektronicznej: zgodę można wyrazić przez udostępnienie adresu elektronicznego w celu otrzymywania informacji handlowej.",
     "unsub": "Art. 21 RODO: po sprzeciwie dane nie mogą być przetwarzane na potrzeby marketingu bezpośredniego.",
     "ack": "Zapoznałem się z ryzykiem. Sam decyduję o wysłaniu tej wiadomości i odpowiedzialność za wysyłkę ponosi moja firma."
   },
   "log": [
-    { "at": "18.11.2026, 15:02", "who": "Jan K.", "company": "Hurtownia Elektryczna Volt (przykład)", "kind": "rfq_reply", "level": "low", "ack": false },
-    { "at": "12.11.2026, 10:41", "who": "Jan K.", "company": "Auto Części 24 (przykład)", "kind": "consent_request", "level": "very_high", "ack": true }
+    {
+      "at": "18.11.2026, 15:02",
+      "who": "Jan K.",
+      "company": "Hurtownia Elektryczna Volt (przykład)",
+      "kind": "rfq_reply",
+      "level": "low",
+      "ack": false
+    },
+    {
+      "at": "12.11.2026, 10:41",
+      "who": "Jan K.",
+      "company": "Auto Części 24 (przykład)",
+      "kind": "consent_request",
+      "level": "very_high",
+      "ack": true
+    }
   ],
   "icp": "Sklepy internetowe i firmy usługowe, które mają już stronę i wydają na reklamę co najmniej 1000 zł miesięcznie, ale nie mierzą, z której kampanii przychodzą zamówienia.",
-  "letters": { "firms": 40, "letters": 46, "visit": 14, "report": 9, "consent": 6, "offer": 6, "reply": 2, "refused": 1, "quiet": 9, "cost": 6.5 },
+  "letters": {"firms": 40, "letters": 46, "visit": 14, "report": 9, "consent": 6, "offer": 6, "reply": 2, "refused": 1, "quiet": 9, "cost": 6.5},
   "topics": ["Nowa strona internetowa", "Reklamy w Google", "Pozycjonowanie"],
   "cardQr": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIQAAACEAQAAAAB5P74KAAAA/0lEQVR42s2WwQ3DMAwDuYH235IbqCLVFEF/oR9tYCDpPVSKop2gvy/8mACoQjXbjzGpnlX6uY8xmcIsEtQfnBEVLvY5mdq6HZFpb6wCee/9ObHze91n8Zh4+tZYt2w8JyWBMp7wEGNi2131SlRE2tqmrPXlBIWWPioMzEnDudxZsmPiTkGH6db7czKhnIISx3cyIwKp09JWYU6ccMotXp2GRFNsbsMVk9YOobwqr5iMX5sERSIn0Lk2d/a1UzKyu3Usk8YDohgN99H2TkJEan2HIlWfmQbEBxuUBu/eE+IMSOfnTZQRbpjkW05cbjWSOfHJP3nSC2Qdy8h/fbe8AMRb2QXClmR5AAAAAElFTkSuQmCC",
   "search": [
-    { "company": "Sklep Ogrodnik (przykład)", "source": "Twoja lista", "score": 80, "audit": 58, "pkd": "Sklepy internetowe", "region": "mazowieckie", "size": "10-49 osób", "age": 9, "condition": "dobra", "tenders": false, "reason": "Reklamy Google prowadzą na stronę bez pomiaru konwersji." },
-    { "company": "Kwiaciarnia Internetowa Fiołek (przykład)", "source": "Twoja lista", "score": 75, "invite": ["Propozycje współpracy prosimy przesyłać na adres wspolpraca@fiolek.example.", "wspolpraca@fiolek.example", "fiolek.example/kontakt"], "pkd": "Sklepy internetowe", "region": "łódzkie", "size": "do 9 osób", "age": 4, "condition": "dobra", "tenders": false, "reason": "Strona blokuje boty wyszukiwarek AI w robots.txt." },
-    { "company": "Okna Jasne (przykład)", "source": "wyniki przetargów", "score": 90, "win": "Wymiana stolarki okiennej w szkole podstawowej (przykład)", "pkd": "Budownictwo i wykończenia", "region": "mazowieckie", "size": "50-249 osób", "age": 17, "condition": "dobra", "tenders": true, "reason": "Startuje w przetargach, a strona nie ma opisu realizacji." },
-    { "company": "Gabinet Stomatologiczny Uśmiech (przykład)", "source": "Twoja lista", "score": 60, "pkd": "Usługi medyczne", "region": "śląskie", "size": "do 9 osób", "age": 6, "condition": "dobra", "tenders": false, "reason": "Wizytówka Google bez godzin otwarcia i zdjęć." },
-    { "company": "Transport Szybki (przykład)", "source": "wyniki przetargów", "score": 55, "win": "Dowóz uczniów do szkół w gminie (przykład)", "pkd": "Transport i logistyka", "region": "łódzkie", "size": "10-49 osób", "age": 2, "condition": "podwyższone ryzyko", "tenders": true, "reason": "Młoda spółka z szybkim wzrostem zatrudnienia, brak strony ofertowej." },
-    { "company": "Hotel Nad Stawem (przykład)", "source": "Twoja lista", "score": 70, "consent": ["recepcja@nadstawem.example", "19.11.2026"], "pkd": "Hotele i gastronomia", "region": "mazowieckie", "size": "10-49 osób", "age": 12, "condition": "dobra", "tenders": false, "reason": "Rezerwacje tylko przez pośredników, własna strona bez systemu rezerwacji." },
-    { "company": "Meble Dąb (przykład)", "source": "Twoja lista", "score": 65, "pkd": "Sklepy internetowe", "region": "śląskie", "size": "10-49 osób", "age": 14, "condition": "dobra", "tenders": false, "reason": "Wypisał się z wiadomości 03.11.2026. Platforma nie pozwoli wysłać mu oferty." },
-    { "company": "Budimpex S.A. (przykład)", "source": "wyniki przetargów", "score": 50, "win": "Remont elewacji budynku urzędu (przykład)", "pkd": "Budownictwo i wykończenia", "region": "mazowieckie", "size": "50-249 osób", "age": 21, "condition": "podwyższone ryzyko", "tenders": true, "reason": "Decyzja UOKiK o opóźnianiu płatności. Sprawdź przed wyceną." }
+    {
+      "company": "Sklep Ogrodnik (przykład)",
+      "source": "Twoja lista",
+      "score": 80,
+      "audit": 58,
+      "pkd": "Sklepy internetowe",
+      "region": "mazowieckie",
+      "size": "10-49 osób",
+      "age": 9,
+      "condition": "dobra",
+      "tenders": false,
+      "reason": "Reklamy Google prowadzą na stronę bez pomiaru konwersji."
+    },
+    {
+      "company": "Kwiaciarnia Internetowa Fiołek (przykład)",
+      "source": "Twoja lista",
+      "score": 75,
+      "invite": ["Propozycje współpracy prosimy przesyłać na adres wspolpraca@fiolek.example.", "wspolpraca@fiolek.example", "fiolek.example/kontakt"],
+      "pkd": "Sklepy internetowe",
+      "region": "łódzkie",
+      "size": "do 9 osób",
+      "age": 4,
+      "condition": "dobra",
+      "tenders": false,
+      "reason": "Strona blokuje boty wyszukiwarek AI w robots.txt."
+    },
+    {
+      "company": "Okna Jasne (przykład)",
+      "source": "wyniki przetargów",
+      "score": 90,
+      "win": "Wymiana stolarki okiennej w szkole podstawowej (przykład)",
+      "pkd": "Budownictwo i wykończenia",
+      "region": "mazowieckie",
+      "size": "50-249 osób",
+      "age": 17,
+      "condition": "dobra",
+      "tenders": true,
+      "reason": "Startuje w przetargach, a strona nie ma opisu realizacji."
+    },
+    {
+      "company": "Gabinet Stomatologiczny Uśmiech (przykład)",
+      "source": "Twoja lista",
+      "score": 60,
+      "pkd": "Usługi medyczne",
+      "region": "śląskie",
+      "size": "do 9 osób",
+      "age": 6,
+      "condition": "dobra",
+      "tenders": false,
+      "reason": "Wizytówka Google bez godzin otwarcia i zdjęć."
+    },
+    {
+      "company": "Transport Szybki (przykład)",
+      "source": "wyniki przetargów",
+      "score": 55,
+      "win": "Dowóz uczniów do szkół w gminie (przykład)",
+      "pkd": "Transport i logistyka",
+      "region": "łódzkie",
+      "size": "10-49 osób",
+      "age": 2,
+      "condition": "podwyższone ryzyko",
+      "tenders": true,
+      "reason": "Młoda spółka z szybkim wzrostem zatrudnienia, brak strony ofertowej."
+    },
+    {
+      "company": "Hotel Nad Stawem (przykład)",
+      "source": "Twoja lista",
+      "score": 70,
+      "consent": ["recepcja@nadstawem.example", "19.11.2026"],
+      "pkd": "Hotele i gastronomia",
+      "region": "mazowieckie",
+      "size": "10-49 osób",
+      "age": 12,
+      "condition": "dobra",
+      "tenders": false,
+      "reason": "Rezerwacje tylko przez pośredników, własna strona bez systemu rezerwacji."
+    },
+    {
+      "company": "Meble Dąb (przykład)",
+      "source": "Twoja lista",
+      "score": 65,
+      "pkd": "Sklepy internetowe",
+      "region": "śląskie",
+      "size": "10-49 osób",
+      "age": 14,
+      "condition": "dobra",
+      "tenders": false,
+      "reason": "Wypisał się z wiadomości 03.11.2026. Platforma nie pozwoli wysłać mu oferty."
+    },
+    {
+      "company": "Budimpex S.A. (przykład)",
+      "source": "wyniki przetargów",
+      "score": 50,
+      "win": "Remont elewacji budynku urzędu (przykład)",
+      "pkd": "Budownictwo i wykończenia",
+      "region": "mazowieckie",
+      "size": "50-249 osób",
+      "age": 21,
+      "condition": "podwyższone ryzyko",
+      "tenders": true,
+      "reason": "Decyzja UOKiK o opóźnianiu płatności. Sprawdź przed wyceną."
+    }
   ],
   "rfq_sources": [
     ["Baza Konkurencyjności", "https://bazakonkurencyjnosci.funduszeeuropejskie.gov.pl/", "bazakonkurencyjnosci.funduszeeuropejskie.gov.pl", "Zapytania firm i instytucji, które kupują w projektach z funduszy unijnych. Trafiają tu zamówienia powyżej 50 000 zł netto. Ofertę składa się w samej Bazie."],
@@ -162,9 +373,33 @@
     ["Strony firm", "", "", "Zakładki „Zapytania ofertowe”, „Przetargi”, „Zakupy” albo „Dla dostawców”. W zapytaniu jest adres e-mail do składania ofert."]
   ],
   "rfqs": [
-    { "contact": 5, "company": "Hurtownia Elektryczna Volt (przykład)", "title": "Szukamy agencji do prowadzenia kampanii Google Ads", "where": "strona firmy, zakładka „Zapytania ofertowe”", "published": "17.11.2026", "deadline": "28.11.2026", "address": "oferty@volt.example" },
-    { "contact": null, "company": "Spółdzielnia Mleczarska Łąka (przykład)", "title": "Nowa strona internetowa z katalogiem produktów", "where": "Baza Konkurencyjności (przykład wpisu)", "published": "14.11.2026", "deadline": "02.12.2026", "address": "zamowienia@laka.example" },
-    { "contact": null, "company": "Centrum Szkoleń Kurs (przykład)", "title": "Pozycjonowanie i treści na blog przez 12 miesięcy", "where": "strona firmy", "published": "10.11.2026", "deadline": "25.11.2026", "address": "biuro@kurs.example" }
+    {
+      "contact": 5,
+      "company": "Hurtownia Elektryczna Volt (przykład)",
+      "title": "Szukamy agencji do prowadzenia kampanii Google Ads",
+      "where": "strona firmy, zakładka „Zapytania ofertowe”",
+      "published": "17.11.2026",
+      "deadline": "28.11.2026",
+      "address": "oferty@volt.example"
+    },
+    {
+      "contact": null,
+      "company": "Spółdzielnia Mleczarska Łąka (przykład)",
+      "title": "Nowa strona internetowa z katalogiem produktów",
+      "where": "Baza Konkurencyjności (przykład wpisu)",
+      "published": "14.11.2026",
+      "deadline": "02.12.2026",
+      "address": "zamowienia@laka.example"
+    },
+    {
+      "contact": null,
+      "company": "Centrum Szkoleń Kurs (przykład)",
+      "title": "Pozycjonowanie i treści na blog przez 12 miesięcy",
+      "where": "strona firmy",
+      "published": "10.11.2026",
+      "deadline": "25.11.2026",
+      "address": "biuro@kurs.example"
+    }
   ],
   "sequence": {
     "name": "Odpowiedź na zapytanie ofertowe",
@@ -180,7 +415,6 @@
       ["Centrum Szkoleń Kurs (przykład)", "Odpowiedź odbiorcy 16.11.2026", "Zatrzymana"]
     ]
   },
-
   "tech": {
     "site": "sklep-przykladowy.example",
     "at": "18.11.2026",
@@ -262,7 +496,12 @@
       "google_total": 1203,
       "copilot_total": 412,
       "copilot_pages": [["/poradnik/odkamienianie", 310], ["/poradnik/ekspres-cisnieniowy-do-domu", 74], ["/ranking-ekspresow", 28]],
-      "copilot_queries": [["jak odkamienić ekspres kolbowy", 140], ["odkamieniacz do ekspresu czym zastąpić", 61], ["ekspres ciśnieniowy do domu jaki wybrać", 52], ["ranking ekspresów kolbowych", 19]],
+      "copilot_queries": [
+        ["jak odkamienić ekspres kolbowy", 140],
+        ["odkamieniacz do ekspresu czym zastąpić", 61],
+        ["ekspres ciśnieniowy do domu jaki wybrać", 52],
+        ["ranking ekspresów kolbowych", 19]
+      ],
       "visits": [["ChatGPT", 40, 20], ["Perplexity", 11, 12], ["Copilot", 3, null]],
       "sessions": 2700,
       "bots": [
@@ -307,27 +546,92 @@
       ]
     }
   },
-
   "ads": {
     "client": "Sklep Przykładowy (dane fikcyjne)",
     "weeks": ["21.09", "28.09", "05.10", "12.10", "19.10", "26.10", "02.11", "09.11"],
     "platforms": [
-      { "id": "google", "name": "Google Ads", "spend": [1180, 1210, 1250, 1190, 1320, 1400, 1460, 1510], "clicks": [610, 640, 655, 630, 690, 720, 735, 760], "conv": [31, 33, 34, 30, 33, 32, 31, 30], "month_budget": 4400, "month_spend": 4040 },
-      { "id": "meta", "name": "Meta Ads", "spend": [820, 840, 810, 860, 900, 940, 980, 1010], "clicks": [980, 1010, 960, 1040, 1090, 1130, 1150, 1190], "conv": [22, 23, 21, 24, 20, 19, 17, 16], "month_budget": 4500, "month_spend": 2715 }
+      {
+        "id": "google",
+        "name": "Google Ads",
+        "spend": [1180, 1210, 1250, 1190, 1320, 1400, 1460, 1510],
+        "clicks": [610, 640, 655, 630, 690, 720, 735, 760],
+        "conv": [31, 33, 34, 30, 33, 32, 31, 30],
+        "month_budget": 4400,
+        "month_spend": 4040
+      },
+      {
+        "id": "meta",
+        "name": "Meta Ads",
+        "spend": [820, 840, 810, 860, 900, 940, 980, 1010],
+        "clicks": [980, 1010, 960, 1040, 1090, 1130, 1150, 1190],
+        "conv": [22, 23, 21, 24, 20, 19, 17, 16],
+        "month_budget": 4500,
+        "month_spend": 2715
+      }
     ],
     "campaigns": [
-      { "id": "c1", "platform": "google", "name": "Wyszukiwarka: ekspresy", "active": true, "budget": 115, "spend": 3200, "conv": 78, "prev_spend": 2700, "prev_conv": 80 },
-      { "id": "c2", "platform": "google", "name": "Performance Max: sklep", "active": true, "budget": 70, "spend": 1890, "conv": 41, "prev_spend": 1580, "prev_conv": 40 },
-      { "id": "c3", "platform": "google", "name": "Remarketing", "active": false, "budget": 25, "spend": 600, "conv": 7, "prev_spend": 550, "prev_conv": 8, "paused": "17.11.2026" },
-      { "id": "c4", "platform": "meta", "name": "Zapytania: formularz", "active": true, "budget": 90, "spend": 2450, "conv": 52, "prev_spend": 2100, "prev_conv": 62 },
-      { "id": "c5", "platform": "meta", "name": "Ruch na poradnik", "active": true, "budget": 50, "spend": 1380, "conv": 20, "prev_spend": 1230, "prev_conv": 28 }
+      {
+        "id": "c1",
+        "platform": "google",
+        "name": "Wyszukiwarka: ekspresy",
+        "active": true,
+        "budget": 115,
+        "spend": 3200,
+        "conv": 78,
+        "prev_spend": 2700,
+        "prev_conv": 80
+      },
+      {
+        "id": "c2",
+        "platform": "google",
+        "name": "Performance Max: sklep",
+        "active": true,
+        "budget": 70,
+        "spend": 1890,
+        "conv": 41,
+        "prev_spend": 1580,
+        "prev_conv": 40
+      },
+      {
+        "id": "c3",
+        "platform": "google",
+        "name": "Remarketing",
+        "active": false,
+        "budget": 25,
+        "spend": 600,
+        "conv": 7,
+        "prev_spend": 550,
+        "prev_conv": 8,
+        "paused": "17.11.2026"
+      },
+      {
+        "id": "c4",
+        "platform": "meta",
+        "name": "Zapytania: formularz",
+        "active": true,
+        "budget": 90,
+        "spend": 2450,
+        "conv": 52,
+        "prev_spend": 2100,
+        "prev_conv": 62
+      },
+      {
+        "id": "c5",
+        "platform": "meta",
+        "name": "Ruch na poradnik",
+        "active": true,
+        "budget": 50,
+        "spend": 1380,
+        "conv": 20,
+        "prev_spend": 1230,
+        "prev_conv": 28
+      }
     ],
     "changes": [
-      { "at": "17.11.2026, 09:14", "who": "Jan K.", "what": "Remarketing: wstrzymano kampanię" },
-      { "at": "10.11.2026, 16:30", "who": "Jan K.", "what": "Wyszukiwarka: ekspresy: budżet dzienny ze 100 zł na 115 zł" }
+      {"at": "17.11.2026, 09:14", "who": "Jan K.", "what": "Remarketing: wstrzymano kampanię"},
+      {"at": "10.11.2026, 16:30", "who": "Jan K.", "what": "Wyszukiwarka: ekspresy: budżet dzienny ze 100 zł na 115 zł"}
     ]
   },
-
   "profile": {
     "name": "Marketing i strony WWW",
     "cpv": ["79340000", "79341400", "79342000", "72413000", "79416000"],
@@ -339,38 +643,94 @@
   },
   "tenders": [
     {
-      "id": "t1", "source": "BZP", "title": "Kampania promocyjna marki turystycznej regionu w internecie", "buyer": "Urząd Marszałkowski Województwa Przykładowego (przykład)", "buyer_company": "b1",
-      "cpv_main": "79341400", "cpv_all": ["79341400", "79342000"], "region": "mazowieckie", "value": 180000, "deadline": "2026-11-27T10:00",
+      "id": "t1",
+      "source": "BZP",
+      "title": "Kampania promocyjna marki turystycznej regionu w internecie",
+      "buyer": "Urząd Marszałkowski Województwa Przykładowego (przykład)",
+      "buyer_company": "b1",
+      "cpv_main": "79341400",
+      "cpv_all": ["79341400", "79342000"],
+      "region": "mazowieckie",
+      "value": 180000,
+      "deadline": "2026-11-27T10:00",
       "text": "kampania promocyjna w wyszukiwarce i mediach społecznościowych, google ads, materiały wideo"
     },
     {
-      "id": "t2", "source": "BZP", "title": "Budowa i utrzymanie strony internetowej muzeum", "buyer": "Muzeum Regionalne w Przykładowie (przykład)", "buyer_company": null,
-      "cpv_main": "72413000", "cpv_all": ["72413000", "72212224"], "region": "łódzkie", "value": 65000, "deadline": "2026-12-04T12:00",
+      "id": "t2",
+      "source": "BZP",
+      "title": "Budowa i utrzymanie strony internetowej muzeum",
+      "buyer": "Muzeum Regionalne w Przykładowie (przykład)",
+      "buyer_company": null,
+      "cpv_main": "72413000",
+      "cpv_all": ["72413000", "72212224"],
+      "region": "łódzkie",
+      "value": 65000,
+      "deadline": "2026-12-04T12:00",
       "text": "strona internetowa zgodna z WCAG 2.1, system zarządzania treścią, utrzymanie przez 24 miesiące"
     },
     {
-      "id": "t3", "source": "BZP", "title": "Prowadzenie profili urzędu w mediach społecznościowych w 2027 r.", "buyer": "Urząd Miasta Przykładowo (przykład)", "buyer_company": null,
-      "cpv_main": "79342000", "cpv_all": ["79342000"], "region": "śląskie", "value": null, "deadline": "2026-12-09T09:00",
+      "id": "t3",
+      "source": "BZP",
+      "title": "Prowadzenie profili urzędu w mediach społecznościowych w 2027 r.",
+      "buyer": "Urząd Miasta Przykładowo (przykład)",
+      "buyer_company": null,
+      "cpv_main": "79342000",
+      "cpv_all": ["79342000"],
+      "region": "śląskie",
+      "value": null,
+      "deadline": "2026-12-09T09:00",
       "text": "media społecznościowe, 20 publikacji miesięcznie, moderacja komentarzy"
     },
     {
-      "id": "t4", "source": "BZP", "title": "Pozycjonowanie serwisu informacyjnego i audyt SEO", "buyer": "Powiatowy Urząd Pracy w Przykładzie (przykład)", "buyer_company": null,
-      "cpv_main": "79340000", "cpv_all": ["79340000"], "region": "mazowieckie", "value": 15000, "deadline": "2026-11-21T10:00",
+      "id": "t4",
+      "source": "BZP",
+      "title": "Pozycjonowanie serwisu informacyjnego i audyt SEO",
+      "buyer": "Powiatowy Urząd Pracy w Przykładzie (przykład)",
+      "buyer_company": null,
+      "cpv_main": "79340000",
+      "cpv_all": ["79340000"],
+      "region": "mazowieckie",
+      "value": 15000,
+      "deadline": "2026-11-21T10:00",
       "text": "pozycjonowanie serwisu, audyt seo, raport miesięczny"
     },
     {
-      "id": "t5", "source": "TED", "title": "Usługi komunikacji i promocji projektu unijnego", "buyer": "Agencja Rozwoju Przykładowego (przykład)", "buyer_company": null,
-      "cpv_main": "79416000", "cpv_all": ["79416000", "79952000"], "region": "mazowieckie", "value": 620000, "deadline": "2026-12-15T12:00",
+      "id": "t5",
+      "source": "TED",
+      "title": "Usługi komunikacji i promocji projektu unijnego",
+      "buyer": "Agencja Rozwoju Przykładowego (przykład)",
+      "buyer_company": null,
+      "cpv_main": "79416000",
+      "cpv_all": ["79416000", "79952000"],
+      "region": "mazowieckie",
+      "value": 620000,
+      "deadline": "2026-12-15T12:00",
       "text": "obsługa public relations, organizacja konferencji, materiały informacyjne"
     },
     {
-      "id": "t6", "source": "BZP", "title": "Dostawa materiałów promocyjnych z nadrukiem", "buyer": "Starostwo Powiatowe w Przykładzie (przykład)", "buyer_company": null,
-      "cpv_main": "79342000", "cpv_all": ["79342000", "22462000"], "region": "mazowieckie", "value": 30000, "deadline": "2026-12-02T10:00",
+      "id": "t6",
+      "source": "BZP",
+      "title": "Dostawa materiałów promocyjnych z nadrukiem",
+      "buyer": "Starostwo Powiatowe w Przykładzie (przykład)",
+      "buyer_company": null,
+      "cpv_main": "79342000",
+      "cpv_all": ["79342000", "22462000"],
+      "region": "mazowieckie",
+      "value": 30000,
+      "deadline": "2026-12-02T10:00",
       "text": "druk ulotek i gadżety z logo powiatu"
     },
     {
-      "id": "t7", "source": "BZP", "title": "Kampania Google Ads dla portu lotniczego", "buyer": "Port Lotniczy Przykładowo (przykład)", "buyer_company": null,
-      "cpv_main": "79341400", "cpv_all": ["79341400"], "region": "pomorskie", "value": 90000, "deadline": "2026-12-10T10:00",
+      "id": "t7",
+      "source": "BZP",
+      "title": "Kampania Google Ads dla portu lotniczego",
+      "buyer": "Port Lotniczy Przykładowo (przykład)",
+      "buyer_company": null,
+      "cpv_main": "79341400",
+      "cpv_all": ["79341400"],
+      "region": "pomorskie",
+      "value": 90000,
+      "deadline": "2026-12-10T10:00",
       "text": "google ads, kampania promocyjna połączeń"
     }
   ],
@@ -395,10 +755,7 @@
         ["Wskaźniki do osiągnięcia", "2 000 000 wyświetleń i 60 000 wejść na stronę kampanii.", "OPZ, pkt 3.2"],
         ["Prawa autorskie", "Przeniesienie praw do wszystkich materiałów bez dodatkowego wynagrodzenia.", "wzór umowy, § 12"]
       ],
-      "questions": [
-        "Czy wskaźnik 60 000 wejść liczony jest według Google Analytics zamawiającego, czy raportów platform reklamowych?",
-        "Czy budżet mediowy jest częścią wynagrodzenia, czy zamawiający opłaca go osobno?"
-      ],
+      "questions": ["Czy wskaźnik 60 000 wejść liczony jest według Google Analytics zamawiającego, czy raportów platform reklamowych?", "Czy budżet mediowy jest częścią wynagrodzenia, czy zamawiający opłaca go osobno?"],
       "qa": {
         "q": "Czy mogę polegać na doświadczeniu podwykonawcy?",
         "a": "Tak. SWZ dopuszcza poleganie na zasobach innych podmiotów w zakresie doświadczenia, pod warunkiem złożenia zobowiązania tego podmiotu razem z ofertą.",
@@ -427,7 +784,6 @@
     ["2026-12-09T09:00", "Składanie ofert", "t3"],
     ["2026-12-26T23:59", "Koniec związania ofertą", "t1"]
   ],
-
   "offer": {
     "tender": "t1",
     "sections": [
@@ -446,17 +802,77 @@
   ],
   "grants": {
     "calls": [
-      { "name": "Cyfryzacja małych firm, program regionalny (przykład naboru)", "until": "15.01.2027", "amount": "do 150 000 zł, dofinansowanie 50%",
-        "checks": [[true, "Mikro, małe albo średnie przedsiębiorstwo"], [true, "Siedziba w województwie objętym programem"], [true, "Działalność od co najmniej 12 miesięcy"], [false, "Brak pomocy de minimis powyżej limitu: do sprawdzenia w zaświadczeniach"]] },
-      { "name": "Wejście na rynki zagraniczne (przykład naboru)", "until": "28.02.2027", "amount": "do 400 000 zł, dofinansowanie 70%",
-        "checks": [[true, "Mikro, małe albo średnie przedsiębiorstwo"], [false, "Przychody ze sprzedaży własnego produktu: agencja sprzedaje usługi"], [true, "Brak zaległości podatkowych i składkowych"]] }
+      {
+        "name": "Cyfryzacja małych firm, program regionalny (przykład naboru)",
+        "until": "15.01.2027",
+        "amount": "do 150 000 zł, dofinansowanie 50%",
+        "checks": [
+          [true, "Mikro, małe albo średnie przedsiębiorstwo"],
+          [true, "Siedziba w województwie objętym programem"],
+          [true, "Działalność od co najmniej 12 miesięcy"],
+          [false, "Brak pomocy de minimis powyżej limitu: do sprawdzenia w zaświadczeniach"]
+        ]
+      },
+      {
+        "name": "Wejście na rynki zagraniczne (przykład naboru)",
+        "until": "28.02.2027",
+        "amount": "do 400 000 zł, dofinansowanie 70%",
+        "checks": [
+          [true, "Mikro, małe albo średnie przedsiębiorstwo"],
+          [false, "Przychody ze sprzedaży własnego produktu: agencja sprzedaje usługi"],
+          [true, "Brak zaległości podatkowych i składkowych"]
+        ]
+      }
     ],
     "sections": [
       ["Wnioskodawca", "PerfectData, NIP [NIP] ⟦sprawdź⟧"],
       ["Opis projektu", "Wgraj regulamin naboru i kryteria oceny, a AI napisze tę sekcję na ich podstawie. ⟦sprawdź⟧"],
       ["Budżet", "Zestawienie wydatków: [kategoria, kwota, uzasadnienie]. Kwalifikowalność wydatków sprawdź w regulaminie naboru. ⟦sprawdź⟧"],
       ["Potencjał", "Kampania Google Ads i Meta dla sklepu internetowego, 2025 r. ⟦źródło: biblioteka: Referencja 1⟧"]
-    ]
+    ],
+    "query": {"what": "kampanie i narzędzia do sprzedaży w internecie, szkolenia zespołu", "region": "mazowieckie", "size": "mała (10-49 osób)"},
+    "finds": [
+      {
+        "id": "f1",
+        "name": "Bon na cyfryzację sprzedaży (przykład)",
+        "inst": "Instytucja przykładowa",
+        "host": "gov.pl",
+        "official": true,
+        "until": "2027-01-08",
+        "opens": "",
+        "amount": "do 150 000 zł, dofinansowanie do 85%",
+        "audience": "mikro, małe i średnie firmy",
+        "fit": "Pasuje do wdrożenia narzędzi sprzedaży. Wymaga wkładu własnego 15%.",
+        "quote": "Nabór wniosków trwa do wyczerpania środków, nie dłużej niż do wskazanego dnia."
+      },
+      {
+        "id": "f2",
+        "name": "Wsparcie marketingu MŚP na Mazowszu (przykład)",
+        "inst": "Instytucja przykładowa",
+        "host": "example.com",
+        "official": false,
+        "until": "2027-02-06",
+        "opens": "2026-12-08",
+        "amount": "do 400 000 zł, dofinansowanie do 50%",
+        "audience": "małe i średnie firmy z województwa mazowieckiego",
+        "fit": "Nabór dopiero się otworzy. Kampanie w internecie mieszczą się w opisie kosztów.",
+        "quote": ""
+      },
+      {
+        "id": "f3",
+        "name": "Szkolenia i doradztwo dla firm usługowych (przykład)",
+        "inst": "",
+        "host": "example.com",
+        "official": false,
+        "until": "",
+        "opens": "",
+        "amount": "",
+        "audience": "firmy z sektora usług",
+        "fit": "Termin nie jest podany na stronie, trzeba go sprawdzić u operatora.",
+        "quote": ""
+      }
+    ],
+    "written": ["PerfectData prowadzi kampanie w wyszukiwarce i mediach społecznościowych dla sklepów internetowych. ⟦źródło: biblioteka: Opis firmy⟧\nNIP i dane rejestrowe: [NIP] ⟦sprawdź⟧", "Projekt obejmuje wdrożenie narzędzi do sprzedaży w internecie i szkolenie zespołu. ⟦źródło: regulamin, § 4 ust. 2⟧\nProblem, który rozwiązuje: ręczna obsługa zapytań wydłuża czas odpowiedzi do klienta. ⟦sprawdź⟧", "Wydatki kwalifikowane to zakup licencji i usługi doradcze, do 85% kosztów. ⟦źródło: regulamin, § 6 ust. 1⟧\nZestawienie wydatków: [kategoria, kwota, uzasadnienie]. ⟦sprawdź⟧", "Kampania Google Ads i Meta dla sklepu internetowego, 2025 r. ⟦źródło: biblioteka: Referencja 1⟧\nZespół: dwóch specjalistów z certyfikatami Google Ads. ⟦źródło: biblioteka: Certyfikaty⟧"]
   },
   "library": [
     ["Referencja (zrealizowane zlecenie)", "Referencja 1 (przykład)", "Kampania Google Ads i Meta dla sklepu internetowego, budżet 96 000 zł, 2025 r."],
@@ -466,25 +882,51 @@
     ["Polisa OC", "Polisa OC działalności (przykład)", "Suma gwarancyjna 500 000 zł, ważna do 31.12.2026."],
     ["Gotowy opis (np. o firmie, metodyka)", "O firmie (przykład)", "Krótki opis firmy używany w ofertach i wiadomościach."]
   ],
-
   "companies": [
     {
-      "id": "b1", "name": "Urząd Marszałkowski Województwa Przykładowego (przykład)", "nip": "000-000-00-01", "form": "jednostka samorządu terytorialnego", "since": "1999", "accounts": 3, "board": [], "watched": true,
-      "signals": [["none", "Czynny podatnik VAT", "Firma jest zarejestrowana jako czynny podatnik VAT.", "Wykaz podatników VAT", 0]],
-      "uokik": [], "changes": []
+      "id": "b1",
+      "name": "Urząd Marszałkowski Województwa Przykładowego (przykład)",
+      "nip": "000-000-00-01",
+      "form": "jednostka samorządu terytorialnego",
+      "since": "1999",
+      "accounts": 3,
+      "board": [],
+      "watched": true,
+      "signals": [
+        ["none", "Czynny podatnik VAT", "Firma jest zarejestrowana jako czynny podatnik VAT.", "Wykaz podatników VAT", 0]
+      ],
+      "uokik": [],
+      "changes": []
     },
     {
-      "id": "b2", "name": "Budimpex S.A. (przykład)", "nip": "000-000-00-02", "form": "spółka akcyjna", "since": "2005", "accounts": 0, "board": ["Prezes zarządu", "Członek zarządu"], "watched": true,
+      "id": "b2",
+      "name": "Budimpex S.A. (przykład)",
+      "nip": "000-000-00-02",
+      "form": "spółka akcyjna",
+      "since": "2005",
+      "accounts": 0,
+      "board": ["Prezes zarządu", "Członek zarządu"],
+      "watched": true,
       "signals": [
         ["high", "Decyzja UOKiK o nadmiernym opóźnianiu płatności", "Decyzja przykładowa DZP-0/2026, wydana 14.05.2026. Kara za opóźnianie płatności dostawcom.", "Decyzje Prezesa UOKiK (zatory płatnicze)", 35],
         ["mid", "Brak rachunku na białej liście", "Czynny podatnik VAT bez zgłoszonego rachunku firmowego. Przed przelewem potwierdź numer konta.", "Wykaz podatników VAT", 10],
         ["none", "Czynny podatnik VAT", "Firma jest zarejestrowana jako czynny podatnik VAT.", "Wykaz podatników VAT", 0]
       ],
       "uokik": ["Decyzja przykładowa DZP-0/2026 z 14.05.2026"],
-      "changes": [["12.11.2026", "Z wykazu VAT zniknął rachunek bankowy"], ["03.10.2026", "Zmiana w zarządzie: nowy członek zarządu"]]
+      "changes": [
+        ["12.11.2026", "Z wykazu VAT zniknął rachunek bankowy"],
+        ["03.10.2026", "Zmiana w zarządzie: nowy członek zarządu"]
+      ]
     },
     {
-      "id": "b3", "name": "Dom i Styl sp. z o.o. w likwidacji (przykład)", "nip": "000-000-00-03", "form": "spółka z ograniczoną odpowiedzialnością", "since": "2019", "accounts": 1, "board": ["Likwidator"], "watched": true,
+      "id": "b3",
+      "name": "Dom i Styl sp. z o.o. w likwidacji (przykład)",
+      "nip": "000-000-00-03",
+      "form": "spółka z ograniczoną odpowiedzialnością",
+      "since": "2019",
+      "accounts": 1,
+      "board": ["Likwidator"],
+      "watched": true,
       "signals": [
         ["high", "Likwidacja, upadłość lub restrukturyzacja w KRS", "Dział 6 odpisu KRS zawiera informację o likwidacji, upadłości albo restrukturyzacji.", "KRS, dział 6", 40],
         ["high", "Wpisy o zaległościach lub wierzytelnościach w KRS", "Dział 4 odpisu KRS zawiera wpisy o zaległościach podatkowych lub składkowych.", "KRS, dział 4", 30],
@@ -496,18 +938,106 @@
       "changes": [["06.11.2026", "W KRS pojawił się wpis o otwarciu likwidacji"]]
     },
     {
-      "id": "b4", "name": "Hurtownia Narzędzi Stalmet (przykład)", "nip": "000-000-00-04", "form": "spółka z ograniczoną odpowiedzialnością", "since": "2011", "accounts": 2, "board": ["Prezes zarządu"], "watched": false,
-      "signals": [["none", "Czynny podatnik VAT", "Firma jest zarejestrowana jako czynny podatnik VAT.", "Wykaz podatników VAT", 0]],
-      "uokik": [], "changes": []
+      "id": "b4",
+      "name": "Hurtownia Narzędzi Stalmet (przykład)",
+      "nip": "000-000-00-04",
+      "form": "spółka z ograniczoną odpowiedzialnością",
+      "since": "2011",
+      "accounts": 2,
+      "board": ["Prezes zarządu"],
+      "watched": false,
+      "signals": [
+        ["none", "Czynny podatnik VAT", "Firma jest zarejestrowana jako czynny podatnik VAT.", "Wykaz podatników VAT", 0]
+      ],
+      "uokik": [],
+      "changes": []
     }
   ],
-  "checks": {
-    "b2": { "krz": ["none", "08.11.2026"], "fin": [2025, 2640000, 9800000] },
-    "b4": { "krz": null, "fin": null }
-  },
+  "checks": {"b2": {"krz": ["none", "08.11.2026"], "fin": [2025, 2640000, 9800000]}, "b4": {"krz": null, "fin": null}},
   "receivables": [
-    { "company": "b2", "invoice": "FV/2026/09/014", "amount": 12300, "issued": "2026-09-16", "due": "2026-09-30", "demand": "2026-10-14", "bureau": "Biuro Przykładowe S.A., ul. Wzorcowa 1, Warszawa (przykład)" },
-    { "company": "b3", "invoice": "FV/2026/10/031", "amount": 3690, "issued": "2026-10-14", "due": "2026-10-28", "demand": "2026-11-05", "bureau": "Biuro Przykładowe S.A., ul. Wzorcowa 1, Warszawa (przykład)" },
-    { "company": "b4", "invoice": "FV/2026/11/002", "amount": 430, "issued": "2026-10-27", "due": "2026-11-10", "demand": null, "bureau": "" }
-  ]
+    {
+      "company": "b2",
+      "invoice": "FV/2026/09/014",
+      "amount": 12300,
+      "issued": "2026-09-16",
+      "due": "2026-09-30",
+      "demand": "2026-10-14",
+      "bureau": "Biuro Przykładowe S.A., ul. Wzorcowa 1, Warszawa (przykład)"
+    },
+    {
+      "company": "b3",
+      "invoice": "FV/2026/10/031",
+      "amount": 3690,
+      "issued": "2026-10-14",
+      "due": "2026-10-28",
+      "demand": "2026-11-05",
+      "bureau": "Biuro Przykładowe S.A., ul. Wzorcowa 1, Warszawa (przykład)"
+    },
+    {"company": "b4", "invoice": "FV/2026/11/002", "amount": 430, "issued": "2026-10-27", "due": "2026-11-10", "demand": null, "bureau": ""}
+  ],
+  "plan": {
+    "limits": [
+      ["Użycia AI w panelu na miesiąc", 30, 400],
+      ["Odpowiedzi czatu AI na stronie na miesiąc", 100, 1500],
+      ["Osoby w zespole", 3, 15],
+      ["Witryny w Widoczności", 2, 20]
+    ],
+    "usage": [
+      ["Użycia AI w panelu", 18, 30],
+      ["Odpowiedzi czatu na stronie", 41, 100],
+      ["Osoby w zespole", 2, 3],
+      ["Witryny w Widoczności", 1, 2]
+    ],
+    "renews": "01.12.2026",
+    "firm": "Hurtownia Narzędzi Stalmet (przykład)"
+  },
+  "admin": {
+    "firms": [
+      {
+        "id": "a1",
+        "name": "PerfectData",
+        "operator": true,
+        "plan": "internal",
+        "people": 4,
+        "ops": 212,
+        "chat": 640,
+        "last": "24.11.2026",
+        "blocked": false
+      },
+      {
+        "id": "a2",
+        "name": "Hurtownia Narzędzi Stalmet (przykład)",
+        "operator": false,
+        "plan": "basic",
+        "people": 2,
+        "ops": 18,
+        "chat": 41,
+        "last": "23.11.2026",
+        "blocked": false
+      },
+      {
+        "id": "a3",
+        "name": "Rowery Koło (przykład)",
+        "operator": false,
+        "plan": "extended",
+        "people": 6,
+        "ops": 133,
+        "chat": 402,
+        "last": "24.11.2026",
+        "blocked": false
+      },
+      {
+        "id": "a4",
+        "name": "Biuro Rachunkowe Bilans (przykład)",
+        "operator": false,
+        "plan": "basic",
+        "people": 1,
+        "ops": 30,
+        "chat": 12,
+        "last": "11.11.2026",
+        "blocked": true
+      }
+    ],
+    "invites": [["nowa-firma@example.com", "Podstawowy", "08.12.2026"]]
+  }
 }

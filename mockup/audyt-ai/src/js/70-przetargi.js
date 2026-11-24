@@ -50,7 +50,7 @@ function renderTenders() {
       ok.map(({ t, m }) => { const d = daysTo(t.deadline), card = t.id === PLAT.tender_card.id; return `<div class="item" style="--c1:58px">
         <span class="big" data-score="${t.id}">${m.score}</span>
         <div><p><b>${card ? `<a href="#przetarg">${esc(t.title)}</a>` : esc(t.title)}</b></p><p>${esc(t.buyer)}, ${esc(t.source)}${t.value === null ? '' : ', ' + zl(t.value)}</p><p>${esc(m.reasons.join('. '))}.</p></div>
-        <div class="end">${leftState(d, 'do ' + dpl(t.deadline) + ', ' + dni(d))}</div></div>`; }).join('') + `</div>
+        <div class="end">${leftState(d, 'do ' + dpl(t.deadline) + ', ' + dni(d))}${t.inOffers || t.id === PLAT.offer.tender ? `<a class="small" href="#oferta">w ofertach</a>` : `<button class="btn ghost sm" type="button" data-act="p-offer" data-id="${t.id}">Do ofert</button>`}</div></div>`; }).join('') + `</div>
     <div class="sec">${secHead('Odrzucone przez profil', 'Te ogłoszenia nie trafiają na listę ani do porannego e-maila.', out.length)}` +
       out.map(({ t, m }) => `<div class="item" style="--c1:58px"><span></span><div><p>${esc(t.title)}</p><p>${esc(t.buyer)}</p></div><div class="end"><span class="small muted">${esc(m.out)}</span></div></div>`).join('') + `</div>`);
 }
@@ -104,6 +104,9 @@ function renderTerms() {
 }
 
 FORMS.tenderAsk = () => { document.getElementById('tqNote').hidden = false; };
+
+/* Jeden klik zakłada szkic oferty i zapisuje przetarg. Drugi nie tworzy duplikatu: zamiast przycisku jest link do szkicu. */
+ACTIONS['p-offer'] = (btn) => { PLAT.tenders.find((t) => t.id === btn.dataset.id).inOffers = true; rerender('przetargi'); };
 
 MODS.push({ id: 'przetargi', order: 7, label: 'Przetargi', about: 'Codzienny import ogłoszeń z BZP i TED, dopasowanie do profilu, karta przetargu z analizą SWZ i kalendarz terminów.',
   head: (v) => {

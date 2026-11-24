@@ -23,7 +23,7 @@ Na perfectdata.pl nic nie zostało zainstalowane. Kod trafi na stronę dopiero p
 - **Platforma dla wielu firm:** pakiety Podstawowy i Rozszerzony z miesięcznym przydziałem AI, ekran administratora (firmy, zaproszenia, blokada, limity), logowanie dwuetapowe, eksport i usunięcie danych firmy, własne połączenia każdej firmy w Widoczności.
 - **Nabory dotacji:** wyszukiwarka naborów (AI szuka w internecie i podaje źródła) oraz przycisk, który pisze cały wniosek.
 - **Widoczność:** zakładka w module Audyt. Użytkownik wpisuje adres witryny i wgrywa paczkę z przycisku „Eksportuj” w Search Console albo dodaje jeden adres e-mail jako użytkownika i klika „Połącz”. Panel pokazuje, co poprawić najpierw w Google, gdzie stronę widać w odpowiedziach AI i co publikuje konkurencja.
-- **Mockup całego panelu:** `mockup/audyt-ai`, 9 modułów i 34 ekrany, z listą 72 funkcji i ich stanem. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip`.
+- **Mockup całego panelu:** `mockup/audyt-ai`, 10 modułów i 37 ekranów, z listą 81 funkcji i ich stanem. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip`.
 - **Wytyczne audytu:** `resources/audyt-ai-rules.json` (czyta je silnik) i dokument dla zespołu `mockup/audyt-ai/WYTYCZNE.md`.
 - **Plany modułów:** `PLAN-ZAPYTANIA.md` i `PLAN-AUDYT-AI.md`.
 
@@ -34,7 +34,7 @@ Panel i raporty wyglądają jak perfectdata.pl, żeby klient agencji widział je
 - **Kolory ze strony** (odczytane ze stylów perfectdata.pl 19.11.2026): tło `#0a0e1a`, panel `#0f1524`, powierzchnia `#151c2e`, linie `#232d45`, złoto `#d4a94a` (jaśniejsze `#e8c97a`, ciemniejsze `#a87f2c`), tekst `#f2f3f7`, tekst pomocniczy `#9aa3b8`.
 - **Czcionka systemowa**, ta sama co na stronie. Panel nie pobiera żadnych czcionek ani skryptów z zewnątrz.
 - **Jeden ciemny motyw**, bo strona ma tylko ciemny.
-- **Układ:** nagłówek jak na stronie (logo, 9 modułów, link do perfectdata.pl), pod nim zakładki modułu. Bez bocznego menu platformy. Na telefonie pasek modułów przewija się w bok.
+- **Układ:** nagłówek jak na stronie (logo, 10 modułów, link do perfectdata.pl), pod nim zakładki modułu. Bez bocznego menu platformy. Na telefonie pasek modułów przewija się w bok.
 - **Złoto ma jedno znaczenie:** zdobyte punkty, główny przycisk i aktywna pozycja menu. Nie służy do ozdoby.
 - **Linijka 100 punktów** w raporcie audytu. Każdy z 24 wskaźników to odcinek o szerokości równej jego wadze. Złote wypełnienie to zdobyte punkty, czerwona ramka to wskaźnik z zerem. Kliknięcie odcinka otwiera wskaźnik. Ta sama linijka pokazuje stan „przed” i „po”.
 - **Stany rozróżnia kształt i słowo, nie sam kolor:** pełne koło „Dobrze”, pół koła „Do poprawy”, pierścień „Źle”.
@@ -46,21 +46,20 @@ W platformie wygląd i zestaw modułów będą ustawieniem organizacji (pole `se
 
 ## Funkcje i ich stan
 
-Mockup pokazuje 72 funkcje. Zakładka „Lista funkcji” na pulpicie podaje stan każdej z nich i prowadzi do ekranu.
+Mockup pokazuje 81 funkcji. Zakładka „Lista funkcji” na pulpicie podaje stan każdej z nich i prowadzi do ekranu.
 
 | Moduł | Działa w silniku | Do zbudowania | Czeka na zgodę Google i Meta |
 |---|---|---|---|
 | Zapytania | 5 | 0 | 0 |
-| Klienci | 19 | 1 | 0 |
+| Klienci | 20 | 1 | 0 |
 | Audyt AI | 6 | 1 | 0 |
-| SEO i strona | 7 | 1 | 0 |
+| SEO i strona | 8 | 1 | 0 |
 | Reklamy | 0 | 0 | 6 |
-| Przetargi | 9 | 0 | 0 |
-| Oferty i wnioski | 9 | 0 | 0 |
+| Przetargi | 10 | 0 | 0 |
+| Oferty i wnioski | 11 | 0 | 0 |
 | Kontrahenci | 7 | 1 | 0 |
-| Razem | 62 | 4 | 6 |
-
-Funkcje dodane 24.11.2026 po południu (opisane niżej: pakiety i administracja, nabory, „Co napisał klient”, przetarg jednym kliknięciem w ofertach) są w silniku, ale nie ma ich jeszcze w mockupie ani w tej tabeli.
+| Konto i platforma | 4 | 0 | 0 |
+| Razem | 71 | 4 | 6 |
 
 „Działa w silniku” znaczy, że kod jest w repozytorium i przechodzi testy. Silnik nie jest jeszcze uruchomiony online (etap 0).
 
@@ -465,6 +464,7 @@ Potrzebne przed etapem 4:
   - pisanie całego wniosku (gotowa sekcja nietknięta, podmieniona kolejka, zatrzymanie po wyczerpaniu przydziału),
   - „Co napisał klient” i przetarg jednym kliknięciem w ofertach.
 - **W przeglądarce** na danych przykładowych: przejście po 181 stronach w trzech szerokościach (1280, 390, 320) bez błędów i bez poziomego przewijania. Osobno: zaproszenie firmy z administracji, rejestracja z linku w drugiej przeglądarce, pakiet Podstawowy na nowym koncie, brak dostępu do administracji, przycisk „Połącz z Google” i przekierowanie na ekran zgody Google, pole tokenu Cloudflare, lista naborów, przycisk „Napisz cały wniosek”, rozwinięcie „Co napisał klient”.
+- **Mockup po zmianach:** 37 ekranów w 4 szerokościach bez błędów i bez poziomego przewijania. Nowe ekrany przeklikane: wyszukiwarka naborów (szukaj, obserwuj, odrzuć), pisanie całego wniosku sekcja po sekcji, „Do ofert” na liście przetargów, rozwinięcie „Co napisał klient”, pakiet, logowanie dwuetapowe, administracja (zmiana pakietu, blokada, zaproszenie).
 - **Nie sprawdzono na prawdziwych usługach:** logowania Google (potrzebny klient OAuth), tokenu Cloudflare innej firmy, wyszukiwarki naborów na prawdziwym modelu (potrzebny klucz API z włączonym web search) ani jakości wniosku pisanego w całości. Te części są napisane według dokumentacji i sprawdzone na odpowiedziach w jej formacie.
 
 ### Widoczność w Google, w AI i u konkurencji (24.11.2026)
