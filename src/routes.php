@@ -146,6 +146,8 @@ return static function (Router $r): void {
     $r->get('/klienci/nowy', [OutreachController::class, 'contactForm'], $a);
     $r->get('/klienci/idealny-klient', [OutreachController::class, 'icp'], $a);
     $r->post('/klienci/idealny-klient', [OutreachController::class, 'icpSave'], $a);
+    $r->get('/klienci/dotacje-ue', [ProspectController::class, 'eu'], $a);
+    $r->post('/klienci/dotacje-ue/dodaj', [ProspectController::class, 'addFromEu'], $a);
     $r->get('/klienci/potencjalni', [ProspectController::class, 'index'], $a);
     $r->post('/klienci/potencjalni/kryteria', [ProspectController::class, 'saveCriteria'], $a);
     $r->get('/klienci/potencjalni/kod-qr.png', [ProspectController::class, 'card'], $a);

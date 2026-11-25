@@ -85,6 +85,50 @@ final class Http
         return self::request('POST', $url, json_out($data), $headers + ['Content-Type' => 'application/json', 'Accept' => 'application/json'], $timeout);
     }
 
+    /**
+     * Pobranie dużego pliku prosto na dysk (np. lista projektów z funduszy UE, ok. 150 MB), bez trzymania go w pamięci.
+     * @return array{status: int, bytes: int, error?: string}
+     */
+    public static function download(string $url, string $path, int $timeout = 900, int $maxBytes = 400_000_000): array
+    {
+        $fixtures = (string) Config::get('HTTP_FIXTURES');
+        if ($fixtures !== '') {
+            $r = self::request('GET', $url);
+            if ($r['status'] === 200) {
+                file_put_contents($path, $r['body']);
+            }
+            return ['status' => $r['status'], 'bytes' => $r['status'] === 200 ? strlen($r['body']) : 0] + (isset($r['error']) ? ['error' => $r['error']] : []);
+        }
+        self::$log[] = ['method' => 'GET', 'url' => $url];
+        $fh = fopen($path, 'wb');
+        if ($fh === false) {
+            return ['status' => 0, 'bytes' => 0, 'error' => 'Nie da się zapisać pliku ' . $path];
+        }
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_FILE => $fh,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS => 3,
+            CURLOPT_PROTOCOLS => CURLPROTO_HTTPS | CURLPROTO_HTTP,
+            CURLOPT_CONNECTTIMEOUT => 20,
+            CURLOPT_TIMEOUT => $timeout,
+            CURLOPT_HTTPHEADER => ['User-Agent: ' . self::UA, 'Accept-Language: pl,en;q=0.8'],
+            CURLOPT_NOPROGRESS => false,
+            // Przerywamy, gdy plik rośnie ponad limit (ochrona dysku przy błędnym adresie).
+            CURLOPT_PROGRESSFUNCTION => static fn ($ch, $dlTotal, $dlNow): int => $dlNow > $maxBytes ? 1 : 0,
+        ]);
+        $ok = curl_exec($ch);
+        $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        $err = curl_error($ch);
+        fclose($fh);
+        $bytes = (int) @filesize($path);
+        if ($ok === false || $status !== 200) {
+            @unlink($path);
+            return ['status' => $status, 'bytes' => 0, 'error' => $err ?: 'HTTP ' . $status];
+        }
+        return ['status' => $status, 'bytes' => $bytes];
+    }
+
     private static function fromFixture(string $dir, string $method, string $url, string $body = ''): array
     {
         $routes = is_file($dir . '/routes.php') ? require $dir . '/routes.php' : [];

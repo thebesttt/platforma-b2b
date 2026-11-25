@@ -61,6 +61,8 @@ return [
 
     // Plany zamówień z BZP i zapowiedzi z TED (przed ogólnymi odpowiedziami BZP i TED niżej).
     ...require __DIR__ . '/plans.php',
+    // Lista projektów z funduszy UE 2021-2027 (strona i plik CSV).
+    ...require __DIR__ . '/eu.php',
 
     // BZP - pierwsza strona ogłoszeń o zamówieniu; reszta pusta.
     '#^GET https://ezamowienia\.gov\.pl/mo-board/api/v1/Board/Search\?NoticeType=ContractNotice&.*&PageNumber=1&#' => 'bzp_search_p1.json',

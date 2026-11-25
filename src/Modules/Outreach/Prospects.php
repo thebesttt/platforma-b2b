@@ -29,7 +29,7 @@ use App\Modules\Tenders\Results;
 final class Prospects
 {
     public const STATUSES = ['new' => 'do oceny', 'picked' => 'wybrane', 'contacted' => 'po kontakcie', 'skipped' => 'pominięte', 'objected' => 'sprzeciw'];
-    public const SOURCES = ['results' => 'wyniki przetargów', 'list' => 'Twoja lista', 'qr' => 'kod QR firmy', 'ceidg' => 'CEIDG'];
+    public const SOURCES = ['results' => 'wyniki przetargów', 'list' => 'Twoja lista', 'qr' => 'kod QR firmy', 'ceidg' => 'CEIDG', 'eu' => 'dotacje UE'];
     /** Tyle wierszy przyjmujemy z jednego wklejenia i tyle firm z jednego wyszukiwania. */
     public const PASTE_LIMIT = 50;
     public const PICK_LIMIT = 40;
@@ -166,6 +166,44 @@ final class Prospects
             $added++;
         }
         return $added;
+    }
+
+    /**
+     * Firmy z listy projektów UE. Lista nie podaje NIP-u, więc firma trafia na listę z nazwą i faktami o projekcie;
+     * NIP i stronę użytkownik może dopisać na karcie firmy. Ta sama firma (po nazwie) nie trafia na listę drugi raz.
+     * @return int liczba dodanych firm
+     */
+    public static function addFromEu(int $orgId, int $userId, array $ids): int
+    {
+        $db = Db::get();
+        $org = $db->one('SELECT * FROM organizations WHERE id = ?', [$orgId]);
+        $added = 0;
+        foreach (array_slice(array_values(array_unique(array_map('intval', $ids))), 0, self::PICK_LIMIT) as $id) {
+            $p = EuProjects::find($id);
+            if (!$p || self::byName($orgId, (string) $p['beneficiary'])) {
+                continue;
+            }
+            $regions = array_values(array_filter(explode(' ', (string) $p['voivodeships'])));
+            $pid = self::insert($orgId, $userId, [
+                'name' => (string) $p['beneficiary'], 'voivodeship' => count($regions) === 1 ? $regions[0] : null, 'source' => 'eu',
+                'facts_json' => json_out(['eu' => EuProjects::facts($p)]), 'enriched_at' => now_utc(),
+            ]);
+            self::rescore(self::find($orgId, $pid) ?? [], $org);
+            $added++;
+        }
+        return $added;
+    }
+
+    /** Firma o tej samej nazwie (bez formy prawnej i polskich znaków) już jest na liście. */
+    public static function byName(int $orgId, string $name): ?array
+    {
+        $key = EuProjects::key($name);
+        foreach (Db::get()->all('SELECT * FROM prospects WHERE org_id = ? AND search LIKE ?', [$orgId, '%' . str_replace(['%', '_'], '', $key) . '%']) as $row) {
+            if (EuProjects::key((string) $row['name']) === $key) {
+                return $row;
+            }
+        }
+        return null;
     }
 
     /**
@@ -500,7 +538,8 @@ final class Prospects
         $hay = search_text(implode(' ', array_merge(
             [(string) $p['name'], (string) ($company['pkd'] ?? '')],
             (array) (json_in($company['krs_json'] ?? null)['pkd'] ?? []),
-            array_column((array) ($facts['wins']['rows'] ?? []), 'title')
+            array_column((array) ($facts['wins']['rows'] ?? []), 'title'),
+            [(string) ($facts['eu']['title'] ?? ''), (string) ($facts['eu']['action'] ?? '')]
         )));
         $hit = null;
         foreach ($words as $w) {
@@ -542,13 +581,19 @@ final class Prospects
         $started = (string) ($facts['ceidg']['started'] ?? '');
         $ageDays = $started !== '' ? (int) floor((time() - strtotime($started)) / 86400) : null;
         $fromNew = $ageDays === null || $ageDays < 0 ? 0 : ($ageDays <= 90 ? 20 : ($ageDays <= 365 ? 10 : 0));
-        $best = max($fromWin, $fromSite, $fromAudit, $fromNew);
+        // Projekt z dotacją UE w toku: firma ma budżet na zakupy (więcej punktów, gdy projekt ruszył w ostatnim roku).
+        $euEnd = (string) ($facts['eu']['end'] ?? '');
+        $euStart = (string) ($facts['eu']['start'] ?? '');
+        $euActive = !empty($facts['eu']) && ($euEnd === '' || $euEnd >= gmdate('Y-m-d'));
+        $fromEu = !$euActive ? 0 : ($euStart !== '' && strtotime($euStart) >= time() - 365 * 86400 ? 20 : 10);
+        $best = max($fromWin, $fromSite, $fromAudit, $fromNew, $fromEu);
         $rows[] = ['label' => 'Powód kontaktu', 'max' => 20, 'points' => $best,
             'note' => $best === 0 ? ($report !== null ? 'audyt strony: ' . $report['score'] . ' na 100, niewiele do poprawy' : 'brak świeżego powodu: sprawdź stronę firmy')
                 : ($fromWin === $best ? 'wygrane zamówienie ' . ($winDays === 0 ? 'dziś' : $winDays . ' dni temu')
+                    : ($fromEu === $best && $fromAudit < $best && $fromSite < $best ? 'projekt z dotacją UE w toku' . ($euEnd !== '' ? ' (do ' . date('d.m.Y', strtotime($euEnd)) . ')' : '')
                     : ($fromNew === $best && $fromAudit < $best && $fromSite < $best ? 'nowa firma: działa od ' . $ageDays . ' ' . plural((int) $ageDays, 'dnia', 'dni', 'dni')
                     : ($fromAudit === $best ? 'audyt strony: ' . $report['score'] . ' na 100 punktów'
-                        : $issues . ' ' . plural($issues, 'rzecz', 'rzeczy', 'rzeczy') . ' do poprawy na stronie firmy')))];
+                        : $issues . ' ' . plural($issues, 'rzecz', 'rzeczy', 'rzeczy') . ' do poprawy na stronie firmy'))))];
 
         return [min(100, array_sum(array_column($rows, 'points'))), $rows];
     }
@@ -581,6 +626,11 @@ final class Prospects
                     . (!empty($last['value']) ? ', ' . money_pl((float) $last['value']) : '') . ' (' . date('d.m.Y', strtotime((string) $last['date'])) . ').';
             }
             $out[] = $line;
+        }
+        if ($eu = $facts['eu'] ?? null) {
+            $out[] = 'Realizuje projekt z funduszy UE: „' . $eu['title'] . '”' . (!empty($eu['program']) ? ' (' . $eu['program'] . ')' : '')
+                . (!empty($eu['value']) ? ', wartość ' . money_pl((float) $eu['value']) : '') . (!empty($eu['eu']) ? ', dofinansowanie ' . money_pl((float) $eu['eu']) : '')
+                . (!empty($eu['end']) ? ', realizacja do ' . date('d.m.Y', strtotime((string) $eu['end'])) : '') . '.';
         }
         if ($company) {
             $bits = array_filter([

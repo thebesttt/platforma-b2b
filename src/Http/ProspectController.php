@@ -19,6 +19,7 @@ use App\Modules\Outreach\Consents;
 use App\Modules\Outreach\Outreach;
 use App\Modules\Outreach\ProspectAudit;
 use App\Modules\Outreach\ProspectEvents;
+use App\Modules\Outreach\EuProjects;
 use App\Modules\Outreach\Prospects;
 use App\Modules\Tenders\Regions;
 use App\Modules\Tenders\Results;
@@ -52,6 +53,41 @@ final class ProspectController extends Controller
             'ceidgOn' => Ceidg::enabled(), 'ceidgFilters' => $cf, 'ceidg' => $ceidg,
             'followUps' => Prospects::followUps($org),
         ]);
+    }
+
+    /** Firmy z dotacjami UE: projekty spółek z listy funduszy europejskich 2021-2027, do dodania na listę potencjalnych klientów. */
+    public function eu(Request $r): Response
+    {
+        $org = $this->orgId();
+        $criteria = Prospects::criteria(Auth::org());
+        $woj = array_key_exists('woj', $r->query) ? (isset(Regions::ALL[$r->str('woj')]) ? $r->str('woj') : '') : (count($criteria['regions']) === 1 ? $criteria['regions'][0] : '');
+        $f = [
+            'q' => mb_substr($r->str('q'), 0, 120),
+            'woj' => $woj,
+            'stan' => in_array($r->str('stan'), ['new', 'all'], true) ? $r->str('stan') : 'active',
+            'min' => in_array($r->int('min'), [100000, 500000, 1000000, 5000000], true) ? $r->int('min') : 0,
+        ];
+        $page = max(1, $r->int('strona', 1));
+        $list = EuProjects::search($f, $page);
+        // Firmy już dodane do listy: oznaczamy je, żeby nie dodawać drugi raz.
+        $known = [];
+        foreach ($this->db()->all('SELECT name FROM prospects WHERE org_id = ?', [$org]) as $p) {
+            $known[EuProjects::key((string) $p['name'])] = true;
+        }
+        return $this->view('outreach/eu_projects', [
+            'rows' => $list['rows'], 'total' => $list['total'], 'page' => $page, 'f' => $f, 'known' => $known,
+            'coverage' => EuProjects::coverage(), 'title' => 'Firmy z dotacjami UE',
+        ]);
+    }
+
+    public function addFromEu(Request $r): Response
+    {
+        $n = Prospects::addFromEu($this->orgId(), (int) Auth::id(), (array) $r->input('ids', []));
+        if ($n === 0) {
+            return $this->back($r, '/klienci/dotacje-ue', 'Zaznacz firmy, których jeszcze nie ma na liście potencjalnych klientów.', 'error');
+        }
+        AuditLog::add('prospect.add', 'prospect', 0, ['source' => 'eu', 'count' => $n], $r->ip());
+        return $this->redirect('/klienci/potencjalni', 'Dodano ' . $n . ' ' . plural($n, 'firmę', 'firmy', 'firm') . ' z listy projektów UE. NIP i stronę firmy możesz dopisać na jej karcie.');
     }
 
     public function saveCriteria(Request $r): Response

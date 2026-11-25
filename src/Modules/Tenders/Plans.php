@@ -170,16 +170,35 @@ final class Plans
     }
 
     /**
-     * Szukane słowa jako warunki LIKE z prostą odmianą (jak w PlanMatcher::patterns): „hala sportowa” znajdzie „hali sportowej”.
+     * Prosty rdzeń polskiego słowa do wyszukiwania: „fotowoltaika” → „fotowolta” (znajdzie „fotowoltaiczna”), „odpady” → „odpad”,
+     * „komputer” → „komput”. Słowo 4-literowe zakończone samogłoską traci ją, ale dopuszcza tylko krótką końcówkę („hala” → „hali”).
+     * @return array{0: string, 1: bool} rdzeń i to, czy końcówka ma być krótka (do 3 liter)
+     */
+    public static function stem(string $w): array
+    {
+        $len = strlen($w);
+        if ($len <= 3) {
+            return [$w, false];
+        }
+        if ($len === 4) {
+            return preg_match('/[aeiouy]$/', $w) ? [substr($w, 0, 3), true] : [$w, false];
+        }
+        $s = preg_replace('/[aeiouy]{1,2}$/', '', $w) ?? $w;
+        if (strlen($s) > 6) {
+            $s = substr($s, 0, max(6, strlen($s) - 2));
+        }
+        return [strlen($s) >= 4 ? $s : substr($w, 0, 4), false];
+    }
+
+    /**
+     * Szukane słowa jako warunki LIKE z prostą odmianą: „hala sportowa” znajdzie „hali sportowej”.
      * @return string[]
      */
     public static function likeTerms(string $q): array
     {
         $out = [];
         foreach (array_filter(explode(' ', search_text($q))) as $w) {
-            $len = strlen($w);
-            $stem = $len >= 5 ? (preg_replace('/[aeiouy]{1,2}$/', '', $w) ?? $w) : ($len === 4 && preg_match('/[aeiouy]$/', $w) ? substr($w, 0, 3) : $w);
-            $out[] = '%' . (strlen($stem) >= 3 ? $stem : $w) . '%';
+            $out[] = '%' . self::stem($w)[0] . '%';
         }
         return array_slice($out, 0, 8);
     }

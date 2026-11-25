@@ -100,6 +100,15 @@ final class CronController
         } catch (\Throwable $e) {
             $out['plans'] = ['error' => $e->getMessage()];
         }
+        // Firmy z dotacjami UE: plik z listą projektów ma ok. 150 MB, więc pobiera go tylko zadanie z wiersza poleceń
+        // (GitHub Actions), i tylko wtedy, gdy na stronie funduszy pojawił się nowy miesiąc.
+        if (PHP_SAPI === 'cli') {
+            try {
+                $out['eu_projects'] = \App\Modules\Outreach\EuProjects::sync();
+            } catch (\Throwable $e) {
+                $out['eu_projects'] = ['error' => $e->getMessage()];
+            }
+        }
         try {
             $out['watchlist'] = Companies::refreshWatched();
         } catch (\Throwable $e) {

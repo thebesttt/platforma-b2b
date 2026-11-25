@@ -24,6 +24,7 @@ $total = array_sum($counts);
     <p class="muted small">Firmy, do których warto się odezwać. Panel dopisuje dane z rejestrów, liczy dopasowanie i przygotowuje ofertę. Lista i szkic oferty nie wymagają zgody firmy. Zgody wymaga wysyłka e-mailem, dlatego na karcie firmy widzisz wszystkie drogi kontaktu z oceną ryzyka. Zgodę zbierzesz listem: jest w nim adres strony, na której firma sama zostawia e-mail.</p>
   </div>
   <div class="row-flex">
+    <a class="btn ghost" href="/klienci/dotacje-ue">Firmy z dotacjami UE</a>
     <a class="btn ghost" href="/klienci/potencjalni/listy">Listy seryjnie</a>
     <a class="btn ghost" href="#kryteria">Kogo szukasz</a>
     <a class="btn" href="#znajdz">Znajdź firmy</a>

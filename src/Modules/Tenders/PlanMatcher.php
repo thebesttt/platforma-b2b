@@ -214,9 +214,7 @@ final class PlanMatcher
     }
 
     /**
-     * Słowa kluczowe jako wyrażenia z prostą odmianą: plan pisze „odpadów komunalnych”, a profil „odpady komunalne”.
-     * Słowo od 5 liter traci końcowe samogłoski i dopasowuje dowolne zakończenie („komputer” → „komputerowego”),
-     * słowo 4-literowe zakończone samogłoską dopuszcza krótką końcówkę („hala” → „hali”, ale nie „halogen”).
+     * Słowa kluczowe jako wyrażenia z prostą odmianą (Plans::stem): plan pisze „odpadów komunalnych”, a profil „odpady komunalne”.
      * @return array<string, string> słowo w zapisie użytkownika => wyrażenie regularne
      */
     public static function patterns(string $s): array
@@ -233,15 +231,8 @@ final class PlanMatcher
             }
             $parts = [];
             foreach (explode(' ', $k) as $w) {
-                $len = strlen($w);
-                if ($len >= 5) {
-                    $stem = preg_replace('/[aeiouy]{1,2}$/', '', $w) ?? $w;
-                    $parts[] = preg_quote(strlen($stem) >= 4 ? $stem : substr($w, 0, 4), '/') . '[a-z0-9]*';
-                } elseif ($len === 4 && preg_match('/[aeiouy]$/', $w)) {
-                    $parts[] = preg_quote(substr($w, 0, 3), '/') . '[a-z]{0,3}\b';
-                } else {
-                    $parts[] = preg_quote($w, '/') . '[a-z0-9]*';
-                }
+                [$stem, $short] = Plans::stem($w);
+                $parts[] = preg_quote($stem, '/') . ($short ? '[a-z]{0,3}\b' : '[a-z0-9]*');
             }
             $out[mb_strtolower(utrim(preg_replace('/\s+/u', ' ', $raw) ?? $raw))] = '/ ' . implode(' ', $parts) . '/';
         }

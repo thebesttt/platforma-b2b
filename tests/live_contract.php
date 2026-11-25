@@ -17,6 +17,7 @@ use App\Core\Migrator;
 use App\Core\Nip;
 use App\Modules\Companies\Registries;
 use App\Modules\Companies\Uokik;
+use App\Modules\Outreach\EuProjects;
 use App\Modules\Tenders\BzpClient;
 use App\Modules\Tenders\BzpNoticeParser;
 use App\Modules\Tenders\PlanParser;
@@ -157,6 +158,27 @@ $check('TED: wstępne ogłoszenia informacyjne (zapowiedzi)', function () use ($
     $withDate = count(array_filter($notices, static fn ($n) => !empty($n['future-notice'])));
     $withRegion = count(array_filter(array_map(static fn ($n) => TedClient::normalizePlan($n)['plan']['voivodeship'], $notices)));
     return count($notices) . ' zapowiedzi, typy: ' . json_encode($types) . ", z datą ogłoszenia: $withDate, z województwem: $withRegion";
+});
+$check('Fundusze UE: lista projektów 2021-2027 (adres pliku, nagłówek, spółki)', function () use ($need) {
+    $url = EuProjects::sourceUrl();
+    $need($url !== null, 'nie znaleziono adresu pliku CSV na stronie ' . EuProjects::PAGE_URL);
+    // Tylko początek pliku (ok. 400 kB), żeby nie pobierać 150 MB przy każdym sprawdzeniu.
+    $r = Http::get($url, ['Range' => 'bytes=0-400000'], 60);
+    $need(in_array($r['status'], [200, 206], true), 'kod ' . $r['status'] . ' przy pobieraniu ' . $url);
+    $body = substr($r['body'], 0, 400000);
+    $body = substr($body, 0, (int) strrpos($body, "\n")); // ostatni wiersz bywa ucięty
+    $tmp = tempnam(sys_get_temp_dir(), 'fe');
+    file_put_contents($tmp, $body);
+    $res = EuProjects::importFile($tmp);
+    unlink($tmp);
+    $need(!$res['errors'], implode('; ', $res['errors']));
+    $need($res['read'] > 50, 'za mało wierszy: ' . $res['read']);
+    $withRegion = (int) Db::get()->val("SELECT COUNT(*) FROM eu_projects WHERE voivodeships <> ''");
+    $withValue = (int) Db::get()->val('SELECT COUNT(*) FROM eu_projects WHERE value_total IS NOT NULL');
+    $withEnd = (int) Db::get()->val('SELECT COUNT(*) FROM eu_projects WHERE end_date IS NOT NULL');
+    $need($res['kept'] === 0 || $withValue >= 0.9 * $res['kept'], 'wartość odczytana w ' . $withValue . ' z ' . $res['kept']);
+    $need($res['kept'] === 0 || $withEnd >= 0.9 * $res['kept'], 'data zakończenia odczytana w ' . $withEnd . ' z ' . $res['kept']);
+    return basename($url) . ': przeczytano ' . $res['read'] . ' wierszy, spółek z trwającymi projektami ' . $res['kept'] . ", z województwem $withRegion";
 });
 $krsNo = null;
 $check('Biała lista VAT', function () use (&$bzpRows, &$krsNo, $need) {
