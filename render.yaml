@@ -41,6 +41,8 @@ services:
         sync: false
       - key: MAIL_FROM             # nadawca w domenie zweryfikowanej w Resend, np. Panel PerfectData <panel@perfectdata.pl>
         sync: false
+      - key: CAMPAIGN_FROM         # opcjonalnie: osobny adres kampanii e-mail, np. kampanie@kampanie.perfectdata.pl (puste = MAIL_FROM)
+        sync: false
       - key: SIGNUP_OPEN           # 0 = rejestracja tylko z linku z kodem (zalecane do czasu regulaminu), 1 = otwarta dla wszystkich
         value: "0"
       - key: SIGNUP_CODE           # kod zaproszenia: konto zakłada się pod adresem /rejestracja?kod=<ta wartość>

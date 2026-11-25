@@ -7,6 +7,7 @@
   </div>
   <div class="row-flex">
     <a class="btn ghost" href="/klienci/potencjalni">Potencjalni klienci<?= ($prospects['new'] + $prospects['picked']) ? ' (' . (int) ($prospects['new'] + $prospects['picked']) . ')' : '' ?></a>
+    <a class="btn ghost" href="/klienci/kampanie">Kampanie e-mail</a>
     <a class="btn ghost" href="/klienci/dotacje-ue">Firmy z dotacjami UE</a>
     <a class="btn ghost" href="/klienci/zapytania">Zapytania z rynku<?= $rfqOpen ? ' (' . (int) $rfqOpen . ')' : '' ?></a>
     <a class="btn ghost" href="/klienci/idealny-klient">Idealny klient</a>

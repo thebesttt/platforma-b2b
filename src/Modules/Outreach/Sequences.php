@@ -34,7 +34,8 @@ final class Sequences
     public static function sentToday(int $orgId): int
     {
         $start = (new \DateTimeImmutable('today', new \DateTimeZone('Europe/Warsaw')))->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d H:i:s');
-        return (int) Db::get()->val("SELECT COUNT(*) FROM messages WHERE org_id = ? AND status = 'sent' AND sent_at >= ?", [$orgId, $start]);
+        // Wiadomości kampanii wysyła panel, a nie skrzynka użytkownika, więc nie liczą się do tego limitu.
+        return (int) Db::get()->val("SELECT COUNT(*) FROM messages WHERE org_id = ? AND status = 'sent' AND sent_at >= ? AND kind <> 'campaign'", [$orgId, $start]);
     }
 
     public static function find(int $orgId, int $id): ?array

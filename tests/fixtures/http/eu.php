@@ -11,9 +11,12 @@ if (!function_exists('eu_fixture_csv')) {
     {
         $d = static fn (int $days): string => gmdate('Y-m-d', time() + $days * 86400);
         $q = static fn (string $s): string => '"' . str_replace('"', '""', $s) . '"';
-        $header = ['Nazwa projektu', 'Opis projektu', 'Numer umowy', 'Nazwa beneficjenta', 'Nazwa wykonawcy kontraktu', 'Numer statku', 'Fundusz', 'Cel szczegółowy',
-            'Program', 'Priorytet', 'Działanie', 'Wartość projektu (zł)', 'Poziom dofinansowania %', 'Dofinansowanie UE (zł)', 'Kurs EURO', 'Miejsce realizacji',
-            'Data rozpoczęcia', 'Data zakończenia', 'Kategoria wsparcia'];
+        // Nagłówek jak w prawdziwym pliku: nazwy po polsku i po angielsku.
+        $header = ['Nazwa projektu/ Project name', 'Opis projektu/ Project summary', 'Numer umowy/decyzji/ Contract number', 'Nazwa beneficjenta/ Beneficiary name',
+            'Nazwa wykonawcy kontraktu/ The contractor’s name', 'Numer identyfikacyjny statku w rejestrze floty rybackiej UE/ The Union fishing fleet register identification number',
+            'Fundusz/ Fund', 'Cel szczegółowy/ Specific objective ', 'Program/ Programme', 'Priorytet/ Priority', 'Działanie/ Measure', 'Wartość projektu (w zł)/ Total project value (PLN)',
+            'Poziom unijnego dofinansowania w procentach (w %)/ Union co-financing rate (%)', 'Dofinansowanie z UE (w zł)/ EU co-financing (PLN)', 'Kurs EURO/ EURO exchange rate',
+            'Miejsce realizacji projektu/ Project location ', 'Data rozpoczęcia projektu/ Project start date', 'Data zakończenia projektu/ Project end date', 'Kategoria wsparcia/ Type of intervention'];
         $row = static fn (string $title, string $desc, string $no, string $who, string $program, string $action, string $value, string $eu, string $place, string $start, string $end): array
             => [$title, $desc, $no, $who, '', '', 'EFRR', 'Cyfryzacja', $program, 'Priorytet 1', $action, $value, '70,00', $eu, '4,3', $place, $start, $end, 'Wsparcie MŚP'];
         $rows = [
@@ -28,7 +31,7 @@ if (!function_exists('eu_fixture_csv')) {
                 'WOJ.: DOLNOŚLĄSKIE, POW.: Wrocław, GM.: Wrocław', $d(-1200), $d(-400)),
             $row('Budowa drogi gminnej', 'Opis', 'FELU.02.01-IP.01-0005/24', 'Gmina Testowo', 'Fundusze Europejskie dla Lubelskiego 2021-2027', '5.1 Drogi', '4 000 000,00', '3 400 000,00',
                 'WOJ.: LUBELSKIE, POW.: lubelski, GM.: Testowo', $d(-30), $d(300)),
-            $row('Instalacja fotowoltaiczna i magazyn energii', 'Farma fotowoltaiczna na dachach hal z magazynem energii.', 'FENX.02.01-IP.01-0006/25', 'Zielona Energia sp. z o.o.',
+            $row('Instalacja fotowoltaiczna i magazyn energii', 'Farma fotowoltaiczna na dachach hal; magazyn energii.', 'FENX.02.01-IP.01-0006/25', 'Zielona Energia sp z o.o.',
                 'Fundusze Europejskie na Infrastrukturę, Klimat, Środowisko', '2.1 OZE', '6 400 000,00', '3 200 000,00',
                 'WOJ.: MAZOWIECKIE, POW.: Radom, GM.: Radom | WOJ.: ŚLĄSKIE, POW.: Gliwice, GM.: Gliwice', $d(-30), $d(700)),
             $row('Centrum logistyczne z systemem zarządzania magazynem', 'System WMS i automatyczne sortowanie.', 'FENG.02.01-IP.01-0007/25', 'Logistyka Polska Spółka Akcyjna',
@@ -39,12 +42,14 @@ if (!function_exists('eu_fixture_csv')) {
                 'WOJ.: ŁÓDZKIE, POW.: Łódź, GM.: Łódź', $d(-60), $d(400)),
         ];
         if ($short) {
-            $rows = array_values(array_filter($rows, static fn (array $r): bool => $r[3] !== 'Zielona Energia sp. z o.o.'));
+            $rows = array_values(array_filter($rows, static fn (array $r): bool => $r[3] !== 'Zielona Energia sp z o.o.'));
         }
-        $out = "\xEF\xBB\xBF" . $q('Lista projektów realizowanych z Funduszy Europejskich w Polsce w latach 2021-2027 (stan na 01.11.2026)') . str_repeat(';', 18) . "\n";
-        $out .= implode(';', array_map($q, $header)) . "\n";
+        // Jak w prawdziwym pliku: BOM, tytuł i nagłówek bez cudzysłowów, końce linii CRLF, cudzysłów tylko przy polach z nową linią albo średnikiem.
+        $cell = static fn (string $v): string => preg_match('/[;"\r\n]/', $v) ? $q($v) : $v;
+        $out = "\xEF\xBB\xBFLista projektów realizowanych z Funduszy Europejskich w Polsce w latach 2021-2027 - stan na 1 listopada 2026 roku/ List of projects in Poland co-financed by European Funds in the years 2021-2027 as of 1st November 2026" . str_repeat(';', 18) . "\r\n";
+        $out .= implode(';', $header) . "\r\n";
         foreach ($rows as $r) {
-            $out .= implode(';', array_map($q, $r)) . "\n";
+            $out .= implode(';', array_map($cell, $r)) . "\r\n";
         }
         return $out;
     }
@@ -54,7 +59,7 @@ $csvPath = '/wp-content/uploads/2026/11/Lista_projektow_FE_2021_2027_01112026.cs
 return [
     '#^GET https://funduszeeuropejskie\.gov\.pl/raporty-i-analizy/lista-projektow-realizowanych-z-funduszy-europejskich-w-polsce-w-latach-2021-2027/\n#' => ['status' => 200, 'body' =>
         '<html><body><h1>Lista projektów realizowanych z Funduszy Europejskich w Polsce w latach 2021-2027</h1>'
-        . '<button class="btn" data-url="' . $csvPath . '">Pobierz plik CSV (145 MB)</button>'
-        . '<button class="btn" data-url="/wp-content/uploads/2026/11/Lista_projektow_FE_2021_2027_01112026.xlsx">Pobierz plik XLSX</button></body></html>'],
+        . '<button type="button" class="btn feux-btn-primary w-100" onclick="downloadDocumentFile(this, event)" data-filename="Lista_projektow_FE_2021_2027_01112026.xlsx" data-url="/wp-content/uploads/2026/11/Lista_projektow_FE_2021_2027_01112026.xlsx">pobierz raport: XLSX</button>'
+        . "<span>Inne formaty:</span><a href='' class='publi-card-right__text__status' onclick='downloadDocumentFile(this, event)' data-filename='Lista_projektow_FE_2021_2027_01112026.csv' data-url='" . $csvPath . "'>CSV 137.93 MB</a></body></html>"],
     '#^GET https://funduszeeuropejskie\.gov\.pl' . preg_quote($csvPath, '#') . '\n#' => ['status' => 200, 'body' => eu_fixture_csv((string) App\Core\Config::get('FIXTURE_EU', '') === 'krotka')],
 ];

@@ -63,7 +63,7 @@
     <section class="card">
       <h2 style="margin-bottom:8px">Historia wiadomości</h2>
       <?php if ($messages): ?>
-        <ul class="list-plain"><?php foreach ($messages as $m): ?><li class="small"><a href="/wiadomosci/<?= (int) $m['id'] ?>"><?= e(truncate((string) $m['subject'], 60)) ?></a><br><span class="xs muted"><?= e(RiskPolicy::KINDS[$m['kind']]['title'] ?? $m['kind']) ?> · <?= e(local_dt($m['created_at'], 'd.m.Y')) ?></span></li><?php endforeach ?></ul>
+        <ul class="list-plain"><?php foreach ($messages as $m): ?><li class="small"><a href="/wiadomosci/<?= (int) $m['id'] ?>"><?= e(truncate((string) $m['subject'], 60)) ?></a><br><span class="xs muted"><?= e($m['kind'] === 'campaign' ? 'Kampania e-mail' : (RiskPolicy::KINDS[$m['kind']]['title'] ?? $m['kind'])) ?> · <?= e(local_dt($m['created_at'], 'd.m.Y')) ?></span></li><?php endforeach ?></ul>
       <?php else: ?><p class="small muted" style="margin:0">Brak wiadomości.</p><?php endif ?>
     </section>
     <form method="post" action="/klienci/<?= (int) $c['id'] ?>/odpowiedz" class="card stack-sm">

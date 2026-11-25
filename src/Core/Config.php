@@ -32,6 +32,7 @@ final class Config
         'GOOGLE_SERVICE_ACCOUNT' => '', // klucz konta usługi Google (JSON albo base64): Search Console API i Google Analytics Data API, tylko odczyt
         'RESEND_API_KEY' => '',
         'MAIL_FROM' => '',
+        'CAMPAIGN_FROM' => '',
         'HTTP_FIXTURES' => '',
         'UPLOAD_MAX_MB' => '15',
         'SIGNUP_OPEN' => '0',          // 1 = każdy może założyć konto; 0 = tylko z kodem zaproszenia (SIGNUP_CODE)

@@ -9,7 +9,8 @@ namespace App\Core;
  * Wysyłka przez API Resend (zmienne RESEND_API_KEY i MAIL_FROM). Każda wiadomość trafia do tabeli outbox,
  * także ta, której nie udało się wysłać, żeby w Ustawieniach było widać, co się stało.
  *
- * To nie jest kanał do ofert: wiadomości do klientów wychodzą ze skrzynki użytkownika (moduł „Klienci i wiadomości”).
+ * Oferty do pojedynczych firm wychodzą ze skrzynki użytkownika (moduł „Klienci i wiadomości”). Kampanie e-mail idą tędy
+ * tylko do odbiorców ze zgodą albo relacją (Campaigns), z nazwą firmy użytkownika jako nadawcą i jego adresem do odpowiedzi.
  */
 final class Mailer
 {
@@ -29,8 +30,12 @@ final class Mailer
         return self::driver() !== 'none';
     }
 
-    /** @return array{ok: bool, status: string, error?: string} */
-    public static function send(string $to, string $subject, string $text, ?int $orgId = null, string $kind = ''): array
+    /**
+     * @param array{from_name?: string, reply_to?: string, headers?: array<string, string>} $opts nadawca widoczny dla odbiorcy,
+     *        adres do odpowiedzi i dodatkowe nagłówki (kampanie: nazwa firmy, skrzynka użytkownika, List-Unsubscribe)
+     * @return array{ok: bool, status: string, error?: string}
+     */
+    public static function send(string $to, string $subject, string $text, ?int $orgId = null, string $kind = '', array $opts = []): array
     {
         $to = mb_strtolower(trim($to));
         // Nagłówki nie mogą zawierać znaków nowej linii (wstrzyknięcie nagłówków).
@@ -42,12 +47,14 @@ final class Mailer
         $status = 'skipped';
         $error = null;
         if ($driver === 'resend') {
-            $r = Http::postJson(self::API, [
-                'from' => (string) Config::get('MAIL_FROM'),
-                'to' => [$to],
-                'subject' => $subject,
-                'text' => $text,
-            ], ['Authorization' => 'Bearer ' . Config::get('RESEND_API_KEY')], 10);
+            $payload = ['from' => self::from($opts['from_name'] ?? null, $kind), 'to' => [$to], 'subject' => $subject, 'text' => $text];
+            if (!empty($opts['reply_to']) && filter_var($opts['reply_to'], FILTER_VALIDATE_EMAIL)) {
+                $payload['reply_to'] = (string) $opts['reply_to'];
+            }
+            if (!empty($opts['headers'])) {
+                $payload['headers'] = array_map(static fn ($v) => str_replace(["\r", "\n"], '', (string) $v), $opts['headers']);
+            }
+            $r = Http::postJson(self::API, $payload, ['Authorization' => 'Bearer ' . Config::get('RESEND_API_KEY')], 10);
             if ($r['status'] >= 200 && $r['status'] < 300) {
                 $status = 'sent';
             } else {
@@ -69,6 +76,21 @@ final class Mailer
             error_log('[mail] zapis do outbox: ' . $e->getMessage());
         }
         return ['ok' => in_array($status, ['sent', 'logged'], true), 'status' => $status] + ($error ? ['error' => $error] : []);
+    }
+
+    /**
+     * Nadawca: MAIL_FROM, a dla kampanii CAMPAIGN_FROM, jeśli administrator ustawił osobną domenę (reputacja wysyłki
+     * kampanii nie wpływa wtedy na powiadomienia i reset hasła). Nazwa wyświetlana może być nazwą firmy użytkownika.
+     */
+    public static function from(?string $name = null, string $kind = ''): string
+    {
+        $base = (string) ($kind === 'campaign' && (string) Config::get('CAMPAIGN_FROM') !== '' ? Config::get('CAMPAIGN_FROM') : Config::get('MAIL_FROM'));
+        if ($name === null || trim($name) === '') {
+            return $base;
+        }
+        $addr = preg_match('/<([^>]+)>/', $base, $m) ? $m[1] : trim($base);
+        $clean = trim(str_replace(['"', '<', '>', "\r", "\n"], '', $name));
+        return '"' . mb_substr($clean, 0, 80) . '" <' . $addr . '>';
     }
 
     /** Powiadomienie dla wszystkich osób z firmy. @return int liczba wysłanych */

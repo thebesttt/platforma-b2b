@@ -36,21 +36,26 @@ final class EuProjects
     private const COLUMNS = [
         'nazwa projektu' => 'title', 'opis' => 'summary', 'numer umowy' => 'contract_no', 'nazwa beneficjenta' => 'beneficiary',
         'fundusz' => 'fund', 'program' => 'program', 'dzialanie' => 'action', 'wartosc projektu' => 'value_total',
-        'dofinansowanie ue' => 'eu_amount', 'miejsce realizacji' => 'place', 'data rozpoczecia' => 'start_date',
+        'dofinansowanie' => 'eu_amount', 'miejsce realizacji' => 'place', 'data rozpoczecia' => 'start_date',
         'data zakonczenia' => 'end_date', 'kategoria wsparcia' => 'category',
     ];
 
     /** Formy prawne spółek handlowych i spółdzielni. */
-    private const COMPANY = '/sp\.\s*z\s*o\.\s*o|spółk[aię]\s+(z\s+ograniczon|akcyjn|komandytow|jawn|partnersk)|prosta\s+spółka\s+akcyjna|\bS\.\s?A\.?(\s|$)|\sSA$|\bsp\.\s?[kjp]\.|\bP\.\s?S\.\s?A\.?|\bS\.\s?K\.\s?A\.?|spółdzielni/iu';
+    private const COMPANY = '/\bsp\.?\s*z\s*o\.?\s*o\b|spółk[aię]\s+(z\s+ograniczon|akcyjn|komandytow|jawn|partnersk)|prosta\s+spółka\s+akcyjna|\bS\.\s?A\.?(\s|$)|\sSA$|\bsp\.\s?[kjp]\.|\bP\.\s?S\.\s?A\.?|\bS\.\s?K\.\s?A\.?|spółdzielni/iu';
 
     /** Spółka cywilna: w nazwie są zwykle imiona i nazwiska wspólników, więc jej nie zapisujemy. */
     private const CIVIL = '/\bs\.\s?c\.|spółka\s+cywilna/iu';
+
+    /** Odpowiedź strony z listą przy ostatnim sprawdzeniu (kod i rozmiar), do komunikatu o błędzie. */
+    public static string $pageStatus = '';
 
     /** Adres aktualnego pliku CSV ze strony z listą projektów. Null, gdy strona nie odpowiada albo zmieniła wygląd. */
     public static function sourceUrl(): ?string
     {
         $r = Http::get(self::PAGE_URL, [], 30);
-        if ($r['status'] !== 200 || !preg_match('#(?:data-url|href)="([^"]*Lista_projektow_FE_2021_2027_[0-9]+\.csv)"#i', $r['body'], $m)) {
+        self::$pageStatus = $r['status'] . ', ' . strlen($r['body']) . ' B';
+        // Przycisk „Inne formaty: CSV” ma atrybut w apostrofach (data-url='…csv'), przycisk XLSX w cudzysłowach.
+        if ($r['status'] !== 200 || !preg_match('#(?:data-url|href)=["\']([^"\']*Lista_projektow_FE_2021_2027_[0-9]+\.csv)["\']#i', $r['body'], $m)) {
             return null;
         }
         $url = html_entity_decode($m[1], ENT_QUOTES);
@@ -65,7 +70,7 @@ final class EuProjects
     {
         $url = self::sourceUrl();
         if ($url === null) {
-            return ['errors' => ['Nie znaleziono pliku CSV na stronie z listą projektów UE. Strona mogła zmienić wygląd albo nie odpowiada.']];
+            return ['errors' => ['Nie znaleziono pliku CSV na stronie z listą projektów UE (odpowiedź: ' . self::$pageStatus . '). Strona mogła zmienić wygląd albo nie odpowiada.']];
         }
         if (!$force && Kv::get('eu:source') === $url) {
             return ['skipped' => true, 'source' => $url, 'errors' => []];

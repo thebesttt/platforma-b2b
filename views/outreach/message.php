@@ -5,7 +5,7 @@
     <div class="row-flex">
       <span class="chip <?= $m['status'] === 'sent' ? 'low' : 'neutral' ?>"><?= $m['status'] === 'sent' ? 'wysłana ' . e(local_dt($m['sent_at'], 'd.m.Y H:i')) : 'do wysłania' ?></span>
       <span class="chip <?= $lv['chip'] ?>">ryzyko <?= e($lv['label']) ?></span>
-      <span class="chip neutral"><?= e(RiskPolicy::KINDS[$m['kind']]['title'] ?? $m['kind']) ?></span>
+      <span class="chip neutral"><?= e($m['kind'] === 'campaign' ? 'Kampania e-mail' : (RiskPolicy::KINDS[$m['kind']]['title'] ?? $m['kind'])) ?></span>
     </div>
     <h1><?= e($m['subject']) ?></h1>
     <p class="muted small" style="margin:0">Do: <?= e(($m['person'] ? $m['person'] . ' ' : '') . '<' . $m['email'] . '>') ?></p>

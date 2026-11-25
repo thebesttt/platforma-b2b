@@ -365,3 +365,8 @@ a.seg:hover, a.seg:focus-visible { outline: 2px solid var(--accent); outline-off
 .voice.in-table { border-top: 0; padding: 6px 0 0; }
 .voice.in-table > summary { font-size: .84rem; color: var(--accent, #1d4ed8); }
 .voice.in-table .voice-body { font-size: .86rem; white-space: normal; }
+
+/* Kampanie e-mail: wersja wiadomości dla jednego odbiorcy. */
+.version { border-top: 1px solid var(--line-soft); padding: 12px 0; }
+.version > summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.version form { margin-top: 10px; }

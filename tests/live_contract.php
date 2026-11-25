@@ -167,8 +167,12 @@ $check('Fundusze UE: lista projektów 2021-2027 (adres pliku, nagłówek, spół
     $need(in_array($r['status'], [200, 206], true), 'kod ' . $r['status'] . ' przy pobieraniu ' . $url);
     $body = substr($r['body'], 0, 400000);
     $body = substr($body, 0, (int) strrpos($body, "\n")); // ostatni wiersz bywa ucięty
+    // Do początku pliku (tytuł, nagłówek, pierwsze projekty instytucji) dokładamy fragment ze środka, gdzie są projekty firm.
+    $mid = Http::get($url, ['Range' => 'bytes=60000000-60600000'], 60);
+    $chunk = $mid['status'] === 206 ? substr($mid['body'], (int) strpos($mid['body'], "\r\n") + 2) : '';
+    $chunk = substr($chunk, 0, (int) strrpos($chunk, "\r\n"));
     $tmp = tempnam(sys_get_temp_dir(), 'fe');
-    file_put_contents($tmp, $body);
+    file_put_contents($tmp, $body . "\r\n" . $chunk);
     $res = EuProjects::importFile($tmp);
     unlink($tmp);
     $need(!$res['errors'], implode('; ', $res['errors']));
@@ -178,7 +182,9 @@ $check('Fundusze UE: lista projektów 2021-2027 (adres pliku, nagłówek, spół
     $withEnd = (int) Db::get()->val('SELECT COUNT(*) FROM eu_projects WHERE end_date IS NOT NULL');
     $need($res['kept'] === 0 || $withValue >= 0.9 * $res['kept'], 'wartość odczytana w ' . $withValue . ' z ' . $res['kept']);
     $need($res['kept'] === 0 || $withEnd >= 0.9 * $res['kept'], 'data zakończenia odczytana w ' . $withEnd . ' z ' . $res['kept']);
-    return basename($url) . ': przeczytano ' . $res['read'] . ' wierszy, spółek z trwającymi projektami ' . $res['kept'] . ", z województwem $withRegion";
+    $need($res['kept'] > 0, 'we fragmencie ze środka pliku nie rozpoznano żadnej spółki z trwającym projektem');
+    $sample = Db::get()->one('SELECT beneficiary, title, voivodeships, value_total, end_date FROM eu_projects ORDER BY id LIMIT 1');
+    return basename($url) . ': przeczytano ' . $res['read'] . ' wierszy, spółek z trwającymi projektami ' . $res['kept'] . ", z województwem $withRegion; np. " . json_encode($sample, JSON_UNESCAPED_UNICODE);
 });
 $krsNo = null;
 $check('Biała lista VAT', function () use (&$bzpRows, &$krsNo, $need) {

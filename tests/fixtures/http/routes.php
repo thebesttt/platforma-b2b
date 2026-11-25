@@ -159,6 +159,11 @@ return [
     ]]),
     '#^POST https://api\.anthropic\.com/v1/messages\n.*Piszesz fragment#s' => 'claude_section.json',
     '#^POST https://api\.anthropic\.com/v1/messages\n.*Piszesz e-mail#s' => 'claude_email.json',
+    // Kampania: wersja wiadomości dopasowana do odbiorcy (z długim myślnikiem, który panel zamienia na zwykły łącznik).
+    '#^POST https://api\.anthropic\.com/v1/messages\n.*Dopasowujesz wiadomość kampanii#s' => $claude([
+        'subject' => "Strona Państwa firmy \u{2014} propozycja",
+        'body' => "Dzień dobry,\n\nwidzimy, że realizują Państwo projekt z funduszy europejskich \u{2014} gratulujemy.\n\nProponujemy przegląd strony w 2 tygodnie.\n\nZ poważaniem\nJan Test",
+    ]),
     // Czat w widżecie zapytań: odpowiedź z bazy wiedzy firmy.
     '#^POST https://api\.anthropic\.com/v1/messages\n.*Jesteś asystentem na stronie firmy#s' => $json([
         'type' => 'message', 'role' => 'assistant', 'stop_reason' => 'end_turn',
