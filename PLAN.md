@@ -1,29 +1,29 @@
 # Plan działania
 
-Stan na 24.11.2026.
+Stan na 25.11.2026.
 
 **Zmiana kierunku.** Pierwszym użytkownikiem narzędzia jest PerfectData (perfectdata.pl). Cel: więcej zapytań ze strony i audyt, którym agencja pracuje z klientami SEO i GEO. Platforma B2B (przetargi, oferty, kontrahenci) zostaje silnikiem pod spodem i osobnym produktem na później.
 
 Na perfectdata.pl nic nie zostało zainstalowane. Kod trafi na stronę dopiero po wyraźnej zgodzie właściciela.
 
-**Co się zmieniło 20.11.2026.** Etapy 1 i 2 oraz większość etapu 3 są zbudowane w silniku i przechodzą testy. Tego samego dnia doszło pięć funkcji z etapu 4: wyniki przetargów, praca zespołu nad ofertą, warunki naboru dotacji, przypomnienia z adresem wypisania i opis idealnego klienta. Potem doszły cztery funkcje, których dane nie są dostępne dla programów: panel pokazuje, gdzie je znaleźć, i daje miejsce na wpisanie (szczegóły niżej, w części „Dane wpisywane ręcznie”). 23.11.2026 doszła lista potencjalnych klientów: panel proponuje firmy, układa treść oferty i pokazuje drogi kontaktu z oceną ryzyka (część „Potencjalni klienci i wysyłka”). Tego samego dnia doszła zgoda na ofertę e-mailem zbierana listem: strona zgody z kodem QR i zapisanym dowodem. Potem siedem dodatków do listów i zgód: audyt strony jako zachęta, lejek listów, listy seryjnie, kod QR na wizytówkę, pytanie o zainteresowania, wyszukiwanie w CEIDG i drugi list (część „Listy i zgody: siedem dodatków”). 24.11.2026 doszła widoczność: dane z Search Console, sygnały z odpowiedzi AI i konkurencja z map witryn (część „Widoczność w Google, w AI i u konkurencji”). Do uruchomienia zostały kroki właściciela z etapu 0: hosting, baza, klucze usług i zgoda na kod widżetu. Lista na końcu, w części „Co jest potrzebne od właściciela”.
+**Co się zmieniło 20.11.2026.** Etapy 1 i 2 oraz większość etapu 3 są zbudowane w silniku i przechodzą testy. Tego samego dnia doszło pięć funkcji z etapu 4: wyniki przetargów, praca zespołu nad ofertą, warunki naboru dotacji, przypomnienia z adresem wypisania i opis idealnego klienta. Potem doszły cztery funkcje, których dane nie są dostępne dla programów: panel pokazuje, gdzie je znaleźć, i daje miejsce na wpisanie (szczegóły niżej, w części „Dane wpisywane ręcznie”). 23.11.2026 doszła lista potencjalnych klientów: panel proponuje firmy, układa treść oferty i pokazuje drogi kontaktu z oceną ryzyka (część „Potencjalni klienci i wysyłka”). Tego samego dnia doszła zgoda na ofertę e-mailem zbierana listem: strona zgody z kodem QR i zapisanym dowodem. Potem siedem dodatków do listów i zgód: audyt strony jako zachęta, lejek listów, listy seryjnie, kod QR na wizytówkę, pytanie o zainteresowania, wyszukiwanie w CEIDG i drugi list (część „Listy i zgody: siedem dodatków”). 24.11.2026 doszła widoczność: dane z Search Console, sygnały z odpowiedzi AI i konkurencja z map witryn (część „Widoczność w Google, w AI i u konkurencji”). 25.11.2026 doszły trzy publiczne źródła popytu i kampanie e-mail: plany zamówień z BZP i zapowiedzi z TED, firmy z dotacjami UE oraz kampanie z wersją wiadomości dla każdego odbiorcy (części „Skąd brać popyt: źródła publiczne” i „Kampanie e-mail dopasowane do odbiorcy”). Do uruchomienia zostały kroki właściciela z etapu 0: hosting, baza, klucze usług i zgoda na kod widżetu. Lista na końcu, w części „Co jest potrzebne od właściciela”.
 
 ## Co jest gotowe
 
-- **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`, 183 testy na SQLite i PostgreSQL. Gotowa do uruchomienia w Render.
+- **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`, 204 testy na SQLite i PostgreSQL. Gotowa do uruchomienia w Render.
 - **Panel w wyglądzie PerfectData** (zmienna `APP_THEME=perfectdata` albo ustawienie firmy) z wyborem modułów w menu i pulpitem, który pokazuje tylko włączone moduły.
 - **Zapytania ze strony:** widżet do wklejenia jedną linią kodu, kwalifikator z jawną tabelą punktów, lista i karta zapytań, czat AI z bazy wiedzy, lejek i test dwóch wersji.
 - **Audyt AI:** 24 wskaźniki i 100 punktów z jednego pliku wytycznych, raport z linijką punktów i listą „Najpierw to”, „Przed i po”, strona wytycznych, raport dla klienta pod linkiem, audyt wielu stron z mapy witryny. Sprawdzony na prawdziwej stronie perfectdata.pl.
 - **Poczta z panelu:** powiadomienie o zapytaniu, reset hasła, zaproszenia do zespołu i poranny przegląd (przetargi, zapytania, alerty).
-- **Przetargi:** import i dopasowanie do profilu, karta przetargu, analiza SWZ oraz wyniki: kto wygrywa w branży i regionie, za ile i przy ilu ofertach. Alert, gdy zapisany przetarg zostanie rozstrzygnięty.
+- **Przetargi:** import i dopasowanie do profilu, karta przetargu, analiza SWZ oraz wyniki: kto wygrywa w branży i regionie, za ile i przy ilu ofertach. Alert, gdy zapisany przetarg zostanie rozstrzygnięty. Plany zamówień: pozycje z rocznych planów urzędów w BZP i zapowiedzi z TED, dopasowane do profilu, zanim przetarg zostanie ogłoszony.
 - **Oferty i wnioski:** szkic z ogłoszenia i biblioteki, praca zespołu (sekcja przydzielona osobie, zapis nie nadpisuje cudzej zmiany), lista dokumentów do odhaczania, a we wniosku o dotację sprawdzenie warunków naboru z cytatami. Lista obserwowanych naborów z przewodnikiem po pięciu oficjalnych serwisach, przypomnieniami o końcu naboru i wnioskiem zakładanym z naboru.
-- **Klienci i wiadomości:** ocena ryzyka prawnego przed wysyłką, przypomnienia po 4 i po 10 dniach z dziennym limitem, adres wypisania w stopce ofert, opis idealnego klienta ze strony firmy. Rejestr zapytań ofertowych z rynku: gdzie szukać, termin, kontakt z podstawą „zapytanie ofertowe” i odpowiedź jednym kliknięciem. Lista potencjalnych klientów: firmy z wyników przetargów i z listy użytkownika, dane z rejestrów, punkty dopasowania, treść oferty układana automatycznie i drogi kontaktu z oceną ryzyka. Zgoda na ofertę e-mailem zbierana listem: w liście jest adres strony zgody i kod QR, firma sama zostawia e-mail, a panel zapisuje dowód. Do tego audyt strony jako zachęta, lejek listów z kosztem jednej zgody, listy seryjnie, drugi list po 21 dniach, kod QR na wizytówkę, pytanie o zainteresowania i wyszukiwanie firm w CEIDG (po wpisaniu tokenu). Przycisk „Napisz” przy kontakcie sam dobiera rodzaj wiadomości do podstawy kontaktu.
+- **Klienci i wiadomości:** ocena ryzyka prawnego przed wysyłką, przypomnienia po 4 i po 10 dniach z dziennym limitem, adres wypisania w stopce ofert, opis idealnego klienta ze strony firmy. Rejestr zapytań ofertowych z rynku: gdzie szukać, termin, kontakt z podstawą „zapytanie ofertowe” i odpowiedź jednym kliknięciem. Lista potencjalnych klientów: firmy z wyników przetargów i z listy użytkownika, dane z rejestrów, punkty dopasowania, treść oferty układana automatycznie i drogi kontaktu z oceną ryzyka. Zgoda na ofertę e-mailem zbierana listem: w liście jest adres strony zgody i kod QR, firma sama zostawia e-mail, a panel zapisuje dowód. Do tego audyt strony jako zachęta, lejek listów z kosztem jednej zgody, listy seryjnie, drugi list po 21 dniach, kod QR na wizytówkę, pytanie o zainteresowania i wyszukiwanie firm w CEIDG (po wpisaniu tokenu). Przycisk „Napisz” przy kontakcie sam dobiera rodzaj wiadomości do podstawy kontaktu. Firmy z dotacjami UE: spółki w trakcie projektu z funduszy europejskich, do dodania na listę potencjalnych klientów. Kampanie e-mail: jedna treść, ale wersja dla każdego odbiorcy z faktów o jego firmie. Panel wysyła sam tylko do zgód i klientów.
 - **Kontrahenci:** karta firmy z rejestrów publicznych, a do tego dwa sprawdzenia robione ręcznie: Krajowy Rejestr Zadłużonych i liczby ze sprawozdania finansowego, z których panel liczy, po ilu dniach firma płaci dostawcom.
 - **Audyt techniczny:** bez zmian, działa od początku.
 - **Platforma dla wielu firm:** pakiety Podstawowy i Rozszerzony z miesięcznym przydziałem AI, ekran administratora (firmy, zaproszenia, blokada, limity), logowanie dwuetapowe, eksport i usunięcie danych firmy, własne połączenia każdej firmy w Widoczności.
 - **Nabory dotacji:** wyszukiwarka naborów (AI szuka w internecie i podaje źródła) oraz przycisk, który pisze cały wniosek.
 - **Widoczność:** zakładka w module Audyt. Użytkownik wpisuje adres witryny i wgrywa paczkę z przycisku „Eksportuj” w Search Console albo dodaje jeden adres e-mail jako użytkownika i klika „Połącz”. Panel pokazuje, co poprawić najpierw w Google, gdzie stronę widać w odpowiedziach AI i co publikuje konkurencja.
-- **Mockup całego panelu:** `mockup/audyt-ai`, 11 modułów w sześciu grupach menu i 38 ekranów, z listą 81 funkcji i ich stanem. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip`.
+- **Mockup całego panelu:** `mockup/audyt-ai`, 11 modułów w sześciu grupach menu i 41 ekranów, z listą 84 funkcji i ich stanem. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip`.
 - **Wytyczne audytu:** `resources/audyt-ai-rules.json` (czyta je silnik) i dokument dla zespołu `mockup/audyt-ai/WYTYCZNE.md`.
 - **Plany modułów:** `PLAN-ZAPYTANIA.md` i `PLAN-AUDYT-AI.md`.
 
@@ -46,21 +46,21 @@ W platformie wygląd i zestaw modułów będą ustawieniem organizacji (pole `se
 
 ## Funkcje i ich stan
 
-Mockup pokazuje 81 funkcji. Zakładka „Lista funkcji” na pulpicie podaje stan każdej z nich i prowadzi do ekranu.
+Mockup pokazuje 84 funkcje. Zakładka „Lista funkcji” na pulpicie podaje stan każdej z nich i prowadzi do ekranu.
 
 | Moduł | Działa w silniku | Do zbudowania | Czeka na zgodę Google i Meta |
 |---|---|---|---|
 | Zapytania | 5 | 0 | 0 |
-| Klienci | 20 | 1 | 0 |
+| Klienci | 22 | 1 | 0 |
 | Audyt AI | 6 | 1 | 0 |
 | SEO i strona | 8 | 1 | 0 |
 | Reklamy | 0 | 0 | 6 |
-| Przetargi | 10 | 0 | 0 |
+| Przetargi | 11 | 0 | 0 |
 | Oferty | 6 | 0 | 0 |
 | Dotacje | 5 | 0 | 0 |
 | Kontrahenci | 7 | 1 | 0 |
 | Konto i platforma | 4 | 0 | 0 |
-| Razem | 71 | 4 | 6 |
+| Razem | 74 | 4 | 6 |
 
 „Działa w silniku” znaczy, że kod jest w repozytorium i przechodzi testy. Silnik nie jest jeszcze uruchomiony online (etap 0).
 
@@ -210,6 +210,40 @@ Panel nie czyta skrzynki pocztowej: wiadomości wychodzą z programu pocztowego 
 
 1. dostęp do Gmaila albo Microsoft 365 (Google wymaga dla odczytu poczty płatnej oceny bezpieczeństwa aplikacji),
 2. adres w panelu, na który użytkownik przekazuje odpowiedzi (wymaga odbierania poczty w domenie panelu, np. Resend Inbound, i rekordów MX).
+
+### Skąd brać popyt: źródła publiczne
+
+Popyt na usługi firm, które korzystają z panelu, widać w danych publicznych, zanim klient sam się odezwie. Zasada dla wszystkich źródeł: panel bierze tylko to, co instytucja udostępnia programom albo do pobrania, nie obchodzi zabezpieczeń i nie zbiera adresów e-mail z rejestrów ani stron.
+
+| Źródło | Co mówi o popycie | Stan |
+|---|---|---|
+| Plany postępowań w BZP | Zamawiający publiczni publikują plan zamówień na rok w ciągu 30 dni od przyjęcia budżetu (art. 23 Pzp): przedmiot, tryb, orientacyjna wartość i kwartał wszczęcia. W 2026 r. do maja było ok. 4000 ogłoszeń planów, najwięcej w styczniu i lutym. | Zbudowane 25.11.2026 (Przetargi → Plany zamówień) |
+| Wstępne ogłoszenia informacyjne w TED | Zapowiedzi zamówień od progów unijnych, często z kodami CPV i datą planowanego ogłoszenia. | Zbudowane 25.11.2026, w tym samym ekranie |
+| Lista projektów z funduszy UE 2021-2027 | Kto dostał dofinansowanie, na co, za ile i do kiedy trwa projekt. Firma w trakcie projektu ma budżet, a większe zakupy ogłasza zwykle w Bazie Konkurencyjności. Plik CSV ok. 138 MB, co miesiąc, bez NIP-u. | Zbudowane 25.11.2026 (Klienci → Firmy z dotacjami UE): tylko spółki z trwającymi projektami |
+| Baza Konkurencyjności | Zapytania ofertowe firm z dotacjami, często małe i dobre dla MŚP. | Ręcznie: rejestr zapytań z rynku (20.11.2026). Automat wymaga zgody operatora Bazy |
+| SUDOP (UOKiK) | Pomoc publiczna i de minimis dla firm, z NIP-em beneficjenta. | Do sprawdzenia: czy dane da się pobrać bez obchodzenia zabezpieczeń |
+| Rejestr wniosków, decyzji i zgłoszeń budowlanych (GUNB) | Kto i gdzie buduje: sygnał dla firm budowlanych, instalacyjnych i wykończeniowych. | Do sprawdzenia: zakres danych i sposób pobierania |
+| Centralna Baza Ofert Pracy | Firma, która zatrudnia, rośnie i kupuje. Oferty z urzędów pracy są publiczne. | Do zrobienia. Ofert z prywatnych portali nie pobieramy |
+| CEIDG i KRS | Nowe firmy i zmiany w firmach (zarząd, kapitał, adres). | CEIDG: zbudowane, działa po wpisaniu tokenu. KRS: alerty o zmianach u obserwowanych firm. Wyszukiwania spółek po branży KRS nie udostępnia |
+| Nowe obowiązki prawne | Powód kontaktu, gdy przepisy zmuszają firmy do zmian, np. wymagania dostępności części e-sklepów i usług od 28.06.2025, KSeF, nowelizacja ustawy o krajowym systemie cyberbezpieczeństwa. Pomysł: test dostępności strony w audycie jako zachęta w liście. | Pomysł. Treść o przepisach do sprawdzenia przez prawnika |
+| Google Trends i Bank Danych Lokalnych GUS | O co ludzie pytają w regionie i jak zmienia się lokalny rynek: do planowania treści i kampanii. | Pomysł |
+
+**Plany zamówień, jak działają.** Codzienny import pobiera listę planów z BZP (`NoticeType=TenderPlanNotice`) i treść każdego planu (`GetNoticeQuery`, bo `GetNoticeHtmlBodyById` zwraca dla planów pustą treść). Z jednego okresu zostaje najnowsza wersja planu. Nowa wersja aktualizuje pozycje po numerze, a pozycje, z których urząd zrezygnował, znikają z listy, ale zapisane dopasowania zostają w historii. Plan nie ma kodów CPV, więc dopasowanie idzie po słowach kluczowych z profilu z prostą odmianą („odpady” znajdzie „odpadów”, „hala” znajdzie „hali”). Punkty: województwo 10, słowa 30 i po 10 za kolejne (do 50), wartość w zakresie +10, poza zakresem -25, wszczęcie w tym kwartale +10, później +15. Minięty termin nie odejmuje punktów, tylko ostrzega, że przetarg mógł już zostać ogłoszony. Pierwszy import dociąga plany od 1 stycznia w porcjach po 800 planów dziennie, a `php bin/console plans` robi to naraz. Zapowiedzi z TED to typy `pin-only`, `pin-buyer` i `pin-rtl`.
+
+**Firmy z dotacjami UE, jak działają.** Zadanie dzienne z GitHub Actions sprawdza stronę z listą projektów i pobiera plik tylko wtedy, gdy pojawił się nowy miesiąc. Plik czytamy strumieniowo. Zostają spółki (sp. z o.o., S.A., spółki komandytowe, jawne, partnerskie, proste spółki akcyjne, spółdzielnie) z projektem w toku albo zakończonym w ostatnich 6 miesiącach. Osób fizycznych i spółek cywilnych nie zapisujemy, bo ich nazwa to imiona i nazwiska. Firma dodana na listę potencjalnych klientów dostaje w punktacji powód kontaktu „projekt z dotacją UE w toku”, a w treści oferty zdanie o projekcie. NIP i stronę użytkownik dopisuje na karcie firmy.
+
+### Kampanie e-mail dopasowane do odbiorcy
+
+Klienci → Kampanie e-mail. Jedna treść do wielu firm, ale każda firma dostaje własną wersję.
+
+- **Szablon z polami:** `{powitanie}`, `{firma}`, `{miasto}`, `{powod}`, `{podpis}`. Zdanie `{powod}` panel składa z faktów, które już zna, w tej kolejności: zapytanie ze strony, odpowiedź klienta, zapytanie ofertowe, tematy zaznaczone na stronie zgody, wygrany przetarg, projekt z dotacją UE, audyt strony, współpraca. Gdy nie zna żadnego faktu, linia znika.
+- **Wersja przez AI (opcja):** AI przepisuje wersję pod fakty firmy, bez zmiany oferty, cen i linków. Każdy odbiorca to jedno użycie AI z pakietu. Wersji poprawionych ręcznie AI nie rusza.
+- **Ryzyko dla każdego odbiorcy** z tych samych reguł co pojedyncza wiadomość. Panel wysyła sam tylko do odbiorców z ryzykiem niskim (zgoda, klient, adres podany do ofert). Pozostałe wersje użytkownik może pobrać jako pliki .eml i wysłać ze swojej skrzynki, jeśli zapozna się z ryzykiem i to potwierdzi. Potwierdzenie trafia do historii kampanii i kontaktu. Wypisani nie dostają nic.
+- **Dlaczego panel nie wysyła ryzykownych wiadomości sam:** wtedy platforma byłaby narzędziem wysyłki informacji handlowej bez zgody, a jej domena traciłaby reputację u skrzynek pocztowych. Decyzja o takiej wiadomości zostaje u klienta, a wysyłka z jego skrzynki.
+- **Wysyłka przez panel:** nadawca to nazwa firmy użytkownika z adresu panelu (`MAIL_FROM` albo osobny `CAMPAIGN_FROM`), odpowiedzi trafiają na skrzynkę użytkownika. Każda wiadomość ma stopkę z informacją, skąd mamy adres, link do wypisania i nagłówek `List-Unsubscribe` z wypisaniem jednym kliknięciem. Przed każdą wiadomością panel sprawdza jeszcze raz, czy odbiorca się nie wypisał i czy zgoda nadal jest zapisana.
+- **Limity:** przerwa 14 dni między kampaniami do tej samej firmy, dzienny limit z pakietu (startowo 100 w Podstawowym i 1000 w Rozszerzonym), wysyłka partiami po 20.
+- **Bez pikseli śledzących.** Wynik kampanii to wysłane, odpowiedzi i wypisania.
+- **Skąd adresy:** tylko z kontaktów firmy, czyli od firm, które same podały adres (zapytanie, zgoda, współpraca). Panel nie buduje bazy adresów z rejestrów ani stron.
 
 ### Widoczność w Google, w AI i u konkurencji
 
@@ -380,7 +414,7 @@ Do sprawdzenia po wdrożeniu: czy rejestr decyzji UOKiK przyjmuje połączenia z
 ### 4d. Rozwój produktu (kolejność według wartości)
 
 1. **Wyniki przetargów z BZP:** zbudowane 20.11.2026. Kto wygrywa i za ile, zestawienie zwycięzców, historia zamawiającego na karcie przetargu, wygrane na karcie firmy.
-2. **Baza Konkurencyjności** jako trzecie źródło. To zamówienia firm z dotacjami, często małe i dobre dla MŚP. Od 20.11.2026 jest w rejestrze zapytań jako źródło przeglądane ręcznie. Automatyczny import wymaga zgody operatora Bazy albo oficjalnego dostępu do danych.
+2. **Baza Konkurencyjności** jako trzecie źródło. To zamówienia firm z dotacjami, często małe i dobre dla MŚP. Od 20.11.2026 jest w rejestrze zapytań jako źródło przeglądane ręcznie, a od 25.11.2026 lista firm z dotacjami UE pokazuje, kto ma budżet i będzie ogłaszał zapytania. Automatyczny import wymaga zgody operatora Bazy albo oficjalnego dostępu do danych.
 3. **Ryzyko płatnicze:**
    - szacunek, po ilu dniach firma płaci dostawcom, ze sprawozdań finansowych w KRS: zbudowane 20.11.2026, liczby przepisuje użytkownik,
    - postępowania upadłościowe i restrukturyzacyjne z Krajowego Rejestru Zadłużonych: zbudowane 20.11.2026, wynik wpisuje użytkownik.
@@ -394,7 +428,9 @@ Do sprawdzenia po wdrożeniu: czy rejestr decyzji UOKiK przyjmuje połączenia z
    - zapytania ofertowe firm (strony firm, Baza Konkurencyjności, platformy zakupowe): rejestr z przewodnikiem po źródłach zbudowany 20.11.2026, zapytania wpisuje użytkownik,
    - opis idealnego klienta z treści strony firmy: zbudowane 20.11.2026,
    - lista potencjalnych klientów z treścią oferty i drogami kontaktu: zbudowana 23.11.2026, razem z listami, stroną zgody, lejkiem i wyszukiwaniem w CEIDG (po wpisaniu tokenu),
-   - sekwencje z przypomnieniami i dziennym limitem: zbudowane 20.11.2026 w wersji, w której wysyłasz ze swojej skrzynki, a panel pilnuje terminów. Automatyczna wysyłka wymaga połączenia ze skrzynką (punkt 6).
+   - sekwencje z przypomnieniami i dziennym limitem: zbudowane 20.11.2026 w wersji, w której wysyłasz ze swojej skrzynki, a panel pilnuje terminów. Automatyczna wysyłka wymaga połączenia ze skrzynką (punkt 6),
+   - plany zamówień z BZP i TED, firmy z dotacjami UE i kampanie e-mail z wersją dla każdego odbiorcy: zbudowane 25.11.2026,
+   - kolejne źródła popytu do sprawdzenia: SUDOP, rejestr budowlany GUNB, Centralna Baza Ofert Pracy (część „Skąd brać popyt”).
 9. **Widoczność w Google i w AI:** dane z Search Console, sygnały z odpowiedzi AI i konkurencja z map witryn zbudowane 24.11.2026. Do zrobienia: ocena wizytówki Google (wymaga zgody Google), pozycje konkurentów w wynikach (wymaga płatnej usługi z wynikami wyszukiwania) i test cytowań w AI.
 10. **Dotacje:** ocena warunków naboru na wgranym regulaminie i lista obserwowanych naborów z przypomnieniami są zbudowane (20.11.2026). Wyszukiwarka naborów i pisanie całego wniosku jednym przyciskiem doszły 24.11.2026.
 11. **Drobne uzupełnienia:** odhaczanie gotowych dokumentów w ofercie i podział sekcji między osoby są zbudowane (20.11.2026). Do zrobienia: szacowany czas pracy przy poprawkach z audytu technicznego.
@@ -411,7 +447,8 @@ Bez tego panel nie ruszy albo nie zrobi części pracy. Tych rzeczy nie da się 
 | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | przycisk „Połącz z Google” dla firm klientów. Adres powrotu: `<adres panelu>/audyt/widocznosc/google/powrot`. Do pracy z wieloma firmami potrzebna weryfikacja aplikacji przez Google | console.cloud.google.com |
 | Ceny i limity pakietów | Podstawowy i Rozszerzony mają limity startowe (30 i 400 użyć AI). Do decyzji: ceny, ostateczne limity, sposób płatności | decyzja właściciela |
 | `SALES_EMAIL` | adres, na który firmy piszą o zmianie pakietu (pokazany w Ustawieniach) | własny adres |
-| `RESEND_API_KEY`, `MAIL_FROM` i rekordy DNS | powiadomienia, reset hasła, poranny przegląd | resend.com |
+| `RESEND_API_KEY`, `MAIL_FROM` i rekordy DNS | powiadomienia, reset hasła, poranny przegląd, kampanie e-mail do odbiorców ze zgodą | resend.com |
+| `CAMPAIGN_FROM`, opcjonalnie | osobny adres kampanii (np. w subdomenie), żeby kampanie nie psuły reputacji powiadomień | resend.com, druga zweryfikowana domena |
 | `PSI_KEY` | szybkość strony w audytach | Google Cloud, interfejs PageSpeed Insights |
 | `CF_ACCOUNT_ID`, `CF_BROWSER_TOKEN` | wskaźniki A6 i E2 | Cloudflare, Browser Run |
 | `GOOGLE_SERVICE_ACCOUNT`, opcjonalnie | stałe połączenie z Search Console i Google Analytics (bez niego działa wgrywanie plików) | Google Cloud, około 10 minut, raz. Kroki są w części „Widoczność w Google, w AI i u konkurencji” |
@@ -438,6 +475,8 @@ Decyzje:
 11. **Źródło zapytania z asystenta AI w widżecie.** Widżet mógłby zapisać, że osoba przyszła z ChatGPT albo Perplexity. Bez pamięci przeglądarki działa to tylko wtedy, gdy ktoś otworzy widżet na pierwszej stronie wizyty. Pełne przypisanie wymaga zapisu w przeglądarce, a dziś widżet niczego w niej nie zapisuje. Do decyzji, czy warto to zmieniać.
 12. **Pozycje konkurentów w Google.** Search Console pokazuje tylko własną witrynę. Cudze pozycje dają płatne usługi z wynikami wyszukiwania (opłata za każde sprawdzone zapytanie). Do decyzji: czy i dla ilu zapytań.
 13. **Test cytowań w AI przez Claude.** Najprostsza wersja nie wymaga nowych kluczy: panel zadaje pytania klientów modelowi Claude z wyszukiwaniem w sieci i liczy, kogo cytuje. Koszt rośnie z liczbą pytań, więc potrzebny jest limit.
+14. **Kampanie e-mail z adresu panelu.** Panel wysyła kampanie tylko do odbiorców ze zgodą, ale z domeny panelu. Do decyzji: osobna subdomena dla kampanii (`CAMPAIGN_FROM`) i dzienne limity w pakietach (startowo 100 i 1000).
+15. **Kolejne źródła popytu.** Która branża klientów na start, bo od niej zależy, czy następne powinny być pozwolenia na budowę (GUNB), oferty pracy (CBOP), czy pomoc publiczna (SUDOP).
 
 Potrzebne przed etapem 4:
 
@@ -448,9 +487,22 @@ Potrzebne przed etapem 4:
   - regulaminu i polityki prywatności (po ich przygotowaniu wpisz adresy w `TERMS_URL` i `PRIVACY_URL`),
   - umowy powierzenia przetwarzania danych: klienci wpisują dane osób kontaktowych, więc platforma przetwarza je w ich imieniu, a podwykonawcami są Render, Anthropic i usługa e-mail,
   - opinii o module wiadomości (art. 398 Prawa komunikacji elektronicznej) i o module należności (art. 15 i 15a ustawy o udostępnianiu informacji gospodarczych),
-  - opinii o zbieraniu zgód: treść zgody i prośby o raport, raport jako zachęta, drugi list, wykorzystanie danych z CEIDG do listów i pytanie e-mailem o adres do ofert.
+  - opinii o zbieraniu zgód: treść zgody i prośby o raport, raport jako zachęta, drugi list, wykorzystanie danych z CEIDG do listów i pytanie e-mailem o adres do ofert,
+  - opinii o kampaniach e-mail: wysyłka przez panel do odbiorców ze zgodą (platforma jako pośrednik), stopka i wypisanie oraz wykorzystanie listy projektów UE i planów zamówień do kontaktu.
 
 ## Co zostało sprawdzone
+
+### Plany zamówień, firmy z dotacjami UE, kampanie e-mail (25.11.2026)
+
+- **204 testy** na SQLite i PostgreSQL oraz test obrazu Docker (GitHub Actions). Nowe obejmują:
+  - plany: odczyt treści planu o budowie jak w BZP (rok i wersja z tabelek, dwie sekcje progów, kategorie z rozstrzelonymi literami, wartości, terminy kwartalne i miesięczne, rezygnacja z pozycji), najnowszą wersję z jednego okresu, ponowienie planu, którego treści nie udało się pobrać, limit pobrań z kontynuacją, aktualizację pozycji w miejscu z zachowaniem zapisanych dopasowań, dopasowanie z odmianą słów, ekran z zapisem i ukrywaniem, izolację firm, zapis profilu z od razu policzonymi planami, zadanie dzienne,
+  - firmy z dotacjami UE: rozpoznanie spółek (także zapisy z prawdziwego pliku, np. „sp z o.o.” i „SPÓŁKA Z OGRANICZONA ODPOWIEDZIALNOŚCIĄ”), pominięcie osób fizycznych, spółek cywilnych, gmin i dawno zakończonych projektów, pobranie pliku raz na miesiąc, usunięcie projektów, których nie ma w nowym pliku, zły plik bez utraty danych, dodanie firmy do potencjalnych klientów bez powtórek i z powodem kontaktu w punktacji,
+  - kampanie: wersja z faktów dla każdego odbiorcy, ryzyko i trasa wysyłki dla każdego, wypisani poza kampanią, przerwa 14 dni, wysyłka przez panel tylko do zgód z nazwą firmy, adresem do odpowiedzi i nagłówkiem wypisania, zgoda cofnięta przed wysyłką, dzienny limit, pliki .eml w ZIP tylko po potwierdzeniu ryzyka, AI z licznikiem użyć i zamianą długich myślników, ekran i izolacja firm, wypisanie jednym kliknięciem.
+- **Na prawdziwych danych (test kontraktu w GitHub Actions):** plany z BZP: 6 planów, 24 pozycje, w każdej odczytany rok, kategoria, wartość i termin. Zapowiedzi z TED: typy `pin-rtl`, `pin-only`, `pin-buyer`, województwo w każdej. Lista projektów UE: adres pliku znaleziony na stronie (link CSV ma atrybut w apostrofach, poprawione), w próbce 261 wierszy i 36 spółek z trwającymi projektami.
+- **Silnik i mockup liczą plany tak samo:** 6 pozycji planów z mockupu, ta sama ocena albo odrzucenie w obu.
+- **W przeglądarce** na danych przykładowych: przejście po 189 stronach w trzech szerokościach (1280, 390, 320) bez błędów i bez poziomego przewijania. Osobno: plany z zapisem pozycji, wyszukiwarka wszystkich planów, informacja na pulpicie, dodanie firmy z dotacją do potencjalnych klientów, kampania z wysyłką przez panel (3 wiadomości), przycisk potwierdzenia nieaktywny bez zaznaczenia oświadczenia i pobranie 9 wiadomości jako ZIP.
+- **Mockup po zmianach:** 41 ekranów w 4 szerokościach bez błędów i bez poziomego przewijania. Przeklikane: plany (zapisz, ukryj, przywróć), firmy z dotacjami (szukaj, dodaj), kampania (AI, wysyłka przez panel, potwierdzenie ryzyka, pobranie).
+- **Nie sprawdzono na prawdziwych usługach:** wysyłki kampanii przez Resend z prawdziwej domeny (format zapytania według dokumentacji Resend: `reply_to` i `headers`) ani pełnego importu listy projektów UE (150 MB) i wszystkich planów od stycznia. Pierwsze uruchomienie zadania dziennego po starcie panelu to sprawdzi.
 
 ### Platforma dla wielu firm, nabory, słowa klienta (24.11.2026, po południu)
 

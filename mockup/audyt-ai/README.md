@@ -1,16 +1,16 @@
 # Mockup panelu PerfectData
 
-Klikalny mockup całego panelu: 11 modułów w sześciu grupach menu (Pulpit, Sprzedaż, Marketing, Przetargi i dotacje, Kontrahenci, Konto), 38 ekranów. Pokazuje każdą funkcję z opisu produktu na przykładowych danych. Nic nie jest mierzone ani wysyłane.
+Klikalny mockup całego panelu: 11 modułów w sześciu grupach menu (Pulpit, Sprzedaż, Marketing, Przetargi i dotacje, Kontrahenci, Konto), 41 ekranów. Pokazuje każdą funkcję z opisu produktu na przykładowych danych. Nic nie jest mierzone ani wysyłane.
 
 | Moduł | Ekrany |
 |---|---|
-| Pulpit | Dziś, Lista funkcji (81 funkcji ze stanem: działa w silniku, do zbudowania, czeka na zgodę Google i Meta) |
+| Pulpit | Dziś, Lista funkcji (84 funkcje ze stanem: działa w silniku, do zbudowania, czeka na zgodę Google i Meta) |
 | Zapytania | Zapytania, Zasady kwalifikacji, Podgląd widżetu, Wyniki |
-| Klienci | Kontakty z rozwijanym „Co napisał klient”, Wiadomość z ekranem ryzyka i decyzją, Zapytania ofertowe, Potencjalni klienci (lista firm, treść oferty, drogi kontaktu z ryzykiem), Wysyłka i dziennik |
+| Klienci | Kontakty z rozwijanym „Co napisał klient”, Wiadomość z ekranem ryzyka i decyzją, Zapytania ofertowe, Potencjalni klienci (lista firm, treść oferty, drogi kontaktu z ryzykiem), Firmy z dotacjami UE, Kampanie e-mail (wersja dla każdego odbiorcy, ryzyko, wysyłka przez panel albo ze skrzynki), Wysyłka i dziennik |
 | Audyt AI | Raport, Wytyczne wskaźników, Przed i po, Cytowania w AI, Strony witryny |
 | SEO i strona | Audyt techniczny, Konkurenci (audyty i mapy witryn), Google (Search Console), Odpowiedzi AI, Wizytówka |
 | Reklamy | Wyniki, Kampanie z potwierdzeniem zmian i dziennikiem, Alerty |
-| Przetargi | Dopasowane z przyciskiem „Do ofert”, Karta przetargu z analizą SWZ, Profil, Terminy |
+| Przetargi | Dopasowane z przyciskiem „Do ofert”, Karta przetargu z analizą SWZ, Plany zamówień (BZP i zapowiedzi z TED), Profil, Terminy |
 | Oferty | Oferta, Biblioteka firmy |
 | Dotacje | Nabory (wyszukiwarka naborów, znalezione i obserwowane nabory), Wniosek pisany jednym przyciskiem |
 | Kontrahenci | Karta firmy, Obserwowane i alerty, Należności |
@@ -22,12 +22,13 @@ Mockup ma wygląd perfectdata.pl: kolory odczytane ze stylów strony 19.11.2026 
 
 ## Reguły przeniesione z silnika
 
-Cztery obliczenia w mockupie to kopie reguł z kodu PHP. Wyniki porównałem z silnikiem na danych mockupu: 38 porównań, wszystkie zgodne.
+Pięć obliczeń w mockupie to kopie reguł z kodu PHP. Wyniki porównałem z silnikiem na danych mockupu: 44 porównania, wszystkie zgodne (25.11.2026 doszło 6 pozycji planów zamówień).
 
 | Co liczy mockup | Funkcja w mockupie | Źródło w silniku |
 |---|---|---|
 | Ryzyko prawne wiadomości | `assessMessage` w `src/js/40-klienci.js` | `src/Modules/Outreach/RiskPolicy.php` |
 | Dopasowanie przetargu 0-100 | `matchTender` w `src/js/70-przetargi.js` | `src/Modules/Tenders/Matcher.php` |
+| Dopasowanie pozycji planu zamówień i rdzeń słowa | `matchPlan`, `stemPl` w `src/js/70-przetargi.js` | `src/Modules/Tenders/PlanMatcher.php`, `Plans::stem` |
 | Warunki wpisu do BIG i rekompensata | `bigCheck`, `compensation` w `src/js/90-kontrahenci.js` | `src/Modules/Companies/Receivables.php` |
 | Ocena ryzyka płatniczego | `companyRisk` w `src/js/90-kontrahenci.js` | `src/Modules/Companies/Risk.php` |
 

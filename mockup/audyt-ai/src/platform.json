@@ -40,7 +40,9 @@
         ["Wyszukiwanie firm w CEIDG: branża, region, data założenia", "firmy", "silnik", "Działa po wpisaniu bezpłatnego tokenu hurtowni danych CEIDG. Bez adresów e-mail i telefonów. Spółek z KRS tak szukać się nie da."],
         ["Sekwencje z przypomnieniami i dziennymi limitami", "wysylka", "silnik", "Panel pilnuje terminów i przygotowuje treść kolejnych kroków. Wysyłasz ze swojej skrzynki."],
         ["Co napisał klient: zapytanie, zapytanie ofertowe, wklejona odpowiedź", "kontakty", "silnik", "Rozwijane przy kontakcie. Panel nie czyta skrzynki, więc odpowiedź e-mail wklejasz przy „Firma odpisała”."],
-        ["Wykrywanie odpowiedzi i wypisań", "wysylka", "plan", "Wypisanie działa: odbiorca klika adres w stopce oferty. Odpowiedź zaznaczasz ręcznie, bo automat wymaga połączenia ze skrzynką."]
+        ["Wykrywanie odpowiedzi i wypisań", "wysylka", "plan", "Wypisanie działa: odbiorca klika adres w stopce oferty. Odpowiedź zaznaczasz ręcznie, bo automat wymaga połączenia ze skrzynką."],
+        ["Firmy z dotacjami UE jako potencjalni klienci", "dotacje-ue", "silnik", "Lista projektów 2021-2027 z funduszeeuropejskie.gov.pl, raz w miesiącu. Tylko spółki, bez osób fizycznych i spółek cywilnych."],
+        ["Kampanie e-mail z wersją dla każdego odbiorcy", "kampanie-email", "silnik", "Wersja z faktów o firmie albo przez AI. Panel wysyła tylko do zgód i klientów, resztę po potwierdzeniu ryzyka ze skrzynki. Wypisani nigdy."]
       ]
     },
     {
@@ -92,7 +94,8 @@
         ["Kalendarz terminów", "terminy", "silnik", "Plik .ics do własnego kalendarza."],
         ["Poranny e-mail z nowymi przetargami", "profil", "silnik", "W jednym przeglądzie z zapytaniami i alertami. Wymaga klucza usługi wysyłkowej."],
         ["Wyniki przetargów: kto wygrywa i za ile", "przetargi", "silnik", "Sprawdzone na 25 prawdziwych ogłoszeniach o wyniku. Alert, gdy zapisany przetarg zostanie rozstrzygnięty."],
-        ["Przetarg jednym kliknięciem w ofertach", "przetargi", "silnik", "Przycisk „Do ofert” zakłada szkic oferty i zapisuje przetarg. Drugi klik nie tworzy duplikatu."]
+        ["Przetarg jednym kliknięciem w ofertach", "przetargi", "silnik", "Przycisk „Do ofert” zakłada szkic oferty i zapisuje przetarg. Drugi klik nie tworzy duplikatu."],
+        ["Plany zamówień z BZP i zapowiedzi z TED dopasowane do profilu", "plany", "silnik", "Plany pobierane codziennie od 1 stycznia. Plan nie ma kodów CPV, więc liczą się słowa kluczowe z prostą odmianą."]
       ]
     },
     {
@@ -1044,5 +1047,20 @@
       }
     ],
     "invites": [["nowa-firma@example.com", "Podstawowy", "08.12.2026"]]
-  }
+  },
+  "plans": [
+    {"id": "pl1", "buyer": "Gmina Przykładowo (przykład)", "region": "mazowieckie", "subject": "Prowadzenie kampanii promocyjnej gminy w mediach społecznościowych (przykład)", "category": "usługi", "value": 120000, "term": "IV kwartał", "quarter": 4, "year": 2026, "position": "1.3.2", "source": "BZP", "sme": true, "mode": "Tryb podstawowy bez negocjacji"},
+    {"id": "pl2", "buyer": "Miejskie Centrum Kultury (przykład)", "region": "łódzkie", "subject": "Wykonanie nowej strony internetowej z systemem do zarządzania treścią (przykład)", "category": "usługi", "value": 85000, "term": "grudzień", "quarter": 4, "year": 2026, "position": "1.3.1", "source": "BZP", "sme": true, "mode": "Tryb podstawowy bez negocjacji"},
+    {"id": "pl3", "buyer": "Powiat Przykładowy (przykład)", "region": "śląskie", "subject": "Kampania informacyjna projektu unijnego: spoty, plakaty i strona internetowa projektu (przykład)", "category": "usługi", "value": 240000, "term": "II kwartał", "quarter": 2, "year": 2026, "position": "1.3.4", "source": "BZP", "sme": true, "mode": "Tryb podstawowy z negocjacjami"},
+    {"id": "pl4", "buyer": "Urząd Marszałkowski (przykład)", "region": "mazowieckie", "subject": "Pozycjonowanie i kampanie Google Ads serwisu turystycznego województwa (przykład)", "category": "usługi", "value": 650000, "term": "ogłoszenie planowane na 15.02.2027", "quarter": 1, "year": 2027, "position": "1", "source": "TED, zapowiedź", "sme": false, "mode": "Wstępne ogłoszenie informacyjne"},
+    {"id": "pl5", "buyer": "Gmina Daleka (przykład)", "region": "podlaskie", "subject": "Strona internetowa szkoły podstawowej (przykład)", "category": "usługi", "value": 30000, "term": "IV kwartał", "quarter": 4, "year": 2026, "position": "1.3.1", "source": "BZP", "sme": true, "mode": "Tryb podstawowy bez negocjacji"},
+    {"id": "pl6", "buyer": "Szpital Wojewódzki (przykład)", "region": "łódzkie", "subject": "Dostawa sprzętu medycznego dla oddziału kardiologii (przykład)", "category": "dostawy", "value": 900000, "term": "IV kwartał", "quarter": 4, "year": 2026, "position": "1.2.3", "source": "BZP", "sme": false, "mode": "Przetarg nieograniczony"}
+  ],
+  "eu_projects": [
+    {"id": "eu1", "beneficiary": "Ogrody Zimowe Verano sp. z o.o. (przykład)", "title": "Wdrożenie sklepu internetowego B2B i automatyzacja sprzedaży", "program": "Fundusze Europejskie dla Mazowsza 2021-2027", "region": "mazowieckie", "value": 1250000, "eu": 875000, "start": "2026-09-01", "end": "2027-12-31", "summary": "Sklep internetowy dla odbiorców hurtowych, integracja z magazynem i automatyczne oferty."},
+    {"id": "eu2", "beneficiary": "Fabryka Okien Panorama S.A. (przykład)", "title": "Cyfryzacja procesów sprzedaży i marketingu", "program": "Fundusze Europejskie dla Nowoczesnej Gospodarki", "region": "łódzkie", "value": 3400000, "eu": 1700000, "start": "2026-06-01", "end": "2028-06-30", "summary": "System CRM, konfigurator okien na stronie internetowej i kampanie dla dystrybutorów."},
+    {"id": "eu3", "beneficiary": "Zielona Energia sp. z o.o. (przykład)", "title": "Instalacja fotowoltaiczna i magazyn energii", "program": "Fundusze Europejskie na Infrastrukturę, Klimat, Środowisko", "region": "śląskie", "value": 6400000, "eu": 3200000, "start": "2026-10-15", "end": "2028-10-31", "summary": "Farma fotowoltaiczna na dachach hal z magazynem energii."},
+    {"id": "eu4", "beneficiary": "Logistyka Polska Spółka Akcyjna (przykład)", "title": "Centrum logistyczne z systemem zarządzania magazynem", "program": "Fundusze Europejskie dla Nowoczesnej Gospodarki", "region": "", "value": 12000000, "eu": 5000000, "start": "2026-03-01", "end": "2027-09-30", "summary": "System WMS, automatyczne sortowanie i portal dla klientów."}
+  ],
+  "campaign": {"name": "Widoczność w odpowiedziach AI (przykład)", "subject": "Jak {firma} wypada w odpowiedziach AI", "body": "{powitanie}\n\n{powod}\n\nSprawdzamy, czy ChatGPT, Gemini i Perplexity polecają Państwa firmę, gdy klient pyta o Wasze usługi. W raporcie pokazujemy, które strony poprawić najpierw.\n\nCzy możemy przesłać krótki raport w przyszłym tygodniu?\n\nZ poważaniem\n{podpis}", "recipients": [1, 2, 3, 4, 5, 6], "pause": 14, "limit": 100}
 }

@@ -219,7 +219,8 @@ function renderSending() {
       <div class="stack" style="gap:28px">
         <div class="sec">${secHead('W toku')}<div class="table-wrap"><table><thead><tr><th>Firma</th><th>Ostatni krok</th><th>Następny</th></tr></thead><tbody>${s.running.map((r) => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('')}</tbody></table></div></div>
         <div class="sec">${secHead('Skąd idzie wysyłka')}<ul class="list" style="padding-top:16px">
-          <li><b>Zawsze z Twojej skrzynki</b>, nigdy z domen platformy.</li>
+          <li><b>Wiadomość do jednej firmy:</b> zawsze z Twojej skrzynki.</li>
+          <li><b>Kampania:</b> panel wysyła sam tylko do firm ze zgodą i do klientów, z nazwą Twojej firmy jako nadawcą. Resztę pobierasz jako .eml.</li>
           <li><b>Dziś:</b> platforma otwiera program pocztowy z gotową wiadomością albo daje plik .eml.</li>
           <li><b>Wypisanie:</b> odbiorca klika adres w stopce oferty, bez logowania.</li>
           <li><b>W planie:</b> połączenie z Gmailem i Microsoft 365, wtedy platforma sama wykryje odpowiedź.</li>
@@ -227,6 +228,101 @@ function renderSending() {
       </div>
     </div>`);
 }
+
+/* ===== Firmy z dotacjami UE ===== */
+state.eu = { q: '', region: '', added: {}, pick: {} };
+const stemQ = (q) => norm(q).split(' ').filter(Boolean).map((w) => (typeof stemPl === 'function' ? stemPl(w)[0] : w));
+function renderEu() {
+  const e = state.eu, terms = stemQ(e.q);
+  const rows = PLAT.eu_projects.filter((p) => (!e.region || p.region === e.region) && terms.every((t) => norm(p.title + ' ' + p.summary + ' ' + p.beneficiary).includes(t)));
+  const regions = [...new Set(PLAT.eu_projects.map((p) => p.region).filter(Boolean))];
+  put('dotacje-ue', stan('silnik', 'Lista projektów z funduszy europejskich 2021-2027 z funduszeeuropejskie.gov.pl, pobierana raz w miesiącu. Firmy w mockupie są zmyślone.') +
+    `<div class="sec">${secHead('Szukaj w projektach firm', 'Spółki w trakcie projektu z dotacją UE mają budżet na zakupy. Większe zakupy ogłaszają zwykle w Bazie Konkurencyjności.')}
+      <form class="form" id="euSearch" style="padding-top:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));display:grid;gap:12px">
+        <label class="field" for="euQ">Czego szukasz w projektach<input id="euQ" type="search" value="${esc(e.q)}" placeholder="np. sklep internetowy, cyfryzacja"></label>
+        <label class="field" for="euR">Województwo<select id="euR"><option value="">Cała Polska</option>${regions.map((r) => `<option${e.region === r ? ' selected' : ''}>${esc(r)}</option>`).join('')}</select></label>
+        <div style="align-self:end"><button class="btn" type="submit">Szukaj</button></div></form></div>
+    <div class="sec">${secHead('Projekty', 'Tylko spółki: bez osób fizycznych i spółek cywilnych. Lista nie podaje NIP-u, więc NIP i stronę dopiszesz na karcie firmy.', rows.length)}` +
+      rows.map((p) => { const on = e.added[p.id]; return `<div class="item" style="--c1:40px">
+        <span>${on ? st('good', 'na liście') : `<label class="sr-only" for="eu-${p.id}">Wybierz ${esc(p.beneficiary)}</label><input type="checkbox" id="eu-${p.id}" data-on="eu-pick" data-id="${p.id}"${e.pick[p.id] ? ' checked' : ''}>`}</span>
+        <div><p><b>${esc(p.beneficiary)}</b></p><p>${esc(p.title)}</p><p class="small muted">${esc(p.program)}${p.region ? ', ' + esc(p.region) : ', cały kraj'} · ${dpl(p.start)} - ${dpl(p.end)}</p>
+          <details class="more"><summary>Opis projektu</summary><p class="small">${esc(p.summary)}</p></details></div>
+        <div class="end"><span class="num">${zl(p.value)}</span><span class="small muted">UE: ${zl(p.eu)}</span></div></div>`; }).join('') +
+      `<div class="acts" style="padding-top:16px"><button class="btn" type="button" data-act="eu-add">Dodaj zaznaczone do potencjalnych klientów</button></div>
+      <p class="small muted" style="padding-top:10px">Panel nie zbiera adresów e-mail z tej listy. Do firmy napiszesz list z kodem strony zgody albo odpowiesz na jej zapytanie ofertowe. W punktach dopasowania projekt w toku daje powód kontaktu.</p></div>`);
+}
+FORMS.euSearch = () => { state.eu.q = document.getElementById('euQ').value.trim().slice(0, 80); state.eu.region = document.getElementById('euR').value; rerender('dotacje-ue'); };
+CHANGES['eu-pick'] = (el) => { if (el.checked) state.eu.pick[el.dataset.id] = true; else delete state.eu.pick[el.dataset.id]; };
+ACTIONS['eu-add'] = () => { for (const id of Object.keys(state.eu.pick)) state.eu.added[id] = true; state.eu.pick = {}; rerender('dotacje-ue'); };
+
+/* ===== Kampanie e-mail ===== */
+state.kc = { ai: false, sent: false, ack: false, ackBox: false, downloaded: false, skip: {} };
+/* Zdanie {powod} z faktów, w tej samej kolejności co w silniku (Campaigns::facts): zapytanie ze strony, odpowiedź klienta,
+   zapytanie ofertowe, tematy ze strony zgody, wygrany przetarg, dotacja UE, audyt strony, współpraca. */
+function campaignFacts(c) {
+  const voice = c.voice || [], list = [], reasons = [];
+  const lead = voice.find((v) => v.source.startsWith('Zapytanie ze strony')), reply = voice.find((v) => v.source.startsWith('Odpowiedź'));
+  if (lead) { const need = (lead.text.match(/Potrzeba: (.+)/) || [])[1] || ''; list.push(['Zapytanie ze strony (' + lead.at + ')', need]); reasons.push('Nawiązujemy do Państwa zapytania z ' + lead.at + (need ? ': ' + need + '.' : '.')); }
+  if (reply) { list.push(['Odpowiedź klienta', 'z ' + reply.at]); reasons.push('Dziękujemy za wiadomość z ' + reply.at + '.'); }
+  if (c.basis === 'rfq' && c.detail && !lead) { list.push(['Zapytanie ofertowe', c.detail]); reasons.push('Nawiązujemy do Państwa zapytania ofertowego: ' + c.detail + '.'); }
+  if (c.basis === 'client') reasons.push('Dziękujemy za dotychczasową współpracę.');
+  return { list, reason: reasons[0] || '' };
+}
+function campaignVersion(c) {
+  const k = PLAT.campaign, f = campaignFacts(c), sig = PLAT.org.user + '\n' + PLAT.org.name + '\n' + PLAT.org.site;
+  let body = k.body;
+  if (!f.reason) body = body.replace(/^\{powod\}\n?/m, '');
+  body = body.replace('{powitanie}', c.person ? 'Dzień dobry, ' + c.person + ',' : 'Dzień dobry,').replace('{powod}', f.reason).replace('{podpis}', sig).replace(/\n{3,}/g, '\n\n');
+  const why = c.basis === 'consent' ? 'Piszemy, bo wyrazili Państwo zgodę na informacje handlowe e-mailem. ' : c.basis === 'client' ? 'Piszemy, bo współpracujemy z Państwa firmą. ' : c.basis === 'rfq' ? 'Piszemy w związku z Państwa zapytaniem ofertowym. ' : '';
+  return { subject: k.subject.replace('{firma}', c.company), body, facts: f, footer: '--\n' + why + 'Jeśli nie chcą Państwo otrzymywać od nas wiadomości, wystarczy otworzyć ten adres: https://panel.perfectdata.pl/wypisz/…\nalbo odpisać „rezygnuję”.' };
+}
+function renderCampaign() {
+  const k = PLAT.campaign, kc = state.kc;
+  const rows = k.recipients.map((id) => { const c = contactOf(id), a = assessMessage('consented', c); return { c, a, route: a.blocked ? 'blocked' : (a.level === 'low' ? 'panel' : 'own'), v: campaignVersion(c) }; });
+  const panel = rows.filter((r) => r.route === 'panel' && !kc.skip[r.c.id]), own = rows.filter((r) => r.route === 'own' && !kc.skip[r.c.id]), blocked = rows.filter((r) => r.route === 'blocked');
+  const status = (r) => kc.skip[r.c.id] ? st('plain', 'pominięta') : r.route === 'blocked' ? st('bad', 'wypisana: nie dostanie') : r.route === 'panel' ? (kc.sent ? st('good', 'wysłana przez panel') : st('plain', 'wyśle panel'))
+    : (kc.downloaded ? st('good', 'pobrana jako .eml') : st('mid', kc.ack ? 'gotowa do pobrania' : 'wyślesz ze skrzynki'));
+  const pke = assessMessage('consented', { basis: 'none' });
+  put('kampanie-email', stan('silnik', 'Kampania z wersją dla każdego odbiorcy, ocena ryzyka, wysyłka partiami i wypisanie jednym kliknięciem. Wersja AI wymaga klucza API.') +
+    `<div class="counts">
+      <div><b>${rows.length}</b><span>odbiorców wybranych</span></div><div><b>${panel.length}</b><span>wyśle panel (zgoda albo klient)</span></div>
+      <div><b>${own.length}</b><span>do wysłania ze skrzynki</span></div><div><b>${blocked.length}</b><span>wypisanych: nie dostaną</span></div></div>
+    <div class="two">
+      <div class="sec">${secHead('1. Treść: ' + esc(k.name), 'Pola w nawiasach panel wypełnia osobno dla każdej firmy. Stopkę ze źródłem adresu i wypisaniem dodaje sam.')}
+        <div class="msg" style="margin-top:16px"><b>${esc(k.subject)}</b>${esc(k.body)}</div>
+        <dl class="kv" style="padding-top:14px;grid-template-columns:110px minmax(0,1fr)"><dt>{powitanie}</dt><dd>„Dzień dobry,” z osobą, jeśli ją znamy</dd><dt>{firma}</dt><dd>nazwa firmy odbiorcy</dd><dt>{powod}</dt><dd>zdanie z faktów: zapytanie, odpowiedź, zapytanie ofertowe, tematy zgody, przetarg, dotacja UE, audyt</dd><dt>{podpis}</dt><dd>Twoje dane z konta</dd></dl></div>
+      <div class="sec">${secHead('Zasady wysyłki')}<ul class="list" style="padding-top:16px">
+        <li><b>Panel wysyła sam tylko do firm ze zgodą albo do klientów.</b> Nadawca to nazwa Twojej firmy, odpowiedzi trafiają na Twoją skrzynkę.</li>
+        <li><b>Pozostałe wiadomości</b> pobierzesz jako pliki .eml i wyślesz ze swojej skrzynki, jeśli potwierdzisz ryzyko.</li>
+        <li><b>Wypisani nie dostają nic.</b> Każda wiadomość ma link do wypisania w stopce i w nagłówku (przycisk „Wypisz” w skrzynce).</li>
+        <li><b>Przerwa ${k.pause} dni</b> między kampaniami do tej samej firmy i dzienny limit z pakietu (${k.limit}).</li>
+        <li><b>Bez pikseli śledzących.</b> Wynik to wysłane, odpowiedzi i wypisania.</li></ul></div>
+    </div>
+    <div class="sec">${secHead('2. Wersje dla odbiorców', kc.ai ? 'Wersje dopasowane przez AI: ta sama oferta, nawiązanie do faktów tej firmy. Każdy odbiorca to jedno użycie AI z pakietu.' : 'Wersje z szablonu i faktów. Każdą możesz poprawić ręcznie albo pominąć firmę.', rows.length)}
+      <div class="acts" style="padding-top:12px">${kc.ai ? st('good', 'dopasowane przez AI') : `<button class="btn ghost" type="button" data-act="kc-ai">Dopasuj przez AI (${panel.length + own.length} użyć)</button>`}</div>` +
+      rows.map((r) => `<details class="more" style="padding:12px 0;border-top:1px solid var(--line)"${r.c.id === 1 ? ' open' : ''}><summary><b>${esc(r.c.company)}</b> ${status(r)}</summary>
+        ${r.v.facts.list.length ? `<p class="small muted" style="padding-top:8px">Fakty, które zna panel: ${r.v.facts.list.map(([l, t]) => esc(l) + ': ' + esc(t)).join('; ')}</p>` : `<p class="small muted" style="padding-top:8px">Panel nie zna o tej firmie faktów poza nazwą, więc zdanie {powod} zostało pominięte.</p>`}
+        ${r.route === 'blocked' ? '' : `<div class="msg" style="margin-top:10px"><b>${esc(r.v.subject)}</b>${esc(r.v.body)}${kc.ai && r.v.facts.reason ? '\n\n(AI przepisało wstęp pod fakty tej firmy, ofertę zostawiło bez zmian)' : ''}<span class="small muted" style="display:block;margin-top:10px;white-space:pre-wrap">${esc(r.v.footer)}</span></div>
+        <div class="acts" style="padding-top:8px"><button class="btn ghost sm" type="button" data-act="kc-skip" data-id="${r.c.id}">${kc.skip[r.c.id] ? 'Przywróć firmę' : 'Pomiń tę firmę'}</button></div>`}</details>`).join('') + `</div>
+    <div class="two">
+      <div class="sec">${secHead('3. Przez panel', 'Firmy ze zgodą albo Twoi klienci.', panel.length)}
+        <p style="padding-top:14px">Nadawca: „${esc(PLAT.org.name)}” z adresu panelu. Odpowiedzi trafią na Twoją skrzynkę.</p>
+        <div class="acts" style="padding-top:12px">${kc.sent ? `<p class="note">Wysłano ${panel.length} wiadomości. W panelu wysyłka idzie partiami po 20 i zatrzymuje się na dziennym limicie.</p>` : `<button class="btn" type="button" data-act="kc-send"${panel.length ? '' : ' disabled'}>Wyślij przez panel (${panel.length})</button>`}</div></div>
+      <div class="sec">${secHead('4. Ze swojej skrzynki', 'Firmy bez zapisanej zgody.', own.length)}
+        ${own.length ? `<p style="padding-top:14px">${st(RISK[pke.level][0], 'ryzyko ' + RISK[pke.level][1])} ${esc(pke.lead)}</p><ul class="list small muted">${pke.law.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>
+        <p class="small">Panel nie wyśle tych wiadomości sam. Bezpieczniej: list z kodem strony zgody.</p>
+        ${kc.downloaded ? `<p class="note">Pobrano ${own.length} pliki .eml. Otwórz każdy w programie pocztowym i kliknij Wyślij. Potwierdzenie ryzyka jest w historii kontaktu.</p>`
+          : kc.ack ? `<div class="acts"><button class="btn" type="button" data-act="kc-dl">Pobierz ${own.length} wiadomości (.eml w ZIP)</button></div>`
+          : `<label class="check" for="kcAck" style="color:var(--text)"><input type="checkbox" id="kcAck" data-on="kc-ackbox"${kc.ackBox ? ' checked' : ''}><span>${esc(PLAT.law.ack)}</span></label><div class="acts"><button class="btn ghost" type="button" id="kcAckBtn" data-act="kc-ack"${kc.ackBox ? '' : ' disabled'}>Potwierdzam dla ${own.length} wiadomości</button></div>`}` : '<p class="muted" style="padding-top:14px">Brak.</p>'}
+        <p class="small muted">To podsumowanie przepisów, nie porada prawna. Decyzja należy do Ciebie.</p></div>
+    </div>`);
+}
+ACTIONS['kc-ai'] = () => { state.kc.ai = true; rerender('kampanie-email'); };
+ACTIONS['kc-send'] = () => { state.kc.sent = true; rerender('kampanie-email'); };
+ACTIONS['kc-skip'] = (b) => { const id = Number(b.dataset.id); if (state.kc.skip[id]) delete state.kc.skip[id]; else state.kc.skip[id] = true; rerender('kampanie-email'); };
+CHANGES['kc-ackbox'] = (el) => { state.kc.ackBox = el.checked; document.getElementById('kcAckBtn').disabled = !el.checked; };
+ACTIONS['kc-ack'] = () => { if (state.kc.ackBox) { state.kc.ack = true; rerender('kampanie-email'); } };
+ACTIONS['kc-dl'] = () => { state.kc.downloaded = true; rerender('kampanie-email'); };
 
 const resetDecision = () => { state.k.ack = false; state.k.saved = false; };
 const refocus = (id) => { const el = document.getElementById(id); if (el) el.focus(); };
@@ -294,7 +390,8 @@ CHANGES['k-kind'] = (el) => { state.k.kind = el.value; resetDecision(); rerender
 CHANGES['k-ack'] = (el) => { state.k.ack = el.checked; rerender('wiadomosc'); refocus('kAck'); };
 CHANGES['k-filter'] = (el) => { state.k.f[el.dataset.key] = el.value; rerender('firmy'); refocus(el.id); };
 
-MODS.push({ id: 'klienci', group: 'sprzedaz', order: 3, label: 'Klienci', about: 'Kontakty z podstawą kontaktu, wiadomości z ekranem ryzyka, zapytania ofertowe firm i lista potencjalnych klientów.',
-  head: (v) => ({ crumbs: 'Klienci i wiadomości', title: { kontakty: 'Kontakty', firmy: 'Potencjalni klienci', rfq: 'Zapytania ofertowe firm', wiadomosc: 'Nowa wiadomość', wysylka: 'Wysyłka i dziennik' }[v.id] }),
+MODS.push({ id: 'klienci', group: 'sprzedaz', order: 3, label: 'Klienci', about: 'Kontakty z podstawą kontaktu, wiadomości z ekranem ryzyka, zapytania ofertowe firm, potencjalni klienci (także firmy z dotacjami UE) i kampanie e-mail z wersją dla każdego odbiorcy.',
+  head: (v) => ({ crumbs: 'Klienci i wiadomości', title: { kontakty: 'Kontakty', firmy: 'Potencjalni klienci', 'dotacje-ue': 'Firmy z dotacjami UE', 'kampanie-email': 'Kampanie e-mail', rfq: 'Zapytania ofertowe firm', wiadomosc: 'Nowa wiadomość', wysylka: 'Wysyłka i dziennik' }[v.id] }),
   views: [{ id: 'kontakty', label: 'Kontakty', render: renderContacts }, { id: 'wiadomosc', label: 'Wiadomość', gap: 28, render: renderMessage }, { id: 'rfq', label: 'Zapytania ofertowe', render: renderRfq },
-    { id: 'firmy', label: 'Potencjalni klienci', render: renderSearch }, { id: 'wysylka', label: 'Wysyłka i dziennik', gap: 40, render: renderSending }] });
+    { id: 'firmy', label: 'Potencjalni klienci', render: renderSearch }, { id: 'dotacje-ue', label: 'Firmy z dotacjami UE', gap: 32, render: renderEu },
+    { id: 'kampanie-email', label: 'Kampanie e-mail', gap: 36, render: renderCampaign }, { id: 'wysylka', label: 'Wysyłka i dziennik', gap: 40, render: renderSending }] });

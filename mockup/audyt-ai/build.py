@@ -70,7 +70,7 @@ steps = [s[1] for s in leads['funnel']]
 if steps != sorted(steps, reverse=True) or steps[0] != leads['ab']['b'][1] or steps[3] != leads['ab']['b'][2]:
     errors.append('Lejek: kroki muszą maleć i zgadzać się z wariantem „Kwalifikator” w teście.')
 # Pozostałe moduły: odwołania między danymi muszą wskazywać istniejące rzeczy.
-view_ids = set(re.findall(r"\{ id: '([a-z]+)', label:", page + views))
+view_ids = set(re.findall(r"\{ id: '([a-z-]+)', label:", page + views))
 for group in plat['functions']:
     for name, view, state, _note in group['items']:
         if view not in view_ids:

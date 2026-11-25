@@ -50,8 +50,8 @@ $org = App\Core\Auth::org() ?? [];
   <form method="post" action="<?= $url ?>" class="stack-sm">
     <?= csrf_field() ?>
     <div class="form-grid two">
-      <div class="field"><label for="c-name">Nazwa kampanii</label><input id="c-name" name="name" maxlength="120" value="<?= e($c['name']) ?>"></div>
-      <div class="field"><label for="c-subject">Temat</label><input id="c-subject" name="subject" maxlength="200" value="<?= e($c['subject']) ?>"></div>
+      <div class="field"><label for="c-name">Nazwa kampanii</label><input id="c-name" type="text" name="name" maxlength="120" value="<?= e($c['name']) ?>"></div>
+      <div class="field"><label for="c-subject">Temat</label><input id="c-subject" type="text" name="subject" maxlength="200" value="<?= e($c['subject']) ?>"></div>
     </div>
     <div class="field"><label for="c-body">Treść z polami</label><textarea id="c-body" name="body" rows="12"><?= e($c['body']) ?></textarea></div>
     <p class="xs muted">Pola: <?php foreach (Campaigns::FIELDS as $field => $desc): ?><code title="<?= e($desc) ?>"><?= e($field) ?></code> <?php endforeach ?>. Stopkę z informacją, skąd masz adres, i linkiem do wypisania panel dodaje sam do każdej wiadomości.</p>
@@ -113,7 +113,7 @@ $org = App\Core\Auth::org() ?? [];
       <?php endif ?>
       <form method="post" action="<?= $url ?>/wersja/<?= (int) $w['id'] ?>" class="stack-sm">
         <?= csrf_field() ?>
-        <div class="field"><label for="s-<?= (int) $w['id'] ?>">Temat</label><input id="s-<?= (int) $w['id'] ?>" name="subject" value="<?= e($w['subject']) ?>"<?= $editable ? '' : ' readonly' ?>></div>
+        <div class="field"><label for="s-<?= (int) $w['id'] ?>">Temat</label><input id="s-<?= (int) $w['id'] ?>" type="text" name="subject" value="<?= e($w['subject']) ?>"<?= $editable ? '' : ' readonly' ?>></div>
         <div class="field"><label for="b-<?= (int) $w['id'] ?>">Treść</label><textarea id="b-<?= (int) $w['id'] ?>" name="body" rows="10"<?= $editable ? '' : ' readonly' ?>><?= e($w['body']) ?></textarea></div>
         <pre class="xs muted" style="white-space:pre-wrap;margin:0"><?= e(ltrim(Campaigns::footer(['id' => (int) $w['contact_id']] + $w, $base), "\n")) ?></pre>
         <?php if ($editable): ?>

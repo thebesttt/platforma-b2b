@@ -354,5 +354,39 @@ function demo_seed(): array
         }
     }
 
+    // Plany zamówień: plan i zapowiedź z zapisanych odpowiedzi BZP i TED oraz przykładowy plan powiatu z Mazowsza.
+    \App\Modules\Tenders\BzpClient::$pauseUs = 0;
+    \App\Modules\Tenders\PlanImporter::run(gmdate('Y') . '-01-01 00:00:00');
+    \App\Modules\Tenders\BzpClient::$pauseUs = 150000;
+    $y = (int) gmdate('Y');
+    $q = intdiv((int) gmdate('n') - 1, 3) + 1;
+    $planItems = [
+        ['1.1.1', 'Przebudowa drogi powiatowej nr 2201W wraz z budową chodnika (przykład)', 2400000, max(1, $q - 1)],
+        ['1.1.2', 'Remont nawierzchni dróg powiatowych po zimie (przykład)', 1100000, $q],
+        ['1.1.3', 'Budowa parkingu przy szpitalu powiatowym (przykład)', 780000, min(4, $q + 1)],
+        ['1.2.1', 'Dostawa soli drogowej do zimowego utrzymania dróg (przykład)', 300000, $q],
+    ];
+    \App\Modules\Tenders\Plans::save([
+        'source' => 'bzp', 'plan_key' => $y . '/BZP 00000001 (przykład)', 'notice_number' => $y . '/BZP 00000001/02/P (przykład)', 'version' => 2, 'year' => $y,
+        'buyer_name' => 'Powiat Przykładowy', 'buyer_nip' => '9999999999', 'buyer_city' => 'Przykładowo', 'voivodeship' => 'mazowieckie', 'url' => null,
+        'published_at' => $y . '-01-28 09:00:00',
+    ], array_map(static fn (array $i): array => [
+        'position' => $i[0], 'section' => 'below', 'category' => str_starts_with($i[0], '1.2') ? 'supplies' : 'works', 'subject' => $i[1],
+        'mode' => 'Tryb podstawowy na podstawie: art. 275 pkt 1 ustawy', 'value_estimated' => $i[2], 'currency' => 'PLN', 'term' => ['', 'I', 'II', 'III', 'IV'][$i[3]] . ' kwartał',
+        'quarter' => $i[3], 'month' => null, 'info' => "Zamówienie jest odpowiednie dla MŚP: TAK", 'sme' => 1, 'update_note' => '', 'status' => 'active',
+    ], $planItems));
+    \App\Modules\Tenders\PlanMatcher::run($org);
+
+    // Firmy z dotacjami UE z zapisanego pliku listy projektów.
+    \App\Modules\Outreach\EuProjects::sync(true);
+
+    // Kampania e-mail w przygotowaniu: odbiorcy z kontaktów, wersje z faktów.
+    $orgRow = $db->one('SELECT * FROM organizations WHERE id = ?', [$org]);
+    $userRow = $db->one('SELECT * FROM users WHERE id = ?', [$uid]);
+    $campaignId = \App\Modules\Outreach\Campaigns::create($org, $uid, 'Przegląd nawierzchni przed zimą (przykład)', 'Przegląd nawierzchni dla {firma}',
+        "{powitanie}\n\n{powod}\n\nPrzed zimą robimy bezpłatny przegląd parkingów i dróg dojazdowych: w godzinę oceniamy ubytki i spękania, a w raporcie podajemy koszt naprawy.\n\nCzy pasuje Państwu termin w przyszłym tygodniu?\n\nZ poważaniem\n{podpis}");
+    $contactIds = array_map('intval', array_column($db->all('SELECT id FROM contacts WHERE org_id = ?', [$org]), 'id'));
+    \App\Modules\Outreach\Campaigns::setRecipients($org, \App\Modules\Outreach\Campaigns::find($org, $campaignId), $contactIds, $orgRow, $userRow);
+
     return ['ok' => true, 'org_id' => $org, 'login' => 'demo@example.com / demo-haslo-123'];
 }

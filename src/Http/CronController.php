@@ -96,7 +96,7 @@ final class CronController
         }
         // Plany zamówień z BZP i zapowiedzi z TED. Pierwsze uruchomienie dociąga plany od początku roku w kilku porcjach.
         try {
-            $out['plans'] = \App\Modules\Tenders\PlanImporter::run(null, PHP_SAPI === 'cli' ? 1500 : 300, PHP_SAPI === 'cli' ? 200 : 40);
+            $out['plans'] = \App\Modules\Tenders\PlanImporter::run(null, PHP_SAPI === 'cli' ? 800 : 300, PHP_SAPI === 'cli' ? 120 : 40);
         } catch (\Throwable $e) {
             $out['plans'] = ['error' => $e->getMessage()];
         }

@@ -103,15 +103,82 @@ function renderTerms() {
       PLAT.terms.map(([at, what, id]) => { const d = daysTo(at); return `<div class="item" style="--c1:150px"><span class="num"><b>${dpl(at)}</b></span><div><p><b>${esc(what)}</b></p><p>${esc(tenderOf(id).title)}</p></div><div class="end">${leftState(d, 'za ' + dni(d))}</div></div>`; }).join('') + `</div>`);
 }
 
+/* ===== Plany zamówień ===== */
+state.pl = { saved: {}, hidden: {} };
+/* Prosty rdzeń polskiego słowa, jak w silniku (Plans::stem): „fotowoltaika” znajdzie „fotowoltaiczna”, „hala” znajdzie „hali”. */
+function stemPl(w) {
+  if (w.length <= 3) return [w, false];
+  if (w.length === 4) return /[aeiouy]$/.test(w) ? [w.slice(0, 3), true] : [w, false];
+  let s = w.replace(/[aeiouy]{1,2}$/, '');
+  if (s.length > 6) s = s.slice(0, Math.max(6, s.length - 2));
+  return [s.length >= 4 ? s : w.slice(0, 4), false];
+}
+const kwPattern = (kw) => new RegExp(' ' + norm(kw).split(' ').map((w) => { const [s, short] = stemPl(w); return s + (short ? '[a-z]{0,3}\\b' : '[a-z0-9]*'); }).join(' '));
+
+/* Dopasowanie pozycji planu do profilu. Te same reguły co w silniku (PlanMatcher): województwo 10, słowa 30 i po 10 za kolejne
+   (do 50), wartość +10 albo -25, wszczęcie w tym kwartale +10, później +15. Minięty termin tylko ostrzega. Próg: 30 punktów. */
+function matchPlan(it, p) {
+  const text = ' ' + norm(it.subject) + ' ', reasons = [], nowQ = Math.floor(TODAY.getMonth() / 3) + 1, year = TODAY.getFullYear();
+  let score = 0;
+  if (p.regions.length) {
+    if (!p.regions.includes(it.region)) return { out: 'województwo spoza profilu: ' + (it.region || 'brak') };
+    score += 10; reasons.push('Województwo: ' + it.region);
+  }
+  for (const kw of p.exclude) if (kwPattern(kw).test(text)) return { out: 'słowo wykluczające: ' + kw };
+  const hits = p.keywords.filter((kw) => kwPattern(kw).test(text));
+  if (!hits.length) return { out: 'żadne słowo kluczowe z profilu (plan nie ma kodów CPV)' };
+  score += Math.min(50, 30 + 10 * (hits.length - 1)); reasons.push('Słowa kluczowe: ' + hits.slice(0, 4).join(', '));
+  if (it.value !== null) {
+    if (it.value < p.min || it.value > p.max) { score -= 25; reasons.push('Wartość poza Twoim zakresem'); } else { score += 10; reasons.push('Wartość w Twoim zakresie'); }
+  }
+  if (it.year > year) { score += 15; reasons.push('Plan na ' + it.year + ' rok: dużo czasu na przygotowanie'); }
+  else if (it.quarter < nowQ) reasons.push('Termin z planu minął: sprawdź, czy przetarg nie jest już ogłoszony');
+  else if (it.quarter === nowQ) { score += 10; reasons.push('Wszczęcie planowane w tym kwartale'); }
+  else { score += 15; reasons.push('Jest czas na przygotowanie'); }
+  score = Math.max(0, Math.min(100, score));
+  return score >= 30 ? { score, reasons } : { out: 'ocena ' + score + ' poniżej progu 30 pkt' };
+}
+
+function renderPlans() {
+  const all = PLAT.plans.map((it) => ({ it, m: matchPlan(it, PLAT.profile) })), nowQ = Math.floor(TODAY.getMonth() / 3) + 1;
+  const ok = all.filter((x) => !x.m.out && !state.pl.hidden[x.it.id]).sort((a, b) => b.m.score - a.m.score), out = all.filter((x) => x.m.out);
+  const hidden = all.filter((x) => !x.m.out && state.pl.hidden[x.it.id]);
+  const row = ({ it, m }) => { const past = it.year === TODAY.getFullYear() && it.quarter < nowQ, saved = state.pl.saved[it.id]; return `<div class="item" style="--c1:58px">
+      <span class="big">${m.score}</span>
+      <div><p><b>${esc(it.subject)}</b>${saved ? ' ' + st('good', 'zapisana') : ''}${it.sme ? ' <span class="small muted">dla MŚP</span>' : ''}</p>
+        <p>${esc(it.buyer)}, ${esc(it.region)} · ${it.source === 'BZP' ? 'plan w BZP, poz. ' + esc(it.position) : esc(it.source)} · ${esc(it.category)}${it.value === null ? '' : ', ' + zl(it.value)}</p>
+        <p class="small muted">${esc(it.mode)}. Dlaczego: ${esc(m.reasons.join('. '))}.</p></div>
+      <div class="end">${past ? st('mid', 'termin minął: ' + it.term) : st('plain', it.term)}
+        <span class="acts" style="margin-top:6px">${saved ? '' : `<button class="btn sm" type="button" data-act="pl-save" data-id="${it.id}">Zapisz</button>`}<button class="btn ghost sm" type="button" data-act="pl-hide" data-id="${it.id}">Ukryj</button></span></div></div>`; };
+  put('plany', stan('silnik', 'Codzienny import planów postępowań z BZP i wstępnych ogłoszeń informacyjnych z TED. Pozycje w mockupie są zmyślone.') +
+    `<div class="counts">
+      <div><b>${ok.length}</b><span>pozycji pasuje do profilu</span></div><div><b>${ok.filter((x) => x.it.quarter >= nowQ || x.it.year > TODAY.getFullYear()).length}</b><span>z wszczęciem od tego kwartału</span></div>
+      <div><b>${Object.keys(state.pl.saved).length}</b><span>zapisanych</span></div><div><b>${out.length}</b><span>odrzuconych przez profil</span></div></div>
+    <div class="sec">${secHead('Zamówienia zapowiedziane, jeszcze nieogłoszone', 'Urzędy publikują plany na cały rok w styczniu i lutym. Przetargu jeszcze nie ma, więc jest czas na referencje i rozmowę z zamawiającym.', ok.length)}` +
+      (ok.length ? ok.map(row).join('') : '<p class="muted" style="padding-top:14px">Brak pozycji. Dodaj do profilu słowa, którymi urzędy opisują Twoje usługi.</p>') + `</div>
+    <div class="two">
+      <div class="sec">${secHead('Odrzucone przez profil')}` + out.map(({ it, m }) => `<div class="item" style="--c1:0px"><span></span><div><p>${esc(it.subject)}</p><p class="small muted">${esc(it.buyer)}: ${esc(m.out)}</p></div><span></span></div>`).join('') +
+        hidden.map(({ it }) => `<div class="item" style="--c1:0px"><span></span><div><p>${esc(it.subject)}</p><p class="small muted">ukryta przez Ciebie</p></div><div class="end"><button class="btn ghost sm" type="button" data-act="pl-show" data-id="${it.id}">Przywróć</button></div></div>`).join('') + `</div>
+      <div class="sec">${secHead('Co zrobić z pozycją z planu')}<ul class="list" style="padding-top:16px">
+        <li>Zapisz ją i wróć przed terminem wszczęcia.</li>
+        <li>Sprawdź zamawiającego i jego wcześniejsze przetargi w wynikach.</li>
+        <li>Zamawiający często robi rozeznanie rynku i prosi o wycenę orientacyjną: przygotuj referencje zawczasu.</li>
+        <li>Plan nie zobowiązuje urzędu do ogłoszenia przetargu.</li></ul></div>
+    </div>`);
+}
+ACTIONS['pl-save'] = (b) => { state.pl.saved[b.dataset.id] = true; rerender('plany'); };
+ACTIONS['pl-hide'] = (b) => { state.pl.hidden[b.dataset.id] = true; delete state.pl.saved[b.dataset.id]; rerender('plany'); };
+ACTIONS['pl-show'] = (b) => { delete state.pl.hidden[b.dataset.id]; rerender('plany'); };
+
 FORMS.tenderAsk = () => { document.getElementById('tqNote').hidden = false; };
 
 /* Jeden klik zakłada szkic oferty i zapisuje przetarg. Drugi nie tworzy duplikatu: zamiast przycisku jest link do szkicu. */
 ACTIONS['p-offer'] = (btn) => { PLAT.tenders.find((t) => t.id === btn.dataset.id).inOffers = true; rerender('przetargi'); };
 
-MODS.push({ id: 'przetargi', group: 'zamowienia', order: 7, label: 'Przetargi', about: 'Codzienny import ogłoszeń z BZP i TED, dopasowanie do profilu, karta przetargu z analizą SWZ i kalendarz terminów.',
+MODS.push({ id: 'przetargi', group: 'zamowienia', order: 7, label: 'Przetargi', about: 'Codzienny import ogłoszeń z BZP i TED, dopasowanie do profilu, karta przetargu z analizą SWZ, plany zamówień urzędów i kalendarz terminów.',
   head: (v) => {
-    if (v.id !== 'przetarg') return { crumbs: 'Przetargi', title: { przetargi: 'Dopasowane przetargi', profil: 'Profil przetargowy', terminy: 'Kalendarz terminów' }[v.id] };
+    if (v.id !== 'przetarg') return { crumbs: 'Przetargi', title: { przetargi: 'Dopasowane przetargi', plany: 'Plany zamówień', profil: 'Profil przetargowy', terminy: 'Kalendarz terminów' }[v.id] };
     const t = tenderOf(PLAT.tender_card.id);
     return { crumbs: 'Przetargi, karta ogłoszenia', title: t.title, facts: [['Zamawiający', t.buyer], ['Źródło', t.source], ['Wartość', zl(t.value)], ['Składanie ofert', dpl(t.deadline)], ['Dopasowanie', matchTender(t, PLAT.profile).score + ' / 100']] };
   },
-  views: [{ id: 'przetargi', label: 'Dopasowane', gap: 32, render: renderTenders }, { id: 'przetarg', label: 'Karta przetargu', gap: 40, render: renderTender }, { id: 'profil', label: 'Profil', render: renderProfile }, { id: 'terminy', label: 'Terminy', render: renderTerms }] });
+  views: [{ id: 'przetargi', label: 'Dopasowane', gap: 32, render: renderTenders }, { id: 'przetarg', label: 'Karta przetargu', gap: 40, render: renderTender }, { id: 'plany', label: 'Plany zamówień', gap: 32, render: renderPlans }, { id: 'profil', label: 'Profil', render: renderProfile }, { id: 'terminy', label: 'Terminy', render: renderTerms }] });

@@ -16,8 +16,8 @@ $statusLabel = ['draft' => ['szkic', 'neutral'], 'sending' => ['w trakcie wysył
     <h2>Nowa kampania</h2>
     <form method="post" action="/klienci/kampanie" class="stack-sm">
       <?= csrf_field() ?>
-      <div class="field"><label for="k-name">Nazwa (widzisz ją tylko Ty)</label><input id="k-name" name="name" maxlength="120" placeholder="np. Przegląd stron, listopad"></div>
-      <div class="field"><label for="k-subject">Temat wiadomości</label><input id="k-subject" name="subject" maxlength="200" value="Propozycja dla {firma}"></div>
+      <div class="field"><label for="k-name">Nazwa (widzisz ją tylko Ty)</label><input id="k-name" type="text" name="name" maxlength="120" placeholder="np. Przegląd stron, listopad"></div>
+      <div class="field"><label for="k-subject">Temat wiadomości</label><input id="k-subject" type="text" name="subject" maxlength="200" value="Propozycja dla {firma}"></div>
       <div class="field"><label for="k-body">Treść</label><textarea id="k-body" name="body" rows="12"><?= e(Campaigns::defaultBody()) ?></textarea></div>
       <p class="xs muted">Pola w nawiasach klamrowych panel wypełni osobno dla każdej firmy. Stopkę z informacją, skąd masz adres, i linkiem do wypisania panel doda sam.</p>
       <button class="btn" type="submit">Zapisz i wybierz odbiorców</button>
