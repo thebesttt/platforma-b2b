@@ -16,6 +16,7 @@ final class BzpClient
     public const BASE = 'https://ezamowienia.gov.pl/mo-board/api/v1/Board';
     public const NOTICE_TYPES = ['ContractNotice', 'SmallContractNotice'];
     public const RESULT_TYPE = 'TenderResultNotice';
+    public const PLAN_TYPE = 'TenderPlanNotice';
 
     /** Gdy pobieranie przerwał limit stron: chwila publikacji (UTC), od której trzeba kontynuować. Null = pobrano wszystko. */
     public ?string $continueFrom = null;
@@ -49,6 +50,60 @@ final class BzpClient
             }
         }
         return $out;
+    }
+
+    /**
+     * Plany postępowań (art. 23 Pzp) opublikowane od podanej chwili (UTC). Każda aktualizacja planu to osobne ogłoszenie
+     * z kolejnym numerem wersji („2026/BZP 00037981/02/P”), więc z jednego okresu zostawiamy najnowszą wersję każdego planu.
+     * Pozycje planu są tylko w treści ogłoszenia (planHtml i PlanParser).
+     * @return array<int, array>
+     */
+    public function plansSince(string $fromUtc, int $maxPages = 120, ?callable $sleep = null): array
+    {
+        $plans = [];
+        foreach ($this->fetch([self::PLAN_TYPE], $fromUtc, $maxPages, $sleep) as $row) {
+            $p = self::normalizePlan($row);
+            if ($p !== null && (!isset($plans[$p['plan_key']]) || $p['version'] > $plans[$p['plan_key']]['version'])) {
+                $plans[$p['plan_key']] = $p;
+            }
+        }
+        return array_values($plans);
+    }
+
+    public static function normalizePlan(array $row): ?array
+    {
+        $number = trim((string) ($row['noticeNumber'] ?? ''));
+        $key = trim((string) ($row['bzpNumber'] ?? ''));
+        $version = 1;
+        if (preg_match('#^(\d{4}/BZP \d+)/(\d+)/P$#', $number, $m)) {
+            $key = $key !== '' ? $key : $m[1];
+            $version = (int) $m[2];
+        }
+        if ($key === '' || $number === '') {
+            return null;
+        }
+        $nip = Nip::clean((string) ($row['organizationNationalId'] ?? ''));
+        return [
+            'source' => 'bzp',
+            'plan_key' => mb_substr($key, 0, 80),
+            'notice_number' => mb_substr($number, 0, 80),
+            'version' => $version,
+            'year' => preg_match('/^(\d{4})\//', $key, $y) ? (int) $y[1] : null,
+            'buyer_name' => utrim((string) ($row['organizationName'] ?? '')) ?: null,
+            'buyer_nip' => Nip::valid($nip) ? $nip : null,
+            'buyer_city' => utrim((string) ($row['organizationCity'] ?? '')) ?: null,
+            'voivodeship' => Regions::fromBzp($row['organizationProvince'] ?? null),
+            'published_at' => self::utc($row['publicationDate'] ?? null),
+            'url' => 'https://ezamowienia.gov.pl/mo-client-board/bzp/tender-details/' . rawurlencode($number),
+        ];
+    }
+
+    /** Treść planu w HTML. Dla planów działa zapytanie po numerze ogłoszenia (GetNoticeHtmlBodyById zwraca pustą treść). */
+    public function planHtml(string $noticeNumber): ?string
+    {
+        $j = Http::getJson(self::BASE . '/GetNoticeQuery?noticeNumber=' . rawurlencode($noticeNumber));
+        $html = is_array($j) ? (string) ($j['html'] ?? '') : '';
+        return $html !== '' ? $html : null;
     }
 
     /** @return array<string, array> surowe wiersze wyszukiwarki, klucz to identyfikator ogłoszenia */

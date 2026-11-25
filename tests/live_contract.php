@@ -19,6 +19,7 @@ use App\Modules\Companies\Registries;
 use App\Modules\Companies\Uokik;
 use App\Modules\Tenders\BzpClient;
 use App\Modules\Tenders\BzpNoticeParser;
+use App\Modules\Tenders\PlanParser;
 use App\Modules\Tenders\TedClient;
 
 (new Migrator(Db::get()))->migrate();
@@ -110,6 +111,52 @@ $check('TED: wyszukiwarka API v3', function () use ($need) {
     $need(count($rows) > 0, 'brak ogłoszeń z Polski');
     $need($rows[0]['title'] !== '(bez tytułu)', 'brak tytułu');
     return count($rows) . ' ogłoszeń';
+});
+$check('BZP: plany postępowań (lista, treść i parser)', function () use ($need) {
+    $bzp = new BzpClient();
+    BzpClient::$pauseUs = 100000;
+    // Styczeń ma najwięcej planów, więc sprawdzamy początek roku: najpierw bieżącego, potem poprzedniego.
+    $plans = $bzp->plansSince(gmdate('Y') . '-01-15 00:00:00', 2) ?: $bzp->plansSince(((int) gmdate('Y') - 1) . '-01-15 00:00:00', 2);
+    $need(count($plans) > 0, 'brak planów w wyszukiwarce (NoticeType=TenderPlanNotice)');
+    $need((bool) preg_match('#^\d{4}/BZP \d+$#', $plans[0]['plan_key']), 'nieoczekiwany numer planu: ' . $plans[0]['plan_key']);
+    $stats = ['planów' => 0, 'z_rokiem' => 0, 'z_pozycjami' => 0, 'pozycji' => 0, 'z_kwartałem' => 0, 'z_wartością' => 0, 'z_kategorią' => 0];
+    foreach (array_slice($plans, 0, 6) as $p) {
+        $html = $bzp->planHtml($p['notice_number']);
+        $need($html !== null, 'brak treści planu ' . $p['notice_number'] . ' (GetNoticeQuery)');
+        $parsed = PlanParser::parse($html);
+        $stats['planów']++;
+        $stats['z_rokiem'] += $parsed['year'] ? 1 : 0;
+        $stats['z_pozycjami'] += $parsed['items'] ? 1 : 0;
+        foreach ($parsed['items'] as $it) {
+            $stats['pozycji']++;
+            $stats['z_kwartałem'] += $it['quarter'] ? 1 : 0;
+            $stats['z_wartością'] += $it['value_estimated'] !== null ? 1 : 0;
+            $stats['z_kategorią'] += $it['category'] ? 1 : 0;
+        }
+        usleep(150000);
+    }
+    $need($stats['z_rokiem'] === $stats['planów'], 'rok planu odczytany w ' . $stats['z_rokiem'] . ' z ' . $stats['planów']);
+    $need($stats['z_pozycjami'] >= $stats['planów'] - 1, 'pozycje odczytane w ' . $stats['z_pozycjami'] . ' z ' . $stats['planów'] . ' planów');
+    $need($stats['z_wartością'] >= 0.9 * $stats['pozycji'], 'wartość odczytana w ' . $stats['z_wartością'] . ' z ' . $stats['pozycji'] . ' pozycji');
+    $need($stats['z_kategorią'] >= 0.9 * $stats['pozycji'], 'kategoria odczytana w ' . $stats['z_kategorią'] . ' z ' . $stats['pozycji'] . ' pozycji');
+    $need($stats['z_kwartałem'] >= 0.8 * $stats['pozycji'], 'termin odczytany w ' . $stats['z_kwartałem'] . ' z ' . $stats['pozycji'] . ' pozycji');
+    return json_encode($stats, JSON_UNESCAPED_UNICODE);
+});
+$check('TED: wstępne ogłoszenia informacyjne (zapowiedzi)', function () use ($need) {
+    $r = Http::postJson(TedClient::URL, [
+        'query' => 'buyer-country=POL AND notice-type IN (' . TedClient::PLAN_TYPES . ') AND publication-date>=' . gmdate('Ymd', time() - 120 * 86400),
+        'fields' => TedClient::PLAN_FIELDS, 'page' => 1, 'limit' => 20, 'scope' => 'ALL', 'paginationMode' => 'PAGE_NUMBER',
+    ]);
+    $need($r['status'] === 200, 'kod ' . $r['status'] . ': ' . substr((string) $r['body'], 0, 300));
+    $j = json_decode((string) $r['body'], true);
+    $notices = $j['notices'] ?? [];
+    $need(count($notices) > 0, 'brak zapowiedzi z Polski z ostatnich 120 dni');
+    $types = array_count_values(array_map(static fn ($n) => (string) ($n['notice-type'] ?? '?'), $notices));
+    $p = TedClient::normalizePlan($notices[0]);
+    $need($p['plan']['buyer_name'] !== null && $p['items'][0]['subject'] !== '(bez tytułu)', 'brak zamawiającego albo tytułu');
+    $withDate = count(array_filter($notices, static fn ($n) => !empty($n['future-notice'])));
+    $withRegion = count(array_filter(array_map(static fn ($n) => TedClient::normalizePlan($n)['plan']['voivodeship'], $notices)));
+    return count($notices) . ' zapowiedzi, typy: ' . json_encode($types) . ", z datą ogłoszenia: $withDate, z województwem: $withRegion";
 });
 $krsNo = null;
 $check('Biała lista VAT', function () use (&$bzpRows, &$krsNo, $need) {

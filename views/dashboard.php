@@ -103,6 +103,9 @@ $lead = $leads[0] ?? null;
       <h2 id="t-match">Dopasowane przetargi</h2>
       <a class="small" href="/przetargi">Wszystkie dopasowania</a>
     </div>
+    <?php $planNew = App\Modules\Tenders\Plans::newCount(App\Core\Auth::orgId()); if ($planNew): ?>
+      <p class="small" style="padding:0 20px"><a href="/przetargi/plany"><?= $planNew ?> <?= plural($planNew, 'nowa pozycja', 'nowe pozycje', 'nowych pozycji') ?> w planach zamówień</a>: zamówienia zapowiedziane, ale jeszcze nieogłoszone.</p>
+    <?php endif ?>
     <?php if ($matches): ?>
     <div class="table-wrap">
       <table>

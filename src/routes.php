@@ -17,6 +17,7 @@ use App\Http\InboundController;
 use App\Http\LibraryController;
 use App\Http\OfferController;
 use App\Http\OutreachController;
+use App\Http\PlanController;
 use App\Http\ProspectController;
 use App\Http\RfqController;
 use App\Http\SeoController;
@@ -83,6 +84,8 @@ return static function (Router $r): void {
     $r->get('/przetargi', [TenderController::class, 'index'], $a);
     $r->get('/przetargi/szukaj', [TenderController::class, 'search'], $a);
     $r->get('/przetargi/wyniki', [TenderController::class, 'results'], $a);
+    $r->get('/przetargi/plany', [PlanController::class, 'index'], $a);
+    $r->post('/przetargi/plany/{id}/status', [PlanController::class, 'status'], $a);
     $r->get('/przetargi/{id}', [TenderController::class, 'show'], $a);
     $r->post('/przetargi/{id}/status', [TenderController::class, 'status'], $a);
     $r->post('/przetargi/{id}/do-ofert', [TenderController::class, 'toOffers'], $a);

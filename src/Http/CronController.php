@@ -35,12 +35,13 @@ final class CronController
         $task = $r->str('task', 'daily');
         $result = match ($task) {
             'import' => Importer::run(),
+            'plans' => \App\Modules\Tenders\PlanImporter::run(),
             'uokik' => Uokik::sync(),
             'watchlist' => Companies::refreshWatched(),
             default => self::daily(),
         };
         // Błędy importu zwracamy kodem 500, żeby zadanie w GitHub Actions było widoczne jako nieudane.
-        $errors = $task === 'import' ? ($result['errors'] ?? []) : ($result['import']['errors'] ?? []);
+        $errors = in_array($task, ['import', 'plans'], true) ? ($result['errors'] ?? []) : ($result['import']['errors'] ?? []);
         return Response::json(['ok' => !$errors, 'task' => $task, 'result' => $result], $errors ? 500 : 200);
     }
 
@@ -92,6 +93,12 @@ final class CronController
             $out['results'] = Results::import(null, $cli ? 1500 : 400, $cli ? 900 : 240);
         } catch (\Throwable $e) {
             $out['results'] = ['error' => $e->getMessage()];
+        }
+        // Plany zamówień z BZP i zapowiedzi z TED. Pierwsze uruchomienie dociąga plany od początku roku w kilku porcjach.
+        try {
+            $out['plans'] = \App\Modules\Tenders\PlanImporter::run(null, PHP_SAPI === 'cli' ? 1500 : 300, PHP_SAPI === 'cli' ? 200 : 40);
+        } catch (\Throwable $e) {
+            $out['plans'] = ['error' => $e->getMessage()];
         }
         try {
             $out['watchlist'] = Companies::refreshWatched();

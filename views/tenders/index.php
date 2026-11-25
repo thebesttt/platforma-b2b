@@ -9,6 +9,7 @@ $base = array_filter(['profil' => $profileId ?: null, 'q' => $q ?: null]);
     <p class="muted small"><?= $total ?> <?= plural($total, 'ogłoszenie', 'ogłoszenia', 'ogłoszeń') ?> z otwartym terminem składania ofert</p>
   </div>
   <div class="row-flex">
+    <a class="btn ghost" href="/przetargi/plany">Plany zamówień<?php $pn = App\Modules\Tenders\Plans::newCount(App\Core\Auth::orgId()); if ($pn): ?> <span class="chip info"><?= $pn ?></span><?php endif ?></a>
     <a class="btn ghost" href="/przetargi/szukaj">Przeszukaj wszystkie ogłoszenia</a>
     <a class="btn ghost" href="/przetargi/wyniki">Wyniki przetargów</a>
     <a class="btn ghost" href="/profile">Profile (<?= count($profiles) ?>)</a>

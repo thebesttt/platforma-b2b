@@ -5,6 +5,7 @@
  *   php bin/console migrate            - utworzenie/aktualizacja tabel
  *   php bin/console import [od]        - import ogłoszeń BZP i TED (od: 'Y-m-d H:i:s' UTC) i dopasowanie do profili
  *   php bin/console results [dni] [ile] - wyniki przetargów z BZP (dni wstecz, ile ogłoszeń doczytać z cenami)
+ *   php bin/console plans [od] [ile]   - plany zamówień z BZP i zapowiedzi z TED (od: 'Y-m-d H:i:s' UTC, ile treści planów pobrać)
  *   php bin/console uokik:sync [lata]  - pobranie decyzji UOKiK o zatorach płatniczych
  *   php bin/console uokik:import pliki.html… - wgranie zapisanych stron listy decyzji (gdy rejestr blokuje serwer)
  *   php bin/console watchlist          - odświeżenie obserwowanych kontrahentów (alerty o zmianach)
@@ -46,6 +47,11 @@ try {
             $days = (int) ($argv[2] ?? 0);
             $out(App\Modules\Tenders\Results::import($days > 0 ? gmdate('Y-m-d H:i:s', time() - $days * 86400) : null, (int) ($argv[3] ?? 400), 900));
             break;
+        case 'plans':
+            // Plany zamówień. Bez daty: od miejsca, w którym skończył ostatni import (pierwszy import: od 1 stycznia).
+            $res = App\Modules\Tenders\PlanImporter::run(($argv[2] ?? '') !== '' ? $argv[2] : null, (int) ($argv[3] ?? 3000), 400);
+            $out($res);
+            exit(empty($res['errors']) ? 0 : 2);
         case 'uokik:sync':
             $out(Uokik::sync((int) ($argv[2] ?? 6)));
             break;

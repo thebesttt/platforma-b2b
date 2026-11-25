@@ -59,6 +59,9 @@ return [
     '#^POST https://api\.anthropic\.com/v1/messages\n.*Sprawdzasz, na które pytania odpowiada treść strony#s' => $claude(site_d2($site)),
     '#^POST https://api\.anthropic\.com/v1/messages\n.*Układasz pytania poboczne#s' => $claude(['questions' => site_questions()]),
 
+    // Plany zamówień z BZP i zapowiedzi z TED (przed ogólnymi odpowiedziami BZP i TED niżej).
+    ...require __DIR__ . '/plans.php',
+
     // BZP - pierwsza strona ogłoszeń o zamówieniu; reszta pusta.
     '#^GET https://ezamowienia\.gov\.pl/mo-board/api/v1/Board/Search\?NoticeType=ContractNotice&.*&PageNumber=1&#' => 'bzp_search_p1.json',
     // Ogłoszenia o wyniku: prawdziwe ogłoszenia z 16.11.2026 (jedna część, dwie części, konsorcjum, część nierozstrzygnięta,

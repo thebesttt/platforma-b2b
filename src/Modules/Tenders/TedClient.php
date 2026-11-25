@@ -55,6 +55,122 @@ final class TedClient
         return array_values($out);
     }
 
+    /** Pola wstępnych ogłoszeń informacyjnych (PIN): zapowiedź jest opisana w częściach („part”), a nie w zadaniach („lot”). */
+    public const PLAN_FIELDS = [
+        'publication-number', 'notice-title', 'notice-type', 'publication-date',
+        'buyer-name', 'organisation-identifier-buyer', 'organisation-city-buyer',
+        'classification-cpv', 'contract-nature-main-proc', 'title-part', 'description-part',
+        'place-of-performance-subdiv-part', 'place-of-performance-subdiv-proc',
+        'estimated-value-part', 'estimated-value-proc', 'estimated-value-cur-proc', 'future-notice',
+    ];
+
+    /** Typy zapowiedzi: wstępne ogłoszenie informacyjne, także na profilu nabywcy i skracające terminy. */
+    public const PLAN_TYPES = 'pin-only pin-buyer pin-rtl';
+
+    /**
+     * Wstępne ogłoszenia informacyjne z Polski od podanego dnia (Y-m-d): zamawiający zapowiada zamówienie, zanim je ogłosi.
+     * Każde ogłoszenie to jeden plan z jedną pozycją, bo części PIN rzadko mają osobne wartości i terminy.
+     * @return array<int, array{plan: array, items: array<int, array>}>
+     */
+    public function plansSince(string $fromDate, int $maxPages = 10, ?callable $sleep = null): array
+    {
+        $out = [];
+        $query = sprintf('buyer-country=POL AND notice-type IN (%s) AND publication-date>=%s', self::PLAN_TYPES, date('Ymd', strtotime($fromDate)));
+        for ($page = 1; $page <= $maxPages; $page++) {
+            $r = Http::postJson(self::URL, [
+                'query' => $query, 'fields' => self::PLAN_FIELDS, 'page' => $page, 'limit' => 100,
+                'scope' => 'ALL', 'paginationMode' => 'PAGE_NUMBER',
+            ]);
+            if ($r['status'] !== 200) {
+                break;
+            }
+            $j = json_decode($r['body'], true);
+            $notices = is_array($j) ? ($j['notices'] ?? []) : [];
+            foreach ($notices as $n) {
+                if (!empty($n['publication-number'])) {
+                    $out[(string) $n['publication-number']] = self::normalizePlan($n);
+                }
+            }
+            if (count($notices) < 100) {
+                break;
+            }
+            $sleep ? $sleep() : usleep(200000);
+        }
+        return array_values($out);
+    }
+
+    /** @return array{plan: array, items: array<int, array>} */
+    public static function normalizePlan(array $n): array
+    {
+        $t = self::normalize($n + ['place-of-performance-subdiv-lot' => $n['place-of-performance-subdiv-part'] ?? $n['place-of-performance-subdiv-proc'] ?? null]);
+        $parts = array_values(array_filter(array_map('trim', self::langList($n['description-part'] ?? null))));
+        $titles = array_values(array_filter(array_map('trim', self::langList($n['title-part'] ?? null))));
+        $value = self::scalar($n['estimated-value-proc'] ?? null);
+        if (!is_numeric($value)) {
+            $sum = 0.0;
+            foreach ((array) ($n['estimated-value-part'] ?? []) as $v) {
+                $sum += is_numeric($v) ? (float) $v : 0.0;
+            }
+            $value = $sum > 0 ? $sum : null;
+        }
+        $future = (string) (self::scalar($n['future-notice'] ?? null) ?? '');
+        $month = preg_match('/^\d{4}-(\d{2})-\d{2}/', $future, $fm) ? (int) $fm[1] : null;
+        $year = preg_match('/^(\d{4})-/', $future, $fy) ? (int) $fy[1] : null;
+        $subject = $t['title'];
+        if ($titles && !in_array($subject, $titles, true) && count($titles) > 1) {
+            $subject .= ' (części: ' . implode('; ', array_slice($titles, 0, 5)) . ')';
+        }
+        $plan = [
+            'source' => 'ted',
+            'plan_key' => $t['external_id'],
+            'notice_number' => $t['notice_number'],
+            'version' => 1,
+            'year' => $year ?? (int) substr((string) $t['published_at'], 0, 4),
+            'buyer_name' => $t['buyer_name'],
+            'buyer_nip' => $t['buyer_nip'],
+            'buyer_city' => $t['buyer_city'],
+            'voivodeship' => $t['voivodeship'],
+            'published_at' => $t['published_at'],
+            'url' => $t['url'],
+        ];
+        $item = [
+            'position' => '1',
+            'section' => 'above',
+            'category' => $t['order_type'],
+            'subject' => mb_substr($subject, 0, 1000),
+            'mode' => 'Wstępne ogłoszenie informacyjne',
+            'value_estimated' => is_numeric($value) ? (float) $value : null,
+            'currency' => $t['currency'],
+            'term' => $future !== '' ? 'Ogłoszenie planowane na ' . substr($future, 0, 10) : '',
+            'quarter' => $month ? intdiv($month - 1, 3) + 1 : null,
+            'month' => $month,
+            'info' => mb_substr(implode("\n", $parts), 0, 600),
+            'sme' => null,
+            'cpv' => $t['cpv_all'],
+            'update_note' => '',
+            'status' => 'active',
+        ];
+        return ['plan' => $plan, 'items' => [$item]];
+    }
+
+    /** Pole wielojęzyczne z listą wartości (np. opis każdej części): wartości po polsku, potem po angielsku. */
+    private static function langList(mixed $v): array
+    {
+        if (is_string($v)) {
+            return [$v];
+        }
+        if (!is_array($v)) {
+            return [];
+        }
+        foreach (['pol', 'eng', 'mul'] as $l) {
+            if (isset($v[$l])) {
+                return array_map('strval', (array) $v[$l]);
+            }
+        }
+        $first = reset($v);
+        return $first === false ? [] : array_map('strval', (array) $first);
+    }
+
     public static function normalize(array $n): array
     {
         $pub = (string) $n['publication-number'];

@@ -16,6 +16,7 @@ use App\Modules\Ai\DocumentText;
 use App\Modules\Companies\Companies;
 use App\Modules\Tenders\Analysis;
 use App\Modules\Tenders\Matcher;
+use App\Modules\Tenders\PlanMatcher;
 use App\Modules\Tenders\Regions;
 use App\Modules\Tenders\Results;
 use App\Modules\Tenders\Tenders;
@@ -450,7 +451,11 @@ final class TenderController extends Controller
         }
         // Od razu dopasowujemy ogłoszenia z ostatnich 30 dni, żeby lista nie była pusta do jutra.
         $new = $data['active'] ? Matcher::run($org, $id, gmdate('Y-m-d H:i:s', time() - 30 * 86400)) : 0;
-        return $this->redirect('/przetargi?profil=' . $id, 'Profil zapisany. ' . ($new ? 'Znaleźliśmy ' . $new . ' ' . plural($new, 'pasujące ogłoszenie', 'pasujące ogłoszenia', 'pasujących ogłoszeń') . '.' : 'Nowe ogłoszenia pojawią się po najbliższym imporcie.'));
+        // Plany zamówień liczymy od nowa dla zmienionego profilu. Czego nie zdążymy teraz, dokończy ekran planów albo nocny import.
+        PlanMatcher::reset($id);
+        $plans = $data['active'] ? PlanMatcher::run($org, $id, 3.0) : 0;
+        return $this->redirect('/przetargi?profil=' . $id, 'Profil zapisany. ' . ($new ? 'Znaleźliśmy ' . $new . ' ' . plural($new, 'pasujące ogłoszenie', 'pasujące ogłoszenia', 'pasujących ogłoszeń') . '.' : 'Nowe ogłoszenia pojawią się po najbliższym imporcie.')
+            . ($plans ? ' W planach zamówień: ' . $plans . ' ' . plural($plans, 'pasująca pozycja', 'pasujące pozycje', 'pasujących pozycji') . '.' : ''));
     }
 
     public function profileDelete(Request $r): Response
