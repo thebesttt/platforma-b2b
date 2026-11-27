@@ -186,6 +186,30 @@ $check('Fundusze UE: lista projektów 2021-2027 (adres pliku, nagłówek, spół
     $sample = Db::get()->one('SELECT beneficiary, title, voivodeships, value_total, end_date FROM eu_projects ORDER BY id LIMIT 1');
     return basename($url) . ': przeczytano ' . $res['read'] . ' wierszy, spółek z trwającymi projektami ' . $res['kept'] . ", z województwem $withRegion; np. " . json_encode($sample, JSON_UNESCAPED_UNICODE);
 });
+$check('Biała lista VAT: sprawdzenie rachunku (metoda check) i klucz zapytania', function () use ($need) {
+    // Urząd m.st. Warszawy: czynny podatnik z tysiącami rachunków. Pierwszy rachunek z wykazu ma dać TAK, ten sam numer
+    // z inną końcówką i poprawioną sumą kontrolną NIE, a numer z błędną sumą kontrolną błąd WL-111.
+    $s = Registries::whiteList('5252248481');
+    $need($s['ok'] && !empty($s['request']['id']), 'brak klucza zapytania w odpowiedzi search: ' . json_encode($s['request'] ?? null));
+    $raw = Http::get(Registries::WL . '5252248481?date=' . Registries::today(), ['Accept' => 'application/json']);
+    $acc = (string) (json_decode($raw['body'], true)['result']['subject']['accountNumbers'][0] ?? '');
+    $need(App\Core\Nrb::valid($acc), 'rachunek z wykazu nie przechodzi naszej sumy kontrolnej: ' . $acc);
+    $yes = Registries::checkAccount('5252248481', $acc);
+    $need($yes['ok'] && $yes['assigned'] === true && $yes['request']['id'] !== '', 'oczekiwano TAK z kluczem: ' . json_encode($yes, JSON_UNESCAPED_UNICODE));
+    $bban = substr($acc, 2, 22) . '00';
+    $r = 0;
+    foreach (str_split($bban . '252100') as $d) {
+        $r = ($r * 10 + (int) $d) % 97;
+    }
+    $other = str_pad((string) (98 - $r), 2, '0', STR_PAD_LEFT) . $bban;
+    $no = Registries::checkAccount('5252248481', $other);
+    $need($no['ok'] && $no['assigned'] === false, 'oczekiwano NIE: ' . json_encode($no, JSON_UNESCAPED_UNICODE));
+    $bad = Registries::checkAccount('5252248481', '12' . substr($acc, 2));
+    $need(!$bad['ok'] && ($bad['code'] ?? '') === 'WL-111', 'oczekiwano WL-111: ' . json_encode($bad, JSON_UNESCAPED_UNICODE));
+    $future = Registries::checkAccount('5252248481', $acc, gmdate('Y-m-d', time() + 3 * 86400));
+    $need(!$future['ok'] && ($future['code'] ?? '') === 'WL-103', 'oczekiwano WL-103 dla daty z przyszłości: ' . json_encode($future, JSON_UNESCAPED_UNICODE));
+    return 'TAK i NIE z kluczami, WL-111 i WL-103 zgodne; zapytań dziś według licznika: ' . (Registries::WL_DAILY - Registries::whiteListLeft());
+});
 $krsNo = null;
 $check('Biała lista VAT', function () use (&$bzpRows, &$krsNo, $need) {
     $tried = 0;

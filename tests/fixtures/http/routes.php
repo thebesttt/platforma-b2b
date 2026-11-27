@@ -92,6 +92,13 @@ return [
     '#^POST https://api\.ted\.europa\.eu/v3/notices/search#' => 'ted_search_p1.json',
 
     // Biała lista VAT: firma testowa (NIP 1234563218), nieprawidłowy NIP, pozostałe - brak w wykazie.
+    // Biała lista: sprawdzenie rachunku (metoda „check”), odpowiedzi w formacie z prawdziwego API (27.11.2026).
+    '#^GET https://wl-api\.mf\.gov\.pl/api/check/nip/\d+/bank-account/\d+\?date=2020-01-02\n#' => $json(['message' => 'Data sprzed zakresu rejestru.', 'code' => 'WL-118'], 400),
+    '#^GET https://wl-api\.mf\.gov\.pl/api/check/nip/1234563218/bank-account/61109010140000071219812874\?date=\d{4}-\d\d-\d\d\n#' => $json(['result' => ['accountAssigned' => 'TAK', 'requestDateTime' => '27-11-2026 21:43:58', 'requestId' => 'KPYYH-99ch9dm']]),
+    '#^GET https://wl-api\.mf\.gov\.pl/api/check/nip/\d+/bank-account/89114020040000350212345678\?#' => ['status' => 429, 'body' => ''],
+    '#^GET https://wl-api\.mf\.gov\.pl/api/check/nip/\d+/bank-account/\d+\?date=#' => $json(['result' => ['accountAssigned' => 'NIE', 'requestDateTime' => '27-11-2026 21:44:10', 'requestId' => 'byswY-99ch9ea']]),
+    // Status na dzień z przeszłości: wtedy firma była zwolniona z VAT.
+    '#^GET https://wl-api\.mf\.gov\.pl/api/search/nip/1234563218\?date=2025-03-10\n#' => $json(['result' => ['subject' => ['name' => 'PRZYKŁADOWA SPÓŁKA BUDOWLANA SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ', 'nip' => '1234563218', 'statusVat' => 'Zwolniony', 'regon' => '123456785', 'krs' => '0000123456', 'registrationLegalDate' => '2024-03-01', 'accountNumbers' => ['61109010140000071219812874'], 'hasVirtualAccounts' => false], 'requestDateTime' => '27-11-2026 21:50:00', 'requestId' => 'Hist1-99ch9fa']]),
     '#^GET https://wl-api\.mf\.gov\.pl/api/search/nips/#' => 'wl_nips.json',
     '#^GET https://wl-api\.mf\.gov\.pl/api/search/nip/1234563218\?#' => 'wl_1234563218.json',
     '#^GET https://wl-api\.mf\.gov\.pl/api/search/nip/7181968222\?#' => 'wl_7181968222.json',

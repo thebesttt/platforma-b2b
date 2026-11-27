@@ -1,6 +1,9 @@
 <?php
 use App\Core\Nip;
+use App\Core\Nrb;
 use App\Modules\Companies\ManualChecks;
+use App\Modules\Companies\Registries;
+use App\Modules\Companies\VatChecks;
 use App\Modules\Companies\Receivables;
 
 $risk = $signals['risk'] ?? ['score' => $c['risk_score'], 'label' => '', 'level' => 'low', 'signals' => []];
@@ -51,6 +54,61 @@ $hasUokik = !empty($signals['uokik']);
         <div class="sig"><span class="chip <?= $l[0] ?>"><?= $l[1] ?></span><div><p style="font-weight:600"><?= e($s['title']) ?></p><p class="small"><?= e($s['detail']) ?></p><span class="src" style="margin-top:4px"><?= e($s['source']) ?></span></div></div>
       <?php endforeach ?>
       <p class="muted xs" style="margin:12px 0 0">Ocena opiera się wyłącznie na danych publicznych. Nie zawiera informacji o długach zgłoszonych przez innych użytkowników platformy - takie dane trafiają tylko do biur informacji gospodarczej. Pełny raport z BIG (np. KRD, BIG InfoMonitor) zamówisz u biura.</p>
+    </section>
+
+    <section class="card" id="biala-lista" aria-labelledby="t-wl">
+      <div class="between" style="align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:8px">
+        <h2 id="t-wl">Biała lista VAT: rachunek przed przelewem</h2>
+        <span class="muted xs">Historia sprawdzeń widoczna tylko dla Twojej firmy</span>
+      </div>
+      <?php $req = $wl['_request'] ?? null; ?>
+      <p class="small" style="margin:0 0 4px">
+        <?php if ($wl): ?>
+          Status VAT dziś: <b><?= e(mb_strtolower((string) ($wl['statusVat'] ?? 'brak'))) ?></b><?= !empty($wl['registrationLegalDate']) ? ', zarejestrowany od ' . e(date('d.m.Y', strtotime((string) $wl['registrationLegalDate']))) : '' ?>.
+          Rachunki w wykazie: <?= (int) ($wl['accountCount'] ?? 0) ?><?= !empty($wl['hasVirtualAccounts']) ? ' (firma ma też rachunki wirtualne, np. do płatności masowych)' : '' ?>.
+          <?php if (!empty($wl['removalDate'])): ?>Wykreślenie <?= e(date('d.m.Y', strtotime((string) $wl['removalDate']))) ?><?= !empty($wl['removalBasis']) ? ' (' . e((string) $wl['removalBasis']) . ')' : '' ?>.<?php endif ?>
+          <?php if (!empty($wl['restorationDate'])): ?>Przywrócenie <?= e(date('d.m.Y', strtotime((string) $wl['restorationDate']))) ?><?= !empty($wl['restorationBasis']) ? ' (' . e((string) $wl['restorationBasis']) . ')' : '' ?>.<?php endif ?>
+        <?php else: ?>
+          Tej firmy nie ma dziś w wykazie podatników VAT (ani jako czynnej, ani jako zwolnionej). Jeśli wystawia Ci faktury z VAT, wyjaśnij to przed zapłatą.
+        <?php endif ?>
+      </p>
+      <?php if ($req): ?><p class="xs muted" style="margin:0 0 12px">Dane z wykazu na <?= e(date('d.m.Y', strtotime((string) $req['date']))) ?>, klucz zapytania MF: <code><?= e((string) $req['id']) ?></code></p><?php endif ?>
+
+      <form class="form-grid no-print" method="post" action="/kontrahenci/<?= e($c['nip']) ?>/biala-lista" style="margin-top:12px">
+        <?= csrf_field() ?><input type="hidden" name="kind" value="account">
+        <div class="field" style="grid-column:1/-1"><label for="wl-acc">Numer rachunku z faktury</label><input id="wl-acc" type="text" name="account" inputmode="numeric" autocomplete="off" maxlength="40" placeholder="26 cyfr z faktury" required></div>
+        <div class="field"><label for="wl-date">Dzień zlecenia przelewu</label><input id="wl-date" type="date" name="date" value="<?= e(Registries::today()) ?>" min="<?= e(VatChecks::EARLIEST) ?>" max="<?= e(Registries::today()) ?>"></div>
+        <div class="field"><label for="wl-amount">Kwota brutto (opcjonalnie)</label><input id="wl-amount" type="text" name="amount" inputmode="decimal" autocomplete="off" placeholder="np. 18 450,00"></div>
+        <div class="field" style="justify-content:flex-end"><button class="btn" type="submit"<?= $vatLeft <= 0 ? ' disabled' : '' ?>>Sprawdź rachunek</button></div>
+      </form>
+      <form class="row-flex no-print" method="post" action="/kontrahenci/<?= e($c['nip']) ?>/biala-lista" style="margin-top:8px;align-items:flex-end;flex-wrap:wrap">
+        <?= csrf_field() ?><input type="hidden" name="kind" value="status">
+        <div class="field" style="margin:0"><label for="wl-sdate">Status VAT w dniu (np. dzień faktury)</label><input id="wl-sdate" type="date" name="date" value="<?= e(Registries::today()) ?>" min="<?= e(VatChecks::EARLIEST) ?>" max="<?= e(Registries::today()) ?>"></div>
+        <button class="btn ghost" type="submit"<?= $vatLeft <= 0 ? ' disabled' : '' ?>>Sprawdź status</button>
+      </form>
+      <p class="xs muted" style="margin:8px 0 0">Dziś możesz wykonać jeszcze <?= (int) $vatLeft ?> <?= plural((int) $vatLeft, 'sprawdzenie', 'sprawdzenia', 'sprawdzeń') ?>. Ministerstwo Finansów pozwala na 100 zapytań dziennie z jednego adresu, wspólnie dla całego panelu. Bez limitu sprawdzisz rachunek w <a href="https://www.podatki.gov.pl/wykaz-podatnikow-vat-wyszukiwarka" target="_blank" rel="noopener">wyszukiwarce na podatki.gov.pl</a>.</p>
+
+      <?php if ($vatChecks): ?>
+      <div class="table-wrap" style="margin-top:14px">
+        <table>
+          <thead><tr><th scope="col">Na dzień</th><th scope="col">Co</th><th scope="col">Wynik</th><th scope="col">Klucz zapytania MF</th></tr></thead>
+          <tbody>
+          <?php foreach ($vatChecks as $v):
+              $chip = $v['kind'] === 'account' ? ($v['result'] === 'TAK' ? 'low' : 'high') : ($v['result'] === 'Czynny' ? 'low' : ($v['result'] === 'Zwolniony' ? 'neutral' : 'high'));
+          ?>
+            <tr>
+              <td class="small" style="min-width:7.5em"><span class="nowrap"><?= e(date('d.m.Y', strtotime((string) $v['check_date']))) ?></span><div class="t-sub">sprawdzono <?= e(local_dt((string) $v['created_at'], 'd.m H:i')) ?><?= $v['user_name'] ? ', ' . e((string) $v['user_name']) : '' ?></div></td>
+              <td class="small"><?= $v['kind'] === 'account' ? 'rachunek <span class="nowrap">' . e(Nrb::format((string) $v['account'])) . '</span>' . ($v['amount'] !== null ? '<div class="t-sub">' . e(money_pl((float) $v['amount'])) . '</div>' : '') : 'status VAT' ?></td>
+              <td><span class="chip <?= $chip ?>"><?= e($v['kind'] === 'account' ? ($v['result'] === 'TAK' ? 'jest w wykazie' : 'nie ma w wykazie') : mb_strtolower((string) $v['result'])) ?></span></td>
+              <td class="small"><code><?= e((string) $v['request_id']) ?></code><div class="t-sub"><?= e(local_dt((string) $v['request_at'], 'd.m.Y H:i:s')) ?></div></td>
+            </tr>
+          <?php endforeach ?>
+          </tbody>
+        </table>
+      </div>
+      <p class="no-print" style="margin:10px 0 0"><a class="btn ghost sm" href="/kontrahenci/<?= e($c['nip']) ?>/biala-lista.csv">Pobierz potwierdzenia (CSV)</a></p>
+      <?php endif ?>
+      <p class="xs muted" style="margin:12px 0 0">Kiedy to ważne: płatność powyżej 15 000 zł brutto dla czynnego podatnika VAT. Przelew na rachunek spoza wykazu w dniu zlecenia przelewu wyłącza wydatek z kosztów podatkowych i daje solidarną odpowiedzialność za VAT sprzedawcy, chyba że w ciągu 7 dni złożysz zawiadomienie ZAW-NR. Klucz zapytania MF to potwierdzenie sprawdzenia: zachowaj go z dokumentami płatności. To opis przepisów, nie porada podatkowa.</p>
     </section>
 
     <section class="card" id="sprawdzenia" aria-labelledby="t-checks">
@@ -254,7 +312,7 @@ $hasUokik = !empty($signals['uokik']);
         <?php if ($wl): ?><dt>Rachunki na białej liście</dt><dd><?= (int) ($wl['accountCount'] ?? 0) ?><?= !empty($wl['hasVirtualAccounts']) ? ' (w tym wirtualne)' : '' ?></dd><?php endif ?>
         <?php if (!empty($krs['website'])): ?><dt>Strona</dt><dd><?= e($krs['website']) ?></dd><?php endif ?>
       </dl>
-      <p class="xs muted" style="margin:12px 0 0">Przed przelewem powyżej 15 000 zł sprawdź, czy numer konta z faktury jest na białej liście (podatki.gov.pl).</p>
+      <p class="xs muted" style="margin:12px 0 0">Przed przelewem powyżej 15 000 zł sprawdź numer konta z faktury: <a href="#biala-lista">Biała lista VAT</a>.</p>
     </section>
 
     <?php if ($signals['uokik'] ?? []): ?>

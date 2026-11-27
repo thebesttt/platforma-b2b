@@ -1,16 +1,16 @@
 # Plan działania
 
-Stan na 25.11.2026.
+Stan na 27.11.2026.
 
 **Zmiana kierunku.** Pierwszym użytkownikiem narzędzia jest PerfectData (perfectdata.pl). Cel: więcej zapytań ze strony i audyt, którym agencja pracuje z klientami SEO i GEO. Platforma B2B (przetargi, oferty, kontrahenci) zostaje silnikiem pod spodem i osobnym produktem na później.
 
 Na perfectdata.pl nic nie zostało zainstalowane. Kod trafi na stronę dopiero po wyraźnej zgodzie właściciela.
 
-**Co się zmieniło 20.11.2026.** Etapy 1 i 2 oraz większość etapu 3 są zbudowane w silniku i przechodzą testy. Tego samego dnia doszło pięć funkcji z etapu 4: wyniki przetargów, praca zespołu nad ofertą, warunki naboru dotacji, przypomnienia z adresem wypisania i opis idealnego klienta. Potem doszły cztery funkcje, których dane nie są dostępne dla programów: panel pokazuje, gdzie je znaleźć, i daje miejsce na wpisanie (szczegóły niżej, w części „Dane wpisywane ręcznie”). 23.11.2026 doszła lista potencjalnych klientów: panel proponuje firmy, układa treść oferty i pokazuje drogi kontaktu z oceną ryzyka (część „Potencjalni klienci i wysyłka”). Tego samego dnia doszła zgoda na ofertę e-mailem zbierana listem: strona zgody z kodem QR i zapisanym dowodem. Potem siedem dodatków do listów i zgód: audyt strony jako zachęta, lejek listów, listy seryjnie, kod QR na wizytówkę, pytanie o zainteresowania, wyszukiwanie w CEIDG i drugi list (część „Listy i zgody: siedem dodatków”). 24.11.2026 doszła widoczność: dane z Search Console, sygnały z odpowiedzi AI i konkurencja z map witryn (część „Widoczność w Google, w AI i u konkurencji”). 25.11.2026 doszły trzy publiczne źródła popytu i kampanie e-mail: plany zamówień z BZP i zapowiedzi z TED, firmy z dotacjami UE oraz kampanie z wersją wiadomości dla każdego odbiorcy (części „Skąd brać popyt: źródła publiczne” i „Kampanie e-mail dopasowane do odbiorcy”). Do uruchomienia zostały kroki właściciela z etapu 0: hosting, baza, klucze usług i zgoda na kod widżetu. Lista na końcu, w części „Co jest potrzebne od właściciela”.
+**Co się zmieniło 20.11.2026.** Etapy 1 i 2 oraz większość etapu 3 są zbudowane w silniku i przechodzą testy. Tego samego dnia doszło pięć funkcji z etapu 4: wyniki przetargów, praca zespołu nad ofertą, warunki naboru dotacji, przypomnienia z adresem wypisania i opis idealnego klienta. Potem doszły cztery funkcje, których dane nie są dostępne dla programów: panel pokazuje, gdzie je znaleźć, i daje miejsce na wpisanie (szczegóły niżej, w części „Dane wpisywane ręcznie”). 23.11.2026 doszła lista potencjalnych klientów: panel proponuje firmy, układa treść oferty i pokazuje drogi kontaktu z oceną ryzyka (część „Potencjalni klienci i wysyłka”). Tego samego dnia doszła zgoda na ofertę e-mailem zbierana listem: strona zgody z kodem QR i zapisanym dowodem. Potem siedem dodatków do listów i zgód: audyt strony jako zachęta, lejek listów, listy seryjnie, kod QR na wizytówkę, pytanie o zainteresowania, wyszukiwanie w CEIDG i drugi list (część „Listy i zgody: siedem dodatków”). 24.11.2026 doszła widoczność: dane z Search Console, sygnały z odpowiedzi AI i konkurencja z map witryn (część „Widoczność w Google, w AI i u konkurencji”). 25.11.2026 doszły trzy publiczne źródła popytu i kampanie e-mail: plany zamówień z BZP i zapowiedzi z TED, firmy z dotacjami UE oraz kampanie z wersją wiadomości dla każdego odbiorcy (części „Skąd brać popyt: źródła publiczne” i „Kampanie e-mail dopasowane do odbiorcy”). 27.11.2026 doszła biała lista VAT przed przelewem: sprawdzenie rachunku z faktury i statusu VAT na wybrany dzień z kluczem zapytania Ministerstwa Finansów (część „Biała lista VAT przed przelewem”). Do uruchomienia zostały kroki właściciela z etapu 0: hosting, baza, klucze usług i zgoda na kod widżetu. Lista na końcu, w części „Co jest potrzebne od właściciela”.
 
 ## Co jest gotowe
 
-- **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`, 204 testy na SQLite i PostgreSQL. Gotowa do uruchomienia w Render.
+- **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`, 211 testów na SQLite i PostgreSQL. Gotowa do uruchomienia w Render.
 - **Panel w wyglądzie PerfectData** (zmienna `APP_THEME=perfectdata` albo ustawienie firmy) z wyborem modułów w menu i pulpitem, który pokazuje tylko włączone moduły.
 - **Zapytania ze strony:** widżet do wklejenia jedną linią kodu, kwalifikator z jawną tabelą punktów, lista i karta zapytań, czat AI z bazy wiedzy, lejek i test dwóch wersji.
 - **Audyt AI:** 24 wskaźniki i 100 punktów z jednego pliku wytycznych, raport z linijką punktów i listą „Najpierw to”, „Przed i po”, strona wytycznych, raport dla klienta pod linkiem, audyt wielu stron z mapy witryny. Sprawdzony na prawdziwej stronie perfectdata.pl.
@@ -18,12 +18,12 @@ Na perfectdata.pl nic nie zostało zainstalowane. Kod trafi na stronę dopiero p
 - **Przetargi:** import i dopasowanie do profilu, karta przetargu, analiza SWZ oraz wyniki: kto wygrywa w branży i regionie, za ile i przy ilu ofertach. Alert, gdy zapisany przetarg zostanie rozstrzygnięty. Plany zamówień: pozycje z rocznych planów urzędów w BZP i zapowiedzi z TED, dopasowane do profilu, zanim przetarg zostanie ogłoszony.
 - **Oferty i wnioski:** szkic z ogłoszenia i biblioteki, praca zespołu (sekcja przydzielona osobie, zapis nie nadpisuje cudzej zmiany), lista dokumentów do odhaczania, a we wniosku o dotację sprawdzenie warunków naboru z cytatami. Lista obserwowanych naborów z przewodnikiem po pięciu oficjalnych serwisach, przypomnieniami o końcu naboru i wnioskiem zakładanym z naboru.
 - **Klienci i wiadomości:** ocena ryzyka prawnego przed wysyłką, przypomnienia po 4 i po 10 dniach z dziennym limitem, adres wypisania w stopce ofert, opis idealnego klienta ze strony firmy. Rejestr zapytań ofertowych z rynku: gdzie szukać, termin, kontakt z podstawą „zapytanie ofertowe” i odpowiedź jednym kliknięciem. Lista potencjalnych klientów: firmy z wyników przetargów i z listy użytkownika, dane z rejestrów, punkty dopasowania, treść oferty układana automatycznie i drogi kontaktu z oceną ryzyka. Zgoda na ofertę e-mailem zbierana listem: w liście jest adres strony zgody i kod QR, firma sama zostawia e-mail, a panel zapisuje dowód. Do tego audyt strony jako zachęta, lejek listów z kosztem jednej zgody, listy seryjnie, drugi list po 21 dniach, kod QR na wizytówkę, pytanie o zainteresowania i wyszukiwanie firm w CEIDG (po wpisaniu tokenu). Przycisk „Napisz” przy kontakcie sam dobiera rodzaj wiadomości do podstawy kontaktu. Firmy z dotacjami UE: spółki w trakcie projektu z funduszy europejskich, do dodania na listę potencjalnych klientów. Kampanie e-mail: jedna treść, ale wersja dla każdego odbiorcy z faktów o jego firmie. Panel wysyła sam tylko do zgód i klientów.
-- **Kontrahenci:** karta firmy z rejestrów publicznych, a do tego dwa sprawdzenia robione ręcznie: Krajowy Rejestr Zadłużonych i liczby ze sprawozdania finansowego, z których panel liczy, po ilu dniach firma płaci dostawcom.
+- **Kontrahenci:** karta firmy z rejestrów publicznych, sprawdzenie rachunku na białej liście VAT przed przelewem z kluczem zapytania MF, a do tego dwa sprawdzenia robione ręcznie: Krajowy Rejestr Zadłużonych i liczby ze sprawozdania finansowego, z których panel liczy, po ilu dniach firma płaci dostawcom.
 - **Audyt techniczny:** bez zmian, działa od początku.
 - **Platforma dla wielu firm:** pakiety Podstawowy i Rozszerzony z miesięcznym przydziałem AI, ekran administratora (firmy, zaproszenia, blokada, limity), logowanie dwuetapowe, eksport i usunięcie danych firmy, własne połączenia każdej firmy w Widoczności.
 - **Nabory dotacji:** wyszukiwarka naborów (AI szuka w internecie i podaje źródła) oraz przycisk, który pisze cały wniosek.
 - **Widoczność:** zakładka w module Audyt. Użytkownik wpisuje adres witryny i wgrywa paczkę z przycisku „Eksportuj” w Search Console albo dodaje jeden adres e-mail jako użytkownika i klika „Połącz”. Panel pokazuje, co poprawić najpierw w Google, gdzie stronę widać w odpowiedziach AI i co publikuje konkurencja.
-- **Mockup całego panelu:** `mockup/audyt-ai`, 11 modułów w sześciu grupach menu i 41 ekranów, z listą 84 funkcji i ich stanem. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip`.
+- **Mockup całego panelu:** `mockup/audyt-ai`, 11 modułów w sześciu grupach menu i 41 ekranów, z listą 85 funkcji i ich stanem. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip`.
 - **Wytyczne audytu:** `resources/audyt-ai-rules.json` (czyta je silnik) i dokument dla zespołu `mockup/audyt-ai/WYTYCZNE.md`.
 - **Plany modułów:** `PLAN-ZAPYTANIA.md` i `PLAN-AUDYT-AI.md`.
 
@@ -46,7 +46,7 @@ W platformie wygląd i zestaw modułów będą ustawieniem organizacji (pole `se
 
 ## Funkcje i ich stan
 
-Mockup pokazuje 84 funkcje. Zakładka „Lista funkcji” na pulpicie podaje stan każdej z nich i prowadzi do ekranu.
+Mockup pokazuje 85 funkcji. Zakładka „Lista funkcji” na pulpicie podaje stan każdej z nich i prowadzi do ekranu.
 
 | Moduł | Działa w silniku | Do zbudowania | Czeka na zgodę Google i Meta |
 |---|---|---|---|
@@ -58,9 +58,9 @@ Mockup pokazuje 84 funkcje. Zakładka „Lista funkcji” na pulpicie podaje sta
 | Przetargi | 11 | 0 | 0 |
 | Oferty | 6 | 0 | 0 |
 | Dotacje | 5 | 0 | 0 |
-| Kontrahenci | 7 | 1 | 0 |
+| Kontrahenci | 8 | 1 | 0 |
 | Konto i platforma | 4 | 0 | 0 |
-| Razem | 74 | 4 | 6 |
+| Razem | 75 | 4 | 6 |
 
 „Działa w silniku” znaczy, że kod jest w repozytorium i przechodzi testy. Silnik nie jest jeszcze uruchomiony online (etap 0).
 
@@ -201,6 +201,19 @@ Ograniczenie po stronie Google: dopóki aplikacja OAuth nie przejdzie weryfikacj
 **Napisz cały wniosek.** Na ekranie wniosku (i oferty przetargowej) jeden przycisk uruchamia pisanie wszystkich sekcji, których nikt nie oznaczył jako gotowe. AI pisze sekcję po sekcji, strona pokazuje postęp i sama prowadzi kolejne kroki, a „Zatrzymaj” przerywa. Każda sekcja to jedno użycie AI. Zasady pisania zostają: tylko z regulaminu naboru i biblioteki firmy, zdania bez źródła są podświetlone. Regulamin i kryteria użytkownik wgrywa sam, bo panel nie pobiera plików z zabezpieczonych stron.
 
 **Przetargi: do ofert jednym kliknięciem.** Na listach przetargów przycisk „Do ofert” zakłada szkic oferty i zapisuje przetarg. Drugie kliknięcie nie tworzy duplikatu, tylko pokazuje znacznik „w ofertach”. „Zapisz” na karcie przetargu robi to samo.
+
+### Biała lista VAT przed przelewem
+
+Karta kontrahenta → „Biała lista VAT: rachunek przed przelewem” (27.11.2026). Biała lista była w ocenie ryzyka od początku (status VAT, liczba rachunków, alert o zmianie rachunków u obserwowanych firm). Doszło to, czego potrzebuje osoba, która płaci fakturę:
+
+- **Sprawdzenie rachunku z faktury** na dzień zlecenia przelewu (metoda „check” API wykazu): odpowiedź TAK albo NIE. Numer z błędną sumą kontrolną panel odrzuca sam, zanim zapyta Ministerstwo Finansów, bo takie zapytanie też zużywa limit.
+- **Status VAT na wybrany dzień**, np. dzień wystawienia faktury: czynny, zwolniony, brak w wykazie, z datami wykreślenia i przywrócenia.
+- **Klucz zapytania MF przy każdym sprawdzeniu.** Ministerstwo opisuje go jako elektroniczny klucz, który potwierdza wykonanie zapytania. Panel zapisuje go z dniem, rachunkiem, kwotą i osobą, która sprawdzała. Historię widzi tylko firma, która sprawdzała. Przycisk „Pobierz potwierdzenia (CSV)” daje plik dla księgowości.
+- **Wynik po ludzku z kwotą.** Przy NIE i płatności powyżej 15 000 zł panel pisze, czym to grozi (wyłączenie z kosztów, solidarna odpowiedzialność za VAT) i co zrobić (poprosić o rachunek z wykazu, a po przelewie złożyć ZAW-NR w ciągu 7 dni od zlecenia przelewu). Do 15 000 zł sankcje z białej listy nie działają.
+- **Nowy sygnał w ocenie ryzyka:** przywrócenie do rejestru VAT w ostatnich 12 miesiącach (+8 punktów).
+- **Limit API:** 100 zapytań dziennie z jednego adresu, wspólnie dla całego panelu. Każda firma ma 20 sprawdzeń dziennie, a ostatnie 10 zapytań zostaje dla nocnego odświeżania obserwowanych firm. Po odpowiedzi „za dużo zapytań” panel nie pyta Ministerstwa do północy. Licznik na karcie pokazuje, ile sprawdzeń zostało, i odsyła do wyszukiwarki na podatki.gov.pl, która limitu nie ma.
+
+Źródła: [jak korzystać z wykazu (KAS)](https://www.gov.pl/web/kas/jak-korzystac-z-wykazu), [dokumentacja API wykazu](https://www.gov.pl/attachment/10b6eb11-ee07-4e6d-b28e-262ed624309c). To opis przepisów, nie porada podatkowa.
 
 ### Klienci: co napisał klient
 
@@ -491,6 +504,14 @@ Potrzebne przed etapem 4:
   - opinii o kampaniach e-mail: wysyłka przez panel do odbiorców ze zgodą (platforma jako pośrednik), stopka i wypisanie oraz wykorzystanie listy projektów UE i planów zamówień do kontaktu.
 
 ## Co zostało sprawdzone
+
+### Biała lista VAT przed przelewem (27.11.2026)
+
+- **211 testów** na SQLite (siedem nowych): suma kontrolna numeru rachunku, sprawdzenie rachunku z zapisem odpowiedzi i klucza MF (czas MF podany po polsku zapisany w UTC), opis wyniku zależny od kwoty, błędy wykrywane bez zapytania do MF (zła suma kontrolna, dzień z przyszłości, dzień sprzed 2020 r., zły format daty), błąd z API (dzień sprzed zakresu rejestru), blokada po odpowiedzi „za dużo zapytań”, dzienny przydział firmy i rezerwa na nocne odświeżanie, status VAT na dzień z przeszłości, karta firmy z formularzem i CSV (pole zaczynające się od znaku formuły dostaje apostrof), izolacja firm, sygnał o niedawnym przywróceniu do rejestru.
+- **Na prawdziwym API Ministerstwa Finansów** (z przeglądarki, 27.11.2026, kilkanaście zapytań): rachunek z wykazu Urzędu m.st. Warszawy dał TAK z kluczem, poprawny rachunek spoza wykazu NIE, rachunek z błędną sumą kontrolną błąd WL-111, dzień z przyszłości WL-103, dzień z 2019 r. WL-118, błędny NIP WL-115. Odpowiedzi testowe mają dokładnie ten format. Nasza suma kontrolna zgadza się z oceną API na prawdziwym numerze i na tym samym numerze z błędem. Odpowiedź wyszukiwania ma nowe pole `exemptionSmeDate`, którego panel nie potrzebuje.
+- **Testy w GitHub Actions nie były uruchamiane** do 1 grudnia, na prośbę właściciela. Zmiany są wypchnięte z oznaczeniem `[skip ci]`. Do zrobienia po 1 grudnia: testy na PostgreSQL i test kontraktu z API (doszło w nim sprawdzenie rachunku: TAK, NIE, WL-111, WL-103).
+- **W przeglądarce** na danych przykładowych: sprawdzenie rachunku (TAK, NIE, zła suma kontrolna), status na dzień, pobranie CSV, karta w szerokościach 1280, 390 i 320 bez poziomego przewijania.
+- **Mockup:** 41 ekranów w 4 szerokościach bez błędów i bez poziomego przewijania, sprawdzenie rachunku przeklikane, suma kontrolna w mockupie daje te same wyniki co silnik.
 
 ### Plany zamówień, firmy z dotacjami UE, kampanie e-mail (25.11.2026)
 

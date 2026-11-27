@@ -14,6 +14,8 @@ use App\Core\Response;
 use App\Modules\Companies\Companies;
 use App\Modules\Companies\ManualChecks;
 use App\Modules\Companies\Receivables;
+use App\Modules\Companies\Registries;
+use App\Modules\Companies\VatChecks;
 use App\Modules\Offers\Docx;
 
 final class CompanyController extends Controller
@@ -94,7 +96,48 @@ final class CompanyController extends Controller
         $awards = \App\Modules\Tenders\Results::buyerHistory($nip, null, 5);
         // Sprawdzenia wpisywane ręcznie: KRZ i liczby ze sprawozdania finansowego. Widzi je tylko ta firma.
         $checks = ManualChecks::forCompany($org, (int) $c['id']);
-        return $this->view('companies/show', compact('c', 'signals', 'wl', 'krs', 'watched', 'receivables', 'alerts', 'tenders', 'wins', 'awards', 'checks') + ['title' => (string) ($c['name'] ?: 'NIP ' . $nip)]);
+        // Sprawdzenia na białej liście (rachunek przed przelewem, status na dzień) z kluczem zapytania MF.
+        $vatChecks = VatChecks::forCompany($org, (int) $c['id']);
+        $vatLeft = VatChecks::left($org);
+        return $this->view('companies/show', compact('c', 'signals', 'wl', 'krs', 'watched', 'receivables', 'alerts', 'tenders', 'wins', 'awards', 'checks', 'vatChecks', 'vatLeft') + ['title' => (string) ($c['name'] ?: 'NIP ' . $nip)]);
+    }
+
+    /** Sprawdzenie na białej liście VAT: rachunek z faktury przed przelewem albo status VAT na wybrany dzień. */
+    public function vatCheck(Request $r): Response
+    {
+        $nip = Nip::clean($r->param('nip'));
+        $c = Companies::byNip($nip);
+        if (!$c) {
+            return $this->notFound();
+        }
+        $to = '/kontrahenci/' . $nip . '#biala-lista';
+        $date = $r->str('date') !== '' ? $r->str('date') : Registries::today();
+        if ($r->str('kind') === 'status') {
+            $res = VatChecks::checkStatus($this->orgId(), Auth::id(), $c, $date);
+        } else {
+            $amountRaw = str_replace([' ', "\u{00A0}", ','], ['', '', '.'], $r->str('amount'));
+            if ($amountRaw !== '' && (!is_numeric($amountRaw) || (float) $amountRaw < 0)) {
+                return $this->redirect($to, 'Kwotę podaj liczbą, np. 18450,00.', 'error');
+            }
+            $res = VatChecks::checkAccount($this->orgId(), Auth::id(), $c, $r->str('account'), $date, $amountRaw !== '' ? (float) $amountRaw : null);
+        }
+        if (!$res['ok']) {
+            return $this->redirect($to, $res['error'], 'error');
+        }
+        AuditLog::add('company.vat_check', 'company', (int) $c['id'], ['kind' => $res['row']['kind'], 'result' => $res['row']['result'], 'request' => $res['row']['request_id']], $r->ip());
+        $bad = ($res['row']['kind'] === 'account' && $res['row']['result'] === 'NIE') || ($res['row']['kind'] === 'status' && $res['row']['result'] !== 'Czynny');
+        return $this->redirect($to, VatChecks::verdict($res['row']), $bad ? 'error' : 'success');
+    }
+
+    /** Potwierdzenia sprawdzeń na białej liście w CSV (dla księgowości). */
+    public function vatCsv(Request $r): Response
+    {
+        $nip = Nip::clean($r->param('nip'));
+        $c = Companies::byNip($nip);
+        if (!$c) {
+            return $this->notFound();
+        }
+        return Response::download(VatChecks::csv($this->orgId(), $c), 'biala-lista-' . $nip . '-' . Registries::today() . '.csv', 'text/csv; charset=utf-8');
     }
 
     /** Wpis ze źródła, którego nie pobieramy automatycznie: wynik sprawdzenia w KRZ albo liczby ze sprawozdania finansowego. */

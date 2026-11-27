@@ -35,6 +35,62 @@ function demandLetter(r) {
     `\n\nZ poważaniem\n${PLAT.org.name}`];
 }
 
+/* ===== Biała lista VAT: rachunek przed przelewem ===== */
+state.wl = { log: {}, msg: '' };
+/* Numer rachunku jak w silniku (Nrb::valid): 26 cyfr i suma kontrolna IBAN (PL = 2521, reszta z 97 równa 1). */
+const nrbClean = (a) => a.replace(/^\s*PL/i, '').replace(/\D/g, '');
+function nrbValid(a) {
+  const x = nrbClean(a);
+  if (!/^\d{26}$/.test(x)) return false;
+  let r = 0;
+  for (const d of x.slice(2) + '2521' + x.slice(0, 2)) r = (r * 10 + Number(d)) % 97;
+  return r === 1;
+}
+const nrbFormat = (a) => { const x = nrbClean(a); return x.length === 26 ? x.slice(0, 2) + ' ' + x.slice(2).match(/.{4}/g).join(' ') : a; };
+const WL_LIMIT = 20;
+/* Opis wyniku jak w silniku (VatChecks::verdict). */
+function wlVerdict(v) {
+  const day = dpl(v.date);
+  if (v.kind === 'status') return 'Status VAT w dniu ' + day + ': ' + v.result + '.';
+  if (v.result === 'TAK') return 'Rachunek ' + nrbFormat(v.account) + ' jest na białej liście w dniu ' + day + '. Klucz zapytania MF: ' + v.key + '.';
+  const big = v.amount === null || v.amount > 15000;
+  return 'Rachunku ' + nrbFormat(v.account) + ' nie ma na białej liście w dniu ' + day + ' (albo firma nie jest czynnym podatnikiem VAT). ' +
+    (big ? 'Przy płatności powyżej 15 000 zł przelew na ten rachunek może wyłączyć wydatek z kosztów i dać solidarną odpowiedzialność za VAT. Poproś kontrahenta o rachunek z wykazu. Jeśli przelew już poszedł, złóż zawiadomienie ZAW-NR w ciągu 7 dni od zlecenia przelewu. '
+      : 'Przy tej kwocie (do 15 000 zł) sankcje z białej listy nie działają, ale upewnij się, że numer jest właściwy. ') + 'Klucz zapytania MF: ' + v.key + '.';
+}
+function renderWl(c) {
+  const log = state.wl.log[c.id] || [], used = Object.values(state.wl.log).flat().length, left = Math.max(0, WL_LIMIT - used);
+  const chip = (v) => v.kind === 'account' ? (v.result === 'TAK' ? st('good', 'jest w wykazie') : st('bad', 'nie ma w wykazie')) : st(v.result === 'Czynny' ? 'good' : 'plain', v.result.toLowerCase());
+  return `<div class="sec">${secHead('Biała lista VAT: rachunek przed przelewem', 'Sprawdź numer konta z faktury w dniu zlecenia przelewu. Odpowiedź ma klucz zapytania z Ministerstwa Finansów, który jest potwierdzeniem sprawdzenia.')}
+    <p style="padding-top:14px">Status VAT dziś: <b>${esc(c.vat.toLowerCase())}</b>, zarejestrowany od ${dpl(c.vatSince)}. Rachunki w wykazie: ${c.accounts}.${c.wlAccounts.length ? ' Przykładowy rachunek z wykazu do wypróbowania: <span class="num">' + nrbFormat(c.wlAccounts[0]) + '</span>.' : ''}</p>
+    <form class="form" id="wlForm" style="padding-top:8px">
+      <label class="field" for="wlAcc" style="flex:1 1 300px">Numer rachunku z faktury<input id="wlAcc" type="text" inputmode="numeric" autocomplete="off" placeholder="26 cyfr z faktury"></label>
+      <label class="field" for="wlDate">Dzień zlecenia przelewu<input id="wlDate" type="date" value="${PLAT.today}" max="${PLAT.today}"></label>
+      <label class="field" for="wlAmount">Kwota brutto (opcjonalnie)<input id="wlAmount" type="text" inputmode="decimal" placeholder="np. 18 450,00"></label>
+      <div class="acts" style="align-self:end"><button class="btn" type="submit"${left ? '' : ' disabled'}>Sprawdź rachunek</button><button class="btn ghost" type="button" data-act="wl-status"${left ? '' : ' disabled'}>Status VAT w tym dniu</button></div></form>
+    ${state.wl.msg ? `<p class="note" id="wlMsg" tabindex="-1" role="status">${esc(state.wl.msg)}</p>` : ''}
+    <p class="small muted">Dziś możesz wykonać jeszcze ${left} ${left === 1 ? 'sprawdzenie' : (left % 10 >= 2 && left % 10 <= 4 && (left % 100 < 10 || left % 100 >= 20) ? 'sprawdzenia' : 'sprawdzeń')}. Ministerstwo Finansów pozwala na 100 zapytań dziennie z jednego adresu, wspólnie dla całego panelu.</p>` +
+    (log.length ? log.map((v) => `<div class="item" style="--c1:110px"><span class="lead-col num">${dpl(v.date)}</span><div><p>${v.kind === 'account' ? 'rachunek <span class="num">' + nrbFormat(v.account) + '</span>' + (v.amount !== null ? ', ' + zl(v.amount) : '') : 'status VAT'}</p><p class="small muted">Klucz zapytania MF: <span class="num">${esc(v.key)}</span></p></div><div class="end">${chip(v)}</div></div>`).join('') +
+      '<div class="acts" style="padding-top:12px"><button class="btn ghost sm" type="button" data-act="wl-csv">Pobierz potwierdzenia (CSV)</button></div>' : '') +
+    `<p class="small muted" style="padding-top:12px">Kiedy to ważne: płatność powyżej 15 000 zł brutto dla czynnego podatnika VAT. Przelew na rachunek spoza wykazu wyłącza wydatek z kosztów i daje solidarną odpowiedzialność za VAT sprzedawcy, chyba że w ciągu 7 dni złożysz ZAW-NR. To opis przepisów, nie porada podatkowa.</p></div>`;
+}
+const wlKey = () => Array.from({ length: 5 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'[Math.floor(Math.random() * 54)]).join('') + '-mock';
+function wlSave(v) { (state.wl.log[state.co.id] = state.wl.log[state.co.id] || []).unshift(v); state.wl.msg = wlVerdict(v); rerender('kontrahent'); refocus('wlMsg'); }
+FORMS.wlForm = () => {
+  const c = companyOf(state.co.id), acc = document.getElementById('wlAcc').value, date = document.getElementById('wlDate').value || PLAT.today;
+  const rawAmount = document.getElementById('wlAmount').value.replace(/[\s ]|zł/g, '').replace(',', '.');
+  if (!nrbValid(acc)) { state.wl.msg = 'Numer rachunku ma błąd: polski rachunek ma 26 cyfr i sumę kontrolną. Przepisz go z faktury jeszcze raz.'; rerender('kontrahent'); refocus('wlMsg'); return; }
+  if (date > PLAT.today) { state.wl.msg = 'Wykaz odpowiada tylko za dni do dziś.'; rerender('kontrahent'); refocus('wlMsg'); return; }
+  if (rawAmount !== '' && !(Number(rawAmount) >= 0)) { state.wl.msg = 'Kwotę podaj liczbą, np. 18450,00.'; rerender('kontrahent'); refocus('wlMsg'); return; }
+  wlSave({ kind: 'account', account: nrbClean(acc), date, amount: rawAmount === '' ? null : Number(rawAmount), result: c.vat === 'Czynny' && c.wlAccounts.includes(nrbClean(acc)) ? 'TAK' : 'NIE', key: wlKey() });
+};
+ACTIONS['wl-status'] = () => {
+  const c = companyOf(state.co.id), date = document.getElementById('wlDate').value || PLAT.today;
+  if (date > PLAT.today) { state.wl.msg = 'Wykaz odpowiada tylko za dni do dziś.'; rerender('kontrahent'); refocus('wlMsg'); return; }
+  wlSave({ kind: 'status', account: '', date, amount: null, result: date >= c.vatSince ? c.vat : 'brak w wykazie', key: wlKey() });
+};
+ACTIONS['wl-csv'] = () => { state.wl.msg = 'W panelu pobiera się plik CSV z kontrahentem, rachunkiem, kwotą, dniem, wynikiem i kluczem zapytania MF, do przekazania księgowości.'; rerender('kontrahent'); refocus('wlMsg'); };
+
 function renderCompany() {
   const c = companyOf(state.co.id), r = companyRisk(c), mine = PLAT.receivables.filter((x) => x.company === c.id);
   const ch = PLAT.checks[c.id] || (PLAT.checks[c.id] = { krz: null, fin: null });
@@ -52,6 +108,7 @@ function renderCompany() {
     </div>
     <div class="sec">${secHead('Z czego wynika ocena', 'Każdy sygnał ma źródło i wagę. Na start każda firma ma 5 punktów.', r.score + ' pkt')}` +
       c.signals.map(([lv, title, detail, src, w]) => `<div class="item" style="--c1:120px"><span>${st(SIGNAL[lv][0], SIGNAL[lv][1])}</span><div><p><b>${esc(title)}</b></p><p>${esc(detail)} <span class="src">${esc(src)}</span></p></div><div class="end"><span class="num${w ? '' : ' muted'}">${w ? '+' + w : '0'}</span></div></div>`).join('') + `</div>
+    ${renderWl(c)}
     <div class="two">
       <div class="sec">${secHead('Zmiany od początku obserwacji', '', c.changes.length)}${c.changes.length ? c.changes.map(([at, what]) => `<div class="item" style="--c1:96px"><span class="lead-col num">${esc(at)}</span><div><p>${esc(what)}</p></div><span></span></div>`).join('') : '<p class="muted" style="padding-top:14px">Bez zmian w rejestrach.</p>'}</div>
       <div class="sec">${secHead('Twoje należności od tej firmy', '', mine.length)}${mine.length ? mine.map((x) => `<div class="item" style="--c1:150px"><span class="lead-col">${esc(x.invoice)}</span><div><p><b>${zl(x.amount)}</b>, ${dni(overdue(x))} po terminie</p></div><div class="end"><a href="#naleznosci">Należności</a></div></div>`).join('') : '<p class="muted" style="padding-top:14px">Brak zapisanych należności.</p>'}</div>
@@ -108,8 +165,8 @@ ACTIONS['co-fin'] = () => {
   PLAT.checks[state.co.id].fin = pay >= 0 && pur > 0 ? [Number(PLAT.today.slice(0, 4)) - 1, pay, pur] : null;
   rerender('kontrahent'); refocus('coFin');
 };
-CHANGES['co-pick'] = (el) => { state.co.id = el.value; rerender('kontrahent'); refocus('coPick'); };
+CHANGES['co-pick'] = (el) => { state.co.id = el.value; state.wl.msg = ''; rerender('kontrahent'); refocus('coPick'); };
 
-MODS.push({ id: 'kontrahenci', group: 'firmy', order: 9, label: 'Kontrahenci', about: 'Karta firmy po NIP z oceną ryzyka płatniczego, obserwowanie zmian w rejestrach i należności z warunkami wpisu do BIG.',
+MODS.push({ id: 'kontrahenci', group: 'firmy', order: 9, label: 'Kontrahenci', about: 'Karta firmy po NIP z oceną ryzyka płatniczego, sprawdzenie rachunku na białej liście VAT przed przelewem, obserwowanie zmian w rejestrach i należności z warunkami wpisu do BIG.',
   head: (v) => ({ crumbs: 'Wiarygodność kontrahentów', title: { kontrahent: 'Karta firmy', obserwowane: 'Obserwowane firmy', naleznosci: 'Należności' }[v.id] }),
   views: [{ id: 'kontrahent', label: 'Karta firmy', gap: 32, render: renderCompany }, { id: 'obserwowane', label: 'Obserwowane i alerty', render: renderWatch }, { id: 'naleznosci', label: 'Należności', gap: 32, render: renderReceivables }] });

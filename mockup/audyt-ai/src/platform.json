@@ -129,7 +129,8 @@
         ["Należności: wezwanie do zapłaty i warunki wpisu do BIG", "naleznosci", "silnik", "Długi widzi tylko Twoja firma."],
         ["Upadłości i restrukturyzacje z Krajowego Rejestru Zadłużonych", "kontrahent", "silnik", "Rejestr nie udostępnia danych programom. Karta firmy pokazuje, gdzie to sprawdzić, i zapisuje wynik. Obserwowane firmy przypominają o sprawdzeniu co 90 dni."],
         ["Szacowany czas płacenia dostawcom ze sprawozdań", "kontrahent", "silnik", "Dwie liczby przepisujesz ze sprawozdania w przeglądarce dokumentów finansowych KRS, a panel liczy dni."],
-        ["Wpis długu do BIG z platformy", "naleznosci", "plan", "Wymaga umowy z biurem."]
+        ["Wpis długu do BIG z platformy", "naleznosci", "plan", "Wymaga umowy z biurem."],
+        ["Sprawdzenie rachunku na białej liście przed przelewem, z kluczem zapytania MF", "kontrahent", "silnik", "Rachunek i status VAT na wybrany dzień, historia sprawdzeń z kluczami MF w CSV. Limit API Ministerstwa Finansów: 100 zapytań dziennie na cały panel."]
       ]
     },
     {
@@ -898,6 +899,9 @@
       "form": "jednostka samorządu terytorialnego",
       "since": "1999",
       "accounts": 3,
+      "wlAccounts": ["14101000000000000000000101", "84101000000000000000000102", "57101000000000000000000103"],
+      "vat": "Czynny",
+      "vatSince": "1999-01-04",
       "board": [],
       "watched": true,
       "signals": [
@@ -913,6 +917,9 @@
       "form": "spółka akcyjna",
       "since": "2005",
       "accounts": 0,
+      "wlAccounts": [],
+      "vat": "Czynny",
+      "vatSince": "2005-03-01",
       "board": ["Prezes zarządu", "Członek zarządu"],
       "watched": true,
       "signals": [
@@ -933,6 +940,9 @@
       "form": "spółka z ograniczoną odpowiedzialnością",
       "since": "2019",
       "accounts": 1,
+      "wlAccounts": ["88109000000000000000000301"],
+      "vat": "Czynny",
+      "vatSince": "2012-06-11",
       "board": ["Likwidator"],
       "watched": true,
       "signals": [
@@ -952,6 +962,9 @@
       "form": "spółka z ograniczoną odpowiedzialnością",
       "since": "2011",
       "accounts": 2,
+      "wlAccounts": ["09114000000000000000000401", "79114000000000000000000402"],
+      "vat": "Czynny",
+      "vatSince": "2016-09-01",
       "board": ["Prezes zarządu"],
       "watched": false,
       "signals": [

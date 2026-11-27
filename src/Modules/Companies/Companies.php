@@ -46,6 +46,10 @@ final class Companies
             return ['ok' => false, 'error' => $wl['error']];
         }
         $subject = $wl['subject'];
+        if ($subject && !empty($wl['request']['id'])) {
+            // Klucz zapytania z MF przy ostatnim pobraniu karty: widać go na karcie obok danych z wykazu.
+            $subject['_request'] = $wl['request'];
+        }
         $krsNo = $subject['krs'] ?? ($existing['krs'] ?? null);
         $krsSummary = [];
         $krsRaw = null;

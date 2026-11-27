@@ -44,6 +44,12 @@ final class Risk
                     trim('Status: ' . ($status ?: 'brak') . ($wl['removalDate'] ?? null ? ', wykreślenie ' . $wl['removalDate'] : '') . ($wl['removalBasis'] ?? null ? ' (' . $wl['removalBasis'] . ')' : '')),
                     'Wykaz podatników VAT', 30);
             }
+            $restored = (string) ($wl['restorationDate'] ?? '');
+            if ($status === 'Czynny' && $restored !== '' && strtotime($restored) > strtotime('-12 months', $now)) {
+                $add('mid', 'Niedawno przywrócony jako podatnik VAT',
+                    'Przywrócenie do rejestru ' . date('d.m.Y', strtotime($restored)) . (!empty($wl['removalDate']) ? ', wcześniej wykreślenie ' . date('d.m.Y', strtotime((string) $wl['removalDate'])) : '') . '. Przy fakturach z okresu przed przywróceniem sprawdź status VAT na dzień faktury.',
+                    'Wykaz podatników VAT', 8);
+            }
             if (($wl['accountCount'] ?? 0) === 0 && $status === 'Czynny') {
                 $add('mid', 'Brak rachunku na białej liście', 'Czynny podatnik VAT bez zgłoszonego rachunku firmowego. Przed przelewem potwierdź numer konta.', 'Wykaz podatników VAT', 10);
             }

@@ -5,32 +5,108 @@ declare(strict_types=1);
 namespace App\Modules\Companies;
 
 use App\Core\Http;
+use App\Core\Kv;
 use App\Core\Nip;
+use App\Core\Nrb;
 
 /** Publiczne rejestry: biała lista VAT (Ministerstwo Finansów) i KRS (Ministerstwo Sprawiedliwości). */
 final class Registries
 {
     public const WL = 'https://wl-api.mf.gov.pl/api/search/nip/';
     public const WL_MANY = 'https://wl-api.mf.gov.pl/api/search/nips/';
+    public const WL_CHECK = 'https://wl-api.mf.gov.pl/api/check/nip/';
     public const KRS = 'https://api-krs.ms.gov.pl/api/krs/OdpisAktualny/';
 
     /**
-     * Wykaz podatników VAT. Limit API jest dzienny, dlatego wynik zapisujemy w bazie i odświeżamy najwyżej raz na dobę.
-     * @return array{ok: bool, subject?: ?array, error?: string}
+     * Limit API wykazu VAT: 100 zapytań na dobę (do 30 podmiotów w jednym), po przekroczeniu blokada do północy.
+     * Panel ma jeden adres dla wszystkich firm, więc liczymy zapytania wspólnie.
      */
-    public static function whiteList(string $nip): array
+    public const WL_DAILY = 100;
+
+    /**
+     * Wykaz podatników VAT na dzień $date (domyślnie dziś). Limit API jest dzienny, dlatego wynik zapisujemy w bazie
+     * i odświeżamy najwyżej raz na dobę. 'request' to klucz zapytania z MF: potwierdzenie, że sprawdzenie wykonano.
+     * @return array{ok: bool, subject?: ?array, request?: array{id: string, at: string, date: string}, error?: string, code?: string}
+     */
+    public static function whiteList(string $nip, ?string $date = null): array
     {
         $nip = Nip::clean($nip);
-        $r = Http::get(self::WL . $nip . '?date=' . date('Y-m-d'), ['Accept' => 'application/json']);
+        $date ??= self::today();
+        $r = Http::get(self::WL . $nip . '?date=' . $date, ['Accept' => 'application/json']);
+        self::count($r['status']);
         $j = json_decode($r['body'], true);
         if ($r['status'] === 400 && is_array($j)) {
-            return ['ok' => false, 'error' => (string) ($j['message'] ?? 'Nieprawidłowy NIP.')];
+            return ['ok' => false, 'error' => (string) ($j['message'] ?? 'Nieprawidłowy NIP.'), 'code' => (string) ($j['code'] ?? '')];
         }
         if ($r['status'] !== 200 || !is_array($j)) {
-            return ['ok' => false, 'error' => 'Biała lista VAT nie odpowiada' . ($r['status'] === 429 ? ' (limit zapytań na dziś).' : '.')];
+            return ['ok' => false, 'error' => self::down($r['status'])];
         }
         $s = $j['result']['subject'] ?? null;
-        return ['ok' => true, 'subject' => is_array($s) ? self::normalizeSubject($s) : null];
+        return ['ok' => true, 'subject' => is_array($s) ? self::normalizeSubject($s) : null, 'request' => self::request($j['result'] ?? [], $date)];
+    }
+
+    /**
+     * Czy rachunek jest przypisany do czynnego podatnika VAT o tym NIP-ie w danym dniu (metoda „check” wykazu).
+     * Odpowiedź TAK albo NIE z kluczem zapytania. Numer musi mieć poprawną sumę kontrolną, inaczej API zwraca błąd WL-111.
+     * @return array{ok: bool, assigned?: bool, request?: array{id: string, at: string, date: string}, error?: string, code?: string}
+     */
+    public static function checkAccount(string $nip, string $account, ?string $date = null): array
+    {
+        $nip = Nip::clean($nip);
+        $account = Nrb::clean($account);
+        $date ??= self::today();
+        $r = Http::get(self::WL_CHECK . $nip . '/bank-account/' . $account . '?date=' . $date, ['Accept' => 'application/json']);
+        self::count($r['status']);
+        $j = json_decode($r['body'], true);
+        if ($r['status'] === 400 && is_array($j)) {
+            return ['ok' => false, 'error' => (string) ($j['message'] ?? 'Nieprawidłowe dane zapytania.'), 'code' => (string) ($j['code'] ?? '')];
+        }
+        $answer = is_array($j) ? (string) ($j['result']['accountAssigned'] ?? '') : '';
+        if ($r['status'] !== 200 || !in_array($answer, ['TAK', 'NIE'], true)) {
+            return ['ok' => false, 'error' => self::down($r['status'])];
+        }
+        return ['ok' => true, 'assigned' => $answer === 'TAK', 'request' => self::request($j['result'], $date)];
+    }
+
+    /** Ile zapytań do wykazu VAT zostało dziś dla całego panelu (szacunek z naszego licznika). */
+    public static function whiteListLeft(): int
+    {
+        if (Kv::get('wl:blocked:' . self::today())) {
+            return 0;
+        }
+        return max(0, self::WL_DAILY - (int) (Kv::get('wl:calls:' . self::today()) ?? 0));
+    }
+
+    /** Dzień w Polsce: limit API liczy się do północy czasu polskiego, a data zapytania to dzień polski. */
+    public static function today(): string
+    {
+        return (new \DateTimeImmutable('now', new \DateTimeZone('Europe/Warsaw')))->format('Y-m-d');
+    }
+
+    private static function count(int $status): void
+    {
+        $key = 'wl:calls:' . self::today();
+        Kv::set($key, (string) ((int) (Kv::get($key) ?? 0) + 1), 2 * 86400);
+        if ($status === 429) {
+            Kv::set('wl:blocked:' . self::today(), '1', 2 * 86400);
+        }
+    }
+
+    private static function down(int $status): string
+    {
+        return 'Biała lista VAT nie odpowiada' . ($status === 429 ? ' (limit zapytań na dziś, odblokuje się o północy).' : '.');
+    }
+
+    /** Klucz zapytania z MF: identyfikator, czas zapytania (w MF „27-11-2026 21:43:58”, czas polski) i dzień, którego dotyczy. */
+    private static function request(array $result, string $date): array
+    {
+        $at = (string) ($result['requestDateTime'] ?? '');
+        $dt = \DateTimeImmutable::createFromFormat('d-m-Y H:i:s', $at, new \DateTimeZone('Europe/Warsaw'));
+        return [
+            'id' => mb_substr((string) ($result['requestId'] ?? ''), 0, 60),
+            'at' => $dt ? $dt->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d H:i:s') : now_utc(),
+            'date' => $date,
+        ];
     }
 
     /**
@@ -43,10 +119,11 @@ final class Registries
         $nips = array_values(array_unique(array_filter(array_map([Nip::class, 'clean'], $nips), [Nip::class, 'valid'])));
         $out = [];
         foreach (array_chunk($nips, 30) as $chunk) {
-            $r = Http::get(self::WL_MANY . implode(',', $chunk) . '?date=' . date('Y-m-d'), ['Accept' => 'application/json']);
+            $r = Http::get(self::WL_MANY . implode(',', $chunk) . '?date=' . self::today(), ['Accept' => 'application/json']);
+            self::count($r['status']);
             $j = json_decode($r['body'], true);
             if ($r['status'] !== 200 || !is_array($j)) {
-                $err = 'Biała lista VAT nie odpowiada' . ($r['status'] === 429 ? ' (limit zapytań na dziś).' : '.');
+                $err = self::down($r['status']);
                 foreach ($chunk as $nip) {
                     $out[$nip] = ['ok' => false, 'error' => $err];
                 }
