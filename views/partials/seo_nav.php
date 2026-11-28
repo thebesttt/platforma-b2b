@@ -2,12 +2,12 @@
 /**
  * Nagłówek i zakładki jednej witryny w części „Widoczność”.
  * @var array $site
- * @var string $tab google | ai | konkurencja | dane
+ * @var string $tab google | ai | konkurencja | raporty | dane
  * @var array $sites wszystkie witryny firmy
  * @var string $lead jedno zdanie pod tytułem
  */
 $base = '/audyt/widocznosc/' . (int) $site['id'];
-$tabs = ['google' => [$base, 'Google'], 'ai' => [$base . '/ai', 'Odpowiedzi AI'], 'konkurencja' => [$base . '/konkurencja', 'Konkurencja'], 'dane' => [$base . '/dane', 'Dane i połączenia']];
+$tabs = ['google' => [$base, 'Google'], 'ai' => [$base . '/ai', 'Odpowiedzi AI'], 'konkurencja' => [$base . '/konkurencja', 'Konkurencja'], 'raporty' => [$base . '/raporty', 'Raporty dla klienta'], 'dane' => [$base . '/dane', 'Dane i połączenia']];
 ?>
 <header class="page-head">
   <p class="crumbs"><a href="/audyt/widocznosc?lista=1">Widoczność</a> / <?= e($site['host']) ?></p>

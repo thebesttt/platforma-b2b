@@ -74,6 +74,10 @@ final class Sites
         $db->transaction(static function (Db $db) use ($orgId, $id): void {
             $db->run('DELETE FROM seo_stats WHERE site_id = ? AND org_id = ?', [$id, $orgId]);
             $db->run('DELETE FROM seo_rival_pages WHERE site_id = ? AND org_id = ?', [$id, $orgId]);
+            // Raporty, monitory i powiadomienia tej witryny nie mają sensu bez niej.
+            $db->run('DELETE FROM seo_reports WHERE site_id = ? AND org_id = ?', [$id, $orgId]);
+            $db->run('DELETE FROM monitors WHERE site_id = ? AND org_id = ?', [$id, $orgId]);
+            $db->run('DELETE FROM notices WHERE site_id = ? AND org_id = ?', [$id, $orgId]);
             $db->run('DELETE FROM seo_sites WHERE id = ? AND org_id = ?', [$id, $orgId]);
         });
     }

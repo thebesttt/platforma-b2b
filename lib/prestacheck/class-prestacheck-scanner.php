@@ -256,7 +256,7 @@ class PrestaCheck_Scanner {
 		if ( ! empty( $p['product']['url'] ) && 200 === (int) $p['product']['status'] ) {
 			$result['meta']['product_url'] = $p['product']['url'];
 		}
-		$f = array_merge( $f, $this->check_marketing( $html ) );
+		$f = array_merge( $f, $this->check_marketing( $html, $headers ) );
 
 		$result['findings'] = $f;
 		$result['psi_done'] = false;
@@ -977,7 +977,53 @@ class PrestaCheck_Scanner {
 		return $out;
 	}
 
-	private function check_marketing( $html ) {
+	/** Do testów i do ponownej oceny zapisanych stron: wyniki części „Analityka i RODO” dla podanego kodu i nagłówków. */
+	public function marketing_findings( $html, array $headers = array() ) {
+		return $this->check_marketing( $html, $headers );
+	}
+
+	/**
+	 * Skrypty śledzące w kodzie strony. Dla każdego: czy jest od Google i czy jest zablokowany do czasu zgody
+	 * (znacznik script z typem innym niż JavaScript, np. text/plain, albo z adresem w data-src - tak robią banery zgód).
+	 * @return array<string, array{google: bool, direct: bool}>
+	 */
+	public static function trackers( $html ) {
+		$sigs = array(
+			'Google Analytics / Tag Manager' => array( true, '#googletagmanager\.com/(?:gtag/js|gtm\.js)|google-analytics\.com/(?:analytics|ga)\.js#i' ),
+			'Google Ads' => array( true, '#googleadservices\.com/pagead/conversion|gtag\(\s*["\']config["\']\s*,\s*["\']AW-\d#i' ),
+			'Meta Pixel' => array( false, '#connect\.facebook\.net/[^"\'\s]*fbevents\.js|fbq\(\s*["\']init#i' ),
+			'TikTok Pixel' => array( false, '#analytics\.tiktok\.com|ttq\.load\(#i' ),
+			'LinkedIn Insight Tag' => array( false, '#snap\.licdn\.com|_linkedin_partner_id#i' ),
+			'Hotjar' => array( false, '#static\.hotjar\.com|hotjar\.com/c/hotjar#i' ),
+			'Microsoft Clarity' => array( false, '#clarity\.ms/tag|\(window,\s*document,\s*["\']clarity["\']#i' ),
+			'Microsoft Advertising (UET)' => array( false, '#bat\.bing\.com/bat\.js#i' ),
+			'Pinterest Tag' => array( false, '#s\.pinimg\.com/ct/core\.js|pintrk\(\s*["\']load#i' ),
+			'X (Twitter) Pixel' => array( false, '#static\.ads-twitter\.com/uwt\.js|twq\(\s*["\']config#i' ),
+			'Yandex Metrica' => array( false, '#mc\.yandex\.ru/metrika#i' ),
+		);
+		$out = array();
+		if ( ! preg_match_all( '#<script\b([^>]*)>(.*?)</script>#is', $html, $tags, PREG_SET_ORDER ) ) {
+			return $out;
+		}
+		foreach ( $tags as $t ) {
+			$attrs = $t[1];
+			$blob  = $attrs . ' ' . $t[2];
+			$type  = preg_match( '#\btype\s*=\s*["\']?([^"\'\s>]+)#i', $attrs, $m ) ? strtolower( $m[1] ) : '';
+			$runs  = in_array( $type, array( '', 'text/javascript', 'application/javascript', 'module', 'text/ecmascript' ), true )
+				&& ! preg_match( '#\bdata-src\s*=#i', $attrs );
+			foreach ( $sigs as $name => $sig ) {
+				if ( preg_match( $sig[1], $blob ) ) {
+					if ( ! isset( $out[ $name ] ) ) {
+						$out[ $name ] = array( 'google' => $sig[0], 'direct' => false );
+					}
+					$out[ $name ]['direct'] = $out[ $name ]['direct'] || $runs;
+				}
+			}
+		}
+		return $out;
+	}
+
+	private function check_marketing( $html, array $headers = array() ) {
 		$out = array();
 
 		$ga = preg_match( '/googletagmanager\.com\/(gtag\/js\?id=G-|gtm\.js)|GTM-[A-Z0-9]{4,}|["\']G-[A-Z0-9]{6,}["\']|\/modules\/[a-z0-9_]*(?:gtm|tagmanager|tagmenager|googleanalytics|ganalytics|ga4)[a-z0-9_]*\//i', $html );
@@ -987,13 +1033,33 @@ class PrestaCheck_Scanner {
 			$out[] = $this->finding( 'ga4', 'marketing', 'ok', 'Google Analytics / Tag Manager wdrożony', 'Sklep mierzy ruch.', null, null, 0 );
 		}
 
-		$consent_tools = 'clickio|didomi|cookiefirst|cookie-script|cookiescript|quantcast|sourcepoint|seigicookie|pressidium|cookie-consent|cookie_consent|cookie-notice|cookiebot|cookieyes|iubenda|onetrust|cookiehub|complianz|usercentrics|termly|osano|trustarc|axeptio|klaro|tarteaucitron|cookieconsent|cookie-consent|lgcookieslaw|cookiesplus|deluxecookies|pdgdprpro|gdprpro|psgdpr_cookie|consentmanager|cookie-law|cookielaw|cookie_notice|cookienotice|consentmode|gtag\(\s*["\']consent["\']';
-		$consent       = preg_match( '/' . $consent_tools . '/i', $html );
-		if ( ! $consent ) {
-			$out[] = $this->finding( 'consent', 'marketing', 'warning', 'Nie wykryto zgody na cookies (Consent Mode)', 'Nie znaleźliśmy znanego systemu zgód cookies ani Google Consent Mode v2. Bez niego sklep ryzykuje problemy z RODO, a kampanie Google Ads tracą dane o konwersjach.', 'Wdrożenie banera zgód zgodnego z Consent Mode v2.', 'marketing', 4 );
+		// Zgoda na pliki cookie: liczy się dopiero wtedy, gdy strona coś śledzi. Strona bez skryptów śledzących zgody nie potrzebuje.
+		$consent_tools = 'clickio|didomi|cookiefirst|cookie-script|cookiescript|quantcast|sourcepoint|seigicookie|pressidium|cookie-consent|cookie_consent|cookie-notice|cookiebot|cookieyes|iubenda|onetrust|cookiehub|complianz|usercentrics|termly|osano|trustarc|axeptio|klaro|tarteaucitron|cookieconsent|lgcookieslaw|cookiesplus|deluxecookies|pdgdprpro|gdprpro|psgdpr_cookie|consentmanager|cookie-law|cookielaw|cookie_notice|cookienotice|consentmode|borlabs|cookie-yes|moove_gdpr|real-cookie-banner';
+		$cmp      = (bool) preg_match( '/' . $consent_tools . '/i', $html );
+		$cm       = (bool) preg_match( '/["\']consent["\']\s*,\s*["\']default["\']/i', $html );
+		$trackers = self::trackers( $html );
+		$names    = array_keys( $trackers );
+		$early    = array_keys( array_filter( $trackers, static function ( $t ) { return ! $t['google'] && $t['direct']; } ) );
+		$cookies  = array();
+		foreach ( isset( $headers['set-cookie'] ) ? (array) $headers['set-cookie'] : array() as $c ) {
+			if ( preg_match( '/^\s*(_ga|_gid|_gcl_[a-z]+|_fbp|_fbc|_ttp|_hj[a-z]\w*|_clck|_clsk|_uet\w+|li_fat_id|_pin_unauth)=/i', (string) $c, $m ) ) {
+				$cookies[] = $m[1];
+			}
+		}
+		$cookies = array_values( array_unique( $cookies ) );
+
+		if ( $trackers && ! $cmp && ! $cm ) {
+			$out[] = $this->finding( 'consent', 'marketing', 'warning', 'Skrypty śledzące bez zgody na cookies', 'Strona ładuje: ' . implode( ', ', $names ) . '. Nie znaleźliśmy banera zgody ani trybu zgody Google (Consent Mode v2). Pliki cookie analityczne i reklamowe wymagają zgody odwiedzającego (art. 399 Prawa komunikacji elektronicznej), a bez trybu zgody Google kampanie Google Ads tracą dane o konwersjach.', 'Wdrożenie banera zgód zgodnego z Consent Mode v2 i blokowanie skryptów do czasu zgody.', 'marketing', 4 );
+		} elseif ( $trackers && $early ) {
+			$out[] = $this->finding( 'consent_early', 'marketing', 'warning', 'Skrypty reklamowe mogą ładować się przed zgodą', 'Na stronie jest mechanizm zgody, ale ' . implode( ', ', $early ) . ' ' . ( count( $early ) > 1 ? 'są wpisane' : 'jest wpisany' ) . ' w kod strony zwykłym znacznikiem script, bez blokady do czasu zgody. Taki skrypt zwykle zapisuje pliki cookie, zanim odwiedzający wybierze cokolwiek w banerze. Część banerów blokuje skrypty dopiero w przeglądarce, więc potwierdź to w oknie prywatnym (Narzędzia dla programistów, zakładka Aplikacja, pliki cookie przed kliknięciem w baner).', 'Ładowanie skryptów reklamowych przez baner zgody albo Menedżer tagów z warunkiem zgody.', 'marketing', 2 );
+		} elseif ( $trackers ) {
+			$out[] = $this->finding( 'consent', 'marketing', 'ok', 'Skrypty śledzące czekają na zgodę', 'Strona ma mechanizm zgody, a skrypty spoza Google nie są wpisane w kod bez blokady.', null, null, 0 );
+		}
+		if ( $cookies ) {
+			$out[] = $this->finding( 'consent_cookies', 'marketing', 'warning', 'Serwer ustawia pliki cookie śledzące przed zgodą', 'Już pierwsza odpowiedź serwera zapisuje pliki cookie: ' . implode( ', ', $cookies ) . '. Odwiedzający nie zdążył wyrazić zgody, a to pliki analityczne albo reklamowe.', 'Ustawianie tych plików cookie dopiero po zgodzie (zwykle konfiguracja wtyczki albo pomiaru po stronie serwera).', 'marketing', 3 );
 		}
 
-		if ( ! preg_match( '/connect\.facebook\.net\/[^"\']*fbevents\.js|fbq\(\s*["\']init/i', $html ) ) {
+		if ( ! isset( $trackers['Meta Pixel'] ) ) {
 			$out[] = $this->finding( 'pixel', 'marketing', 'info', 'Nie wykryto Meta Pixel', 'Bez piksela Meta nie da się skutecznie prowadzić remarketingu na Facebooku i Instagramie.', 'Wdrożenie Meta Pixel i Conversions API.', 'marketing', 1 );
 		}
 

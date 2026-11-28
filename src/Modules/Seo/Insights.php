@@ -317,6 +317,25 @@ final class Insights
         ];
     }
 
+    /**
+     * Tygodnie (od poniedziałku) z dniem ustawowo wolnym od pracy: podpis pod wykresem tłumaczy spadek w Boże Narodzenie czy w Wielkanoc.
+     * Niedzielne święta pomijamy, bo niedziela i tak jest wolna.
+     * @param string[] $mondays
+     * @return array<string, string[]> poniedziałek => nazwy świąt
+     */
+    public static function holidayWeeks(array $mondays): array
+    {
+        $out = [];
+        foreach ($mondays as $monday) {
+            $sunday = gmdate('Y-m-d', strtotime($monday . ' UTC') + 6 * 86400);
+            $names = array_values(array_filter(\App\Core\Holidays::between($monday, $sunday), static fn (string $n, string $d): bool => $d !== $sunday, ARRAY_FILTER_USE_BOTH));
+            if ($names) {
+                $out[$monday] = $names;
+            }
+        }
+        return $out;
+    }
+
     /** Dane dzienne zsumowane w tygodnie (od poniedziałku). Niepełny pierwszy i ostatni tydzień pomijamy. */
     public static function weekly(array $daily, string $field = 'clicks'): array
     {

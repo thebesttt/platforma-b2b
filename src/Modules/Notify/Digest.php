@@ -194,6 +194,24 @@ final class Digest
             }
         }
 
+        // Alarm pomiaru, monitory i raporty miesięczne do przejrzenia.
+        $notices = Notices::since($id, $since, 12);
+        if ($notices) {
+            $n = count($notices);
+            $parts[] = $n . ' ' . plural($n, 'powiadomienie z monitorów', 'powiadomienia z monitorów', 'powiadomień z monitorów');
+            $lines[] = 'MONITORY, POMIAR I RAPORTY (' . $n . ')';
+            foreach ($notices as $x) {
+                $lines[] = '- ' . truncate((string) $x['title'], 110);
+                if ((string) $x['detail'] !== '') {
+                    $lines[] = '  ' . truncate((string) $x['detail'], 260);
+                }
+                if ((string) $x['url'] !== '') {
+                    $lines[] = '  ' . $baseUrl . $x['url'];
+                }
+            }
+            $lines[] = '';
+        }
+
         if (!$parts) {
             return null;
         }

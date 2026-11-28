@@ -16,10 +16,12 @@ use App\Http\DashboardController;
 use App\Http\GrantCallController;
 use App\Http\InboundController;
 use App\Http\LibraryController;
+use App\Http\MonitorController;
 use App\Http\OfferController;
 use App\Http\OutreachController;
 use App\Http\PlanController;
 use App\Http\ProspectController;
+use App\Http\ReportController;
 use App\Http\RfqController;
 use App\Http\SeoController;
 use App\Http\SettingsController;
@@ -52,6 +54,8 @@ return static function (Router $r): void {
     $r->post('/z/{code}', [ConsentController::class, 'page'], ['csrf' => false]);
     // Raport z audytu strony dla firmy z listy potencjalnych klientów: link z losowym tokenem, bez logowania i plików cookie.
     $r->get('/raport/{token}', [ConsentController::class, 'report']);
+    // Raport miesięczny dla klienta agencji: link z losowym tokenem, bez logowania i plików cookie.
+    $r->get('/m/{token}', [ReportController::class, 'publicReport']);
     $r->get('/wypisz/{token}', [OutreachController::class, 'unsubForm']);
     $r->post('/wypisz/{token}', [OutreachController::class, 'unsubForm'], ['csrf' => false]);
 
@@ -67,6 +71,15 @@ return static function (Router $r): void {
     $r->post('/w/{id}/lead', [WidgetController::class, 'lead'], ['csrf' => false]);
 
     $r->get('/pulpit', [DashboardController::class, 'index'], $a);
+    // Monitory opisane jednym zdaniem i powiadomienia z nich
+    $r->get('/monitory', [MonitorController::class, 'index'], $a);
+    $r->post('/monitory', [MonitorController::class, 'save'], $a);
+    $r->post('/monitory/rozpoznaj', [MonitorController::class, 'parse'], $a);
+    $r->post('/monitory/anuluj', [MonitorController::class, 'cancel'], $a);
+    $r->post('/monitory/przeczytane', [MonitorController::class, 'read'], $a);
+    $r->post('/monitory/{id}/sprawdz', [MonitorController::class, 'check'], $a);
+    $r->post('/monitory/{id}/wlacz', [MonitorController::class, 'toggle'], $a);
+    $r->post('/monitory/{id}/usun', [MonitorController::class, 'delete'], $a);
 
     // Zapytania ze strony
     $r->get('/zapytania', [InboundController::class, 'index'], $a);
@@ -231,6 +244,13 @@ return static function (Router $r): void {
     $r->get('/audyt/widocznosc/{id}/konkurencja', [SeoController::class, 'rivals'], $a);
     $r->post('/audyt/widocznosc/{id}/konkurencja', [SeoController::class, 'saveRivals'], $a);
     $r->get('/audyt/widocznosc/{id}/dane', [SeoController::class, 'data'], $a);
+    // Raporty miesięczne dla klienta: przygotowanie, notatki agencji, link
+    $r->get('/audyt/widocznosc/{id}/raporty', [ReportController::class, 'index'], $a);
+    $r->post('/audyt/widocznosc/{id}/raporty', [ReportController::class, 'create'], $a);
+    $r->post('/audyt/widocznosc/{id}/raporty/wyglad', [ReportController::class, 'brand'], $a);
+    $r->get('/audyt/widocznosc/{id}/raporty/{rid}', [ReportController::class, 'show'], $a);
+    $r->post('/audyt/widocznosc/{id}/raporty/{rid}', [ReportController::class, 'update'], $a);
+    $r->post('/audyt/widocznosc/{id}/raporty/{rid}/usun', [ReportController::class, 'delete'], $a);
     $r->post('/audyt/widocznosc/{id}/import', [SeoController::class, 'import'], $a);
     $r->post('/audyt/widocznosc/{id}/wklej', [SeoController::class, 'paste'], $a);
     $r->post('/audyt/widocznosc/{id}/ustawienia', [SeoController::class, 'settings'], $a);

@@ -136,6 +136,21 @@ $lead = $leads[0] ?? null;
   </div>
 
   <div class="side stack">
+    <?php if (!empty($notices)): ?>
+    <section class="card" aria-labelledby="t-notices">
+      <h2 id="t-notices" style="margin-bottom:8px">Monitory i pomiar</h2>
+      <ul class="list-plain">
+        <?php foreach ($notices as $x): ?>
+          <li>
+            <span class="chip <?= $x['level'] === 'high' ? 'high' : ($x['level'] === 'mid' ? 'mid' : 'info') ?>"><?= $x['read_at'] ? 'przeczytane' : 'nowe' ?></span>
+            <div style="font-weight:600;margin-top:6px"><a href="<?= e(str_starts_with((string) $x['url'], '/') ? (string) $x['url'] : '/monitory') ?>"><?= e(truncate((string) $x['title'], 120)) ?></a></div>
+            <div class="small muted"><?= e(truncate((string) $x['detail'], 200)) ?> · <?= e(local_dt((string) $x['created_at'], 'd.m H:i')) ?></div>
+          </li>
+        <?php endforeach ?>
+      </ul>
+      <p class="small" style="margin:12px 0 0"><a href="/monitory">Wszystkie monitory i powiadomienia</a></p>
+    </section>
+    <?php endif ?>
     <?php if (!empty($deadlines)): ?>
     <section class="card" aria-labelledby="t-deadlines">
       <h2 id="t-deadlines" style="margin-bottom:8px">Zbliżające się terminy</h2>

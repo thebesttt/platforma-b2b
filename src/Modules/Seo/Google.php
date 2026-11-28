@@ -330,7 +330,41 @@ final class Google
         Stats::replace($site, 'ga4_ai', 'total', $cur[0], $cur[1], [['k' => 'api', 'value' => (int) ($got['all'][0][1] ?? 0)]]);
         Stats::replace($site, 'ga4_ai', 'total', $prev[0], $prev[1], [['k' => 'api', 'value' => (int) ($got['all_prev'][0][1] ?? 0)]]);
         Stats::replace($site, 'ga4_ai', 'page', $cur[0], $cur[1], array_values($pages));
+        self::syncGa4Daily($site, $property, $t['token'], $end);
         return ['ok' => true, 'start' => $cur[0], 'end' => $cur[1], 'sessions' => (int) array_sum(array_column($curRows, 'value'))];
+    }
+
+    /** Dni pobierane do alarmu pomiaru: 8 tygodni historii, 2 dni sprawdzane i zapas na święta. */
+    public const GA4_DAILY_DAYS = 70;
+
+    /**
+     * Sesje i zdarzenia kluczowe dzień po dniu: dane do alarmu „pomiar przestał działać” (Tracking).
+     * Błąd tego zapytania nie psuje pobrania: to dane dodatkowe.
+     */
+    private static function syncGa4Daily(array $site, string $property, string $token, string $end): bool
+    {
+        $start = gmdate('Y-m-d', strtotime($end . ' UTC') - (self::GA4_DAILY_DAYS - 1) * 86400);
+        $body = ['dateRanges' => [['startDate' => $start, 'endDate' => $end]], 'dimensions' => [['name' => 'date']],
+            'metrics' => [['name' => 'sessions'], ['name' => 'keyEvents']], 'limit' => '400'];
+        $r = Http::postJson(self::GA4 . '/properties/' . $property . ':runReport', $body, self::auth($token));
+        if ($r['status'] !== 200) {
+            error_log('[ga4] dane dzienne ' . $site['host'] . ': ' . self::explain($r, 'Google Analytics'));
+            return false;
+        }
+        $rows = [];
+        foreach ((array) (json_decode((string) $r['body'], true)['rows'] ?? []) as $row) {
+            $d = (string) ($row['dimensionValues'][0]['value'] ?? '');
+            if (preg_match('/^(\d{4})(\d{2})(\d{2})$/', $d, $m)) {
+                $rows[] = ['day' => $m[1] . '-' . $m[2] . '-' . $m[3], 'clicks' => (int) ($row['metricValues'][0]['value'] ?? 0), 'value' => (float) ($row['metricValues'][1]['value'] ?? 0)];
+            }
+        }
+        // GA4 pomija dni bez sesji: uzupełniamy je zerami, bo dzień bez ruchu to też informacja dla alarmu.
+        $have = array_column($rows, null, 'day');
+        for ($ts = strtotime($start . ' UTC'); $ts <= strtotime($end . ' UTC'); $ts += 86400) {
+            $have[gmdate('Y-m-d', $ts)] ??= ['day' => gmdate('Y-m-d', $ts), 'clicks' => 0, 'value' => 0.0];
+        }
+        Stats::putDaily($site, 'ga4', 'date', array_values($have));
+        return true;
     }
 
     /**

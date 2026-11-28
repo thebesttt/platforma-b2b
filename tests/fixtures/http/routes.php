@@ -172,6 +172,9 @@ return [
         'body' => "Dzień dobry,\n\nwidzimy, że realizują Państwo projekt z funduszy europejskich \u{2014} gratulujemy.\n\nProponujemy przegląd strony w 2 tygodnie.\n\nZ poważaniem\nJan Test",
     ]),
     // Czat w widżecie zapytań: odpowiedź z bazy wiedzy firmy.
+    // Monitory: zdanie, którego panel nie rozpoznał sam. Zdanie z „usuń” udaje odpowiedź spoza katalogu.
+    '#^POST https://api\.anthropic\.com/v1/messages\n.*Zamieniasz zdanie użytkownika na regułę monitora.*usuń#s' => $claude(['kind' => 'usun_wszystko', 'params' => []]),
+    '#^POST https://api\.anthropic\.com/v1/messages\n.*Zamieniasz zdanie użytkownika na regułę monitora#s' => $claude(['kind' => 'gsc_clicks', 'params' => ['site' => 'sklep-przykladowy.example', 'pct' => 25]]),
     '#^POST https://api\.anthropic\.com/v1/messages\n.*Jesteś asystentem na stronie firmy#s' => $json([
         'type' => 'message', 'role' => 'assistant', 'stop_reason' => 'end_turn',
         'content' => [['type' => 'text', 'text' => 'Tak, prowadzimy kampanie Google Ads. Wycenę przygotujemy po krótkiej rozmowie.']],

@@ -56,6 +56,26 @@ $cfDays = static function (int $d) use ($bot, $uaChat, $uaPplx, $uaSearch): arra
     return array_merge($rows, $extra[$d] ?? []);
 };
 $recent = gmdate('Y-m-d', time() - 5 * 86400);
+// GA4 dzień po dniu (alarm pomiaru): 70 dni do wczoraj. Wariant „pomiar-zdarzenia”: od 6 dni zdarzeń kluczowych 0 przy zwykłym
+// ruchu. Wariant „pomiar-ruch”: od 6 dni prawie nie ma sesji (tag zniknął ze strony).
+$gaDaily = static function (string $mode): array {
+    $rows = [];
+    for ($i = 70; $i >= 1; $i--) {
+        $ts = time() - $i * 86400;
+        $weekend = (int) gmdate('N', $ts) >= 6;
+        $s = $weekend ? 60 : 110 + ($i % 5) * 3;
+        $e = $weekend ? 2 : 4 + ($i % 3);
+        if ($mode === 'pomiar-zdarzenia' && $i <= 6) {
+            $e = 0;
+        }
+        if ($mode === 'pomiar-ruch' && $i <= 6) {
+            [$s, $e] = [3, 0];
+        }
+        $rows[] = ['dimensionValues' => [['value' => gmdate('Ymd', $ts)]], 'metricValues' => [['value' => (string) $s], ['value' => (string) $e]]];
+    }
+    return ['dimensionHeaders' => [['name' => 'date']], 'metricHeaders' => [['name' => 'sessions', 'type' => 'TYPE_INTEGER'], ['name' => 'keyEvents', 'type' => 'TYPE_INTEGER']],
+        'rows' => $rows, 'rowCount' => count($rows), 'kind' => 'analyticsData#runReport'];
+};
 
 return [
     // Token konta usługi. Konto o adresie „odrzucony@…” udaje usunięty klucz.
@@ -162,6 +182,7 @@ return [
         ['name' => 'properties/123456789/dataStreams/7', 'type' => 'ANDROID_APP_DATA_STREAM'],
         ['name' => 'properties/123456789/dataStreams/2', 'type' => 'WEB_DATA_STREAM', 'webStreamData' => ['measurementId' => 'G-BBBB', 'defaultUri' => 'https://www.sklep-przykladowy.example/']]]]),
 
+    '#^POST https://analyticsdata\.googleapis\.com/v1beta/properties/123456789:runReport\n.*"keyEvents"#s' => $json($gaDaily((string) $variant)),
     // Google Analytics Data API: sesje. Filtr źródła zwraca też wiersz spoza listy asystentów (szerokie wyrażenie).
     '#^POST https://analyticsdata\.googleapis\.com/v1beta/properties/123456789:runReport\n.*"landingPage"#s' => $json($ga([
         [['/poradnik/odkamienianie', 'chatgpt.com'], 21], [['/poradnik/odkamienianie', 'chat.openai.com'], 4], [['/ranking-ekspresow', 'perplexity.ai'], 9], [['(not set)', 'chatgpt.com'], 2],

@@ -1,16 +1,16 @@
 # Plan działania
 
-Stan na 27.11.2026.
+Stan na 28.11.2026.
 
 **Zmiana kierunku.** Pierwszym użytkownikiem narzędzia jest PerfectData (perfectdata.pl). Cel: więcej zapytań ze strony i audyt, którym agencja pracuje z klientami SEO i GEO. Platforma B2B (przetargi, oferty, kontrahenci) zostaje silnikiem pod spodem i osobnym produktem na później.
 
 Na perfectdata.pl nic nie zostało zainstalowane. Kod trafi na stronę dopiero po wyraźnej zgodzie właściciela.
 
-**Co się zmieniło 20.11.2026.** Etapy 1 i 2 oraz większość etapu 3 są zbudowane w silniku i przechodzą testy. Tego samego dnia doszło pięć funkcji z etapu 4: wyniki przetargów, praca zespołu nad ofertą, warunki naboru dotacji, przypomnienia z adresem wypisania i opis idealnego klienta. Potem doszły cztery funkcje, których dane nie są dostępne dla programów: panel pokazuje, gdzie je znaleźć, i daje miejsce na wpisanie (szczegóły niżej, w części „Dane wpisywane ręcznie”). 23.11.2026 doszła lista potencjalnych klientów: panel proponuje firmy, układa treść oferty i pokazuje drogi kontaktu z oceną ryzyka (część „Potencjalni klienci i wysyłka”). Tego samego dnia doszła zgoda na ofertę e-mailem zbierana listem: strona zgody z kodem QR i zapisanym dowodem. Potem siedem dodatków do listów i zgód: audyt strony jako zachęta, lejek listów, listy seryjnie, kod QR na wizytówkę, pytanie o zainteresowania, wyszukiwanie w CEIDG i drugi list (część „Listy i zgody: siedem dodatków”). 24.11.2026 doszła widoczność: dane z Search Console, sygnały z odpowiedzi AI i konkurencja z map witryn (część „Widoczność w Google, w AI i u konkurencji”). 25.11.2026 doszły trzy publiczne źródła popytu i kampanie e-mail: plany zamówień z BZP i zapowiedzi z TED, firmy z dotacjami UE oraz kampanie z wersją wiadomości dla każdego odbiorcy (części „Skąd brać popyt: źródła publiczne” i „Kampanie e-mail dopasowane do odbiorcy”). 27.11.2026 doszła biała lista VAT przed przelewem: sprawdzenie rachunku z faktury i statusu VAT na wybrany dzień z kluczem zapytania Ministerstwa Finansów (część „Biała lista VAT przed przelewem”). Do uruchomienia zostały kroki właściciela z etapu 0: hosting, baza, klucze usług i zgoda na kod widżetu. Lista na końcu, w części „Co jest potrzebne od właściciela”.
+**Co się zmieniło 20.11.2026.** Etapy 1 i 2 oraz większość etapu 3 są zbudowane w silniku i przechodzą testy. Tego samego dnia doszło pięć funkcji z etapu 4: wyniki przetargów, praca zespołu nad ofertą, warunki naboru dotacji, przypomnienia z adresem wypisania i opis idealnego klienta. Potem doszły cztery funkcje, których dane nie są dostępne dla programów: panel pokazuje, gdzie je znaleźć, i daje miejsce na wpisanie (szczegóły niżej, w części „Dane wpisywane ręcznie”). 23.11.2026 doszła lista potencjalnych klientów: panel proponuje firmy, układa treść oferty i pokazuje drogi kontaktu z oceną ryzyka (część „Potencjalni klienci i wysyłka”). Tego samego dnia doszła zgoda na ofertę e-mailem zbierana listem: strona zgody z kodem QR i zapisanym dowodem. Potem siedem dodatków do listów i zgód: audyt strony jako zachęta, lejek listów, listy seryjnie, kod QR na wizytówkę, pytanie o zainteresowania, wyszukiwanie w CEIDG i drugi list (część „Listy i zgody: siedem dodatków”). 24.11.2026 doszła widoczność: dane z Search Console, sygnały z odpowiedzi AI i konkurencja z map witryn (część „Widoczność w Google, w AI i u konkurencji”). 25.11.2026 doszły trzy publiczne źródła popytu i kampanie e-mail: plany zamówień z BZP i zapowiedzi z TED, firmy z dotacjami UE oraz kampanie z wersją wiadomości dla każdego odbiorcy (części „Skąd brać popyt: źródła publiczne” i „Kampanie e-mail dopasowane do odbiorcy”). 27.11.2026 doszła biała lista VAT przed przelewem: sprawdzenie rachunku z faktury i statusu VAT na wybrany dzień z kluczem zapytania Ministerstwa Finansów (część „Biała lista VAT przed przelewem”). 28.11.2026 doszło pięć pomysłów podpatrzonych w bdos.ai: alarm „pomiar przestał działać”, święta w porównaniach, raport miesięczny dla klienta, monitory opisane jednym zdaniem i sprawdzenie zgody na cookies w audycie (część „Monitory, pomiar i raport dla klienta”). Do uruchomienia zostały kroki właściciela z etapu 0: hosting, baza, klucze usług i zgoda na kod widżetu. Lista na końcu, w części „Co jest potrzebne od właściciela”.
 
 ## Co jest gotowe
 
-- **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`, 211 testów na SQLite i PostgreSQL. Gotowa do uruchomienia w Render.
+- **Silnik:** aplikacja PHP z bazą PostgreSQL w repozytorium `platforma-b2b`, 220 testów na SQLite i PostgreSQL. Gotowa do uruchomienia w Render.
 - **Panel w wyglądzie PerfectData** (zmienna `APP_THEME=perfectdata` albo ustawienie firmy) z wyborem modułów w menu i pulpitem, który pokazuje tylko włączone moduły.
 - **Zapytania ze strony:** widżet do wklejenia jedną linią kodu, kwalifikator z jawną tabelą punktów, lista i karta zapytań, czat AI z bazy wiedzy, lejek i test dwóch wersji.
 - **Audyt AI:** 24 wskaźniki i 100 punktów z jednego pliku wytycznych, raport z linijką punktów i listą „Najpierw to”, „Przed i po”, strona wytycznych, raport dla klienta pod linkiem, audyt wielu stron z mapy witryny. Sprawdzony na prawdziwej stronie perfectdata.pl.
@@ -19,11 +19,12 @@ Na perfectdata.pl nic nie zostało zainstalowane. Kod trafi na stronę dopiero p
 - **Oferty i wnioski:** szkic z ogłoszenia i biblioteki, praca zespołu (sekcja przydzielona osobie, zapis nie nadpisuje cudzej zmiany), lista dokumentów do odhaczania, a we wniosku o dotację sprawdzenie warunków naboru z cytatami. Lista obserwowanych naborów z przewodnikiem po pięciu oficjalnych serwisach, przypomnieniami o końcu naboru i wnioskiem zakładanym z naboru.
 - **Klienci i wiadomości:** ocena ryzyka prawnego przed wysyłką, przypomnienia po 4 i po 10 dniach z dziennym limitem, adres wypisania w stopce ofert, opis idealnego klienta ze strony firmy. Rejestr zapytań ofertowych z rynku: gdzie szukać, termin, kontakt z podstawą „zapytanie ofertowe” i odpowiedź jednym kliknięciem. Lista potencjalnych klientów: firmy z wyników przetargów i z listy użytkownika, dane z rejestrów, punkty dopasowania, treść oferty układana automatycznie i drogi kontaktu z oceną ryzyka. Zgoda na ofertę e-mailem zbierana listem: w liście jest adres strony zgody i kod QR, firma sama zostawia e-mail, a panel zapisuje dowód. Do tego audyt strony jako zachęta, lejek listów z kosztem jednej zgody, listy seryjnie, drugi list po 21 dniach, kod QR na wizytówkę, pytanie o zainteresowania i wyszukiwanie firm w CEIDG (po wpisaniu tokenu). Przycisk „Napisz” przy kontakcie sam dobiera rodzaj wiadomości do podstawy kontaktu. Firmy z dotacjami UE: spółki w trakcie projektu z funduszy europejskich, do dodania na listę potencjalnych klientów. Kampanie e-mail: jedna treść, ale wersja dla każdego odbiorcy z faktów o jego firmie. Panel wysyła sam tylko do zgód i klientów.
 - **Kontrahenci:** karta firmy z rejestrów publicznych, sprawdzenie rachunku na białej liście VAT przed przelewem z kluczem zapytania MF, a do tego dwa sprawdzenia robione ręcznie: Krajowy Rejestr Zadłużonych i liczby ze sprawozdania finansowego, z których panel liczy, po ilu dniach firma płaci dostawcom.
-- **Audyt techniczny:** bez zmian, działa od początku.
+- **Audyt techniczny:** działa od początku. Od 28.11.2026 część RODO rozróżnia skrypty śledzące czekające na zgodę i ładowane przed nią oraz pliki cookie śledzące zapisywane przez serwer.
+- **Monitory i powiadomienia:** reguły opisane jednym zdaniem sprawdzane codziennie, alarm pomiaru Google Analytics i raport miesięczny dla klienta agencji. Powiadomienia na pulpicie, w zakładce Monitory i w porannym przeglądzie.
 - **Platforma dla wielu firm:** pakiety Podstawowy i Rozszerzony z miesięcznym przydziałem AI, ekran administratora (firmy, zaproszenia, blokada, limity), logowanie dwuetapowe, eksport i usunięcie danych firmy, własne połączenia każdej firmy w Widoczności.
 - **Nabory dotacji:** wyszukiwarka naborów (AI szuka w internecie i podaje źródła) oraz przycisk, który pisze cały wniosek.
 - **Widoczność:** zakładka w module Audyt. Użytkownik wpisuje adres witryny i wgrywa paczkę z przycisku „Eksportuj” w Search Console albo dodaje jeden adres e-mail jako użytkownika i klika „Połącz”. Panel pokazuje, co poprawić najpierw w Google, gdzie stronę widać w odpowiedziach AI i co publikuje konkurencja.
-- **Mockup całego panelu:** `mockup/audyt-ai`, 11 modułów w sześciu grupach menu i 41 ekranów, z listą 85 funkcji i ich stanem. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip`.
+- **Mockup całego panelu:** `mockup/audyt-ai`, 11 modułów w sześciu grupach menu i 43 ekrany, z listą 92 funkcji i ich stanem. Prywatny podgląd w Claude i paczka `audyt-ai-mockup.zip`.
 - **Wytyczne audytu:** `resources/audyt-ai-rules.json` (czyta je silnik) i dokument dla zespołu `mockup/audyt-ai/WYTYCZNE.md`.
 - **Plany modułów:** `PLAN-ZAPYTANIA.md` i `PLAN-AUDYT-AI.md`.
 
@@ -46,21 +47,21 @@ W platformie wygląd i zestaw modułów będą ustawieniem organizacji (pole `se
 
 ## Funkcje i ich stan
 
-Mockup pokazuje 85 funkcji. Zakładka „Lista funkcji” na pulpicie podaje stan każdej z nich i prowadzi do ekranu.
+Mockup pokazuje 92 funkcje. Zakładka „Lista funkcji” na pulpicie podaje stan każdej z nich i prowadzi do ekranu.
 
 | Moduł | Działa w silniku | Do zbudowania | Czeka na zgodę Google i Meta |
 |---|---|---|---|
 | Zapytania | 5 | 0 | 0 |
 | Klienci | 22 | 1 | 0 |
 | Audyt AI | 6 | 1 | 0 |
-| SEO i strona | 8 | 1 | 0 |
-| Reklamy | 0 | 0 | 6 |
+| SEO i strona | 11 | 1 | 0 |
+| Reklamy | 0 | 0 | 9 |
 | Przetargi | 11 | 0 | 0 |
 | Oferty | 6 | 0 | 0 |
 | Dotacje | 5 | 0 | 0 |
 | Kontrahenci | 8 | 1 | 0 |
-| Konto i platforma | 4 | 0 | 0 |
-| Razem | 75 | 4 | 6 |
+| Konto i platforma | 5 | 0 | 0 |
+| Razem | 79 | 4 | 9 |
 
 „Działa w silniku” znaczy, że kod jest w repozytorium i przechodzi testy. Silnik nie jest jeszcze uruchomiony online (etap 0).
 
@@ -201,6 +202,24 @@ Ograniczenie po stronie Google: dopóki aplikacja OAuth nie przejdzie weryfikacj
 **Napisz cały wniosek.** Na ekranie wniosku (i oferty przetargowej) jeden przycisk uruchamia pisanie wszystkich sekcji, których nikt nie oznaczył jako gotowe. AI pisze sekcję po sekcji, strona pokazuje postęp i sama prowadzi kolejne kroki, a „Zatrzymaj” przerywa. Każda sekcja to jedno użycie AI. Zasady pisania zostają: tylko z regulaminu naboru i biblioteki firmy, zdania bez źródła są podświetlone. Regulamin i kryteria użytkownik wgrywa sam, bo panel nie pobiera plików z zabezpieczonych stron.
 
 **Przetargi: do ofert jednym kliknięciem.** Na listach przetargów przycisk „Do ofert” zakłada szkic oferty i zapisuje przetarg. Drugie kliknięcie nie tworzy duplikatu, tylko pokazuje znacznik „w ofertach”. „Zapisz” na karcie przetargu robi to samo.
+
+### Monitory, pomiar i raport dla klienta
+
+Pięć funkcji z 28.11.2026, podpatrzonych w bdos.ai (narzędzie dla specjalistów Google Ads, działające lokalnie z Claude). Wzięliśmy to, co działa na danych, które panel już ma, i nie wymaga nowych zgód. Tego, co dotyczy samych kont Google Ads, nie budujemy przed dostępem Basic do API (punkt 4 w części 4d).
+
+1. **Alarm „pomiar przestał działać”.** Po każdym pobraniu z Google Analytics panel bierze sesje i zdarzenia kluczowe z 70 dni i porównuje każdy dzień z tym samym dniem tygodnia w 8 poprzednich tygodniach tej witryny. Dwa sygnały: zdarzeń 0 przy ruchu co najmniej połowy zwykłego, choć w historii były w co najmniej 75% takich dni, albo ruch 10% zwykłego i mniej (przy zwykłych 20 sesjach dziennie i więcej). Sygnał musi trwać 2 dni, sprawdzamy dni sprzed 2 dni (dane GA4 z wczoraj bywają niepełne). Powiadomienie przychodzi raz, na początku alarmu, i drugi raz po powrocie do normy. Alarm widać na zakładce Google, w „Dane i połączenia”, na pulpicie, w porannym przeglądzie i w raporcie miesięcznym.
+2. **Święta w porównaniach.** Kalendarz dni ustawowo wolnych (z Wielkanocą liczoną co roku i Wigilią od 2025 r.). Alarm pomiaru i monitor spadku kliknięć pomijają święta, wykres tygodniowy w Widoczności podpisuje tygodnie ze świętem, a raport miesięczny pokazuje je jaśniejszymi słupkami.
+3. **Raport miesięczny dla klienta** (Widoczność → Raporty dla klienta). Jedna strona: wejścia, wyświetlenia, klikalność i pozycja z Search Console za miesiąc kalendarzowy, z porównaniem do poprzedniego miesiąca i rok do roku (tylko z prawie pełnym miesiącem), wykres dzień po dniu, zapytania i strony, odpowiedzi AI, pomiar, audyty, zapytania z widżetu na tej domenie. Agencja dopisuje, co zrobiła i co planuje: bez tego raport nie wychodzi do klienta. Szkic za poprzedni miesiąc powstaje sam 4. dnia miesiąca. Liczby zapisujemy w chwili przygotowania, więc raport udostępniony klientowi się nie zmienia. Link bez logowania, bez plików cookie i skryptów, poza wyszukiwarkami, drukuje się do PDF. Logo, kolor i stopka agencji są jednym ustawieniem dla wszystkich raportów firmy.
+4. **Monitory opisane jednym zdaniem** (Pulpit → Monitory). Katalog sześciu reguł: spadek kliknięć z Google o X% (7 dni do 7 dni, średnio na dzień, bez świąt, od 20 kliknięć), pozycja zapytania gorsza niż N, co najmniej N nowych stron u konkurenta w 7 dni, strona nie odpowiada kodem 200 albo wolniej niż N s, nowy przetarg z frazą w tytule (opcjonalnie od kwoty), brak zapytań ze strony przez N dni. Proste zdania panel rozpoznaje sam. Gdy nie umie, pomaga AI (jedno użycie z pakietu), a jego odpowiedź przechodzi przez tę samą walidację, więc nie doda reguły spoza katalogu. Użytkownik widzi regułę słowami z progiem i dopiero wtedy zapisuje. Sprawdzanie codziennie rano, bez AI, tylko odczyt. Limit: 5 monitorów w Podstawowym, 30 w Rozszerzonym.
+5. **Zgoda na cookies w audycie technicznym.** Panel rozpoznaje 11 rodzajów skryptów śledzących (Google Analytics i Tag Manager, Google Ads, Meta, TikTok, LinkedIn, Hotjar, Clarity, Microsoft Advertising, Pinterest, X, Yandex) i sprawdza, czy skrypty spoza Google czekają na zgodę (typ text/plain albo adres w data-src, jak robią banery). Trzy wyniki: skrypty bez banera i bez trybu zgody Google, skrypty reklamowe mogące ładować się przed zgodą, pliki cookie śledzące zapisywane przez serwer w pierwszej odpowiedzi. Strona bez skryptów śledzących nie dostaje już ostrzeżenia o brakującym banerze. Ocena idzie z kodu strony, bez klikania w baner: część banerów blokuje skrypty dopiero w przeglądarce, więc wynik „mogą ładować się” prosi o potwierdzenie w oknie prywatnym. Podstawa: art. 399 Prawa komunikacji elektronicznej. To opis przepisów, nie porada prawna.
+
+**Do modułu Reklamy po dostępie Basic do Google Ads API** (zapisane w mockupie jako funkcje czekające na zgodę):
+
+- historia zmian z całego konta z rodzajem narzędzia (strona Google Ads, API, skrypty, reguły automatyczne, rekomendacje) i osobą. API podaje ostatnie 30 dni, najwyżej 10 000 wierszy na zapytanie, a zmian z Google Ads Editor nie zwraca,
+- bezpieczniki zmian: podgląd przed i po, limit podniesienia budżetu (startowo 30%), etykieta z datą na każdej zmianie z panelu, osobne potwierdzenie zmiany strategii stawek, ostrzeżenie, gdy zmiana zatrzyma wyświetlanie kampanii,
+- kampania włączona, a nie wydaje, i strony docelowe reklam sprawdzane audytem technicznym.
+
+Źródła: [bdos.ai](https://bdos.ai), [lista zmian BDOS](https://bdos.ai/changelog), [Google Ads API: Change Event](https://developers.google.com/google-ads/api/docs/change-event), [art. 399 PKE](https://lexlege.pl/komunik-elektr/art-399/).
 
 ### Biała lista VAT przed przelewem
 
@@ -434,6 +453,7 @@ Do sprawdzenia po wdrożeniu: czy rejestr decyzji UOKiK przyjmuje połączenia z
 4. **Reklamy Google i Meta.** Wnioski warto złożyć wcześnie, bo zależą od zewnętrznych zgód:
    - Google: poziom dostępu Basic dla projektu Google Cloud, z weryfikacją marki,
    - Meta: weryfikacja firmy i przegląd aplikacji (App Review) dla uprawnienia ads_management.
+   Po dostępie: historia zmian z całego konta, bezpieczniki zmian i kampanie bez wydatków (część „Monitory, pomiar i raport dla klienta”).
 5. **Wpis długu do BIG z platformy.** KRD ma API, ale wymaga umowy. Trzeba zapytać KRD i BIG InfoMonitor o współpracę partnerską.
 6. **Wysyłka z Gmaila i Microsoft 365** zamiast pliku .eml. Uprawnienie Gmaila do wysyłania wymaga weryfikacji aplikacji przez Google.
 7. **Serwer pośredniczący w Polsce** dla rejestru UOKiK, jeśli blokada adresów zagranicznych się potwierdzi.
@@ -504,6 +524,14 @@ Potrzebne przed etapem 4:
   - opinii o kampaniach e-mail: wysyłka przez panel do odbiorców ze zgodą (platforma jako pośrednik), stopka i wypisanie oraz wykorzystanie listy projektów UE i planów zamówień do kontaktu.
 
 ## Co zostało sprawdzone
+
+### Monitory, pomiar i raport dla klienta (28.11.2026)
+
+- **220 testów** na SQLite i na PostgreSQL 16 (uruchomionym lokalnie, bo GitHub Actions czekają do 1 grudnia). Dziewięć nowych obejmuje: kalendarz świąt (Wielkanoc 2024-2027, Wigilia od 2025 r., tygodnie ze świętem), alarm pomiaru na danych przykładowych (dwa dni z rzędu, dzień z opóźnieniem pominięty, mała witryna, rzadkie zdarzenia, święto, za mało danych), alarm po pobraniu z GA4 (treść zapytania, powiadomienie raz, powrót do normy, ekran, pulpit z licznikiem w menu, poranny przegląd), rozpoznanie 11 zdań bez AI, zapis monitora z pierwszym sprawdzeniem, powiadomienie przy zmianie stanu, przetargi tylko nowsze niż ostatnie sprawdzenie, strona 404 i powrót, limit pakietu, izolację firm, zdanie rozpoznane przez AI z licznikiem użyć i odpowiedź AI spoza katalogu odrzuconą, raport miesięczny (sumy, porównania, zapytania, AI, audyty, zapytania z widżetu na www., link bez plików cookie, kod HTML w notatkach jako tekst, logo, zły kolor i zły plik, odświeżenie, wyłączenie linku, izolacja firm), szkic tworzony sam od 4. dnia miesiąca, sprawdzenie zgody na cookies na siedmiu przykładowych stronach.
+- **Biała lista VAT z 27.11.2026 przeszła też na PostgreSQL** (ten sam przebieg 220 testów).
+- **W przeglądarce** na danych przykładowych: monitor ze zdania (rozpoznanie, zapis, pierwsze sprawdzenie), raport (podgląd, udostępnienie, strona klienta bez plików cookie, wydruk do PDF), alarm pomiaru w „Dane i połączenia”, ekrany w szerokościach 1280, 390 i 320 bez poziomego przewijania. Lista monitorów na telefonie była tabelą, która nie mieściła się na ekranie: zamieniona na listę.
+- **Mockup:** 43 ekrany w 4 szerokościach bez błędów i bez poziomego przewijania. Rozpoznanie zdań w mockupie daje te same rodzaje reguł co silnik (8 z 8 zdań).
+- **Nie sprawdzono na prawdziwych usługach:** zapytania GA4 z metryką keyEvents na prawdziwej usłudze (format według dokumentacji Data API), testu na prawdziwym API w GitHub Actions (po 1 grudnia), wyglądu raportu wydrukowanego w Safari i Firefoksie.
 
 ### Biała lista VAT przed przelewem (27.11.2026)
 

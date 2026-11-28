@@ -11,6 +11,7 @@ $path = static fn (string $url): string => AiSources::path($url, (string) $site[
 $gsearch = static fn (string $q): string => 'https://www.google.com/search?q=' . rawurlencode($q);
 echo View::partial('partials/seo_nav', ['site' => $site, 'tab' => $tab, 'sites' => $sites, 'heading' => 'Widoczność w Google',
     'lead' => 'Dane z Search Console witryny ' . $site['host'] . ': co działa, co spada i co poprawić najpierw.']);
+echo View::partial('partials/seo_tracking', ['site' => $site, 'mode' => 'alarm']);
 ?>
 <?php if (!$d): ?>
 <section class="card" aria-labelledby="sg-start">
@@ -47,6 +48,9 @@ echo View::partial('partials/seo_nav', ['site' => $site, 'tab' => $tab, 'sites' 
   <section class="card main" style="flex-basis:340px" aria-labelledby="sg-ch1">
     <h2 id="sg-ch1">Kliknięcia tygodniami</h2>
     <?= View::partial('partials/line_chart', ['points' => $weeklyClicks, 'name' => 'Kliknięcia', 'unit' => 'kliknięć', 'prefix' => 'Tydzień od ']) ?>
+    <?php $hol = Insights::holidayWeeks(array_keys($weeklyClicks)); if ($hol): ?>
+    <p class="sec-note" style="margin-top:8px">Tygodnie ze świętami, w których ruch zwykle spada: <?= e(implode('; ', array_map(static fn (string $w, array $n): string => date('d.m', strtotime($w)) . ' (' . implode(', ', $n) . ')', array_keys($hol), $hol))) ?>.</p>
+    <?php endif ?>
   </section>
   <section class="card main" style="flex-basis:340px" aria-labelledby="sg-ch2">
     <h2 id="sg-ch2">Wyświetlenia tygodniami</h2>

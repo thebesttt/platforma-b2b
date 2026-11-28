@@ -352,6 +352,25 @@ function demo_seed(): array
         foreach ($saved as $k => $v) {
             \App\Core\Config::set($k, $v);
         }
+        // Raport miesięczny za poprzedni miesiąc z notatkami agencji i trzy monitory opisane jednym zdaniem.
+        $rep = \App\Modules\Seo\MonthlyReport::create($find(), \App\Modules\Seo\MonthlyReport::previousMonth(), $uid);
+        if ($rep['ok']) {
+            $db->update('seo_reports', [
+                'done_text' => "Poprawiliśmy tytuły i opisy 12 stron poradnika (przykład).\nDodaliśmy sekcję pytań i odpowiedzi na stronie o odkamienianiu.\nNaprawiliśmy 4 przekierowania po zmianie adresów kategorii.",
+                'next_text' => "Nowy poradnik o młynkach do kawy pod zapytania, które rosną w Search Console.\nTest dwóch wersji tytułu strony rankingu ekspresów.",
+            ], 'id = ?', [(int) $rep['id']]);
+        }
+        $orgRow = $db->one('SELECT * FROM organizations WHERE id = ?', [$org]);
+        foreach ([
+            ['Powiadom mnie, gdy kliknięcia z Google spadną o 30%.', 'gsc_clicks', ['site_id' => (int) $seo['id'], 'pct' => 30]],
+            ['Daj znać, gdy przez 5 dni nie przyjdzie żadne zapytanie ze strony.', 'inbound_silence', ['days' => 5]],
+            ['Powiadom o przetargach na „nawierzchni” od 100 tys. zł.', 'tender', ['phrase' => 'nawierzchni', 'min_value' => 100000]],
+        ] as [$sentence, $kind, $params]) {
+            $m = \App\Modules\Notify\Monitors::create($orgRow, $uid, $sentence, $kind, $params, 'panel');
+            if ($m['ok'] && $kind !== 'tender') {
+                \App\Modules\Notify\Monitors::run(\App\Modules\Notify\Monitors::find($org, (int) $m['id']));
+            }
+        }
     }
 
     // Plany zamówień: plan i zapowiedź z zapisanych odpowiedzi BZP i TED oraz przykładowy plan powiatu z Mazowsza.

@@ -16,8 +16,9 @@ Aplikacja dla firm, które sprzedają innym firmom. Zbiera i ocenia zapytania ze
 | Firmy z dotacjami UE | Spółki z trwającymi projektami z funduszy europejskich 2021-2027: wyszukiwanie po słowach, województwie i wartości, dodanie do potencjalnych klientów z faktami o projekcie. Bez osób fizycznych i spółek cywilnych. | Lista projektów z funduszeeuropejskie.gov.pl (CSV, aktualizacja co miesiąc) |
 | Kampanie e-mail | Szablon z polami i wersja dla każdego odbiorcy z faktów, które panel zna (zapytanie, odpowiedź, zapytanie ofertowe, tematy ze strony zgody, przetarg, dotacja UE, audyt strony), opcjonalnie dopasowana przez AI. Ocena ryzyka dla każdego odbiorcy: panel wysyła tylko do zgód i klientów, resztę użytkownik pobiera jako .eml po potwierdzeniu ryzyka. | Kontakty firmy, Resend |
 | Audyt AI (treść) | Jedna strona i jedna fraza: 24 wskaźniki, 100 punktów, pięć grup (dostęp botów, struktura, wiarygodność, odpowiedzi, szybkość). Raport z linijką punktów, listą „Najpierw to”, dowodem i trzema progami przy każdym wskaźniku. Porównanie „przed i po”, strona „Wytyczne wskaźników” i raport dla klienta pod linkiem bez logowania. 22 wskaźniki liczy program, 2 ocenia model AI z cytatem, który program sprawdza w treści strony. | Publiczna strona i jej robots.txt, PageSpeed Insights, Claude API, opcjonalnie Cloudflare Browser Run |
-| Audyt techniczny | Bezpieczeństwo, szybkość serwera, SEO techniczne, analityka i RODO. Możesz zestawić swoją stronę z konkurentami. To ten sam silnik co w PrestaCheck (`lib/prestacheck`). | Publiczne strony, opcjonalnie Google PageSpeed |
-| Widoczność | Co poprawić najpierw w Google, gdzie stronę widać w odpowiedziach AI i co publikuje konkurencja. Start od adresu witryny: dane z Search Console trafiają z pliku wyeksportowanego przyciskiem „Eksportuj” (panel sam rozpoznaje raport i okres) albo ze stałego połączenia przez konto usługi Google. Ekrany: zapytania tuż za czołówką, wysoka pozycja z niską klikalnością, spadki, dwie strony na jedno zapytanie, strony w odpowiedziach AI Google, cytowania z Copilota, wejścia z asystentów AI, boty AI na stronie, nowe strony i tematy konkurentów. | Search Console (plik albo API), Google Analytics, Bing Webmaster Tools (wklejana tabela), Cloudflare, publiczne mapy witryn |
+| Audyt techniczny | Bezpieczeństwo, szybkość serwera, SEO techniczne, analityka i RODO. W części RODO: które skrypty śledzące strona ładuje, czy skrypty spoza Google czekają na zgodę i czy serwer zapisuje pliki cookie śledzące przed zgodą. Strona bez skryptów śledzących nie dostaje ostrzeżenia o banerze. Możesz zestawić swoją stronę z konkurentami. To ten sam silnik co w PrestaCheck (`lib/prestacheck`). | Publiczne strony, opcjonalnie Google PageSpeed |
+| Widoczność | Co poprawić najpierw w Google, gdzie stronę widać w odpowiedziach AI i co publikuje konkurencja. Start od adresu witryny: dane z Search Console trafiają z pliku wyeksportowanego przyciskiem „Eksportuj” (panel sam rozpoznaje raport i okres) albo ze stałego połączenia przez konto usługi Google. Ekrany: zapytania tuż za czołówką, wysoka pozycja z niską klikalnością, spadki, dwie strony na jedno zapytanie, strony w odpowiedziach AI Google, cytowania z Copilota, wejścia z asystentów AI, boty AI na stronie, nowe strony i tematy konkurentów. Alarm „pomiar przestał działać”: przy połączonym Google Analytics panel porównuje każdy dzień z tym samym dniem tygodnia w 8 poprzednich tygodniach i zgłasza zero zdarzeń kluczowych przy normalnym ruchu albo prawie zerowy ruch (dwa dni z rzędu, bez świąt). Raport miesięczny dla klienta: szkic za poprzedni miesiąc powstaje sam 4. dnia miesiąca, agencja dopisuje, co zrobiła, i udostępnia link bez logowania i plików cookie, z własnym logo, kolorem i stopką. | Search Console (plik albo API), Google Analytics, Bing Webmaster Tools (wklejana tabela), Cloudflare, publiczne mapy witryn |
+| Monitory | Użytkownik pisze jednym zdaniem, czego pilnować („powiadom mnie, gdy kliknięcia z Google spadną o 30%”). Panel zamienia zdanie na regułę z jawnym progiem (spadek kliknięć, pozycja zapytania, nowe strony konkurenta, strona nie działa, przetarg z frazą, brak zapytań ze strony), pokazuje ją do potwierdzenia i sprawdza codziennie rano, tylko czytając dane. Proste zdania rozpoznaje sam, AI pomaga tylko przy reszcie (jedno użycie). Powiadomienia z monitorów, alarmu pomiaru i raportów: pulpit, zakładka Monitory i poranny przegląd. | Dane panelu, strony podane przez użytkownika |
 | Reklamy | Ekran informacyjny. Integracja z Google Ads i Meta czeka na zatwierdzenie dostępu do API. | - |
 
 ### Zasady wbudowane w produkt
@@ -153,7 +154,7 @@ Docelowym rozwiązaniem może być mały serwer pośredniczący w Polsce.
 ## Testy
 
 ```bash
-php tests/run.php                                           # 211 testów, SQLite, bez sieci
+php tests/run.php                                           # 220 testów, SQLite, bez sieci
 TEST_DATABASE_URL=postgres://… php tests/run.php            # te same testy na PostgreSQL
 php tests/live_contract.php                                 # prawdziwe API: BZP, TED, VAT, KRS, UOKiK
 sh tests/smoke.sh http://localhost:10000                    # test dymny działającej instancji
@@ -170,6 +171,9 @@ Workflowy w GitHub Actions:
 - `daily.yml`: codzienny import.
 
 ## Ograniczenia, o których warto wiedzieć
+
+- **Raport miesięczny:** sumy miesiąca liczymy z danych dziennych Search Console, więc są dokładne dla miesiąca kalendarzowego. Tabele zapytań i stron pochodzą z ostatniego okresu w panelu (28 dni) i raport podaje ten okres.
+- **Alarm pomiaru** działa tylko przy połączonym Google Analytics (konto usługi albo własne konto Google firmy), bo potrzebuje danych z każdego dnia. Plik z eksportu ani wklejona tabela nie wystarczą.
 
 - **Limit API białej listy VAT:** 100 zapytań dziennie z jednego adresu, wspólnie dla wszystkich firm na platformie (po przekroczeniu blokada do północy). Panel liczy zapytania, każda firma ma 20 sprawdzeń dziennie, a ostatnie 10 zapytań zostaje dla nocnego odświeżania obserwowanych firm. Bez limitu sprawdza się rachunek w wyszukiwarce na podatki.gov.pl.
 

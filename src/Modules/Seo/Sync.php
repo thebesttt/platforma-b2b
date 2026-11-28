@@ -62,6 +62,11 @@ final class Sync
             Sites::markSync($site, 'ga4', $ga['ok'], $ga['ok'] ? $ga['sessions'] . ' sesji z asystentów AI' : (string) $ga['error']);
             if ($ga['ok']) {
                 $messages[] = 'Google Analytics: ' . $ga['sessions'] . ' ' . plural((int) $ga['sessions'], 'sesja', 'sesje', 'sesji') . ' z asystentów AI w okresie ' . self::range($ga['start'], $ga['end']) . '.';
+                // Alarm pomiaru: po każdym pobraniu, na danych dziennych z GA4.
+                $health = Tracking::check(Sites::find((int) $site['org_id'], (int) $site['id']) ?? $fresh);
+                if (in_array($health['status'], ['events', 'sessions'], true)) {
+                    $errors[] = 'Pomiar: ' . $health['detail'];
+                }
             }
         }
         return ['ok' => $gsc['ok'], 'messages' => $messages, 'errors' => $errors];

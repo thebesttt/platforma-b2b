@@ -27,7 +27,7 @@ $on = static function (string ...$prefixes) use ($path): bool {
 };
 $chip = static fn (int $n, string $class, string $text): string => $n ? ' <span class="chip ' . $class . '">' . e($text) . '</span>' : '';
 $calls = $on('/oferty/nabory');
-$groups = [['Pulpit', [['/pulpit', 'Pulpit', $on('/pulpit'), '']]]];
+$groups = [['Pulpit', [['/pulpit', 'Pulpit', $on('/pulpit'), ''], ['/monitory', 'Monitory', $on('/monitory'), $chip((int) ($counts['notices'] ?? 0), 'info', (string) ($counts['notices'] ?? 0))]]]];
 $sales = [];
 if ($has('zapytania')) {
     $sales[] = ['/zapytania', 'Zapytania', $on('/zapytania'), $chip((int) $counts['leads'], 'info', $counts['leads'] . ' ' . plural((int) $counts['leads'], 'nowe', 'nowe', 'nowych'))];

@@ -68,7 +68,10 @@
         ["Widoczność w odpowiedziach AI: Google, Copilot, wejścia z asystentów i boty AI", "ai", "silnik", "Raporty Google i Binga wgrywa się albo wkleja, bo nie mają API."],
         ["Konkurencja z map witryn: co publikują i jakich tematów brakuje", "konkurenci", "silnik", ""],
         ["Własne konto Google i token Cloudflare każdej firmy", "google", "silnik", "Firma łączy swoje konto Google jednym przyciskiem (tylko odczyt) i widzi wyłącznie swoje dane. Wymaga klienta OAuth po stronie właściciela panelu."],
-        ["Wizytówka Google: oceny i kompletność", "wizytowka", "plan", "Wymaga zgody Google na dostęp do wizytówek."]
+        ["Wizytówka Google: oceny i kompletność", "wizytowka", "plan", "Wymaga zgody Google na dostęp do wizytówek."],
+        ["Alarm: pomiar w Google Analytics przestał działać", "google", "silnik", "Progi z 8 tygodni historii witryny, dwa dni z rzędu, bez świąt. Powiadomienie na początku i po powrocie do normy."],
+        ["Raport miesięczny dla klienta z logo agencji", "raport-miesieczny", "silnik", "Szkic sam 4. dnia miesiąca, notatki agencji, link bez logowania i plików cookie, druk do PDF."],
+        ["Audyt: skrypty śledzące a zgoda na cookies", "technika", "silnik", "Skrypty spoza Google bez blokady do czasu zgody i pliki cookie z serwera przed zgodą."]
       ]
     },
     {
@@ -79,7 +82,10 @@
         ["Porównanie okresów", "reklamy", "zgoda", ""],
         ["Alerty: budżet, wzrost kosztu konwersji o 30%, wstrzymana kampania", "alerty", "zgoda", ""],
         ["Wstrzymanie i wznowienie kampanii, zmiana budżetu z potwierdzeniem", "kampanie", "zgoda", ""],
-        ["Dziennik zmian w kampaniach", "kampanie", "zgoda", ""]
+        ["Dziennik zmian w kampaniach", "kampanie", "zgoda", ""],
+        ["Historia zmian z całego konta: którym narzędziem i kto", "kampanie", "zgoda", "Z Google Ads API (ostatnie 30 dni). Zmian z Google Ads Editor API nie zwraca."],
+        ["Bezpieczniki zmian: limit podniesienia budżetu, etykieta, ostrzeżenie przed zatrzymaniem wyświetlania", "kampanie", "zgoda", "Podgląd przed i po, osobne potwierdzenie zmiany strategii stawek."],
+        ["Kampania włączona, a nie wydaje; strony docelowe reklam w audycie", "alerty", "zgoda", ""]
       ]
     },
     {
@@ -139,7 +145,8 @@
         ["Pakiety z miesięcznym przydziałem AI", "pakiet", "silnik", "Podstawowy i Rozszerzony. Po wyczerpaniu przydziału panel nie pyta modelu, a funkcje bez AI działają dalej."],
         ["Administracja: firmy, zaproszenia, blokada, limity", "administracja", "silnik", "Tylko dla właściciela panelu. Widzi liczby o firmach, nie ich dane. Płatności panel nie obsługuje."],
         ["Logowanie dwuetapowe i wylogowanie z innych urządzeń", "bezpieczenstwo", "silnik", "Kod z aplikacji, kody zapasowe, unieważnianie sesji po zmianie hasła."],
-        ["Eksport i usunięcie danych firmy", "bezpieczenstwo", "silnik", "Paczka ZIP bez haseł i sekretów. Usunięcie wymaga hasła i przepisania nazwy firmy."]
+        ["Eksport i usunięcie danych firmy", "bezpieczenstwo", "silnik", "Paczka ZIP bez haseł i sekretów. Usunięcie wymaga hasła i przepisania nazwy firmy."],
+        ["Monitory opisane jednym zdaniem i powiadomienia", "monitory", "silnik", "Panel rozpoznaje zdanie sam, AI tylko gdy nie umie (jedno użycie). Sprawdzanie codziennie rano, bez AI, tylko odczyt danych."]
       ]
     }
   ],
@@ -439,7 +446,7 @@
       ["critical", "Szybkość", "Odpowiedź serwera 1,9 s", "Włącz pamięć podręczną stron i sprawdź zapytania do bazy na stronie głównej.", 240],
       ["warning", "Bezpieczeństwo", "Ciasteczko sesji bez atrybutu Secure", "Ustaw Secure i SameSite w konfiguracji sesji.", 30],
       ["warning", "SEO", "14 podstron bez opisu meta", "Uzupełnij opisy, zaczynając od stron kategorii.", 180],
-      ["warning", "Analityka i RODO", "Skrypt analityki ładuje się przed zgodą", "Uruchamiaj analitykę dopiero po zgodzie w banerze.", 120],
+      ["warning", "Analityka i RODO", "Skrypty reklamowe mogą ładować się przed zgodą: Meta Pixel, LinkedIn Insight Tag", "Baner zgody jest, ale te skrypty są wpisane w kod zwykłym znacznikiem script. Ładuj je przez baner albo Menedżer tagów z warunkiem zgody.", 120], ["warning", "Analityka i RODO", "Serwer ustawia plik cookie _ga przed zgodą", "Już pierwsza odpowiedź serwera zapisuje _ga. Ustaw go dopiero po zgodzie (wtyczka albo pomiar po stronie serwera).", 60],
       ["warning", "Szybkość", "Zdjęcia produktów bez formatu WebP", "Włącz konwersję zdjęć w sklepie albo w CDN.", 60],
       ["info", "SEO", "Mapa witryny nie zawiera wpisów z bloga", "Dodaj blog do mapy witryny.", 30]
     ],
@@ -540,6 +547,7 @@
         ["serwis", 3, "ekspresy-online.example", "/oferta/serwis-ekspresow"]
       ]
     },
+    "tracking": {"status": "events", "since": "2026-11-16", "days": ["2026-11-17", "2026-11-16"], "detail": "Ruch jest normalny (16.11 i 17.11: 412 i 398 sesji), ale zdarzeń kluczowych jest 0. W ostatnich 8 tygodniach były w 100% takich dni. Najczęstsze przyczyny: zmieniony formularz albo strona podziękowania, usunięte zdarzenie w Menedżerze tagów, zmiana nazwy zdarzenia oznaczonego jako kluczowe."},
     "profile": {
       "rating": "4,6",
       "reviews": 87,
@@ -1075,5 +1083,8 @@
     {"id": "eu3", "beneficiary": "Zielona Energia sp. z o.o. (przykład)", "title": "Instalacja fotowoltaiczna i magazyn energii", "program": "Fundusze Europejskie na Infrastrukturę, Klimat, Środowisko", "region": "śląskie", "value": 6400000, "eu": 3200000, "start": "2026-10-15", "end": "2028-10-31", "summary": "Farma fotowoltaiczna na dachach hal z magazynem energii."},
     {"id": "eu4", "beneficiary": "Logistyka Polska Spółka Akcyjna (przykład)", "title": "Centrum logistyczne z systemem zarządzania magazynem", "program": "Fundusze Europejskie dla Nowoczesnej Gospodarki", "region": "", "value": 12000000, "eu": 5000000, "start": "2026-03-01", "end": "2027-09-30", "summary": "System WMS, automatyczne sortowanie i portal dla klientów."}
   ],
-  "campaign": {"name": "Widoczność w odpowiedziach AI (przykład)", "subject": "Jak {firma} wypada w odpowiedziach AI", "body": "{powitanie}\n\n{powod}\n\nSprawdzamy, czy ChatGPT, Gemini i Perplexity polecają Państwa firmę, gdy klient pyta o Wasze usługi. W raporcie pokazujemy, które strony poprawić najpierw.\n\nCzy możemy przesłać krótki raport w przyszłym tygodniu?\n\nZ poważaniem\n{podpis}", "recipients": [1, 2, 3, 4, 5, 6], "pause": 14, "limit": 100}
+  "campaign": {"name": "Widoczność w odpowiedziach AI (przykład)", "subject": "Jak {firma} wypada w odpowiedziach AI", "body": "{powitanie}\n\n{powod}\n\nSprawdzamy, czy ChatGPT, Gemini i Perplexity polecają Państwa firmę, gdy klient pyta o Wasze usługi. W raporcie pokazujemy, które strony poprawić najpierw.\n\nCzy możemy przesłać krótki raport w przyszłym tygodniu?\n\nZ poważaniem\n{podpis}", "recipients": [1, 2, 3, 4, 5, 6], "pause": 14, "limit": 100},
+  "monitors": [{"kind": "gsc_clicks", "sentence": "Powiadom mnie, gdy kliknięcia z Google spadną o 30%.", "rule": "Kliknięcia z Google na sklep-przykladowy.example w ostatnich 7 dniach spadną o co najmniej 30% wobec 7 dni wcześniej (średnio na dzień, bez świąt).", "state": "ok", "detail": "Kliknięcia 10.11-16.11: 1 012, w 7 dniach wcześniej 968 (+5% średnio na dzień).", "at": "19.11 07:20", "by": "panel"}, {"kind": "inbound_silence", "sentence": "Daj znać, gdy przez 5 dni nie przyjdzie żadne zapytanie ze strony.", "rule": "Przez 5 dni nie przyjdzie żadne zapytanie ze strony.", "state": "ok", "detail": "Ostatnie zapytanie 18.11.2026, 1 dzień temu.", "at": "19.11 07:20", "by": "panel"}, {"kind": "tender", "sentence": "Powiadom o przetargach na pozycjonowanie od 50 tys. zł.", "rule": "Pojawi się nowy przetarg z frazą „pozycjonowanie” w tytule o wartości od 50 000,00 zł.", "state": "hit", "detail": "1 nowy przetarg: Usługa pozycjonowania i prowadzenia kampanii dla portalu miasta (przykład).", "at": "19.11 07:20", "by": "panel"}, {"kind": "site_down", "sentence": "Gdy strona klienta przestanie działać albo będzie wolna.", "rule": "Strona https://sklep-przykladowy.example/ nie odpowie poprawnie (kod inny niż 200) albo odpowie wolniej niż w 5 s.", "state": "ok", "detail": "Strona https://sklep-przykladowy.example/: kod 200, czas 0,8 s.", "at": "19.11 07:20", "by": "ai"}],
+  "notices": [["high", "Pomiar na stronie", "Zdarzenia kluczowe przestały się liczyć: sklep-przykladowy.example", "Ruch jest normalny, ale zdarzeń kluczowych jest 0 od 16.11.", "google", "19.11 07:20"], ["mid", "Monitor", "Monitor: pojawi się nowy przetarg z frazą „pozycjonowanie” w tytule", "1 nowy przetarg: Usługa pozycjonowania i prowadzenia kampanii dla portalu miasta (przykład).", "przetargi", "19.11 07:20"], ["info", "Raport miesięczny", "Raport za październik 2026 gotowy do przejrzenia: sklep-przykladowy.example", "Dopisz, co zrobiliście w tym miesiącu, i udostępnij klientowi link.", "raport-miesieczny", "04.11 07:20"]],
+  "report": {"month": "październik 2026", "prev_gen": "września", "prev_loc": "we wrześniu", "clicks": 3412, "clicks_prev": 3114, "clicks_yoy": 2420, "impressions": 81230, "impressions_prev": 78460, "ctr": 4.2, "ctr_prev": 4.0, "position": 9.8, "position_prev": 10.4, "daily": [96, 104, 112, 109, 98, 71, 66, 118, 121, 115, 119, 110, 76, 70, 124, 127, 119, 122, 113, 79, 72, 126, 131, 124, 128, 117, 80, 74, 130, 133, 118], "queries": [["jaki ekspres ciśnieniowy do domu", 412, 371, 5200, 3.1], ["ekspres kolbowy czy automatyczny", 268, 240, 4100, 2.7], ["jak odkamienić ekspres", 190, 201, 3900, 4.4], ["ranking ekspresów kolbowych", 144, 96, 6100, 7.9], ["młynek do kawy żarnowy", 61, null, 2800, 11.2]], "pages": [["/poradnik/ekspres-cisnieniowy-do-domu", 690, 3.4], ["/poradnik/odkamienianie", 512, 4.1], ["/ranking-ekspresow", 388, 6.7]], "ai": {"overviews": 1240, "assistants": 54, "assistants_prev": 32, "top": "ChatGPT 40, Perplexity 11, Copilot 3", "bots": 1913}, "leads": [14, 11, 5], "tech": [72, 66], "content": [["/poradnik/odkamienianie", 88, 61], ["/ranking-ekspresow", 74, 74]], "done": "Poprawiliśmy tytuły i opisy 12 stron poradnika.\nDodaliśmy sekcję pytań i odpowiedzi na stronie o odkamienianiu.\nNaprawiliśmy 4 przekierowania po zmianie adresów kategorii.", "next": "Nowy poradnik o młynkach do kawy pod zapytania, które rosną w Search Console.\nTest dwóch wersji tytułu strony rankingu ekspresów."}
 }

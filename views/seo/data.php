@@ -51,6 +51,8 @@ $line = static function (?array $sync): string {
   <p class="sec-note" style="padding-top:12px">Połączone źródła panel odświeża raz dziennie. Trzymamy <?= App\Modules\Seo\Stats::KEEP_PERIODS ?> ostatnich okresów każdego raportu i dane dzienne z 16 miesięcy.</p>
 </section>
 
+<?= View::partial('partials/seo_tracking', ['site' => $site, 'mode' => 'pelny']) ?>
+
 <section class="card" id="cloudflare" aria-labelledby="sd-cf-h">
   <h2 id="sd-cf-h" style="margin-bottom:6px">Boty AI z Cloudflare</h2>
   <p class="small muted" style="margin:0 0 14px">Dla witryn, które działają za Cloudflare. Panel pokaże, które boty AI pobierają strony, ile razy i które adresy.</p>

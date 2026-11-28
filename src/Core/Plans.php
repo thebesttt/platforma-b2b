@@ -23,11 +23,12 @@ final class Plans
         'team' => ['Osoby w zespole', 'Konta z dostępem do panelu firmy.'],
         'sites' => ['Witryny w zakładce Widoczność', 'Strony z danymi z Search Console i konkurentami.'],
         'campaign_day' => ['Wiadomości kampanii na dobę', 'Wiadomości z kampanii e-mail wysłane przez panel w ciągu doby (do odbiorców ze zgodą).'],
+        'monitors' => ['Monitory', 'Reguły opisane jednym zdaniem, które panel sprawdza codziennie (tylko odczyt).'],
     ];
 
     public const DEFAULTS = [
-        'basic' => ['ai_ops' => 30, 'ai_chat' => 100, 'team' => 3, 'sites' => 2, 'campaign_day' => 100],
-        'extended' => ['ai_ops' => 400, 'ai_chat' => 1500, 'team' => 15, 'sites' => 20, 'campaign_day' => 1000],
+        'basic' => ['ai_ops' => 30, 'ai_chat' => 100, 'team' => 3, 'sites' => 2, 'campaign_day' => 100, 'monitors' => 5],
+        'extended' => ['ai_ops' => 400, 'ai_chat' => 1500, 'team' => 15, 'sites' => 20, 'campaign_day' => 1000, 'monitors' => 30],
     ];
 
     private const MAX = 1_000_000;
@@ -130,6 +131,7 @@ final class Plans
             'team' => (int) $db->val('SELECT COUNT(*) FROM users WHERE org_id = ?', [$orgId]),
             'sites' => (int) $db->val('SELECT COUNT(*) FROM seo_sites WHERE org_id = ?', [$orgId]),
             'campaign_day' => \App\Modules\Outreach\Campaigns::sentToday($orgId),
+            'monitors' => (int) $db->val('SELECT COUNT(*) FROM monitors WHERE org_id = ?', [$orgId]),
         ];
     }
 

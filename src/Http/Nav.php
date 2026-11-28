@@ -25,7 +25,7 @@ final class Nav
         }
         $org = Auth::orgId();
         if (!$org) {
-            return self::$counts = ['matches' => 0, 'alerts' => 0, 'profiles' => 0, 'leads' => 0];
+            return self::$counts = ['matches' => 0, 'alerts' => 0, 'profiles' => 0, 'leads' => 0, 'notices' => 0];
         }
         $db = Db::get();
         return self::$counts = [
@@ -37,6 +37,7 @@ final class Nav
             'alerts' => (int) $db->val('SELECT COUNT(*) FROM alerts WHERE org_id = ? AND read_at IS NULL AND (company_id IS NOT NULL OR tender_id IS NULL)', [$org]),
             'profiles' => (int) $db->val('SELECT COUNT(*) FROM tender_profiles WHERE org_id = ? AND active = 1', [$org]),
             'leads' => (int) $db->val("SELECT COUNT(*) FROM inbound_leads WHERE org_id = ? AND status = 'new'", [$org]),
+            'notices' => \App\Modules\Notify\Notices::unread($org),
         ];
     }
 }

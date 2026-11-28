@@ -145,6 +145,18 @@ final class CronController
         } catch (\Throwable $e) {
             $out['grants'] = ['error' => $e->getMessage()];
         }
+        // Monitory opisane jednym zdaniem: po imporcie przetargów i odświeżeniu Widoczności, żeby sprawdzały dzisiejsze dane.
+        try {
+            $out['monitors'] = \App\Modules\Notify\Monitors::daily();
+        } catch (\Throwable $e) {
+            $out['monitors'] = ['error' => $e->getMessage()];
+        }
+        // Raporty miesięczne: szkic za poprzedni miesiąc, gdy Search Console ma już komplet dni (od 4. dnia miesiąca).
+        try {
+            $out['reports'] = \App\Modules\Seo\MonthlyReport::daily();
+        } catch (\Throwable $e) {
+            $out['reports'] = ['error' => $e->getMessage()];
+        }
         // Poranny przegląd e-mailem: po imporcie, dopasowaniu i odświeżeniu kontrahentów, żeby obejmował dzisiejsze nowości.
         try {
             $out['digest'] = Digest::run();

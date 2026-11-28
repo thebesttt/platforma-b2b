@@ -78,7 +78,10 @@ function renderGoogle() {
   const g = PLAT.gsc, x = gscInsights();
   const def = { title: 'Kliknięcia z Google tygodniami', labels: g.weeks, prefix: 'Tydzień od ', series: [{ name: 'Kliknięcia', color: 'var(--s1)', values: g.clicks }] };
   const can = g.cannibal;
+  const tr = g.tracking;
   put('google', stan('silnik', 'Dane z pliku wyeksportowanego z Search Console albo ze stałego połączenia. Tu dane przykładowe.') +
+    (tr && tr.status !== 'ok' ? `<p class="note" role="alert" style="border-left:3px solid var(--bad,#b42318)"><b>Zdarzenia kluczowe przestały się liczyć</b> (od ${dpl(tr.since)}). ${esc(tr.detail)} <a href="#monitory">Powiadomienia</a></p>
+      <details class="small" style="padding:4px 0 8px"><summary>Jak to sprawdzamy</summary><p>Każdy dzień porównujemy z tym samym dniem tygodnia w 8 poprzednich tygodniach tej witryny. Zdarzenia: ruch co najmniej 50% zwykłego, zdarzeń 0, a w historii były w co najmniej 75% takich dni. Ruch: sesji 10% zwykłego albo mniej. Sygnał musi trwać 2 dni z rzędu. Sprawdzamy dni sprzed 2 dni, bo dane GA4 z wczoraj bywają niepełne, a święta pomijamy.</p></details>` : '') +
     `<div class="sec">${secHead('Wynik okresu', 'Okres ' + esc(g.period) + ', porównanie z ' + esc(g.prev_period) + '.')}
       <div class="counts" style="padding:18px 0 6px">
         <div><b>${num(x.cur)}</b><span>kliknięć, ${chg(x.cur, x.was)}</span></div>
@@ -153,7 +156,55 @@ function renderGbp() {
       <p style="padding:14px 0 12px">Ocena <b>${esc(p.rating)}</b> z ${p.reviews} opinii.</p>${checkList(p.checks, 'jest', 'brak')}</div>`);
 }
 
-MODS.push({ id: 'seo', group: 'marketing', order: 5, label: 'SEO i strona', about: 'Audyt techniczny, widoczność w Google i w odpowiedziach AI, konkurencja i wizytówka Google.',
-  head: (v) => ({ crumbs: 'Audyt widoczności, SEO i konkurencji', title: { technika: 'Audyt techniczny strony', konkurenci: 'Konkurenci', google: 'Widoczność w Google', ai: 'Widoczność w odpowiedziach AI', wizytowka: 'Wizytówka Google' }[v.id], facts: [['Klient', SAMPLE.client], ['Strona', PLAT.tech.site]] }),
+/* ===== Raport miesięczny dla klienta (jak w silniku: MonthlyReport i partials/monthly_report) ===== */
+state.rep = { done: PLAT.report.done, next: PLAT.report.next, shared: false, msg: '', color: '#D4A94A' };
+function renderMonthly() {
+  const r = PLAT.report, s = state.rep, max = Math.max(...r.daily);
+  const pc = (a, b) => b ? proc(100 * (a - b) / b, true) : '';
+  const tile = (label, val, was, d, lower) => `<div style="border:1px solid var(--line);border-radius:10px;padding:12px 14px"><span class="small muted">${label}</span><b style="display:block;font-size:22px">${val}</b><span class="small">${d ? `<span class="delta${(d.startsWith('+') ? 0 : 1) ^ (lower ? 1 : 0) ? ' neg' : ''}">${d}</span> ` : ''}${esc(r.prev_loc)}: ${was}</span></div>`;
+  put('raport-miesieczny', stan('silnik', 'Szkic za poprzedni miesiąc powstaje sam 4. dnia miesiąca. Liczby są zapisane w chwili przygotowania. Tu dane przykładowe.') +
+    `<div class="sec">${secHead('Notatki agencji', 'Tę część piszecie sami: program nie wie, co zrobiliście. Bez niej raport nie wychodzi do klienta.')}
+      <form class="form" id="repForm" style="padding-top:14px">
+        <label class="field" for="repDone" style="flex:1 1 100%">Co zrobiliśmy w tym miesiącu<textarea id="repDone" rows="4" maxlength="6000">${esc(s.done)}</textarea></label>
+        <label class="field" for="repNext" style="flex:1 1 100%">Plan na następny miesiąc<textarea id="repNext" rows="3" maxlength="6000">${esc(s.next)}</textarea></label>
+        <div class="acts"><button class="btn" type="submit">${s.shared ? 'Zapisz notatki' : 'Zapisz i udostępnij klientowi'}</button></div></form>
+      ${s.msg ? `<p class="note" id="repMsg" tabindex="-1" role="status">${esc(s.msg)}</p>` : ''}
+      ${s.shared ? `<p class="small" style="padding-top:8px">Link dla klienta: <span class="num">panel.perfectdata.pl/m/3f9c…e1a7</span>. Strona bez logowania i plików cookie, poza wyszukiwarkami, drukuje się do PDF.</p>` : ''}
+      <p class="small muted">Wygląd raportów (logo, kolor, stopka) ustawia agencja raz dla wszystkich klientów.</p></div>
+    <div class="sec" style="border:1px solid var(--line);border-radius:12px;padding:18px">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;border-bottom:3px solid ${s.color};padding-bottom:12px">
+        <div><p class="small muted" style="margin:0">Raport miesięczny · ${esc(PLAT.tech.site)}</p><h2 style="margin:4px 0 0;font-size:24px">${esc(r.month.charAt(0).toUpperCase() + r.month.slice(1))}</h2></div><b>${esc(PLAT.org.name)}</b></div>
+      <ul style="padding:12px 0 0 18px;font-size:16px">
+        <li>${num(r.clicks)} wejść z wyników Google (${pc(r.clicks, r.clicks_prev)} wobec ${esc(r.prev_gen)}, ${pc(r.clicks, r.clicks_yoy)} rok do roku).</li>
+        <li>${r.leads[0]} zapytań ze strony (w poprzednim miesiącu ${r.leads[1]}).</li>
+        <li>${r.ai.assistants} wejścia z asystentów AI, takich jak ChatGPT i Perplexity.</li></ul>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;padding-top:6px">
+        ${tile('Wejścia z Google', num(r.clicks), num(r.clicks_prev), pc(r.clicks, r.clicks_prev))}${tile('Wyświetlenia', num(r.impressions), num(r.impressions_prev), pc(r.impressions, r.impressions_prev))}
+        ${tile('Klikalność', num(r.ctr, 1) + '%', num(r.ctr_prev, 1) + '%', '')}${tile('Średnia pozycja', pos1(r.position), pos1(r.position_prev), '')}</div>
+      <p class="small muted" style="padding-top:12px">Wejścia z Google dzień po dniu</p>
+      <div style="display:flex;align-items:flex-end;gap:2px;height:100px;border-bottom:1px solid var(--line)" role="img" aria-label="Wejścia z Google dzień po dniu, najwięcej ${max} dziennie">${r.daily.map((v, i) => `<i style="flex:1 1 0;min-width:0;height:${Math.round(v / max * 100)}%;background:${s.color};border-radius:2px 2px 0 0" title="${i + 1}.10: ${v}"></i>`).join('')}</div>
+      <h3 style="font-size:16px;margin:16px 0 4px">Co zrobiliśmy w tym miesiącu</h3><p style="white-space:pre-line;margin:0">${esc(s.done)}</p>
+      ${s.next.trim() ? `<h3 style="font-size:16px;margin:12px 0 4px">Plan na następny miesiąc</h3><p style="white-space:pre-line;margin:0">${esc(s.next)}</p>` : ''}
+      <h3 style="font-size:16px;margin:16px 0 4px">Najważniejsze zapytania</h3>
+      <div class="table-wrap"><table><thead><tr><th>Zapytanie</th><th class="num">Wejścia</th><th class="num">Wyświetlenia</th><th class="num">Pozycja</th></tr></thead><tbody>
+        ${r.queries.map(([q, c, cp, im, p]) => `<tr><td>${esc(q)}</td><td class="num">${num(c)}${cp ? ' <span class="delta' + (c < cp ? ' neg' : '') + '">' + pc(c, cp) + '</span>' : ''}</td><td class="num">${num(im)}</td><td class="num">${pos1(p)}</td></tr>`).join('')}</tbody></table></div>
+      <h3 style="font-size:16px;margin:16px 0 4px">Widoczność w odpowiedziach AI</h3>
+      <ul style="margin:0;padding-left:18px"><li>Linki do strony w odpowiedziach AI Google: <b>${num(r.ai.overviews)}</b> wyświetleń w miesiącu.</li><li>Wejścia z asystentów AI: <b>${r.ai.assistants}</b> <span class="delta">${pc(r.ai.assistants, r.ai.assistants_prev)}</span> (najwięcej: ${esc(r.ai.top)}).</li><li>Boty AI pobrały strony <b>${num(r.ai.bots)}</b> razy.</li></ul>
+      <h3 style="font-size:16px;margin:16px 0 4px">Pomiar w Google Analytics</h3><p style="margin:0">Przez cały miesiąc pomiar działał bez przerw: ruch i zdarzenia kluczowe były w zwykłym zakresie.</p>
+      <h3 style="font-size:16px;margin:16px 0 4px">Stan strony w audytach</h3>
+      <p style="margin:0">Audyt techniczny: <b>${r.tech[0]}/100</b> <span class="delta">+${r.tech[0] - r.tech[1]} pkt</span>. Audyt AI: ${r.content.map(([u, a, b]) => esc(u) + ' ' + a + '/100' + (a !== b ? ' <span class="delta">+' + (a - b) + '</span>' : '')).join(', ')}.</p>
+      <p class="small muted" style="border-top:1px solid var(--line);padding-top:10px;margin-top:16px">Raport przygotował(a) ${esc(PLAT.org.name)}. Dane: Google Search Console, Google Analytics, Cloudflare, stan na 04.11.2026.</p>
+    </div>`);
+}
+FORMS.repForm = () => {
+  const s = state.rep;
+  s.done = document.getElementById('repDone').value; s.next = document.getElementById('repNext').value;
+  if (!s.shared && !s.done.trim()) { s.msg = 'Przed udostępnieniem dopisz, co zrobiliście w tym miesiącu. Klient powinien widzieć pracę, nie tylko liczby.'; rerender('raport-miesieczny'); refocus('repMsg'); return; }
+  s.msg = s.shared ? 'Notatki zapisane. Klient zobaczy zmiany od razu.' : 'Link dla klienta jest gotowy. Klient otworzy raport bez logowania.';
+  s.shared = true; rerender('raport-miesieczny'); refocus('repMsg');
+};
+
+MODS.push({ id: 'seo', group: 'marketing', order: 5, label: 'SEO i strona', about: 'Audyt techniczny ze zgodą na cookies, widoczność w Google i w odpowiedziach AI z alarmem pomiaru, raport miesięczny dla klienta, konkurencja i wizytówka Google.',
+  head: (v) => ({ crumbs: 'Audyt widoczności, SEO i konkurencji', title: { technika: 'Audyt techniczny strony', konkurenci: 'Konkurenci', google: 'Widoczność w Google', ai: 'Widoczność w odpowiedziach AI', wizytowka: 'Wizytówka Google', 'raport-miesieczny': 'Raport miesięczny dla klienta' }[v.id], facts: [['Klient', SAMPLE.client], ['Strona', PLAT.tech.site]] }),
   views: [{ id: 'technika', label: 'Audyt techniczny', render: renderTech }, { id: 'konkurenci', label: 'Konkurenci', gap: 24, render: renderRivals }, { id: 'google', label: 'Google', gap: 32, render: renderGoogle },
-    { id: 'ai', label: 'Odpowiedzi AI', gap: 32, render: renderAi }, { id: 'wizytowka', label: 'Wizytówka', gap: 32, render: renderGbp }] });
+    { id: 'ai', label: 'Odpowiedzi AI', gap: 32, render: renderAi }, { id: 'raport-miesieczny', label: 'Raport dla klienta', gap: 32, render: renderMonthly }, { id: 'wizytowka', label: 'Wizytówka', gap: 32, render: renderGbp }] });

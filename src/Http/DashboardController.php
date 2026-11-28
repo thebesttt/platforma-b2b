@@ -105,6 +105,7 @@ final class DashboardController extends Controller
         usort($deadlines, static fn ($a, $b) => $a['date'] <=> $b['date']);
         $deadlines = array_slice($deadlines, 0, 6);
 
-        return $this->view('dashboard', compact('matches', 'stats', 'alerts', 'resolved', 'mySections', 'profiles', 'receivables', 'import', 'messages', 'mods', 'leads', 'pages', 'deadlines') + ['title' => 'Pulpit']);
+        $notices = \App\Modules\Notify\Notices::recent($org, 4);
+        return $this->view('dashboard', compact('matches', 'stats', 'alerts', 'resolved', 'mySections', 'profiles', 'receivables', 'import', 'messages', 'mods', 'leads', 'pages', 'deadlines', 'notices') + ['title' => 'Pulpit']);
     }
 }
